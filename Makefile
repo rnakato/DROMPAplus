@@ -1,0 +1,46 @@
+CC = g++
+CFLAGS += -std=c++11 -Wall -O2 -Iutil -Iseqan-library-2.1.1
+LIBS += -lboost_program_options -lboost_system -lboost_filesystem
+TARGET = parse2wig+ drompa+
+SRCDIR = util
+
+ifdef DEBUG
+CFLAGS += -DDEBUG
+endif
+
+OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
+OBJS_COMMON = util.o
+OBJS_PW = parse2wig+.o pw_readmapfile.o $(OBJS_COMMON)
+OBJS_DD = drompa+.o $(OBJS_COMMON)
+
+HEADS_UTIL = common.h util.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
+HEADS_PW = pw_readmapfile.h $(HEADS_UTIL)
+HEADS_DD = dd_gv.h dd_opt.h $(HEADS_UTIL)
+
+SUBDIRS := $(SRCDIR)
+.PHONY: all $(SUBDIRS)
+
+all: $(SUBDIRS) $(TARGET)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
+
+echo:
+	@echo "CFLAGS = $(CFLAGS)"
+
+parse2wig+: $(OBJS_PW)
+	$(CC) -o $@ $(OBJS_UTIL) $^ $(LIBS)
+
+drompa+: $(OBJS_DD)
+	$(CC) -o $@ $(OBJS_UTIL) $^ $(LIBS)
+
+.SUFFIXES: .o .cpp
+.cpp.o:
+	$(CC) -c $< $(CFLAGS)
+
+clean:
+	cd $(SRCDIR); make clean
+	rm $(OBJS_PW) $(OBJS_DD) $(TARGET) *~
+
+$(OBJS_PW): $(HEADS_PW) Makefile
+$(OBJS_DD): $(HEADS_DD) Makefile
