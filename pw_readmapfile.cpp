@@ -12,7 +12,7 @@
 using namespace boost::program_options;
 using namespace seqan;
 
-/*class Fragment{
+/*class FragmentData{
 public:
   string name;
   int chr_F3, chr_F5;
@@ -21,11 +21,10 @@ public:
   int fraglen;
   int readlen_F3, readlen_F5;
   //  short num_multimapped;
-  Fragment(BamAlignmentRecord record):
-    name(record.qName),
-    chr_F3(record.rID),
-    readlen_F3(length(record.seq)),
-    fraglen(record.tLen)
+  FragmentData(const BamAlignmentRecord &record):
+    name(record.qName), chr_F3(record.rID)
+    //    readlen_F3(length(record.seq))
+    //    fraglen(record.tLen)
   {
     if(hasFlagRC(record)) {
       strand = STRAND_MINUS;
@@ -39,64 +38,55 @@ public:
 
 void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
 {
+  CharString filename(inputfile);
+  BamFileIn bamFileIn;
+  if (!open(bamFileIn, toCString(filename))) {
+    cerr << "ERROR: Could not open " << filename << endl;
+    exit(1);
+  }
+
   FragmentStore<> fragStore;
-  std::fstream strmReads(inputfile.c_str(), std::fstream::in | std::fstream::binary);
-  if(!strmReads.is_open()) {
-    cerr << "ERROR: Could not open " << inputfile << endl;
-    exit(1);
-  }
-  /*  read(strmReads, fragStore, Sam());
-  uint nreads = length(fragStore.alignedReadStore);
-  cout << nreads << endl;
-  //sortAlignedReads(fragStore.alignedReadStore, SortPairMatchId());
-  //sortAlignedReads(fragStore.alignedReadStore, SortId());
-
-  uint cid1;
-  for (uint i=0; i<nreads; ++i) {
-    //if current alignment has a mate...
-    cid1 = fragStore.alignedReadStore[i].contigId;
-    cout << cid1 << endl;
-    //    cout << fragStore.contigStore[cid1].seq << endl;
-    // cout << fragStore.contigStore[cid1].gaps << endl;
-  }*/
-  
-  /*  CharString filename(inputfile);
-  BamStream bamSt(toCString(filename));
-  if(!isGood(bamSt)) {
-    cerr << "ERROR: Could not open " << filename << ".\n";
-    exit(1);
-    }*/
-
-  //  int chr_num=length(bamSt.header.sequenceInfos);
-  /*  for(int i=0; i<chr_num; ++i) {
-    cout << bamSt.header.sequenceInfos[i].i1 << endl; // name
-    cout << bamSt.header.sequenceInfos[i].i2 << endl; // length
-    }*/
-
-/*  BamAlignmentRecord record;
-  while(!atEnd(bamSt)) {
-    if (readRecord(record, bamSt) != 0) {
-      cerr << "ERROR: Could not read record!" << endl;
-      exit(1);
-    }
+  //  int nreads(0);
+  try {
+    // Copy header
+    /* BamHeader header;
+       readHeader(header, bamFileIn);
+       int chr_num=length(header.sequenceInfos);
+       for(int i=0; i<chr_num; ++i) {
+       cout << header.sequenceInfos[i].i1 << endl; // name
+       cout << header.sequenceInfos[i].i2 << endl; // length
+     }*/
+    readRecords(fragStore, bamFileIn);
+    uint nreads = length(fragStore.alignedReadStore);
+    cout << nreads << endl;
     
-       cout << "AllProper " << hasFlagAllProper(record) << endl;
-    cout << "Duplicate " << hasFlagDuplicate(record) << endl;
-    cout << "First " << hasFlagFirst(record)     << endl;
-    cout << "Last " << hasFlagLast(record)      << endl;
-    cout << "Multiple " << hasFlagMultiple(record)  << endl;
-    cout << "NextRC " << hasFlagNextRC(record)    << endl;
-    cout << "NextUnmapped " << hasFlagNextUnmapped(record) << endl;
-    cout << "QCNoPass " << hasFlagQCNoPass(record)  << endl;
-    cout << "RC " << hasFlagRC(record)        << endl;
-    cout << "Secondary " << hasFlagSecondary(record) << endl;
-    cout << "Unmapped " << hasFlagUnmapped(record)  << endl;
-
-    if(hasFlagUnmapped(record) || hasFlagQCNoPass(record)) continue;
-    Fragment flag(record);
-    if(frag.fraglen > values["maxins"].as<int>() && frag.fraglen < 0) continue;
+    /*    BamAlignmentRecord record;
+    while(!atEnd(bamFileIn)) {
+      readRecord(record, bamFileIn);
+      
+      cout << "AllProper " << hasFlagAllProper(record) << endl;
+      cout << "Duplicate " << hasFlagDuplicate(record) << endl;
+      cout << "First " << hasFlagFirst(record)     << endl;
+      cout << "Last " << hasFlagLast(record)      << endl;
+      cout << "Multiple " << hasFlagMultiple(record)  << endl;
+      cout << "NextRC " << hasFlagNextRC(record)    << endl;
+      cout << "NextUnmapped " << hasFlagNextUnmapped(record) << endl;
+      cout << "QCNoPass " << hasFlagQCNoPass(record)  << endl;
+      cout << "RC " << hasFlagRC(record)        << endl;
+      cout << "Secondary " << hasFlagSecondary(record) << endl;
+      cout << "Unmapped " << hasFlagUnmapped(record)  << endl;
+      
+      if(hasFlagUnmapped(record) || hasFlagQCNoPass(record)) continue;
+      FragmentData flag(record);
+      if(frag.fraglen > values["maxins"].as<int>() && frag.fraglen < 0) continue;
+      nreads++;
+      }*/
   }
-  */
+  catch (Exception const & e) {
+    cout << "ERROR: " << e.what() << endl;
+    exit(1);
+  }
+
   return;
 }
 
