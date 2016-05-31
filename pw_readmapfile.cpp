@@ -46,7 +46,6 @@ void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
   }
 
   FragmentStore<> fragStore;
-  //  int nreads(0);
   try {
     // Copy header
     /* BamHeader header;
@@ -58,8 +57,17 @@ void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
      }*/
     readRecords(fragStore, bamFileIn);
     uint nreads = length(fragStore.alignedReadStore);
-    cout << nreads << endl;
-    
+    cout << "loaded " << nreads << " mapped reads\n" << endl;
+
+    for (uint i=0; i<nreads; ++i) {
+      cout << fragStore.alignedReadStore[i].beginPos<< endl;
+      cout << fragStore.alignedReadStore[i].contigId<< endl;
+      cout << fragStore.alignedReadStore[i].endPos<< endl;
+      cout << fragStore.alignedReadStore[i].id<< endl;
+      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
+      cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
+      cout << fragStore.alignedReadStore[i].readId<< endl;
+    }
     /*    BamAlignmentRecord record;
     while(!atEnd(bamFileIn)) {
       readRecord(record, bamFileIn);
