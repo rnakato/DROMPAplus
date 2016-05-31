@@ -1,30 +1,35 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
+
+#define SEQAN_HAS_ZLIB 1
+
 #include <boost/algorithm/string.hpp>
-#include <seqan/bam_io.h>
-#include <seqan/store.h>
 #include "pw_gv.h"
 #include "pw_readmapfile.h"
 #include "util.h"
 #include "macro.h"
+#include <zlib.h>
+#include <seqan/bam_io.h>
+#include <seqan/store.h>
 
 using namespace boost::program_options;
 using namespace seqan;
 
-/*class FragmentData{
+class FragmentSingle {
 public:
-  string name;
-  int chr_F3, chr_F5;
-  int F3, F5;
+  CharString name;
+  int chr_F3;
+  int F3;
   Strand strand;
   int fraglen;
-  int readlen_F3, readlen_F5;
+  int readlen_F3;
   //  short num_multimapped;
-  FragmentData(const BamAlignmentRecord &record):
-    name(record.qName), chr_F3(record.rID)
-    //    readlen_F3(length(record.seq))
-    //    fraglen(record.tLen)
+  FragmentSingle(const BamAlignmentRecord &record):
+    name(record.qName),
+    chr_F3(record.rID),
+    fraglen(record.tLen),
+    readlen_F3(length(record.seq))
   {
     if(hasFlagRC(record)) {
       strand = STRAND_MINUS;
@@ -34,7 +39,21 @@ public:
       F3 = record.beginPos;
     }
   }
-  };*/
+  void print() {
+    cout << name << ", " << chr_F3 << ", " << strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+  }
+};
+
+class FragmentPair: public FragmentSingle {
+public:
+  int chr_F5;
+  int F5;
+  int readlen_F5;
+  //  short num_multimapped;
+  FragmentPair(const BamAlignmentRecord &record):
+    FragmentSingle(record)
+  {}
+};
 
 void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
 {
@@ -45,34 +64,31 @@ void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
     exit(1);
   }
 
+  int nreads(0);
   FragmentStore<> fragStore;
   try {
-    // Copy header
-    /* BamHeader header;
-       readHeader(header, bamFileIn);
-       int chr_num=length(header.sequenceInfos);
-       for(int i=0; i<chr_num; ++i) {
-       cout << header.sequenceInfos[i].i1 << endl; // name
-       cout << header.sequenceInfos[i].i2 << endl; // length
-     }*/
-    readRecords(fragStore, bamFileIn);
-    uint nreads = length(fragStore.alignedReadStore);
-    cout << "loaded " << nreads << " mapped reads\n" << endl;
+     BamHeader header;
+     readHeader(header, bamFileIn);
+    
+    //    readRecords(fragStore, bamFileIn);
+    // uint nreads2 = length(fragStore.alignedReadStore);
+    // cout << "loaded " << nreads2 << " mapped reads\n" << endl;
 
-    for (uint i=0; i<nreads; ++i) {
+    /*   for (uint i=0; i<nreads; ++i) {
       cout << fragStore.alignedReadStore[i].beginPos<< endl;
       cout << fragStore.alignedReadStore[i].contigId<< endl;
       cout << fragStore.alignedReadStore[i].endPos<< endl;
       cout << fragStore.alignedReadStore[i].id<< endl;
-      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
-      cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
+      //      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
+      //cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
       cout << fragStore.alignedReadStore[i].readId<< endl;
-    }
-    /*    BamAlignmentRecord record;
+      //      FragmentData flag(fragStore.alignedReadStore[i]);
+      }*/
+    BamAlignmentRecord record;
     while(!atEnd(bamFileIn)) {
       readRecord(record, bamFileIn);
-      
-      cout << "AllProper " << hasFlagAllProper(record) << endl;
+
+      /*cout << "AllProper " << hasFlagAllProper(record) << endl;
       cout << "Duplicate " << hasFlagDuplicate(record) << endl;
       cout << "First " << hasFlagFirst(record)     << endl;
       cout << "Last " << hasFlagLast(record)      << endl;
@@ -82,18 +98,21 @@ void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
       cout << "QCNoPass " << hasFlagQCNoPass(record)  << endl;
       cout << "RC " << hasFlagRC(record)        << endl;
       cout << "Secondary " << hasFlagSecondary(record) << endl;
-      cout << "Unmapped " << hasFlagUnmapped(record)  << endl;
-      
+      cout << "Unmapped " << hasFlagUnmapped(record)  << endl;*/
+
       if(hasFlagUnmapped(record) || hasFlagQCNoPass(record)) continue;
-      FragmentData flag(record);
+      FragmentSingle frag(record);
       if(frag.fraglen > values["maxins"].as<int>() && frag.fraglen < 0) continue;
+      frag.print();
       nreads++;
-      }*/
+     }
   }
   catch (Exception const & e) {
     cout << "ERROR: " << e.what() << endl;
     exit(1);
   }
+
+  cout << "loaded " << nreads << " mapped reads\n" << endl;
 
   return;
 }

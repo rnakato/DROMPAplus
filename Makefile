@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS += -std=c++11 -Wall -O2 -Iutil -Iseqan-library-2.1.1
-LIBS += -lboost_program_options -lboost_system -lboost_filesystem
+CFLAGS += -std=c++11 -Wall -O2 -Iutil 
+LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lpthread -lz
 TARGET = parse2wig+ drompa+
 SRCDIR = util
 
@@ -33,6 +33,9 @@ parse2wig+: $(OBJS_PW)
 
 drompa+: $(OBJS_DD)
 	$(CC) -o $@ $(OBJS_UTIL) $^ $(LIBS)
+
+pw_readmapfile.o: pw_readmapfile.cpp
+	$(CC) -c $< $(CFLAGS) -Iseqan-library-2.1.1
 
 .SUFFIXES: .o .cpp
 .cpp.o:
