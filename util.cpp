@@ -3,8 +3,6 @@
  */
 
 #include "util.h"
-#define PRINTERR(...)   do{ cerr << "Error: " << __VA_ARGS__ << endl; exit(1); }while(0)
-
 
 void isFile(string str)
 {
