@@ -71,6 +71,25 @@ void printRecord(BamAlignmentRecord record)
   cout << "Unmapped " << hasFlagUnmapped(record)  << endl;
 }
 
+void useFragStore(BamFileIn bamFileIn){
+  FragmentStore<> fragStore;
+  readRecords(fragStore, bamFileIn);
+  uint nreads = length(fragStore.alignedReadStore);
+  cout << "loaded " << nreads << " mapped reads\n" << endl;
+
+  for (uint i=0; i<nreads; ++i) {
+    cout << fragStore.alignedReadStore[i].beginPos<< endl;
+    cout << fragStore.alignedReadStore[i].contigId<< endl;
+    cout << fragStore.alignedReadStore[i].endPos<< endl;
+    cout << fragStore.alignedReadStore[i].id<< endl;
+    //      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
+    //cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
+    cout << fragStore.alignedReadStore[i].readId<< endl;
+    //      FragmentData flag(fragStore.alignedReadStore[i]);
+  }
+  return;
+}
+
 vector<FragmentSingle> do_bampe(const variables_map &values, BamFileIn & bamFileIn)
 {
   vector<FragmentSingle> vFrag;
@@ -110,25 +129,6 @@ vector<FragmentSingle> do_bamse(const variables_map &values, BamFileIn & bamFile
   }
   cout << "loaded " << nreads << " mapped reads\n" << endl;
   return vFrag;
-}
-
-void useFragStore(BamFileIn bamFileIn){
-  FragmentStore<> fragStore;
-  readRecords(fragStore, bamFileIn);
-  uint nreads2 = length(fragStore.alignedReadStore);
-  cout << "loaded " << nreads2 << " mapped reads\n" << endl;
-
-  /*   for (uint i=0; i<nreads; ++i) {
-       cout << fragStore.alignedReadStore[i].beginPos<< endl;
-       cout << fragStore.alignedReadStore[i].contigId<< endl;
-       cout << fragStore.alignedReadStore[i].endPos<< endl;
-       cout << fragStore.alignedReadStore[i].id<< endl;
-       //      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
-       //cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
-       cout << fragStore.alignedReadStore[i].readId<< endl;
-       //      FragmentData flag(fragStore.alignedReadStore[i]);
-       }*/
-  return;
 }
 
 void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
