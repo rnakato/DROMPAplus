@@ -234,8 +234,13 @@ void init_dump(const variables_map &values){
   BPRINT("\tFormat: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
   BPRINT("Genome-table file: %1%\n") % values["gt"].as<string>();
   BPRINT("Binsize: %1% bp\n")        % values["binsize"].as<int>();
-  if (!values.count("pair")) BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
-  else BPRINT("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
+  if (!values.count("pair")) {
+    cout << "Single-end mode: ";
+    BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
+  } else {
+    cout << "Paired-end mode: ";
+    BPRINT("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
+  }
   if (!values.count("nofilter")) {
     BPRINT("PCR bias filtering: ON\n");
     if (values["thre_pb"].as<int>()) BPRINT("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int>();

@@ -25,12 +25,13 @@ public:
   int fraglen;
   int readlen_F3;
   //  short num_multimapped;
-  FragmentSingle(const BamAlignmentRecord &record):
+  FragmentSingle(const BamAlignmentRecord &record, int flen=0):
     name(record.qName),
     chr_F3(record.rID),
-    fraglen(record.tLen),
+    fraglen(flen),
     readlen_F3(length(record.seq))
   {
+    if(!fraglen) fraglen = abs(record.tLen);
     if(hasFlagRC(record)) {
       strand = STRAND_MINUS;
       F3 = record.beginPos + length(record.seq) -1;
@@ -40,7 +41,7 @@ public:
     }
   }
   void print() {
-    cout << name << ", " << chr_F3 << ", " << strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+    cout << name << ", " << chr_F3 << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
   }
 };
 
@@ -55,6 +56,81 @@ public:
   {}
 };
 
+void printRecord(BamAlignmentRecord record)
+{
+  cout << "AllProper " << hasFlagAllProper(record) << endl;
+  cout << "Duplicate " << hasFlagDuplicate(record) << endl;
+  cout << "First " << hasFlagFirst(record)     << endl;
+  cout << "Last " << hasFlagLast(record)      << endl;
+  cout << "Multiple " << hasFlagMultiple(record)  << endl;
+  cout << "NextRC " << hasFlagNextRC(record)    << endl;
+  cout << "NextUnmapped " << hasFlagNextUnmapped(record) << endl;
+  cout << "QCNoPass " << hasFlagQCNoPass(record)  << endl;
+  cout << "RC " << hasFlagRC(record)        << endl;
+  cout << "Secondary " << hasFlagSecondary(record) << endl;
+  cout << "Unmapped " << hasFlagUnmapped(record)  << endl;
+}
+
+vector<FragmentSingle> do_bampe(const variables_map &values, BamFileIn & bamFileIn)
+{
+  vector<FragmentSingle> vFrag;
+  int nreads(0);
+  int maxins(values["maxins"].as<int>());
+  BamAlignmentRecord record;
+  while(!atEnd(bamFileIn)) {
+    readRecord(record, bamFileIn);
+    //      printRecord(record);
+    if(!hasFlagAllProper(record) || hasFlagLast(record)) continue;
+    FragmentSingle frag(record);
+    //    frag.print();
+    if(frag.fraglen > maxins) continue;
+    nreads++;
+    vFrag.push_back(frag);
+  }
+  cout << "loaded " << nreads << " mapped reads\n" << endl;
+  return vFrag;
+}
+
+vector<FragmentSingle> do_bamse(const variables_map &values, BamFileIn & bamFileIn)
+{
+  vector<FragmentSingle> vFrag;
+  int nreads(0);
+  int flen = values["flen"].as<int>();
+  BamAlignmentRecord record;
+  while(!atEnd(bamFileIn)) {
+    readRecord(record, bamFileIn);
+    //      printRecord(record);
+    
+    if(hasFlagUnmapped(record) || hasFlagQCNoPass(record)) continue;
+    if(hasFlagFirst(record) || hasFlagLast(record)) cerr << "Warning: parsing paired-end file as single-end." << endl;
+    FragmentSingle frag(record, flen);  ////// fraglenを推定することにすれば？？？？
+    //    frag.print();
+    nreads++;
+    vFrag.push_back(frag);
+  }
+  cout << "loaded " << nreads << " mapped reads\n" << endl;
+  return vFrag;
+}
+
+void useFragStore(BamFileIn bamFileIn){
+  FragmentStore<> fragStore;
+  readRecords(fragStore, bamFileIn);
+  uint nreads2 = length(fragStore.alignedReadStore);
+  cout << "loaded " << nreads2 << " mapped reads\n" << endl;
+
+  /*   for (uint i=0; i<nreads; ++i) {
+       cout << fragStore.alignedReadStore[i].beginPos<< endl;
+       cout << fragStore.alignedReadStore[i].contigId<< endl;
+       cout << fragStore.alignedReadStore[i].endPos<< endl;
+       cout << fragStore.alignedReadStore[i].id<< endl;
+       //      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
+       //cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
+       cout << fragStore.alignedReadStore[i].readId<< endl;
+       //      FragmentData flag(fragStore.alignedReadStore[i]);
+       }*/
+  return;
+}
+
 void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
 {
   CharString filename(inputfile);
@@ -64,56 +140,20 @@ void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
     exit(1);
   }
 
-  int nreads(0);
-  FragmentStore<> fragStore;
   try {
-     BamHeader header;
-     readHeader(header, bamFileIn);
+    // useFragStore(bamFileIn);
+    BamHeader header;
+    readHeader(header, bamFileIn);
     
-    //    readRecords(fragStore, bamFileIn);
-    // uint nreads2 = length(fragStore.alignedReadStore);
-    // cout << "loaded " << nreads2 << " mapped reads\n" << endl;
-
-    /*   for (uint i=0; i<nreads; ++i) {
-      cout << fragStore.alignedReadStore[i].beginPos<< endl;
-      cout << fragStore.alignedReadStore[i].contigId<< endl;
-      cout << fragStore.alignedReadStore[i].endPos<< endl;
-      cout << fragStore.alignedReadStore[i].id<< endl;
-      //      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
-      //cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
-      cout << fragStore.alignedReadStore[i].readId<< endl;
-      //      FragmentData flag(fragStore.alignedReadStore[i]);
-      }*/
-    BamAlignmentRecord record;
-    while(!atEnd(bamFileIn)) {
-      readRecord(record, bamFileIn);
-
-      /*cout << "AllProper " << hasFlagAllProper(record) << endl;
-      cout << "Duplicate " << hasFlagDuplicate(record) << endl;
-      cout << "First " << hasFlagFirst(record)     << endl;
-      cout << "Last " << hasFlagLast(record)      << endl;
-      cout << "Multiple " << hasFlagMultiple(record)  << endl;
-      cout << "NextRC " << hasFlagNextRC(record)    << endl;
-      cout << "NextUnmapped " << hasFlagNextUnmapped(record) << endl;
-      cout << "QCNoPass " << hasFlagQCNoPass(record)  << endl;
-      cout << "RC " << hasFlagRC(record)        << endl;
-      cout << "Secondary " << hasFlagSecondary(record) << endl;
-      cout << "Unmapped " << hasFlagUnmapped(record)  << endl;*/
-
-      if(hasFlagUnmapped(record) || hasFlagQCNoPass(record)) continue;
-      FragmentSingle frag(record);
-      if(frag.fraglen > values["maxins"].as<int>() && frag.fraglen < 0) continue;
-      frag.print();
-      nreads++;
-     }
+    vector<FragmentSingle> vFrag;
+    if (values.count("pair")) vFrag = do_bampe(values, bamFileIn);
+    else vFrag = do_bamse(values, bamFileIn);
+    cout << "loaded " << vFrag.size() << " mapped reads\n" << endl;
   }
   catch (Exception const & e) {
     cout << "ERROR: " << e.what() << endl;
     exit(1);
   }
-
-  cout << "loaded " << nreads << " mapped reads\n" << endl;
-
   return;
 }
 
