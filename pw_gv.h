@@ -5,7 +5,8 @@
 #define _PW_GV_H_
 
 #include "seq.h"
-#include <seqan/bam_io.h>
+//#include <seqan/bam_io.h>
+#include <map>
 
 /* default parameter */
 #define FRAGMENT_LEN 150
@@ -52,20 +53,6 @@ class CompStats{
   int tv;
 };
 
-/*typedef struct{
-  SeqStats *genome, *chr;
-  Readarray **readarray;
-  FragStats fstats;
-  WigStats wstats;
-  CompStats cs_raw, cs_nonred;
-  int threshold4filtering;
-
-  int *GCdist;
-  int maxGC;
-  int sum_GCdist;
-  double *GCweight;
-} Mapfile;*/
-
 class Dist{
  public:
   vector<int> readlen;
@@ -85,54 +72,38 @@ class Dist{
 
 class FragmentSingle {
 public:
-  seqan::CharString name;
-  int chr;
+  string name;
+  string chr;
   int F3;
   Strand strand;
   int fraglen;
   int readlen_F3;
 
- FragmentSingle(vector<string> v, int flen=0)
-  {
-    /*    sv = atoi(v[1]); // bitwise FLAG
-#ifdef READSV
-    if(check_sv(sv, p, clm[0].str)) continue;
-#else
-    if(check_sv(sv, p)) continue;
-#endif
-string chr = addchr(v[2]);*/
-  }
- FragmentSingle(const seqan::BamAlignmentRecord &record, int flen=0):
-  name(record.qName),
-    chr(record.rID),
-    fraglen(flen),
-    readlen_F3(length(record.seq))
-  {
-    if(!fraglen) fraglen = abs(record.tLen);
-    if(hasFlagRC(record)) {
-      strand = STRAND_MINUS;
-      F3 = record.beginPos + length(record.seq) -1;
-    } else {
-      strand = STRAND_PLUS;
-      F3 = record.beginPos;
+ FragmentSingle(vector<string> v, int flen=0):
+  name(v[0]), chr(v[2]), fraglen(flen), readlen_F3(v[9].length())
+    {
+      if(!fraglen) fraglen = abs(stoi(v[8]));
+      int sv = stoi(v[1]); // bitwise FLAG
+      if(sv&16) {
+	strand = STRAND_MINUS;
+	F3 = stoi(v[3]) + readlen_F3 -1;
+      } else {
+	strand = STRAND_PLUS;
+	F3 = stoi(v[3]);
+      }
     }
-  }
   void print() {
-    //    cout << name << ", " << chr_F3 << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
-    cout << chr << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+    cout << name << ", " << chr << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
   }
 };
 
-class FragmentPair: public FragmentSingle {
+/*class FragmentPair: public FragmentSingle {
 public:
   int chr_F5;
   int F5;
   int readlen_F5;
-  //  short num_multimapped;
- FragmentPair(const seqan::BamAlignmentRecord &record):
-    FragmentSingle(record)
-  {}
-};
+  FragmentPair() {}
+  };*/
 
 class Read {
  public:
@@ -160,6 +131,7 @@ class strandData {
 
 class SeqStats {
  public:
+  string name;
   strandData seq[STRANDNUM];
   double depth;
   double w;
@@ -167,7 +139,7 @@ class SeqStats {
   long nread_inbed;
   double FRiP;
   
- SeqStats(): depth(0), w(0), nread_inbed(0), FRiP(0) {}
+ SeqStats(string s): name(s), depth(0), w(0), nread_inbed(0), FRiP(0) {}
   void addfrag(const FragmentSingle &frag) {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
@@ -194,14 +166,23 @@ public:
   SeqStats genome;
   vector<SeqStats> chr;
 
-  Mapfile(const RefGenome &g) {
-    vector<SeqStats> v(g.chrnum);
-    chr = v;
+ Mapfile(const RefGenome &g): genome("genome") {
+    for(auto x:g.chr) {
+      SeqStats s(x.name);
+      chr.push_back(s);
+    }
   }
   void addfrag(const FragmentSingle &frag) {
     dist.readlen[frag.readlen_F3]++;
     dist.fraglen[frag.fraglen]++;
-    chr[frag.chr].addfrag(frag);
+    int on(0);
+    for(auto &x:chr) {
+      if(x.name == frag.chr) {
+	x.addfrag(frag);
+	on++;
+      }
+    }
+    if(!on) cerr << "Warning: " << frag.chr << " is not in genometable." << endl;
   }
   void update() {
     for (auto x:chr) {
