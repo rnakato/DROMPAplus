@@ -120,8 +120,9 @@ void compare_tss(cmdline::parser p,
   accumulator_set<double, stats<tag::mean, tag::variance>> vn1, vn5, vn10, vn100, vnover100;
   vector<string> vgname = scanGeneName(mp);
   int max = p.get<int>("permutation");
+  cout << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
-    cout << "random " << i << endl;
+    cout << i << ".." << flush;
     auto rmp = generate_rand(p, mp, vgname, vbed, n_emp);
     tssdist d_rand = func(p, rmp, vbed);
     vn1(d_rand.n1);
@@ -133,6 +134,7 @@ void compare_tss(cmdline::parser p,
   }
   //  d_list.print();
   cout << "gene num: " << n_emp << endl;  
+  cout << "\t<1k\t1k~5k\t5k~10k\t10k~100k\t100k~"  << endl;
   cout << "list\t" << d_list.n1 << "\t" << d_list.n5 << "\t" << d_list.n10 << "\t" << d_list.n100 << "\t" << d_list.nover100 << endl;
   cout << "mean\t" << mean(vn1) << "\t" << mean(vn5) << "\t" << mean(vn10) << "\t" << mean(vn100) << "\t" << mean(vnover100) << endl;
   cout << "SD\t" << sqrt(variance(vn1)) << "\t" << sqrt(variance(vn5)) << "\t" << sqrt(variance(vn10)) << "\t" << sqrt(variance(vn100)) << "\t" << sqrt(variance(vnover100)) << endl;
