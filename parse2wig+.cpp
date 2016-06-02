@@ -89,10 +89,7 @@ variables_map getOpts(int argc, char* argv[])
     }
     vector<string> opts = {"input", "output", "gt"};
     for (auto x: opts) {
-      if (!values.count(x)) {
-	cerr << "Error: specify --" << x << " option." << endl;
-	exit(1);
-      }
+      if (!values.count(x)) PRINTERR("specify --" << x << " option.");
     }
 
     notify(values);

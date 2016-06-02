@@ -18,18 +18,20 @@ using namespace seqan;
 
 class FragmentSingle {
 public:
-  CharString name;
+  //  CharString name;
   int chr_F3;
   int F3;
   Strand strand;
   int fraglen;
   int readlen_F3;
+  int duplicate;
   //  short num_multimapped;
   FragmentSingle(const BamAlignmentRecord &record, int flen=0):
-    name(record.qName),
+    //   name(record.qName),
     chr_F3(record.rID),
     fraglen(flen),
-    readlen_F3(length(record.seq))
+    readlen_F3(length(record.seq)),
+    duplicate(0)
   {
     if(!fraglen) fraglen = abs(record.tLen);
     if(hasFlagRC(record)) {
@@ -41,7 +43,8 @@ public:
     }
   }
   void print() {
-    cout << name << ", " << chr_F3 << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+    //    cout << name << ", " << chr_F3 << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+    cout << chr_F3 << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
   }
 };
 
@@ -90,10 +93,8 @@ void useFragStore(BamFileIn bamFileIn){
   return;
 }
 
-vector<FragmentSingle> do_bampe(const variables_map &values, BamFileIn & bamFileIn)
+void do_bampe(const variables_map &values, vector<FragmentSingle> &vFrag, BamFileIn & bamFileIn)
 {
-  vector<FragmentSingle> vFrag;
-  int nreads(0);
   int maxins(values["maxins"].as<int>());
   BamAlignmentRecord record;
   while(!atEnd(bamFileIn)) {
@@ -103,17 +104,13 @@ vector<FragmentSingle> do_bampe(const variables_map &values, BamFileIn & bamFile
     FragmentSingle frag(record);
     //    frag.print();
     if(frag.fraglen > maxins) continue;
-    nreads++;
     vFrag.push_back(frag);
   }
-  cout << "loaded " << nreads << " mapped reads\n" << endl;
-  return vFrag;
+  return;
 }
 
-vector<FragmentSingle> do_bamse(const variables_map &values, BamFileIn & bamFileIn)
+void do_bamse(const variables_map &values, vector<FragmentSingle> &vFrag, BamFileIn & bamFileIn)
 {
-  vector<FragmentSingle> vFrag;
-  int nreads(0);
   int flen = values["flen"].as<int>();
   BamAlignmentRecord record;
   while(!atEnd(bamFileIn)) {
@@ -121,62 +118,53 @@ vector<FragmentSingle> do_bamse(const variables_map &values, BamFileIn & bamFile
     //      printRecord(record);
     
     if(hasFlagUnmapped(record) || hasFlagQCNoPass(record)) continue;
-    if(hasFlagFirst(record) || hasFlagLast(record)) cerr << "Warning: parsing paired-end file as single-end." << endl;
+    if(hasFlagFirst(record) || hasFlagLast(record))
+      cerr << "Warning: parsing paired-end file as single-end." << endl;
     FragmentSingle frag(record, flen);  ////// fraglenを推定することにすれば？？？？
     //    frag.print();
-    nreads++;
     vFrag.push_back(frag);
   }
-  cout << "loaded " << nreads << " mapped reads\n" << endl;
-  return vFrag;
+  return;
 }
 
-void parse_sam(const variables_map &values, string inputfile, RefGenome &g)
+void parse_sam(const variables_map &values, string inputfile, vector<FragmentSingle> &vFrag, RefGenome &g)
 {
   CharString filename(inputfile);
   BamFileIn bamFileIn;
-  if (!open(bamFileIn, toCString(filename))) {
-    cerr << "ERROR: Could not open " << filename << endl;
-    exit(1);
-  }
+  if (!open(bamFileIn, toCString(filename))) PRINTERR("Could not open " << filename);
 
   try {
     // useFragStore(bamFileIn);
     BamHeader header;
     readHeader(header, bamFileIn);
-    
-    vector<FragmentSingle> vFrag;
-    if (values.count("pair")) vFrag = do_bampe(values, bamFileIn);
-    else vFrag = do_bamse(values, bamFileIn);
-    cout << "loaded " << vFrag.size() << " mapped reads\n" << endl;
+
+    if (values.count("pair")) do_bampe(values, vFrag, bamFileIn);
+    else do_bamse(values, vFrag, bamFileIn);
   }
   catch (Exception const & e) {
-    cout << "ERROR: " << e.what() << endl;
-    exit(1);
+    PRINTERR(e.what());
   }
   return;
 }
 
-void do_parse(const variables_map &values, string inputfile, RefGenome &g){
-  isFile(inputfile);
-  BPRINT("Parsing %1%...\n") % inputfile;
-
-  string ftype = values["ftype"].as<string>();
-  if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, g);
-  //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
-  // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
-
-  printf("done.\n");
-}
-
 void read_mapfile(const variables_map &values, RefGenome &g){
+  vector<FragmentSingle> vFrag;
+
   vector<string> v;
   boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
-  for(auto x:v) do_parse(values, x, g);
+  for(auto inputfile: v) {
+    isFile(inputfile);
+    BPRINT("Parsing %1%...\n") % inputfile;
+    string ftype = values["ftype"].as<string>();
+    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, vFrag, g);
+    //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
+    // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
+    printf("done.\n");
+  }
+
+  cout << "loaded " << vFrag.size() << " mapped reads\n" << endl;
   
-  /*  Mapfile *mapfile = mapfile_new(g->chrnum, p);
-  
-  add_SeqStats_to_genome(mapfile, g);
+  /*  add_SeqStats_to_genome(mapfile, g);
   output_read_fragment_distribution(p, mapfile);*/  /* output distributions of read length and fragment length */
 
   return;

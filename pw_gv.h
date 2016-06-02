@@ -51,33 +51,13 @@ class WigStats{
   WigStatsMember *genome, *chr;
 };
 
-class seq{
-  long n_read_infile;     /* allow multiread (-kn) */
-  long double n_readname; /* number of unique readname */
-  long n_read_nonred;     /* number of nonredundant reads (use as "reads number") */
-  long n_read_rpkm;       /* number of reads after normalization (n_read_nonred * rpkm weight) */
-  long n_read_red;        /* number of redundant reads (filtered as PCR bias) */
-  double n_read_afterGC;  /* number of reads after GC normalization */
-};
-
-class SeqStats{
-  seq single[STRANDNUM];
-  seq both;
-  double depth;
-  double w;
-  
-  /* FRiP */
-  long n_read_inbed;
-  double FRiP;
-};
-
 class CompStats{
   int nt_all, nt_nonred, nt_red; 
   double complexity;
   int tv;
 };
 
-typedef struct{
+/*typedef struct{
   SeqStats *genome, *chr;
   Readarray **readarray;
   FragStats fstats;
@@ -85,11 +65,40 @@ typedef struct{
   CompStats cs_raw, cs_nonred;
   int threshold4filtering;
 
-  /* for GC*/
   int *GCdist;
   int maxGC;
   int sum_GCdist;
   double *GCweight;
-} Mapfile;
+} Mapfile;*/
+
+class strandStats {
+public:
+  long nread;
+  long nread_nonred;
+  long nread_red;
+  double nread_rpm;
+  double nread_afterGC;
+  strandStats(): nread(0), nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
+};
+
+class ChrStats {
+public:
+  strandStats seq[STRANDNUM];
+  strandStats both;
+  double depth;
+  double w;
+
+  /* FRiP */
+  long nread_inbed;
+  double FRiP;
+ ChrStats(): depth(0), w(0), nread_inbed(0), FRiP(0) {}
+};
+
+class SeqStats {
+  ChrStats genome;
+  vector<ChrStats> chr;
+};
+
+
 
 #endif /* _PW_GV_H_ */

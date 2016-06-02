@@ -11,6 +11,8 @@
 using namespace std;
 using namespace boost::program_options;
 
+#define PRINTERR(...)   do{ cerr << "Error: " << __VA_ARGS__ << endl; exit(1); }while(0)
+
 template <class T>
 void chkminus(const variables_map &values, string x, int lim)
 {
