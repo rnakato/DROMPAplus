@@ -132,13 +132,8 @@ int main(int argc, char* argv[])
     
   /* read mapfile */
   read_mapfile(values, g);
-  //  Mapfile *mapfile = read_mapfile(p, g);
   
-  /* PCR bias filtering and ignore enrichregions */
-  /*check_redundant_reads(p, mapfile, g);
-  add_read_red_to_genome(mapfile, g);
-
-  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);
+  /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);
 
   if(p->bedfilename) calc_FRiP(p, mapfile, g);*/
 

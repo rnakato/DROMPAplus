@@ -7,6 +7,8 @@
 #include "seq.h"
 //#include <seqan/bam_io.h>
 #include <map>
+#include <fstream>
+#include <boost/format.hpp>
 
 /* default parameter */
 #define FRAGMENT_LEN 150
@@ -56,17 +58,45 @@ class CompStats{
 class Dist{
  public:
   vector<int> readlen;
+  vector<int> readlen_F5;
   vector<int> fraglen; /* +1: over DIST_FRAGLEN_MAX */
-  Dist() {
+  int eflen;
+ Dist(): eflen(0){
     vector<int> v(DIST_READLEN_MAX,0);
     readlen = v;
-    vector<int> v2(DIST_FRAGLEN_MAX,0);
-    fraglen = v2;
+    vector<int> v2(DIST_READLEN_MAX,0);
+    readlen_F5 = v2;
+    vector<int> v3(DIST_FRAGLEN_MAX,0);
+    fraglen = v3;
   }
-  void print() {
-    int i;
-    for(i=0; i<DIST_READLEN_MAX; ++i) if(readlen[i]) cout << i << "\t" << readlen[i]<< endl;
-    for(i=0; i<DIST_FRAGLEN_MAX; ++i) if(fraglen[i]) cout << i << "\t" << fraglen[i]<< endl;
+  void printReadlen(string &outputfile, bool pair) {
+    long sum(0);
+    for(int i=0; i<DIST_READLEN_MAX; ++i) sum += readlen[i];
+    ofstream out(outputfile);
+    out << "F3 read length distribution" << endl;
+    out << "length\tread number\tproportion" << endl;
+    for(int i=0; i<DIST_READLEN_MAX; ++i) if(readlen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen[i] % (readlen[i]/(double)sum);
+
+    if(pair) {
+      out << "\n\nF5 read length distribution" << endl;
+      out << "length\tread number\tproportion" << endl;
+      for(int i=0; i<DIST_READLEN_MAX; ++i) if(readlen_F5[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen_F5[i] % (readlen_F5[i]/(double)sum);
+    }
+  }
+
+  void printFraglen(string &outputfile) {
+    int flen_max=0;
+    long sum(0);
+    for(int i=0; i<DIST_FRAGLEN_MAX; ++i) {
+      if(flen_max < fraglen[i]){
+	flen_max = fraglen[i];
+	eflen = i;
+      }
+      sum += readlen[i];
+    }
+    ofstream out(outputfile);
+    out << "length\tread number\tproportion" << endl;
+    for(int i=0; i<DIST_FRAGLEN_MAX; ++i) if(fraglen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % fraglen[i] % (fraglen[i]/(double)sum);
   }
 };
 
@@ -166,11 +196,20 @@ public:
   SeqStats genome;
   vector<SeqStats> chr;
 
- Mapfile(const RefGenome &g): genome("genome") {
+  // PCR bias
+  int thre4filtering;
+  int nt_all, nt_nonred, nt_red;
+  int tv;
+  double r4cmp;
+
+ Mapfile(const RefGenome &g): genome("genome"), nt_all(0), nt_nonred(0), nt_red(0) {
     for(auto x:g.chr) {
       SeqStats s(x.name);
       chr.push_back(s);
     }
+  }
+  void addF5(const int readlen_F5) {
+    dist.readlen_F5[readlen_F5]++;
   }
   void addfrag(const FragmentSingle &frag) {
     dist.readlen[frag.readlen_F3]++;
@@ -193,6 +232,9 @@ public:
     long n(0);
     for (auto x:chr) n += x.bothnread();
     return n;
+  }
+  double complexity() {
+    return nt_nonred/(double)nt_all;
   }
 };
 
