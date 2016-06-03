@@ -110,6 +110,55 @@ RefGenome makeRefGenome(variables_map values)
   return g;
 }
 
+vector<int> make_wigarray(const variables_map &values, SeqStats &chr, RefGenome &g){
+  int i,j, s, e, sbin, ebin, readnum;
+  double w;
+  vector<int> wigarray(p->binnum_chr[chr],0);
+  Strand strand;
+
+  for(strand=0; strand<STRANDNUM; strand++){
+    readnum = mapfile->chr[chr].seq[strand].n_read_infile;
+    for(i=0; i<readnum; i++){
+      if(mapfile->readarray[chr][strand].delete[i]) continue;
+      define_s_e(p, mapfile, g, &s, &e, &w, chr, strand, i);  /* define start and end position and weight of a fragment */
+      sbin = s/p->binsize;
+      ebin = e/p->binsize;
+      for(j=sbin; j<=ebin; j++) wigarray[j] += VALUE2WIGARRAY(w);
+    }
+  }
+
+  /* free mapfile*/
+  if(free) free_mapfile_chr(p, mapfile, chr);
+
+  return wigarray;
+}
+
+void makewig(const variables_map &values, Mapfile &p, RefGenome &g)
+{
+  int chr;
+  printf("Convert read data to array: \n");
+
+  /*  p.wstats.thre = define_wstats_thre(p, mapfile, g);
+  p.wstats.n_darray = max(NUM_DARRAY, p.wstats.thre);
+  p.wstats.genome->darray_all = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.genome->darray_all");
+  p.wstats.genome->darray_bg  = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.genome->darray_bg");
+  for(chr=1; chr<g->chrnum; chr++){
+    p.wstats.chr[chr].darray_all = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.chr[chr]->darray_all");
+    p.wstats.chr[chr].darray_bg  = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.chr[chr]->darray_bg");
+    }*/
+
+  //  for(chr=1; chr<g->chrnum; chr++) makewig_chr(p, mapfile, g, chr);
+  for(auto chr: p.chr) {
+    vector<int> wigarray = make_wigarray(values, chr, g);
+    output_bindata(p->output_dir, p->output_prefix, g, wigarray, p->gtfile, p->binsize, p->binnum_chr[chr], chr, p->wtype);
+  }
+  printf("done.\n");
+  return;
+}
+
+
+
+
 int main(int argc, char* argv[])
 {
   variables_map values = getOpts(argc, argv);
@@ -131,20 +180,18 @@ int main(int argc, char* argv[])
   }*/
     
   /* read mapfile */
-  read_mapfile(values, g);
+  Mapfile p(g);
+  read_mapfile(values, p, g);
   
   /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);
 
   if(p->bedfilename) calc_FRiP(p, mapfile, g);*/
 
-  /* calculate depth */
-  //  calc_depth(p, mapfile, g);
-
   /* GC normalization */
   //if(p->genomefile) GCnorm(p, mapfile, g);
 
   /* make and output wigdata */
-  //makewig(p, mapfile, g);
+  makewig(values, mapfile, g);
 
   /* output wigarray_stats, 
      calculate genome coverage */

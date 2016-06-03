@@ -13,6 +13,13 @@
 
 using namespace boost::program_options;
 
+void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g);
+void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
+void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
+void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre);
+void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData &seq, const int thre);
+
+
 template <class T>
 void do_bampe(const variables_map &values, Mapfile &p, T &in)
 {
@@ -96,105 +103,44 @@ void outputDist(const variables_map &values, Mapfile &p){
   return;
 }
 
-void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq){
-  unordered_map<int, int> mp;
-
-  for(auto x:seq.vRead) {
-    if(mp.find(x.F3) != mp.end()) {
-      if(mp[x.F3] <= p.thre4filtering) {
-	mp[x.F3]++;
-	seq.nread_nonred++;      
-      } else {
-	x.duplicate = 1;
-	seq.nread_red++;
-      }
-    } else {
-      mp[x.F3] = 1;
-      seq.nread_nonred++;
-    }
+void read_mapfile(const variables_map &values, Mapfile &p, RefGenome &g){
+  vector<string> v;
+  boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
+  for(auto inputfile: v) {
+    isFile(inputfile);
+    BPRINT("Parsing %1%...\n") % inputfile;
+    string ftype = values["ftype"].as<string>();
+    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p, g);
+    //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
+    // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
+    printf("done.\n");
   }
 
 #ifdef DEBUG
-  BPRINT("nread: %1%, nonred: %2%, red: %3%\n") %seq.nread() % seq.nread_nonred % seq.nread_red;
+  for (auto x:p.chr) cout<< " loaded " << x.bothnread() << " mapped reads." << endl;
+  cout<< " loaded " << p.nread() << " mapped reads." << endl;
 #endif
 
-  unordered_map<int, int> mp2;
-  for(auto x:seq.vRead) {
-    if(rand() >= p.r4cmp) continue;
-    p.nt_all++;
-    if(mp2.find(x.F3) != mp2.end()) {
-      if(mp2[x.F3] <= p.thre4filtering) {
-	mp2[x.F3]++;
-	p.nt_nonred++;
-      } else {
-	p.nt_red++;
-      }
-    } else {
-      mp2[x.F3] = 1;
-      p.nt_nonred++;
-    }
-  }
+  /* output distributions of read length and fragment length */
+  outputDist(values, p);
+
+  /* PCR bias filtering and ignore enrichregions */
+  check_redundant_reads(values, p, g);  
+  p.update();
+
+  // calculate depth
+  if(values.count("pair")) p.calcdepth(g, p.dist.eflen);
+  else p.calcdepth(g, values["flen"].as<int>());
+
+#ifdef DEBUG
+  p.printstats();
+#endif
 
   return;
 }
 
-void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr){
-  int Fmin, Fmax;
-  unordered_map<string, int> mp;
-  int strand;
-  for(strand=0; strand<STRANDNUM; strand++){
-    //    cout << strand << endl;
-    for(auto x:chr.seq[strand].vRead) {
-      Fmin = min(x.F3, x.F5);
-      Fmax = max(x.F3, x.F5);
-      string str = IntToString(Fmin) + "-" + IntToString(Fmax);
-      //cout << str << endl;
-      if(mp.find(str) != mp.end()) {
-	if(mp[str] <= p.thre4filtering) {
-	  mp[str]++;
-	  chr.seq[strand].nread_nonred++;
-	} else {
-	  x.duplicate = 1;
-	  chr.seq[strand].nread_red++;
-	}
-      } else {
-	mp[str] = 1;
-	chr.seq[strand].nread_nonred++;
-      }
-    }
-  }
-
-#ifdef DEBUG
-  for(strand=0; strand<STRANDNUM; strand++) BPRINT("%4% strand %5% nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread() % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red % chr.name % strand;
-#endif
-
-  unordered_map<string, int> mp2;
-  for(strand=0; strand<STRANDNUM; strand++){
-    for(auto x:chr.seq[strand].vRead) {
-      if(rand() >= p.r4cmp) continue;
-      p.nt_all++;
-      Fmin = min(x.F3, x.F5);
-      Fmax = max(x.F3, x.F5);
-      string str = IntToString(Fmin) + "-" + IntToString(Fmax);
-      if(mp2.find(str) != mp2.end()) {
-	if(mp2[str] <= p.thre4filtering) {
-	  mp2[str]++;
-	  p.nt_nonred++;
-	} else {
-	  p.nt_red++;
-	}
-      } else {
-	mp2[str] = 1;
-	p.nt_nonred++;
-      }
-    }
-  }
-
-  return;
-}
-
-
-void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g){
+void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g)
+{
   int threshold;
   int strand;
   if(values["thre_pb"].as<int>()) threshold = values["thre_pb"].as<int>();
@@ -213,8 +159,7 @@ void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g
   
   // Library complexity
   p.r4cmp = r*RAND_MAX;
-
-  for (auto chr: p.chr) {
+  for (auto &chr: p.chr) {
      cout << chr.name << ".." << flush;
      if (values.count("pair")) filtering_eachchr_pair(values, p, chr);
      else {
@@ -229,43 +174,94 @@ void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g
   return;
 }
 
-
-void read_mapfile(const variables_map &values, RefGenome &g){
-  Mapfile p(g);
-
-  vector<string> v;
-  boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
-  for(auto inputfile: v) {
-    isFile(inputfile);
-    BPRINT("Parsing %1%...\n") % inputfile;
-    string ftype = values["ftype"].as<string>();
-    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p, g);
-    //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
-    // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
-    printf("done.\n");
-  }
-
-  p.update();
-
+void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq)
+{
+  unordered_map<string, int> mp;
+  hashFilterAll(mp, seq, p.thre4filtering);
+  
 #ifdef DEBUG
-  for (auto x:p.chr) cout<< " loaded " << x.bothnread() << " mapped reads." << endl;
-  cout<< " loaded " << p.nread() << " mapped reads." << endl;
+  BPRINT("nread: %1%, nonred: %2%, red: %3%\n") %seq.nread() % seq.nread_nonred % seq.nread_red;
 #endif
 
-  /* output distributions of read length and fragment length */
-  outputDist(values, p);
-
-  /* PCR bias filtering and ignore enrichregions */
-  check_redundant_reads(values, p, g);
-  //  add_read_red_to_genome(mapfile, g);
+  unordered_map<string, int> mp2;
+  hashFilterCmp(mp2, p, seq, p.thre4filtering);
 
   return;
 }
 
+void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr)
+{
+  //  int Fmin, Fmax;
+  unordered_map<string, int> mp;
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    hashFilterAll(mp, chr.seq[strand], p.thre4filtering);
+  }
+
+#ifdef DEBUG
+  for(int strand=0; strand<STRANDNUM; strand++) 
+    BPRINT("%4% strand %5% nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread() % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red % chr.name % strand;
+#endif
+
+  unordered_map<string, int> mp2;
+  for(int strand=0; strand<STRANDNUM; strand++){
+    hashFilterCmp(mp2, p, chr.seq[strand], p.thre4filtering);
+  }
+
+  return;
+}
+
+void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre)
+{
+  for(auto x:seq.vRead) {
+    int Fmin(min(x.F3, x.F5));
+    int Fmax(max(x.F3, x.F5));
+    string str = IntToString(Fmin) + "-" + IntToString(Fmax);
+    
+    if(mp.find(str) != mp.end()) {
+      if(mp[str] <= thre) {
+	mp[str]++;
+	seq.nread_nonred++;
+      } else {
+	x.duplicate = 1;
+	seq.nread_red++;
+      }
+    } else {
+      mp[str] = 1;
+      seq.nread_nonred++;
+    }
+  }
+  return;
+}
+
+void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData &seq, const int thre)
+{
+  for(auto x: seq.vRead){
+    if(rand() >= p.r4cmp) continue;
+
+    int Fmin(min(x.F3, x.F5));
+    int Fmax(max(x.F3, x.F5));
+    string str = IntToString(Fmin) + "-" + IntToString(Fmax);
+    p.nt_all++;
+    if(mp.find(str) != mp.end()) {
+      if(mp[str] <= thre) {
+	mp[str]++;
+	p.nt_nonred++;
+      } else {
+	p.nt_red++;
+      }
+    } else {
+      mp[str] = 1;
+      p.nt_nonred++;
+    }
+  }
+  return;
+}
+
+
 int check_sv(int sv)
 {
   // for paired-end
-  LOG("   the read is paired in sequencing: %d\n",sv&1);
+  /*  LOG("   the read is paired in sequencing: %d\n",sv&1);
   LOG("   the read is mapped in a proper pair: %d\n",sv&2);
   LOG("   the query sequence itself is unmapped: %d\n",sv&4);
   LOG("   the mate is unmapped: %d\n",sv&8);
@@ -275,7 +271,8 @@ int check_sv(int sv)
   LOG("   the read is the second read(F5) in a pair: %d\n",sv&128);
   LOG("   the alignment is not primary: %d\n",sv&256);
   LOG("   the read fails platform/vendor quality checks: %d\n",sv&512);
-  LOG("   the read is either a PCR or an optical duplicate: %d\n",sv&1024);
+  LOG("   the read is either a PCR or an optical duplicate: %d\n",sv&1024);*/
+
   /*  LOG("   template having multiple segments in sequencing: %d\n",sv&1);
   LOG("   each segment properly aligned according to the aligner: %d\n",sv&2);
   LOG("   segment unmapped: %d\n",sv&4);

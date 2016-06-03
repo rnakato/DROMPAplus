@@ -24,16 +24,6 @@
 #define NUM_DARRAY 100
 #define READARRAY_NUM 50000 
 
-class Readarray{
-  int *F3;
-  int *F5;
-  int *weight;
-  //  bool *delete; // for filtering redundant reads
-  //bool *ignore; // for ignoring peak regions
-
-  int narray;
-};
-
 class WigStatsMember {
   int max;
   int *darray_all, *darray_bg;
@@ -47,12 +37,6 @@ class WigStats{
   int thre;
   int num95;
   WigStatsMember *genome, *chr;
-};
-
-class CompStats{
-  int nt_all, nt_nonred, nt_red; 
-  double complexity;
-  int tv;
 };
 
 class Dist{
@@ -157,6 +141,9 @@ class strandData {
   double nread_afterGC;
  strandData(): nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
   long nread() { return (long)vRead.size();}
+  void print() {
+    cout << nread() << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
+  }
 };
 
 class SeqStats {
@@ -187,6 +174,9 @@ class SeqStats {
       seq[i].nread_rpm     += x.seq[i].nread_rpm;
       seq[i].nread_afterGC += x.seq[i].nread_afterGC;
     }
+  }
+  void print() {
+    cout << name << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }
 };
   
@@ -223,10 +213,16 @@ public:
     }
     if(!on) cerr << "Warning: " << frag.chr << " is not in genometable." << endl;
   }
-  void update() {
-    for (auto x:chr) {
-      genome.add(x);
+  void calcdepth(const RefGenome &g, int flen) {
+    for (auto &x:chr) {
+      long len_mpbl(0);
+      for (auto y:g.chr) if(y.name == x.name) len_mpbl = y.len_mpbl;
+      x.depth = len_mpbl ? x.bothnread_nonred() * flen / (double)len_mpbl: 0;
     }
+    genome.depth = g.genome.len_mpbl ? genome.bothnread_nonred() * flen / (double)g.genome.len_mpbl: 0;
+  }
+  void update() {
+    for (auto x:chr) genome.add(x);
   }
   long nread() {
     long n(0);
@@ -235,6 +231,10 @@ public:
   }
   double complexity() {
     return nt_nonred/(double)nt_all;
+  }
+  void printstats() {
+    for (auto x:chr) x.print();
+    genome.print();
   }
 };
 
