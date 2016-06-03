@@ -27,5 +27,6 @@ void chkminus(const variables_map &values, string x, int lim)
 }
 
 void isFile(string);
+string IntToString(int n);
 
 #endif /* _UTIL_H_ */

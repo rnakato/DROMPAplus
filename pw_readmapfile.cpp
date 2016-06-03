@@ -1,9 +1,6 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
-
-#define SEQAN_HAS_ZLIB 1
-
 #include <algorithm>
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
@@ -13,8 +10,6 @@
 #include "util.h"
 #include "common.h"
 #include "macro.h"
-#include <zlib.h>
-//#include <seqan/store.h>
 
 using namespace boost::program_options;
 
@@ -61,7 +56,6 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
     // unmapped reads, low quality reads
     if(sv&4 || sv&512 || sv&1024) continue;
     if(sv&64 || sv&128) cerr << "Warning: parsing paired-end file as single-end." << endl;
-
     FragmentSingle frag(v, flen);  ////// fraglenを推定することにすれば？？？？
     //    frag.print();
     p.addfrag(frag);
@@ -72,13 +66,13 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
 
 void parse_sam(const variables_map &values, string inputfile, Mapfile &p, RefGenome &g)
 {
-  if(values["ftype"].as<string>()=="SAM") {
+  if(values["ftype"].as<string>()=="SAM") {  // SAM
     ifstream in(inputfile);
     if(!in) PRINTERR("Could not open " << inputfile << ".");
-    do_bamse<ifstream>(values, p, in);
     if (values.count("pair")) do_bampe(values, p, in);
     else do_bamse(values, p, in);
-  } else if(values["ftype"].as<string>()=="BAM") {
+  }
+  else if(values["ftype"].as<string>()=="BAM") {  // BAM
     string command = "samtools view -h " + inputfile;
     FILE *fp = popen(command.c_str(), "r");
     __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, ios_base::in);
@@ -149,10 +143,12 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
   unordered_map<string, int> mp;
   int strand;
   for(strand=0; strand<STRANDNUM; strand++){
+    //    cout << strand << endl;
     for(auto x:chr.seq[strand].vRead) {
       Fmin = min(x.F3, x.F5);
       Fmax = max(x.F3, x.F5);
-      string str = Fmin + "-" + Fmax;
+      string str = IntToString(Fmin) + "-" + IntToString(Fmax);
+      //cout << str << endl;
       if(mp.find(str) != mp.end()) {
 	if(mp[str] <= p.thre4filtering) {
 	  mp[str]++;
@@ -169,7 +165,7 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
   }
 
 #ifdef DEBUG
-  for(strand=0; strand<STRANDNUM; strand++) BPRINT("nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread() % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red;
+  for(strand=0; strand<STRANDNUM; strand++) BPRINT("%4% strand %5% nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread() % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red % chr.name % strand;
 #endif
 
   unordered_map<string, int> mp2;
@@ -179,7 +175,7 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
       p.nt_all++;
       Fmin = min(x.F3, x.F5);
       Fmax = max(x.F3, x.F5);
-      string str = Fmin + "-" + Fmax;
+      string str = IntToString(Fmin) + "-" + IntToString(Fmax);
       if(mp2.find(str) != mp2.end()) {
 	if(mp2[str] <= p.thre4filtering) {
 	  mp2[str]++;
@@ -311,6 +307,10 @@ int check_sv(int sv)
   return 0;
 }
 
+
+//#define SEQAN_HAS_ZLIB 1
+//#include <zlib.h>
+//#include <seqan/store.h>
 //using namespace seqan;
 /*void printRecord(BamAlignmentRecord record)
 {

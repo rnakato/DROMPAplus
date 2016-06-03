@@ -3,9 +3,18 @@
  */
 
 #include "util.h"
+#include <sstream>
+#include <string>
 
 void isFile(string str)
 {
   boost::filesystem::path const file(str);
   if(!boost::filesystem::exists(file)) PRINTERR(str << " does not exist.");
+}
+
+string IntToString(int n)
+{
+  ostringstream stream;
+  stream << n;
+  return stream.str();
 }

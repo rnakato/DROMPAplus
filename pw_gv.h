@@ -61,7 +61,7 @@ class Dist{
   vector<int> readlen_F5;
   vector<int> fraglen; /* +1: over DIST_FRAGLEN_MAX */
   int eflen;
- Dist(): eflen(0){
+ Dist(): eflen(0) {
     vector<int> v(DIST_READLEN_MAX,0);
     readlen = v;
     vector<int> v2(DIST_READLEN_MAX,0);
