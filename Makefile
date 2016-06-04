@@ -10,7 +10,7 @@ endif
 
 OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
 OBJS_COMMON = util.o
-OBJS_PW = parse2wig+.o pw_readmapfile.o $(OBJS_COMMON)
+OBJS_PW = pw_main.o pw_readmapfile.o $(OBJS_COMMON)
 OBJS_DD = drompa+.o $(OBJS_COMMON)
 
 HEADS_UTIL = common.h util.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
