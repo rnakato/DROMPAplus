@@ -8,6 +8,6 @@
 #include "util/seq.h"
 #include "pw_gv.h"
 
-void read_mapfile(const boost::program_options::variables_map &, Mapfile &, RefGenome &);
+void read_mapfile(const boost::program_options::variables_map &, Mapfile &);
 
 #endif /* _READMAPFILE_H_ */

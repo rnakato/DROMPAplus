@@ -13,7 +13,7 @@
 
 using namespace boost::program_options;
 
-void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g);
+void check_redundant_reads(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
 void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre);
@@ -51,8 +51,6 @@ void do_bampe(const variables_map &values, Mapfile &p, T &in)
 template <class T>
 void do_bamse(const variables_map &values, Mapfile &p, T & in)
 {
-  int flen = values["flen"].as<int>();
- 
   string lineStr; 
   while (!in.eof()) {
     getline(in, lineStr);
@@ -63,7 +61,7 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
     // unmapped reads, low quality reads
     if(sv&4 || sv&512 || sv&1024) continue;
     if(sv&64 || sv&128) cerr << "Warning: parsing paired-end file as single-end." << endl;
-    FragmentSingle frag(v, flen);  ////// fraglenを推定することにすれば？？？？
+    FragmentSingle frag(v, p.dist.eflen);  ////// fraglenを推定することにすれば？？？？
     //    frag.print();
     p.addfrag(frag);
   }
@@ -71,7 +69,7 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
   return;
 }
 
-void parse_sam(const variables_map &values, string inputfile, Mapfile &p, RefGenome &g)
+void parse_sam(const variables_map &values, string inputfile, Mapfile &p)
 {
   if(values["ftype"].as<string>()=="SAM") {  // SAM
     ifstream in(inputfile);
@@ -103,14 +101,14 @@ void outputDist(const variables_map &values, Mapfile &p){
   return;
 }
 
-void read_mapfile(const variables_map &values, Mapfile &p, RefGenome &g){
+void read_mapfile(const variables_map &values, Mapfile &p){
   vector<string> v;
   boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
   for(auto inputfile: v) {
     isFile(inputfile);
     BPRINT("Parsing %1%...\n") % inputfile;
     string ftype = values["ftype"].as<string>();
-    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p, g);
+    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p);
     //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
     // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
     printf("done.\n");
@@ -125,12 +123,11 @@ void read_mapfile(const variables_map &values, Mapfile &p, RefGenome &g){
   outputDist(values, p);
 
   /* PCR bias filtering and ignore enrichregions */
-  check_redundant_reads(values, p, g);  
+  check_redundant_reads(values, p);
   p.update();
 
   // calculate depth
-  if(values.count("pair")) p.calcdepth(g, p.dist.eflen);
-  else p.calcdepth(g, values["flen"].as<int>());
+  p.calcdepth();
 
 #ifdef DEBUG
   p.printstats();
@@ -139,13 +136,13 @@ void read_mapfile(const variables_map &values, Mapfile &p, RefGenome &g){
   return;
 }
 
-void check_redundant_reads(const variables_map &values, Mapfile &p, RefGenome &g)
+void check_redundant_reads(const variables_map &values, Mapfile &p)
 {
   int threshold;
   int strand;
   if(values["thre_pb"].as<int>()) threshold = values["thre_pb"].as<int>();
   else{
-    threshold = max(1, (int)(p.nread() *10/(double)g.genome.len_mpbl));
+    threshold = max(1, (int)(p.nread() *10/(double)p.genome.len_mpbl));
   }
   cout << "\nChecking redundant reads: redundancy threshold " << threshold << endl;
   p.thre4filtering = threshold;
@@ -212,13 +209,13 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
 
 void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre)
 {
-  for(auto x:seq.vRead) {
+  for(auto &x:seq.vRead) {
     int Fmin(min(x.F3, x.F5));
     int Fmax(max(x.F3, x.F5));
     string str = IntToString(Fmin) + "-" + IntToString(Fmax);
     
     if(mp.find(str) != mp.end()) {
-      if(mp[str] <= thre) {
+      if(mp[str] < thre) {
 	mp[str]++;
 	seq.nread_nonred++;
       } else {
@@ -243,7 +240,7 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
     string str = IntToString(Fmin) + "-" + IntToString(Fmax);
     p.nt_all++;
     if(mp.find(str) != mp.end()) {
-      if(mp[str] <= thre) {
+      if(mp[str] < thre) {
 	mp[str]++;
 	p.nt_nonred++;
       } else {

@@ -4,8 +4,10 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#define VERSION "3.3.0+"
+#include <iostream>
+#include <string>
 
+#define VERSION "3.3.0+"
 #define NUM_1K 1000
 #define NUM_1M 1000000
 #define NUM_10M 10000000
@@ -19,5 +21,20 @@ typedef enum{
   TYPE_BIGWIG,
   PWFILETYPENUM
 } PWfile_Type;
+
+template <class T>
+class var {
+  std::string name;
+ public:
+  T val;
+ var(std::string str, T v=0): name(str), val(v) {}
+  friend std::ostream &operator<<(std::ostream &stream, var v) {
+    return stream << v.name << "\t" << v.val;
+  }
+  var operator++() {
+    val++;
+    return *this;
+  }
+};
 
 #endif /* _COMMON_H_ */

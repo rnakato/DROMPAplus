@@ -5,6 +5,7 @@
 #define _PW_GV_H_
 
 #include "seq.h"
+#include "common.h"
 //#include <seqan/bam_io.h>
 #include <map>
 #include <fstream>
@@ -100,24 +101,16 @@ public:
       int sv = stoi(v[1]); // bitwise FLAG
       if(sv&16) {
 	strand = STRAND_MINUS;
-	F3 = stoi(v[3]) + readlen_F3 -1;
+	F3 = stoi(v[3]) + readlen_F3 -1; //SAM
       } else {
 	strand = STRAND_PLUS;
-	F3 = stoi(v[3]);
+	F3 = stoi(v[3]) -1;  //SAM
       }
     }
   void print() {
-    cout << name << ", " << chr << ", " << F3<< ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+    cout << name << ", " << chr << ", " << F3 << ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
   }
 };
-
-/*class FragmentPair: public FragmentSingle {
-public:
-  int chr_F5;
-  int F5;
-  int readlen_F5;
-  FragmentPair() {}
-  };*/
 
 class Read {
  public:
@@ -149,14 +142,19 @@ class strandData {
 class SeqStats {
  public:
   string name;
+  long len, len_mpbl;
+  int nbin;
+  double p_mpbl;  /* mappability */
+  double gcov;    /* genome coverage for bin */
+
   strandData seq[STRANDNUM];
   double depth;
   double w;
   /* FRiP */
   long nread_inbed;
   double FRiP;
-  
- SeqStats(string s): name(s), depth(0), w(0), nread_inbed(0), FRiP(0) {}
+
+ SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), gcov(0), depth(0), w(0), nread_inbed(0), FRiP(0) { }
   void addfrag(const FragmentSingle &frag) {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
@@ -176,7 +174,10 @@ class SeqStats {
     }
   }
   void print() {
-    cout << name << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
+    cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
+  }
+  void calcdepth(int flen) {
+    depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
   }
 };
   
@@ -192,15 +193,8 @@ public:
   int tv;
   double r4cmp;
 
- Mapfile(const RefGenome &g): genome("genome"), nt_all(0), nt_nonred(0), nt_red(0) {
-    for(auto x:g.chr) {
-      SeqStats s(x.name);
-      chr.push_back(s);
-    }
-  }
-  void addF5(const int readlen_F5) {
-    dist.readlen_F5[readlen_F5]++;
-  }
+  Mapfile(string gtfile, int binsize, int flen);
+  void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
   void addfrag(const FragmentSingle &frag) {
     dist.readlen[frag.readlen_F3]++;
     dist.fraglen[frag.fraglen]++;
@@ -213,25 +207,17 @@ public:
     }
     if(!on) cerr << "Warning: " << frag.chr << " is not in genometable." << endl;
   }
-  void calcdepth(const RefGenome &g, int flen) {
-    for (auto &x:chr) {
-      long len_mpbl(0);
-      for (auto y:g.chr) if(y.name == x.name) len_mpbl = y.len_mpbl;
-      x.depth = len_mpbl ? x.bothnread_nonred() * flen / (double)len_mpbl: 0;
-    }
-    genome.depth = g.genome.len_mpbl ? genome.bothnread_nonred() * flen / (double)g.genome.len_mpbl: 0;
+  void calcdepth() {
+    for (auto &x:chr) x.calcdepth(dist.eflen);
+    genome.calcdepth(dist.eflen);
   }
-  void update() {
-    for (auto x:chr) genome.add(x);
-  }
+  void update() { for (auto x:chr) genome.add(x); }
   long nread() {
     long n(0);
     for (auto x:chr) n += x.bothnread();
     return n;
   }
-  double complexity() {
-    return nt_nonred/(double)nt_all;
-  }
+  double complexity() { return nt_nonred/(double)nt_all; }
   void printstats() {
     for (auto x:chr) x.print();
     genome.print();

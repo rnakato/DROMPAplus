@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
@@ -25,6 +26,23 @@ variables_map getOpts(int argc, char* argv[]);
 void setOpts(options_description &);
 void init_dump(const variables_map &);
 
+Mapfile::Mapfile(string gtfile, int binsize, int flen): genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), r4cmp(0) {
+  ifstream in(gtfile);
+  if(!in) PRINTERR("Could nome open " << gtfile << ".");
+  string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty() || lineStr[0] == '#') continue;
+    vector<string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    SeqStats s(v[0], stoi(v[1]));
+    chr.push_back(s);
+    genome.len += stoi(v[1]);
+  }
+  for(auto &x: chr) genome.nbin += x.nbin = x.len/binsize +1;
+  dist.eflen = flen;
+}
+
 void printVersion()
 {
   cerr << "parse2wig version " << VERSION << endl;
@@ -32,13 +50,13 @@ void printVersion()
 }  
 
 void help_global() {
-    auto helpmsg = R"(
+  auto helpmsg = R"(
 ===============
 
 Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
-
-    cerr << "\nparse2wig v" << VERSION << helpmsg << endl;
-    return;
+  
+  cerr << "\nparse2wig v" << VERSION << helpmsg << endl;
+  return;
 }
 
 void checkParam(const variables_map &values){
@@ -102,40 +120,91 @@ variables_map getOpts(int argc, char* argv[])
   return values;
 }
 
-RefGenome makeRefGenome(variables_map values)
+void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const Read x, long chrlen)
 {
-  auto gt = read_genometable(values["gt"].as<string>());
-  RefGenome g(gt, values["binsize"].as<int>());
+  int s, e;
+  s = min(x.F3, x.F5);
+  e = max(x.F3, x.F5);
+  double w = 1; //INT2WEIGHT(mapfile->readarray[chr][strand].weight[i]);
 
-  return g;
+  if(values["rcenter"].as<int>()) {  /* consider only center region of fragments */
+    s = (s + e - values["rcenter"].as<int>())/2;
+    e = s + values["rcenter"].as<int>();
+  }
+  s = max(0, s);
+  e = min(e, (int)(chrlen -1));
+
+  int sbin(s/values["binsize"].as<int>());
+  int ebin(e/values["binsize"].as<int>());
+  for(int j=sbin; j<=ebin; ++j) wigarray[j] += w; //VALUE2WIGARRAY(w);
+  return;
 }
 
-vector<int> make_wigarray(const variables_map &values, SeqStats &chr, RefGenome &g){
-  int i,j, s, e, sbin, ebin, readnum;
-  double w;
-  vector<int> wigarray(p->binnum_chr[chr],0);
-  Strand strand;
+vector<int> makeWigarray(const variables_map &values, SeqStats &chr)
+{
+  vector<int> wigarray(chr.nbin, 0);
 
-  for(strand=0; strand<STRANDNUM; strand++){
-    readnum = mapfile->chr[chr].seq[strand].n_read_infile;
-    for(i=0; i<readnum; i++){
-      if(mapfile->readarray[chr][strand].delete[i]) continue;
-      define_s_e(p, mapfile, g, &s, &e, &w, chr, strand, i);  /* define start and end position and weight of a fragment */
-      sbin = s/p->binsize;
-      ebin = e/p->binsize;
-      for(j=sbin; j<=ebin; j++) wigarray[j] += VALUE2WIGARRAY(w);
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto x:chr.seq[strand].vRead) {
+      if(x.duplicate) continue;
+      addReadToWigArray(values, wigarray, x, chr.len);
     }
   }
-
-  /* free mapfile*/
-  if(free) free_mapfile_chr(p, mapfile, chr);
-
   return wigarray;
 }
 
-void makewig(const variables_map &values, Mapfile &p, RefGenome &g)
+void outputWig(const variables_map &values, const vector<int> array, const string filename, const SeqStats &chr){
+  int binsize = values["binsize"].as<int>();
+  ofstream out(filename);
+
+  // Header
+  out << boost::format("track type=wiggle_0\tname=\"%1%_%2%\"\tdescription=\"Merged tag counts for every %3% bp\"\n") % values["output"].as<string>() % chr.name % binsize;
+  out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
+
+  // Data
+  for(int i=0; i<chr.nbin; ++i) {
+    if(array[i]) out << boost::format("%1%\t%2$.3f\n") % (i*binsize +1) % (double)array[i];
+  }
+
+  /* compression */
+  //  if(wtype==TYPE_COMPRESSWIG) compress2gz(outputfile);
+
+  return;
+}
+
+void outputArray(const variables_map &values, const vector<int> array, const SeqStats &chr)
 {
-  int chr;
+  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>();
+  filename += "_" + chr.name + ".wig";
+  outputWig(values, array, filename, chr);
+
+  /*  char *output_prefix = alloc_str_new(dir, strlen(prefix)+100);
+  if(wtype==TYPE_BEDGRAPH || wtype==TYPE_BIGWIG) sprintf(output_prefix, "%s/%s.%d", dir, prefix, binsize);
+  else sprintf(output_prefix, "%s/%s_%s.%d", dir, prefix, g->chr[chr].name, binsize);
+  char *outputfilename = alloc_str_new(output_prefix, 20);
+  
+  if(wtype==TYPE_BINARY){
+    sprintf(outputfilename, "%s.bin", output_prefix);
+    make_binary(array, outputfilename, binnum);
+  }
+  else if(wtype==TYPE_BEDGRAPH || wtype==TYPE_BIGWIG){
+    sprintf(outputfilename, "%s.bedGraph", output_prefix);
+    make_bedGraph(g, array, outputfilename, output_prefix, binsize, binnum, chr);
+    if(chr == g->chrnum-1 && wtype==TYPE_BIGWIG) convert_bedGraph_to_bigWig(outputfilename, output_prefix, gtfile);
+  }
+  else if(wtype==TYPE_COMPRESSWIG || wtype==TYPE_UNCOMPRESSWIG){
+    sprintf(outputfilename, "%s.wig", output_prefix);
+    make_wig(g, array, outputfilename, prefix, binsize, binnum, chr, wtype);
+  }
+
+  MYFREE(output_prefix);
+  MYFREE(outputfilename);
+  */
+  return;
+}
+
+void makewig(const variables_map &values, Mapfile &p)
+{
   printf("Convert read data to array: \n");
 
   /*  p.wstats.thre = define_wstats_thre(p, mapfile, g);
@@ -149,14 +218,12 @@ void makewig(const variables_map &values, Mapfile &p, RefGenome &g)
 
   //  for(chr=1; chr<g->chrnum; chr++) makewig_chr(p, mapfile, g, chr);
   for(auto chr: p.chr) {
-    vector<int> wigarray = make_wigarray(values, chr, g);
-    output_bindata(p->output_dir, p->output_prefix, g, wigarray, p->gtfile, p->binsize, p->binnum_chr[chr], chr, p->wtype);
+    vector<int> wigarray = makeWigarray(values, chr);
+    outputArray(values, wigarray, chr);
   }
   printf("done.\n");
   return;
 }
-
-
 
 
 int main(int argc, char* argv[])
@@ -166,22 +233,17 @@ int main(int argc, char* argv[])
   fs::path dir(values["odir"].as<string>());
   fs::create_directory(dir);
 
-  RefGenome g = makeRefGenome(values);
-
-#ifdef DEBUG
-  g.print();
-#endif
-
+  /* read mapfile */
+  //  auto gt = read_genometable(values["gt"].as<string>());
+  Mapfile p(values["gt"].as<string>(), values["binsize"].as<int>(), values["flen"].as<int>());
+  read_mapfile(values, p);
+  
     /* 
   if(p->bedfilename){
     isfile(p->bedfilename);
     p->enrichfile = read_bedfile(p->bedfilename, g);
     //    show_bedfile(p->enrichfile, g->chrnum);
   }*/
-    
-  /* read mapfile */
-  Mapfile p(g);
-  read_mapfile(values, p, g);
   
   /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);
 
@@ -191,7 +253,7 @@ int main(int argc, char* argv[])
   //if(p->genomefile) GCnorm(p, mapfile, g);
 
   /* make and output wigdata */
-  makewig(values, mapfile, g);
+  makewig(values, p);
 
   /* output wigarray_stats, 
      calculate genome coverage */
