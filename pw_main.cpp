@@ -10,13 +10,13 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-#include "pw_gv.h"
 #include "pw_readmapfile.h"
 #include "util.h"
 #include "common.h"
 #include "warn.h"
 #include "macro.h"
 #include "readdata.h"
+#include "pw_makefile.h"
 
 using namespace std;
 using namespace boost::program_options;
@@ -118,111 +118,6 @@ variables_map getOpts(int argc, char* argv[])
     cout << e.what() << endl;
   }
   return values;
-}
-
-void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const Read x, long chrlen)
-{
-  int s, e;
-  s = min(x.F3, x.F5);
-  e = max(x.F3, x.F5);
-  double w = 1; //INT2WEIGHT(mapfile->readarray[chr][strand].weight[i]);
-
-  if(values["rcenter"].as<int>()) {  /* consider only center region of fragments */
-    s = (s + e - values["rcenter"].as<int>())/2;
-    e = s + values["rcenter"].as<int>();
-  }
-  s = max(0, s);
-  e = min(e, (int)(chrlen -1));
-
-  int sbin(s/values["binsize"].as<int>());
-  int ebin(e/values["binsize"].as<int>());
-  for(int j=sbin; j<=ebin; ++j) wigarray[j] += w; //VALUE2WIGARRAY(w);
-  return;
-}
-
-vector<int> makeWigarray(const variables_map &values, SeqStats &chr)
-{
-  vector<int> wigarray(chr.nbin, 0);
-
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x:chr.seq[strand].vRead) {
-      if(x.duplicate) continue;
-      addReadToWigArray(values, wigarray, x, chr.len);
-    }
-  }
-  return wigarray;
-}
-
-void outputWig(const variables_map &values, const vector<int> array, const string filename, const SeqStats &chr){
-  int binsize = values["binsize"].as<int>();
-  ofstream out(filename);
-
-  // Header
-  out << boost::format("track type=wiggle_0\tname=\"%1%_%2%\"\tdescription=\"Merged tag counts for every %3% bp\"\n") % values["output"].as<string>() % chr.name % binsize;
-  out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
-
-  // Data
-  for(int i=0; i<chr.nbin; ++i) {
-    if(array[i]) out << boost::format("%1%\t%2$.3f\n") % (i*binsize +1) % (double)array[i];
-  }
-
-  /* compression */
-  //  if(wtype==TYPE_COMPRESSWIG) compress2gz(outputfile);
-
-  return;
-}
-
-void outputArray(const variables_map &values, const vector<int> array, const SeqStats &chr)
-{
-  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>();
-  filename += "_" + chr.name + ".wig";
-  outputWig(values, array, filename, chr);
-
-  /*  char *output_prefix = alloc_str_new(dir, strlen(prefix)+100);
-  if(wtype==TYPE_BEDGRAPH || wtype==TYPE_BIGWIG) sprintf(output_prefix, "%s/%s.%d", dir, prefix, binsize);
-  else sprintf(output_prefix, "%s/%s_%s.%d", dir, prefix, g->chr[chr].name, binsize);
-  char *outputfilename = alloc_str_new(output_prefix, 20);
-  
-  if(wtype==TYPE_BINARY){
-    sprintf(outputfilename, "%s.bin", output_prefix);
-    make_binary(array, outputfilename, binnum);
-  }
-  else if(wtype==TYPE_BEDGRAPH || wtype==TYPE_BIGWIG){
-    sprintf(outputfilename, "%s.bedGraph", output_prefix);
-    make_bedGraph(g, array, outputfilename, output_prefix, binsize, binnum, chr);
-    if(chr == g->chrnum-1 && wtype==TYPE_BIGWIG) convert_bedGraph_to_bigWig(outputfilename, output_prefix, gtfile);
-  }
-  else if(wtype==TYPE_COMPRESSWIG || wtype==TYPE_UNCOMPRESSWIG){
-    sprintf(outputfilename, "%s.wig", output_prefix);
-    make_wig(g, array, outputfilename, prefix, binsize, binnum, chr, wtype);
-  }
-
-  MYFREE(output_prefix);
-  MYFREE(outputfilename);
-  */
-  return;
-}
-
-void makewig(const variables_map &values, Mapfile &p)
-{
-  printf("Convert read data to array: \n");
-
-  /*  p.wstats.thre = define_wstats_thre(p, mapfile, g);
-  p.wstats.n_darray = max(NUM_DARRAY, p.wstats.thre);
-  p.wstats.genome->darray_all = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.genome->darray_all");
-  p.wstats.genome->darray_bg  = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.genome->darray_bg");
-  for(chr=1; chr<g->chrnum; chr++){
-    p.wstats.chr[chr].darray_all = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.chr[chr]->darray_all");
-    p.wstats.chr[chr].darray_bg  = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.chr[chr]->darray_bg");
-    }*/
-
-  //  for(chr=1; chr<g->chrnum; chr++) makewig_chr(p, mapfile, g, chr);
-  for(auto chr: p.chr) {
-    vector<int> wigarray = makeWigarray(values, chr);
-    outputArray(values, wigarray, chr);
-  }
-  printf("done.\n");
-  return;
 }
 
 

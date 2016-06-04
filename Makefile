@@ -10,11 +10,11 @@ endif
 
 OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
 OBJS_COMMON = util.o
-OBJS_PW = pw_main.o pw_readmapfile.o $(OBJS_COMMON)
+OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o $(OBJS_COMMON)
 OBJS_DD = drompa+.o $(OBJS_COMMON)
 
 HEADS_UTIL = common.h util.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
-HEADS_PW = pw_gv.h pw_readmapfile.h $(HEADS_UTIL)
+HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h $(HEADS_UTIL)
 HEADS_DD = dd_gv.h dd_opt.h $(HEADS_UTIL)
 
 SUBDIRS := $(SRCDIR)

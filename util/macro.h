@@ -10,6 +10,7 @@
 #define RANGE(i, min, max) (((i) >=(min)) && ((i) <=(max)) ? 1: 0)
 #define overlap(s1,e1,s2,e2) ((e1 >= s2) && (e2 >= s1))
 #define JOIN(a,b) (a ## b)
+#define PRINTERR(...) do{ cerr << "Error: " << __VA_ARGS__ << endl; exit(1); }while(0)
 
 //#define CALCRATIO(c,i,r) ((i) ? ((c)/(double)((i)*(r))): 0)
 //#define MKSTRING(str) (# str)

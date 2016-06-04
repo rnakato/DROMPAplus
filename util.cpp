@@ -2,9 +2,10 @@
  * This file is a part of DROMPA sources.
  */
 
-#include "util.h"
 #include <sstream>
 #include <string>
+#include "util.h"
+#include "macro.h"
 
 void isFile(string str)
 {
