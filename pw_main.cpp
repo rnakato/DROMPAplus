@@ -120,6 +120,93 @@ variables_map getOpts(int argc, char* argv[])
   return values;
 }
 
+template <class T, class S>
+void outr(ofstream &out, T a, S b)
+{
+  double r = b ? a*100/(double)b: 0;
+  out << a << " (" << r << "%)\t";
+}
+
+void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Mapfile &mapfile){
+  /* genome data */
+  out << p.name << "\t";
+  out << p.len  << "\t" << p.len_mpbl << "\t" << p.p_mpbl << "\t" ;
+  /* total reads*/
+  out << p.bothnread() << "\t" << p.seq[STRAND_PLUS].nread() << "\t" << p.seq[STRAND_MINUS].nread() << "\t" << (p.bothnread()*100/(double)mapfile.nread()) << "%\t";
+  /* nonredundant reads */
+  outr(out, p.bothnread_nonred(), p.bothnread());
+  p.seq[STRAND_PLUS].printnonred(out);
+  p.seq[STRAND_MINUS].printnonred(out);
+  outr(out, p.bothnread_red(), p.bothnread());
+  p.seq[STRAND_PLUS].printred(out);
+  p.seq[STRAND_MINUS].printred(out);
+  /* reads after GCnorm */
+  if(values.count("genome")) {
+    outr(out, p.bothnread_afterGC(), p.bothnread());
+    p.seq[STRAND_PLUS].printafterGC(out);
+    p.seq[STRAND_MINUS].printafterGC(out);
+  }
+  /* read depth */
+  out << p.depth << "\t";
+  /* weight */
+  if(p.w) out << p.w << "\t"; else out << " - \t";
+  /* read number after rpkm normalization */
+  if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
+  /* genome coverage */
+  out << p.gcov << "\t";
+  /* FRiP */
+  if(values.count("bed")) out << p.FRiP << "\t";
+
+  return;
+}
+
+void output_stats(const variables_map &values, Mapfile &p){
+  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>();
+  ofstream out(filename);
+
+  out << "parse2wig version " << VERSION << endl;
+  out << "Input file:\t\"" << values["input"].as<string>() << "\"" << endl;
+  if(values["thre_pb"].as<int>()) out << "Redundancy threshold: >" << values["thre_pb"].as<int>() << endl;
+
+  if(p.tv) out << "Library complexity: (" << p.complexity() << ") (" << p.nt_nonred << " / " << p.nt_all <<")" << endl;
+  else out << "Library complexity: " << p.complexity() << " (" << p.nt_nonred << " / " << p.nt_all <<")" << endl;
+ 
+  //  if(values.count("genome")) out << "GC summit: %d\n", mapfile->maxGC);
+  // out << "Poisson: lambda = %f\n", mapfile->wstats.genome->ave);
+  // out << "Negative binomial: p=%f, n=%f, p0=%f\n", mapfile->wstats.genome->nb_p, mapfile->wstats.genome->nb_n, mapfile->wstats.genome->nb_p0);
+
+  /* SeqStats */
+  out << "\tlength\tmappable base\tmappability\t";
+  out << "total reads\t\t\t\t";
+  out << "nonredundant reads\t\t\t";
+  out << "redundant reads\t\t\t";
+  if(values.count("genome")) out << "reads (GCnormed)\t\t\t";
+  out << "read depth\t";
+  out << "scaling weight\t";
+  out << "normalized read number\t";
+  out << "genome coverage\t";
+  if(values.count("bed")) out << "FRiP\t";
+  out << endl;
+  out << "\t\t\t\t";
+  out << "both\tforward\treverse\t %% genome\t";
+  out << "both\tforward\treverse\t";
+  out << "both\tforward\treverse\t";
+  if(values.count("genome")) out << "both\tforward\treverse\t";
+  out << endl;
+
+  /*** genome ***/
+  print_SeqStats(values, out, p.genome, p);
+  out << endl;
+  /*** chromosome ***/
+  for(auto x:p.chr) {
+    print_SeqStats(values, out, x, p);
+    out << endl;
+  }
+
+  cout << "stats is output in " << filename << "." << endl;
+
+  return;
+}
 
 int main(int argc, char* argv[])
 {
@@ -155,7 +242,7 @@ int main(int argc, char* argv[])
   // output_wigstats(p, mapfile, g);
 
   /* output stats */
-  // output_stats(p, mapfile, g);
+  output_stats(values, p);
 
   return 0;
 }

@@ -9,18 +9,7 @@ using namespace boost::program_options;
 vector<int> makeWigarray(const variables_map &, SeqStats &);
 void outputWig(const variables_map &, Mapfile &, string);
 void outputBedGraph(const variables_map &, Mapfile &, string);
-
-void outputBinary(const variables_map &values, Mapfile &p, string filename)
-{
-  int binsize = values["binsize"].as<int>();
-
-  ofstream out(filename, ios::binary);
-  for(auto chr: p.chr) {
-    vector<int> array = makeWigarray(values, chr);
-    for(int i=0; i<chr.nbin; ++i) out.write((char *)&array[i], sizeof(int));
-  }
-  return;
-}
+void outputBinary(const variables_map &, Mapfile &, string);
 
 void makewig(const variables_map &values, Mapfile &p)
 {
@@ -144,5 +133,15 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
 
   remove(tempfile.c_str());
   
+  return;
+}
+
+void outputBinary(const variables_map &values, Mapfile &p, string filename)
+{
+  ofstream out(filename, ios::binary);
+  for(auto chr: p.chr) {
+    vector<int> array = makeWigarray(values, chr);
+    for(int i=0; i<chr.nbin; ++i) out.write((char *)&array[i], sizeof(int));
+  }
   return;
 }

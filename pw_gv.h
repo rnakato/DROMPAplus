@@ -137,6 +137,18 @@ class strandData {
   void print() {
     cout << nread() << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
   }
+  void printnonred(ofstream &out) {
+    double r = nread() ? nread_nonred*100/(double)nread(): 0;
+    out << nread_nonred << " (" << r << "%)\t";
+  }
+  void printred(ofstream &out) {
+    double r = nread() ? nread_red*100/(double)nread(): 0;
+    out << nread_red << " (" << r << "%)\t";
+  }
+  void printafterGC(ofstream &out) {
+    double r = nread() ? nread_afterGC*100/(double)nread(): 0;
+    out << nread_afterGC << " (" << r << "%)\t";
+  }
 };
 
 class SeqStats {
