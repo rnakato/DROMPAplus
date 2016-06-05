@@ -8,6 +8,19 @@ using namespace boost::program_options;
 
 vector<int> makeWigarray(const variables_map &, SeqStats &);
 void outputWig(const variables_map &, Mapfile &, string);
+void outputBedGraph(const variables_map &, Mapfile &, string);
+
+void outputBinary(const variables_map &values, Mapfile &p, string filename)
+{
+  int binsize = values["binsize"].as<int>();
+
+  ofstream out(filename, ios::binary);
+  for(auto chr: p.chr) {
+    vector<int> array = makeWigarray(values, chr);
+    for(int i=0; i<chr.nbin; ++i) out.write((char *)&array[i], sizeof(int));
+  }
+  return;
+}
 
 void makewig(const variables_map &values, Mapfile &p)
 {
@@ -23,7 +36,9 @@ void makewig(const variables_map &values, Mapfile &p)
     }*/
 
   int oftype = values["of"].as<int>();
-  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>();
+  string odir = values["odir"].as<string>();
+  string prefix = values["output"].as<string>();
+  string filename = odir + "/" + prefix;
 
   if(oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG){
     filename += ".wig";
@@ -34,14 +49,16 @@ void makewig(const variables_map &values, Mapfile &p)
     }
   } else if (oftype==TYPE_BEDGRAPH || oftype==TYPE_BIGWIG) {
     filename += ".bedGraph";
-    ofstream out(filename);
-    /*    for(auto chr: p.chr) {
-      vector<int> array = makeWigarray(values, chr);
-      outputBedGraph(values, out, array, chr);
+    outputBedGraph(values, p, filename);
+    if(oftype==TYPE_BIGWIG) {
+      printf("Convert to bigWig...\n");
+      string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<string>() + " " + odir + "/" + prefix + ".bw";
+      if(system(command.c_str())) PRINTERR("conversion failed.");
+      remove(filename.c_str()); 
     }
-    out.close();
-    if(oftype==TYPE_BIGWIG) convert_bedGraph_to_bigWig(outputfilename, output_prefix, gtfile);*/
   } else if (oftype==TYPE_BINARY) {
+    filename += ".bin";
+    outputBinary(values, p, filename);
   }
   
   printf("done.\n");
@@ -90,9 +107,42 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
     vector<int> array = makeWigarray(values, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
     for(int i=0; i<chr.nbin; ++i) {
-      if(array[i]) out << boost::format("%1%\t%2%\n") % (i*binsize +1) % (double)array[i];
+      if(array[i]) out << i*binsize +1 << array[i] << endl;
     }
   }
+  
+  return;
+}
+
+void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
+{
+  int e;
+  int binsize = values["binsize"].as<int>();
+  
+  ofstream out(filename);
+  out << boost::format("browser position %1%:%2%-%3%\n") % p.chr[1].name % 0 % (p.chr[1].len/100);
+  out << "browser hide all" << endl;
+  out << "browser pack refGene encodeRegions" << endl;
+  out << "browser full altGraph" << endl;
+  out << boost::format("track type=bedGraph name=\"%1%\" description=\"Merged tag counts for every %2% bp\" visibility=full\n")
+    % values["output"].as<string>() % binsize;
+  out.close();
+
+  string tempfile = filename + ".temp";
+  ofstream temp(tempfile);
+  for(auto chr: p.chr) {
+    vector<int> array = makeWigarray(values, chr);
+    for(int i=0; i<chr.nbin; ++i) {
+      if(i==chr.nbin -1) e = chr.len -1; else e = (i+1)*binsize;
+      if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << array[i] << endl;
+    }
+  }
+  temp.close();
+  
+  string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
+  if(system(command.c_str())) PRINTERR("sorting bedGraph failed.");
+
+  remove(tempfile.c_str());
   
   return;
 }
