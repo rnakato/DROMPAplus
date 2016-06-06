@@ -97,12 +97,14 @@ int main(int argc, char* argv[])
   Mapfile p(values);
   read_mapfile(values, p);
   
-    /* 
-  if(p->bedfilename){
-    isfile(p->bedfilename);
-    p->enrichfile = read_bedfile(p->bedfilename, g);
-    //    show_bedfile(p->enrichfile, g->chrnum);
-  }*/
+
+  if (values.count("bed")) {
+    string bedfile = values["bed"].as<string>();
+    isFile(bedfile);
+    p.vbed = parseBed<bed>(bedfile);
+    printBed(p.vbed);
+    exit(0);
+  }
   
   /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);
 

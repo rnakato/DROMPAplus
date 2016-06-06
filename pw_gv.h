@@ -209,6 +209,7 @@ public:
   int nt_all, nt_nonred, nt_red;
   int tv;
   double r4cmp;
+  vector<bed> vbed;
 
   Mapfile(const variables_map &values);
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
