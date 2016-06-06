@@ -129,23 +129,24 @@ class Read {
 class strandData {
  public:
   vector<Read> vRead;
+  long nread;
   long nread_nonred;
   long nread_red;
   double nread_rpm;
   double nread_afterGC;
  strandData(): nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
-  long nread() { return (long)vRead.size();}
+  void setnread() { nread = vRead.size(); }
   void print() {
-    cout << nread() << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
+    cout << nread << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
   }
   void printnonred(ofstream &out) {
-    printr(out, nread_nonred, nread());
+    printr(out, nread_nonred, nread);
   }
   void printred(ofstream &out) {
-    printr(out, nread_red, nread());
+    printr(out, nread_red, nread);
   }
   void printafterGC(ofstream &out) {
-    printr(out, nread_afterGC, nread());
+    printr(out, nread_afterGC, nread);
   }
 };
 
@@ -169,7 +170,7 @@ class SeqStats {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
   }
-  long bothnread ()         { return seq[STRAND_PLUS].nread()       + seq[STRAND_MINUS].nread(); }
+  long bothnread ()         { return seq[STRAND_PLUS].nread         + seq[STRAND_MINUS].nread; }
   long bothnread_nonred ()  { return seq[STRAND_PLUS].nread_nonred  + seq[STRAND_MINUS].nread_nonred; }
   long bothnread_red ()     { return seq[STRAND_PLUS].nread_red     + seq[STRAND_MINUS].nread_red; }
   long bothnread_rpm ()     { return seq[STRAND_PLUS].nread_rpm     + seq[STRAND_MINUS].nread_rpm; }
@@ -177,6 +178,7 @@ class SeqStats {
 
   void add(const SeqStats &x) { 
     for(int i=0; i<STRANDNUM; i++) {
+      seq[i].nread         += x.seq[i].nread;
       seq[i].nread_nonred  += x.seq[i].nread_nonred;
       seq[i].nread_red     += x.seq[i].nread_red;
       seq[i].nread_rpm     += x.seq[i].nread_rpm;
@@ -203,7 +205,7 @@ public:
   int tv;
   double r4cmp;
 
-  Mapfile(string gtfile, int binsize, int flen);
+  Mapfile(const variables_map &values);
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
   void addfrag(const FragmentSingle &frag) {
     dist.readlen[frag.readlen_F3]++;
@@ -221,11 +223,11 @@ public:
     for (auto &x:chr) x.calcdepth(dist.eflen);
     genome.calcdepth(dist.eflen);
   }
-  void update() { for (auto x:chr) genome.add(x); }
-  long nread() {
-    long n(0);
-    for (auto x:chr) n += x.bothnread();
-    return n;
+  void update() {
+    for (auto &x:chr) {
+      for(int i=0; i<STRANDNUM; i++) x.seq[i].setnread();
+      genome.add(x);
+    }
   }
   double complexity() { return nt_nonred/(double)nt_all; }
   void printstats() {

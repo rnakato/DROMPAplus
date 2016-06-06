@@ -29,7 +29,7 @@ template <class T, class S>
 void printr(ofstream &out, T a, S b)
 {
   double r = b ? a*100/(double)b: 0;
-  out << boost::format("%1% (%2$.2f%%)\t") % a % r;
+  out << boost::format("%1% (%2$.1f%%)\t") % a % r;
 };
 
 void isFile(string);

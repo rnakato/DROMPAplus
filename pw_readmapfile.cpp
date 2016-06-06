@@ -16,9 +16,6 @@ using namespace boost::program_options;
 void check_redundant_reads(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
-void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre);
-void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData &seq, const int thre);
-
 
 template <class T>
 void do_bampe(const variables_map &values, Mapfile &p, T &in)
@@ -114,11 +111,6 @@ void read_mapfile(const variables_map &values, Mapfile &p){
     printf("done.\n");
   }
 
-#ifdef DEBUG
-  for (auto x:p.chr) cout<< " loaded " << x.bothnread() << " mapped reads." << endl;
-  cout<< " loaded " << p.nread() << " mapped reads." << endl;
-#endif
-
   /* output distributions of read length and fragment length */
   outputDist(values, p);
 
@@ -136,87 +128,56 @@ void read_mapfile(const variables_map &values, Mapfile &p){
   return;
 }
 
-void check_redundant_reads(const variables_map &values, Mapfile &p)
+// for single-end
+void hashFilterAll(unordered_map<int, int> &mp, strandData &seq, const int thre)
 {
-  int threshold;
-  int strand;
-  if(values["thre_pb"].as<int>()) threshold = values["thre_pb"].as<int>();
-  else{
-    threshold = max(1, (int)(p.nread() *10/(double)p.genome.len_mpbl));
+  for(auto &x:seq.vRead) {
+    if(mp.find(x.F3) != mp.end()) {
+      if(mp[x.F3] < thre) {
+	++mp[x.F3];
+	seq.nread_nonred++;
+      } else {
+	x.duplicate = 1;
+	seq.nread_red++;
+      }
+    } else {
+      mp[x.F3] = 1;
+      seq.nread_nonred++;
+    }
   }
-  cout << "\nChecking redundant reads: redundancy threshold " << threshold << endl;
-  p.thre4filtering = threshold;
-
-  double r = values["ncmp"].as<int>()/(double)p.nread();
-
-  if(r>1){
-    cerr << "Warning: number of reads is < "<< (int)(values["ncmp"].as<int>()/NUM_1M) <<" million.\n";
-    p.tv = 1;
-  }
-  
-  // Library complexity
-  p.r4cmp = r*RAND_MAX;
-  for (auto &chr: p.chr) {
-     cout << chr.name << ".." << flush;
-     if (values.count("pair")) filtering_eachchr_pair(values, p, chr);
-     else {
-       for(strand=0; strand<STRANDNUM; strand++) filtering_eachchr_single(values, p, chr.seq[strand]);
-     }
-  }
-#ifdef DEBUG
-  BPRINT("nt_all %1%, nt_nonred %2%, nt_red %3%, complexity %4%\n") % p.nt_all % p.nt_nonred % p.nt_red % p.complexity();
-#endif
-
-  printf("done.\n");
   return;
 }
 
-void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq)
+void hashFilterCmp(unordered_map<int, int> &mp, Mapfile &p, const strandData &seq, const int thre)
 {
-  unordered_map<string, int> mp;
-  hashFilterAll(mp, seq, p.thre4filtering);
-  
-#ifdef DEBUG
-  BPRINT("nread: %1%, nonred: %2%, red: %3%\n") %seq.nread() % seq.nread_nonred % seq.nread_red;
-#endif
-
-  unordered_map<string, int> mp2;
-  hashFilterCmp(mp2, p, seq, p.thre4filtering);
-
+  for(auto x: seq.vRead){
+    if(rand() >= p.r4cmp) continue;
+    p.nt_all++;
+    if(mp.find(x.F3) != mp.end()) {
+      if(mp[x.F3] < thre) {
+	++mp[x.F3];
+	p.nt_nonred++;
+      } else {
+	p.nt_red++;
+      }
+    } else {
+      mp[x.F3] = 1;
+      p.nt_nonred++;
+    }
+  }
   return;
 }
 
-void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr)
-{
-  //  int Fmin, Fmax;
-  unordered_map<string, int> mp;
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    hashFilterAll(mp, chr.seq[strand], p.thre4filtering);
-  }
-
-#ifdef DEBUG
-  for(int strand=0; strand<STRANDNUM; strand++) 
-    BPRINT("%4% strand %5% nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread() % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red % chr.name % strand;
-#endif
-
-  unordered_map<string, int> mp2;
-  for(int strand=0; strand<STRANDNUM; strand++){
-    hashFilterCmp(mp2, p, chr.seq[strand], p.thre4filtering);
-  }
-
-  return;
-}
-
+// for paired-end
 void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre)
 {
   for(auto &x:seq.vRead) {
-    int Fmin(min(x.F3, x.F5));
-    int Fmax(max(x.F3, x.F5));
+    int Fmin = min(x.F3, x.F5);
+    int Fmax = max(x.F3, x.F5);
     string str = IntToString(Fmin) + "-" + IntToString(Fmax);
-    
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
-	mp[str]++;
+	++mp[str];
 	seq.nread_nonred++;
       } else {
 	x.duplicate = 1;
@@ -234,14 +195,13 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
 {
   for(auto x: seq.vRead){
     if(rand() >= p.r4cmp) continue;
-
-    int Fmin(min(x.F3, x.F5));
-    int Fmax(max(x.F3, x.F5));
+    int Fmin = min(x.F3, x.F5);
+    int Fmax = max(x.F3, x.F5);
     string str = IntToString(Fmin) + "-" + IntToString(Fmax);
     p.nt_all++;
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
-	mp[str]++;
+	++mp[str];
 	p.nt_nonred++;
       } else {
 	p.nt_red++;
@@ -254,6 +214,76 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
   return;
 }
 
+void check_redundant_reads(const variables_map &values, Mapfile &p)
+{
+  int threshold;
+  int strand;
+  if(values["thre_pb"].as<int>()) threshold = values["thre_pb"].as<int>();
+  else threshold = max(1, (int)(p.genome.bothnread() *10/(double)p.genome.len_mpbl));
+  
+  cout << "\nChecking redundant reads: redundancy threshold " << threshold << endl;
+  p.thre4filtering = threshold;
+
+  // Library complexity
+  double r = values["ncmp"].as<int>()/(double)p.genome.bothnread();
+  if(r>1){
+    cerr << "Warning: number of reads is < "<< (int)(values["ncmp"].as<int>()/NUM_1M) <<" million.\n";
+    p.tv = 1;
+  }
+  p.r4cmp = r*RAND_MAX;
+
+  for (auto &chr: p.chr) {
+     cout << chr.name << ".." << flush;
+     if (values.count("pair")) filtering_eachchr_pair(values, p, chr);
+     else {
+       for(strand=0; strand<STRANDNUM; strand++) filtering_eachchr_single(values, p, chr.seq[strand]);
+     }
+  }
+
+#ifdef DEBUG
+  BPRINT("nt_all %1%, nt_nonred %2%, nt_red %3%, complexity %4%\n") % p.nt_all % p.nt_nonred % p.nt_red % p.complexity();
+#endif
+
+  printf("done.\n");
+  return;
+}
+
+
+void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq)
+{
+  unordered_map<int, int> mp;
+  hashFilterAll(mp, seq, p.thre4filtering);
+  
+#ifdef DEBUG
+  BPRINT("nread: %1%, nonred: %2%, red: %3%\n") % seq.nread % seq.nread_nonred % seq.nread_red;
+#endif
+
+  unordered_map<int, int> mp2;
+  hashFilterCmp(mp2, p, seq, p.thre4filtering);
+
+  return;
+}
+
+void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr)
+{
+  //  int Fmin, Fmax;
+  unordered_map<string, int> mp;
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    hashFilterAll(mp, chr.seq[strand], p.thre4filtering);
+  }
+
+#ifdef DEBUG
+  for(int strand=0; strand<STRANDNUM; strand++) 
+    BPRINT("%4% strand %5% nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red % chr.name % strand;
+#endif
+
+  unordered_map<string, int> mp2;
+  for(int strand=0; strand<STRANDNUM; strand++){
+    hashFilterCmp(mp2, p, chr.seq[strand], p.thre4filtering);
+  }
+
+  return;
+}
 
 int check_sv(int sv)
 {
