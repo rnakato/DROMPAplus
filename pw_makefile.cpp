@@ -4,9 +4,13 @@
 
 #include "pw_makefile.h"
 #include "macro.h"
+
+#define PRINTWARNING_W(w) cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
+
+
 using namespace boost::program_options;
 
-vector<int> makeWigarray(const variables_map &, SeqStats &);
+vector<int> makeWigarray(const variables_map &, Mapfile &p, SeqStats &);
 void outputWig(const variables_map &, Mapfile &, string);
 void outputBedGraph(const variables_map &, Mapfile &, string);
 void outputBinary(const variables_map &, Mapfile &, string);
@@ -92,7 +96,50 @@ vector<int> readMpblbp(const variables_map &values, const SeqStats &chr){
   return mparray;
 }
 
-vector<int> makeWigarray(const variables_map &values, SeqStats &chr)
+void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray){
+  double w=0, dn=0, nm=0;
+  string ntype(values["ntype"].as<string>());
+  
+  if(ntype == "GR") {
+    dn = p.genome.bothnread_nonred();
+    w = dn ? values["nrpm"].as<int>()/dn: 0;
+    if(chr.name == p.lastchr) {
+      BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (long)dn % values["nrpm"].as<int>() % w;
+      if(w>2) PRINTWARNING_W(w);
+    }
+  } else if(ntype == "GD") {
+    dn = p.genome.depth;
+    w = dn ? values["ndepth"].as<double>()/dn: 0;
+    if(chr.name == p.lastchr) {
+      BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.depth % values["ndepth"].as<double>() % w;
+      if(w>2) PRINTWARNING_W(w);
+    }
+  } else if(ntype == "CR") {
+    nm = values["nrpm"].as<int>() * (chr.len_mpbl/(double)p.genome.len_mpbl);
+    dn = chr.bothnread_nonred();
+    w = dn ? nm/dn: 0;
+    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % (long)dn % nm % w;
+    if(w>2) PRINTWARNING_W(w);
+  } else if(ntype == "CD") {
+    dn = chr.depth;
+    w = dn ? values["ndepth"].as<double>()/dn: 0;
+    BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.depth % values["ndepth"].as<double>() % w;
+    if(w>2) PRINTWARNING_W(w);
+  }
+
+  for(int i=0; i<chr.nbin; ++i) {
+    if(wigarray[i]) wigarray[i] *= w;
+  }
+
+  chr.setWeight(w);
+  if(ntype == "GR" || ntype == "GD") p.genome.setWeight(w);
+  else {
+    for(int i=0; i<STRANDNUM; i++) p.genome.seq[i].nread_rpm += chr.seq[i].nread_rpm;
+  }
+  return;
+}
+
+vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
   vector<int> wigarray(chr.nbin, 0);
 
@@ -110,15 +157,18 @@ vector<int> makeWigarray(const variables_map &values, SeqStats &chr)
       //GCnorm(p, mapfile, g);
     } else {
       int binsize = values["binsize"].as<int>();
+      int mpthre = values["mpthre"].as<double>()*binsize;
       auto mparray = readMpblbp(values, chr);
       for(int i=0; i<chr.nbin; ++i) {
-	wigarray[i] = mparray[i] ? wigarray[i]*binsize/(double)mparray[i] : 0;
+	if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
 	//	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
       }
     }
   }
-  exit(0);
 
+  /* Total read normalization */
+  if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);
+	       
   return wigarray;
 }
 
@@ -129,8 +179,8 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
   out << boost::format("track type=wiggle_0\tname=\"%1%\"\tdescription=\"Merged tag counts for every %2% bp\"\n")
     % values["output"].as<string>() % binsize;
   
-  for(auto chr: p.chr) {
-    vector<int> array = makeWigarray(values, chr);
+  for(auto &chr: p.chr) {
+    vector<int> array = makeWigarray(values, p, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
     for(int i=0; i<chr.nbin; ++i) {
       if(array[i]) out << i*binsize +1 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
@@ -156,8 +206,9 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
 
   string tempfile = filename + ".temp";
   ofstream temp(tempfile);
-  for(auto chr: p.chr) {
-    vector<int> array = makeWigarray(values, chr);
+  for(auto &chr: p.chr) {
+    cout << chr.name << ".." << flush;
+    vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) {
       if(i==chr.nbin -1) e = chr.len -1; else e = (i+1)*binsize;
       if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << endl;
@@ -176,8 +227,8 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
 void outputBinary(const variables_map &values, Mapfile &p, string filename)
 {
   ofstream out(filename, ios::binary);
-  for(auto chr: p.chr) {
-    vector<int> array = makeWigarray(values, chr);
+  for(auto &chr: p.chr) {
+    vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) out.write((char *)&array[i], sizeof(int));
   }
   return;

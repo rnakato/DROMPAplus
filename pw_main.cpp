@@ -40,6 +40,7 @@ Mapfile::Mapfile(const variables_map &values):
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     SeqStats s(v[0], stoi(v[1]));
     chr.push_back(s);
+    lastchr = v[0];
   }
 
   // mappability
@@ -290,8 +291,7 @@ void init_dump(const variables_map &values){
 void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Mapfile &mapfile)
 {
   /* genome data */
-  out << p.name << "\t";
-  out << p.len  << "\t" << p.len_mpbl << "\t" << p.p_mpbl << "\t" ;
+  out << p.name << "\t" << p.len  << "\t" << p.len_mpbl << "\t" << p.p_mpbl << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.bothnread() % p.seq[STRAND_PLUS].nread % p.seq[STRAND_MINUS].nread
@@ -331,8 +331,8 @@ void output_stats(const variables_map &values, Mapfile &p)
   ofstream out(filename);
 
   out << "parse2wig version " << VERSION << endl;
-  out << "Input file:\t\"" << values["input"].as<string>() << "\"" << endl;
-  if(values["thre_pb"].as<int>()) out << "Redundancy threshold: >" << values["thre_pb"].as<int>() << endl;
+  out << "Input file: \"" << values["input"].as<string>() << "\"" << endl;
+  out << "Redundancy threshold: >" << p.thre4filtering << endl;
 
   if(p.tv) out << "Library complexity: (" << p.complexity() << ") (" << p.nt_nonred << " / " << p.nt_all <<")" << endl;
   else out << "Library complexity: " << p.complexity() << " (" << p.nt_nonred << " / " << p.nt_all <<")" << endl;
@@ -360,9 +360,8 @@ void output_stats(const variables_map &values, Mapfile &p)
   if(values.count("genome")) out << "both\tforward\treverse\t";
   out << endl;
 
-  /*** genome ***/
+  /*** SeqStats ***/
   print_SeqStats(values, out, p.genome, p);
-  /*** chromosome ***/
   for(auto x:p.chr) print_SeqStats(values, out, x, p);
 
   cout << "stats is output in " << filename << "." << endl;

@@ -254,10 +254,6 @@ void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandDat
   unordered_map<int, int> mp;
   hashFilterAll(mp, seq, p.thre4filtering);
   
-#ifdef DEBUG
-  BPRINT("nread: %1%, nonred: %2%, red: %3%\n") % seq.nread % seq.nread_nonred % seq.nread_red;
-#endif
-
   unordered_map<int, int> mp2;
   hashFilterCmp(mp2, p, seq, p.thre4filtering);
 
@@ -271,11 +267,6 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
   for(int strand=0; strand<STRANDNUM; ++strand) {
     hashFilterAll(mp, chr.seq[strand], p.thre4filtering);
   }
-
-#ifdef DEBUG
-  for(int strand=0; strand<STRANDNUM; strand++) 
-    BPRINT("%4% strand %5% nread: %1%, nonred: %2%, red: %3%\n") % chr.seq[strand].nread % chr.seq[strand].nread_nonred % chr.seq[strand].nread_red % chr.name % strand;
-#endif
 
   unordered_map<string, int> mp2;
   for(int strand=0; strand<STRANDNUM; strand++){

@@ -191,6 +191,10 @@ class SeqStats {
   void calcdepth(int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
   }
+  void setWeight(double weight) {
+    w = weight;
+    for(int i=0; i<STRANDNUM; i++) seq[i].nread_rpm = seq[i].nread_nonred * w;
+  }
 };
   
 class Mapfile {
@@ -198,6 +202,7 @@ public:
   Dist dist;
   SeqStats genome;
   vector<SeqStats> chr;
+  string lastchr;
 
   // PCR bias
   int thre4filtering;
