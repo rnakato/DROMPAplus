@@ -6,6 +6,7 @@
 
 #include "seq.h"
 #include "common.h"
+#include "util.h"
 //#include <seqan/bam_io.h>
 #include <map>
 #include <fstream>
@@ -138,16 +139,13 @@ class strandData {
     cout << nread() << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
   }
   void printnonred(ofstream &out) {
-    double r = nread() ? nread_nonred*100/(double)nread(): 0;
-    out << nread_nonred << " (" << r << "%)\t";
+    printr(out, nread_nonred, nread());
   }
   void printred(ofstream &out) {
-    double r = nread() ? nread_red*100/(double)nread(): 0;
-    out << nread_red << " (" << r << "%)\t";
+    printr(out, nread_red, nread());
   }
   void printafterGC(ofstream &out) {
-    double r = nread() ? nread_afterGC*100/(double)nread(): 0;
-    out << nread_afterGC << " (" << r << "%)\t";
+    printr(out, nread_afterGC, nread());
   }
 };
 

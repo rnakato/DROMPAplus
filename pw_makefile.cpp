@@ -96,7 +96,7 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
     vector<int> array = makeWigarray(values, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
     for(int i=0; i<chr.nbin; ++i) {
-      if(array[i]) out << i*binsize +1 << array[i] << endl;
+      if(array[i]) out << i*binsize +1 << "\t" << array[i] << endl;
     }
   }
   

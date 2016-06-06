@@ -7,6 +7,7 @@
 #include <string>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 using namespace std;
 using namespace boost::program_options;
@@ -23,6 +24,13 @@ void chkminus(const variables_map &values, string x, int lim)
   }
   return;
 }
+
+template <class T, class S>
+void printr(ofstream &out, T a, S b)
+{
+  double r = b ? a*100/(double)b: 0;
+  out << boost::format("%1% (%2$.2f%%)\t") % a % r;
+};
 
 void isFile(string);
 string IntToString(int n);

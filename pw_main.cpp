@@ -120,13 +120,6 @@ variables_map getOpts(int argc, char* argv[])
   return values;
 }
 
-template <class T, class S>
-void outr(ofstream &out, T a, S b)
-{
-  double r = b ? a*100/(double)b: 0;
-  out << a << " (" << r << "%)\t";
-}
-
 void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Mapfile &mapfile){
   /* genome data */
   out << p.name << "\t";
@@ -134,15 +127,15 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
   /* total reads*/
   out << p.bothnread() << "\t" << p.seq[STRAND_PLUS].nread() << "\t" << p.seq[STRAND_MINUS].nread() << "\t" << (p.bothnread()*100/(double)mapfile.nread()) << "%\t";
   /* nonredundant reads */
-  outr(out, p.bothnread_nonred(), p.bothnread());
+  printr(out, p.bothnread_nonred(), p.bothnread());
   p.seq[STRAND_PLUS].printnonred(out);
   p.seq[STRAND_MINUS].printnonred(out);
-  outr(out, p.bothnread_red(), p.bothnread());
+  printr(out, p.bothnread_red(), p.bothnread());
   p.seq[STRAND_PLUS].printred(out);
   p.seq[STRAND_MINUS].printred(out);
   /* reads after GCnorm */
   if(values.count("genome")) {
-    outr(out, p.bothnread_afterGC(), p.bothnread());
+    printr(out, p.bothnread_afterGC(), p.bothnread());
     p.seq[STRAND_PLUS].printafterGC(out);
     p.seq[STRAND_MINUS].printafterGC(out);
   }
@@ -161,7 +154,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
 }
 
 void output_stats(const variables_map &values, Mapfile &p){
-  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>();
+  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>() + "." + IntToString(values["binsize"].as<int>()) + ".xls";
   ofstream out(filename);
 
   out << "parse2wig version " << VERSION << endl;
@@ -188,7 +181,7 @@ void output_stats(const variables_map &values, Mapfile &p){
   if(values.count("bed")) out << "FRiP\t";
   out << endl;
   out << "\t\t\t\t";
-  out << "both\tforward\treverse\t %% genome\t";
+  out << "both\tforward\treverse\t% genome\t";
   out << "both\tforward\treverse\t";
   out << "both\tforward\treverse\t";
   if(values.count("genome")) out << "both\tforward\treverse\t";
