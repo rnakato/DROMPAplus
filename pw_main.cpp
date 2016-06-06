@@ -44,7 +44,7 @@ Mapfile::Mapfile(const variables_map &values):
 
   // mappability
   if (values.count("mp")) {
-    string mpfile = values["mp"].as<string>() + "_genome.txt";
+    string mpfile = values["mp"].as<string>() + "/map_fragL150_genome.txt";
     ifstream in_mpbl(mpfile);
     if(!in_mpbl) PRINTERR("Could nome open " << mpfile << ".");
     while (!in_mpbl.eof()) {
@@ -107,15 +107,8 @@ int main(int argc, char* argv[])
 
   if(p->bedfilename) calc_FRiP(p, mapfile, g);*/
 
-  /* GC normalization */
-  //if(p->genomefile) GCnorm(p, mapfile, g);
-
   /* make and output wigdata */
   makewig(values, p);
-
-  /* output wigarray_stats, 
-     calculate genome coverage */
-  // output_wigstats(p, mapfile, g);
 
   /* output stats */
   output_stats(values, p);

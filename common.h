@@ -13,6 +13,9 @@
 #define NUM_10M 10000000
 #define NUM_100M 100000000
 
+#define VALUE2WIGARRAY(v) ((v) * 1000.0)
+#define WIGARRAY2VALUE(v) ((v) * (1.0/1000.0))
+
 typedef enum{
   TYPE_BINARY,
   TYPE_COMPRESSWIG,

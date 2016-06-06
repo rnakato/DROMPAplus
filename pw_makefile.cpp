@@ -68,8 +68,28 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
 
   int sbin(s/values["binsize"].as<int>());
   int ebin(e/values["binsize"].as<int>());
-  for(int j=sbin; j<=ebin; ++j) wigarray[j] += 1; //VALUE2WIGARRAY(1);
+  for(int j=sbin; j<=ebin; ++j) wigarray[j] += VALUE2WIGARRAY(1);
   return;
+}
+
+vector<int> readMpblbp(const variables_map &values, const SeqStats &chr){
+  string filename = values["mp"].as<string>() + "/map_" + chr.name + "_binary.txt";
+  vector<int> mparray(chr.nbin, 0);
+  int binsize = values["binsize"].as<int>();
+
+  isFile(filename);
+  int n(0);
+  char c;
+  ifstream in(filename);
+  while (!in.eof()) {
+    c = in.get();
+    if(c==' ') continue;
+    if(c=='1') ++mparray[n/binsize];
+    ++n;
+    if(n >= chr.len-1) break;
+  }
+
+  return mparray;
 }
 
 vector<int> makeWigarray(const variables_map &values, SeqStats &chr)
@@ -82,6 +102,23 @@ vector<int> makeWigarray(const variables_map &values, SeqStats &chr)
       addReadToWigArray(values, wigarray, x, chr.len);
     }
   }
+
+  /* mappability */
+  if (values.count("mp")) {
+    /* GC normalization */
+    if(values.count("genome")) {
+      //GCnorm(p, mapfile, g);
+    } else {
+      int binsize = values["binsize"].as<int>();
+      auto mparray = readMpblbp(values, chr);
+      for(int i=0; i<chr.nbin; ++i) {
+	wigarray[i] = mparray[i] ? wigarray[i]*binsize/(double)mparray[i] : 0;
+	//	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
+      }
+    }
+  }
+  exit(0);
+
   return wigarray;
 }
 
@@ -96,7 +133,7 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
     vector<int> array = makeWigarray(values, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
     for(int i=0; i<chr.nbin; ++i) {
-      if(array[i]) out << i*binsize +1 << "\t" << array[i] << endl;
+      if(array[i]) out << i*binsize +1 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
     }
   }
   
@@ -123,7 +160,7 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
     vector<int> array = makeWigarray(values, chr);
     for(int i=0; i<chr.nbin; ++i) {
       if(i==chr.nbin -1) e = chr.len -1; else e = (i+1)*binsize;
-      if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << array[i] << endl;
+      if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << endl;
     }
   }
   temp.close();
