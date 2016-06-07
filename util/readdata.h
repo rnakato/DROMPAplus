@@ -23,19 +23,19 @@ unordered_map<string, unordered_map<string, genedata>> construct_gmp(const unord
 void printMap(const unordered_map<string, unordered_map<string, genedata>> &);
 void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &);
 map<string, int> read_genometable(const string&);
-  
+
 template <class T>
 vector<T> parseBed(const string& fileName)
 {
   vector<T> vbed;
   ifstream in(fileName);
   if(!in) printerr("BED file does not exist.");
-  
+
   string lineStr;
   vector<string> v;
   while (!in.eof()) {
     getline(in, lineStr);
-    if(lineStr.empty() || lineStr[0] == '#' || !lineStr.find("chr\t")) continue;
+    if(lineStr.empty() || lineStr[0] == '#' || !lineStr.find("chromosome")) continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     T bed(v);
     vbed.push_back(bed);

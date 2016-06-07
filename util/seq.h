@@ -13,29 +13,27 @@ inline string addchr(string chr) {
   return chr;
 }
 
-typedef enum{
+typedef enum {
   STRAND_PLUS,
   STRAND_MINUS,
   STRANDNUM
 } Strand;
 
-class range{
+class range {
  public:
   int start;
   int end;
  range(int s, int e): start(s), end(e) {}
 };
 
-class bed{
+class bed {
  public:
   string chr;
   int start;
   int end;
   int summit;
  bed(): start(0), end(0), summit(0) {}
- bed(int s, int e, string c): start(s), end(e) {
-   chr = addchr(c);
- }
+ bed(int s, int e, string c): chr(c), start(s), end(e) {}
  bed(vector<string> s): start(stoi(s[1])), end(stoi(s[2])), summit((start + end)/2) {
    chr = addchr(s[0]);
  }
@@ -115,7 +113,7 @@ class macsxls : public bed {
  }
 };
 
-class genedata{
+class genedata {
  public:
   string tname;
   string gname;

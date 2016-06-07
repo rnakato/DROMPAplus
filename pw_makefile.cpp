@@ -53,7 +53,7 @@ void makewig(const variables_map &values, Mapfile &p)
     filename += ".bin";
     outputBinary(values, p, filename);
   }
-  
+
   printf("done.\n");
   return;
 }

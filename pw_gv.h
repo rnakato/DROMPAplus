@@ -176,13 +176,15 @@ class SeqStats {
   long bothnread_rpm ()     { return seq[STRAND_PLUS].nread_rpm     + seq[STRAND_MINUS].nread_rpm; }
   long bothnread_afterGC () { return seq[STRAND_PLUS].nread_afterGC + seq[STRAND_MINUS].nread_afterGC; }
 
-  void add(const SeqStats &x) { 
+  void addnread(const SeqStats &x) { 
     for(int i=0; i<STRANDNUM; i++) {
-      seq[i].nread         += x.seq[i].nread;
-      seq[i].nread_nonred  += x.seq[i].nread_nonred;
-      seq[i].nread_red     += x.seq[i].nread_red;
-      seq[i].nread_rpm     += x.seq[i].nread_rpm;
-      seq[i].nread_afterGC += x.seq[i].nread_afterGC;
+      seq[i].nread += x.seq[i].nread;
+    }
+  }
+  void addnread_red(const SeqStats &x) { 
+    for(int i=0; i<STRANDNUM; i++) {
+      seq[i].nread_nonred += x.seq[i].nread_nonred;
+      seq[i].nread_red    += x.seq[i].nread_red;
     }
   }
   void print() {
@@ -194,6 +196,29 @@ class SeqStats {
   void setWeight(double weight) {
     w = weight;
     for(int i=0; i<STRANDNUM; i++) seq[i].nread_rpm = seq[i].nread_nonred * w;
+  }
+  void calcFRiP(const vector<bed> vbed) {
+    vector<char> array(len,0);
+    for(auto bed: vbed) {
+      if(bed.chr == name) {
+	for(int i=bed.start; i<=bed.end; ++i) array[i] = 1;
+      }
+    }
+    for(int strand=0; strand<STRANDNUM; ++strand) {
+      for (auto &x: seq[strand].vRead) {
+	if(x.duplicate) continue;
+	int s(min(x.F3, x.F5));
+	int e(max(x.F3, x.F5));
+	for(int i=s; i<=e; ++i) {
+	  if(array[i]) {
+	    x.inpeak = 1;
+	    nread_inbed++;
+	    break;
+	  }
+	}
+      }
+    }
+    FRiP = nread_inbed/(double)bothnread_nonred();
   }
 };
   
@@ -229,16 +254,30 @@ public:
     for (auto &x:chr) x.calcdepth(dist.eflen);
     genome.calcdepth(dist.eflen);
   }
-  void update() {
+  void setnread() {
     for (auto &x:chr) {
       for(int i=0; i<STRANDNUM; i++) x.seq[i].setnread();
-      genome.add(x);
+      genome.addnread(x);
     }
+  }
+  void setnread_red() {
+    for (auto &x:chr) genome.addnread_red(x);
   }
   double complexity() { return nt_nonred/(double)nt_all; }
   void printstats() {
     for (auto x:chr) x.print();
     genome.print();
+  }
+  void calcFRiP() {
+    cout << "calculate FRiP score.." << flush;
+    for(auto &c: chr) {
+      c.calcFRiP(vbed);
+      genome.nread_inbed += c.nread_inbed;
+    }
+    genome.FRiP = genome.nread_inbed/(double)genome.bothnread_nonred();
+    
+    cout << "done." << endl;
+    return;
   }
 };
 

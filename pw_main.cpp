@@ -75,6 +75,40 @@ void printVersion()
   exit(0);
 }  
 
+/*void calcFRiP(Mapfile &p)
+{
+  cout << "calculate FRiP score.." << flush;
+  int s, e;
+  for(auto &chr: p.chr) { 
+    vector<char> array(chr.len,0);
+    for(auto bed: p.vbed) {
+      if(bed.chr == chr.name) {
+	for(int i=bed.start; i<=bed.end; ++i) array[i] = 1;
+      }
+    }
+    for(int strand=0; strand<STRANDNUM; ++strand) {
+      for (auto &x:chr.seq[strand].vRead) {
+	if(x.duplicate) continue;
+	s = min(x.F3, x.F5);
+	e = max(x.F3, x.F5);
+	for(int i=s; i<=e; ++i) {
+	  if(array[i]) {
+	    x.inpeak = 1;
+	    chr.nread_inbed++;
+	    break;
+	  }
+	}
+      }
+    }
+    chr.FRiP = chr.nread_inbed/(double)chr.bothnread_nonred();
+    p.genome.nread_inbed += chr.nread_inbed;
+  }
+  p.genome.FRiP = p.genome.nread_inbed/(double)p.genome.bothnread_nonred();
+  
+  cout << "done." << endl;
+  return;
+  }*/
+
 void help_global()
 {
   auto helpmsg = R"(
@@ -96,19 +130,17 @@ int main(int argc, char* argv[])
   /* read mapfile */
   Mapfile p(values);
   read_mapfile(values, p);
-  
 
+  /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);*/
+
+  // BED file
   if (values.count("bed")) {
     string bedfile = values["bed"].as<string>();
     isFile(bedfile);
     p.vbed = parseBed<bed>(bedfile);
-    printBed(p.vbed);
-    exit(0);
+    //    printBed(p.vbed);
+    p.calcFRiP();
   }
-  
-  /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);
-
-  if(p->bedfilename) calc_FRiP(p, mapfile, g);*/
 
   /* make and output wigdata */
   makewig(values, p);
@@ -313,15 +345,16 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
     p.seq[STRAND_MINUS].printafterGC(out);
   }
   /* read depth */
-  out << p.depth << "\t";
+  //out << p.depth <<"\t";
+  out << boost::format("%1$.3f\t") % p.depth;
   /* weight */
-  if(p.w) out << p.w << "\t"; else out << " - \t";
+  if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
   /* read number after rpkm normalization */
   if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
   /* genome coverage */
   out << p.gcov << "\t";
   /* FRiP */
-  if(values.count("bed")) out << p.FRiP << "\t";
+  if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
   out << endl;
   return;
@@ -329,22 +362,22 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
 
 void output_stats(const variables_map &values, Mapfile &p)
 {
-  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>() + "." + IntToString(values["binsize"].as<int>()) + ".xls";
+  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>() + "." + IntToString(values["binsize"].as<int>()) + ".csv";
   ofstream out(filename);
 
   out << "parse2wig version " << VERSION << endl;
   out << "Input file: \"" << values["input"].as<string>() << "\"" << endl;
   out << "Redundancy threshold: >" << p.thre4filtering << endl;
 
-  if(p.tv) out << "Library complexity: (" << p.complexity() << ") (" << p.nt_nonred << " / " << p.nt_all <<")" << endl;
-  else out << "Library complexity: " << p.complexity() << " (" << p.nt_nonred << " / " << p.nt_all <<")" << endl;
+  if(p.tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % p.complexity() % p.nt_nonred % p.nt_all;
+  else     out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % p.complexity() % p.nt_nonred % p.nt_all;
  
   //  if(values.count("genome")) out << "GC summit: %d\n", mapfile->maxGC);
   // out << "Poisson: lambda = %f\n", mapfile->wstats.genome->ave);
   // out << "Negative binomial: p=%f, n=%f, p0=%f\n", mapfile->wstats.genome->nb_p, mapfile->wstats.genome->nb_n, mapfile->wstats.genome->nb_p0);
 
   /* Global stats */
-  out << "\tlength\tmappable base\tmappability\t";
+  out << "\n\tlength\tmappable base\tmappability\t";
   out << "total reads\t\t\t\t";
   out << "nonredundant reads\t\t\t";
   out << "redundant reads\t\t\t";

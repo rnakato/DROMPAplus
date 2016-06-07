@@ -115,8 +115,9 @@ void read_mapfile(const variables_map &values, Mapfile &p){
   outputDist(values, p);
 
   /* PCR bias filtering and ignore enrichregions */
+  p.setnread();
   check_redundant_reads(values, p);
-  p.update();
+  p.setnread_red();
 
   // calculate depth
   p.calcdepth();
