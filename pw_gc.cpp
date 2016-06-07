@@ -1,11 +1,13 @@
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * This file is a part of DROMPA sources.
+ */
 #include "pw_gc.h"
 #include "pw_makefile.h"
 
-
-vector<int> readMpbl_binary(const variables_map &values, const SeqStats &chr)
+vector<char> readMpbl_binary(const variables_map &values, const SeqStats &chr)
 {
   string filename = values["mp"].as<string>() + "/map_" + chr.name + "_binary.txt";
-  vector<int> mparray(chr.len, 0);
+  vector<char> mparray(chr.len, 0);
 
   isFile(filename);
   int n(0);
@@ -22,25 +24,6 @@ vector<int> readMpbl_binary(const variables_map &values, const SeqStats &chr)
   return mparray;
 }
 
-/*
-vector<int> make_fragarray(const variables_map &values, vector<SeqStats>::iterator chr){
-  // mappability
-  //  auto ar = readMpbl_binary(values, chr); // base-pair resolution
-
-  // ignore bed regions
-    int nbed, beds, bede;
-  if(p->bedfilename){
-    nbed = p->enrichfile->chr[chr].num;
-    for(i=0; i<nbed; i++){
-      beds = p->enrichfile->chr[chr].bed[i].s;
-      bede = p->enrichfile->chr[chr].bed[i].e;
-      for(j=beds; j<=bede; j++) ar[j] = 0;
-    }
-    }
-  return ar;
-}*/
-
-  
 
 void make_GCdist(const variables_map &values, Mapfile &p)
 {
@@ -55,7 +38,14 @@ void make_GCdist(const variables_map &values, Mapfile &p)
   }
   cout << "chromosome for GC distribution: " << p.chr[nchr].name << endl;
 
-  //  auto ar = make_fragarray(values, p.chr[nchr]);
+  // mappability
+  auto array = readMpbl_binary(values, p.chr[nchr]); 
+  // ignore bed regions
+  for(auto bed: p.vbed) {
+    if(bed.chr == p.chr[nchr].name) {
+      for(int i=bed.start; i<=bed.end; ++i) array[i] = 0;
+    }
+  }
 
   /*// make fastaGCarray
   char *fstfile = alloc_str_new(p->genomefile, 50);
