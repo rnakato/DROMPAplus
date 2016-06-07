@@ -16,6 +16,7 @@
 #include "macro.h"
 #include "readdata.h"
 #include "pw_makefile.h"
+#include "pw_gc.h"
 
 using namespace std;
 using namespace boost::program_options;
@@ -75,40 +76,6 @@ void printVersion()
   exit(0);
 }  
 
-/*void calcFRiP(Mapfile &p)
-{
-  cout << "calculate FRiP score.." << flush;
-  int s, e;
-  for(auto &chr: p.chr) { 
-    vector<char> array(chr.len,0);
-    for(auto bed: p.vbed) {
-      if(bed.chr == chr.name) {
-	for(int i=bed.start; i<=bed.end; ++i) array[i] = 1;
-      }
-    }
-    for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &x:chr.seq[strand].vRead) {
-	if(x.duplicate) continue;
-	s = min(x.F3, x.F5);
-	e = max(x.F3, x.F5);
-	for(int i=s; i<=e; ++i) {
-	  if(array[i]) {
-	    x.inpeak = 1;
-	    chr.nread_inbed++;
-	    break;
-	  }
-	}
-      }
-    }
-    chr.FRiP = chr.nread_inbed/(double)chr.bothnread_nonred();
-    p.genome.nread_inbed += chr.nread_inbed;
-  }
-  p.genome.FRiP = p.genome.nread_inbed/(double)p.genome.bothnread_nonred();
-  
-  cout << "done." << endl;
-  return;
-  }*/
-
 void help_global()
 {
   auto helpmsg = R"(
@@ -119,6 +86,7 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   cerr << "\nparse2wig v" << VERSION << helpmsg << endl;
   return;
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -141,6 +109,9 @@ int main(int argc, char* argv[])
     //    printBed(p.vbed);
     p.calcFRiP();
   }
+
+  // GC contents
+  if (values.count("genome")) make_GCdist(values, p);
 
   /* make and output wigdata */
   makewig(values, p);

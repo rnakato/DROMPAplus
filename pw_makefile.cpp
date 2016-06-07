@@ -2,15 +2,16 @@
  * This file is a part of DROMPA sources.
  */
 
+#include <boost/algorithm/string.hpp>
 #include "pw_makefile.h"
 #include "macro.h"
 
 #define PRINTWARNING_W(w) cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
 
-
 using namespace boost::program_options;
 
-vector<int> makeWigarray(const variables_map &, Mapfile &p, SeqStats &);
+vector<int> makeWigarray(const variables_map &, Mapfile &, SeqStats &);
+void norm2rpm(const variables_map &, Mapfile &, SeqStats &, vector<int> &);
 void outputWig(const variables_map &, Mapfile &, string);
 void outputBedGraph(const variables_map &, Mapfile &, string);
 void outputBinary(const variables_map &, Mapfile &, string);
@@ -76,68 +77,40 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
   return;
 }
 
-vector<int> readMpblbp(const variables_map &values, const SeqStats &chr){
-  string filename = values["mp"].as<string>() + "/map_" + chr.name + "_binary.txt";
-  vector<int> mparray(chr.nbin, 0);
+vector<int> readMpbl(const variables_map &values, const SeqStats &chr)
+{
   int binsize = values["binsize"].as<int>();
+  string filename = values["mp"].as<string>() + "/map_fragL150_" + chr.name + "_bin" + IntToString(binsize) +".txt";
+  vector<int> mparray(chr.nbin, 0);
 
   isFile(filename);
-  int n(0);
-  char c;
   ifstream in(filename);
+
+  string lineStr;
   while (!in.eof()) {
-    c = in.get();
-    if(c==' ') continue;
-    if(c=='1') ++mparray[n/binsize];
-    ++n;
-    if(n >= chr.len-1) break;
+    getline(in, lineStr);
+    if(lineStr.empty()) continue;
+    vector<string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+
+    int n(stoi(v[0])/binsize);
+    double val(stof(v[1])*binsize);
+    mparray[n] = val;
   }
 
   return mparray;
 }
 
-void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray){
-  double w=0, dn=0, nm=0;
-  string ntype(values["ntype"].as<string>());
-  
-  if(ntype == "GR") {
-    dn = p.genome.bothnread_nonred();
-    w = dn ? values["nrpm"].as<int>()/dn: 0;
-    if(chr.name == p.lastchr) {
-      BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (long)dn % values["nrpm"].as<int>() % w;
-      if(w>2) PRINTWARNING_W(w);
-    }
-  } else if(ntype == "GD") {
-    dn = p.genome.depth;
-    w = dn ? values["ndepth"].as<double>()/dn: 0;
-    if(chr.name == p.lastchr) {
-      BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.depth % values["ndepth"].as<double>() % w;
-      if(w>2) PRINTWARNING_W(w);
-    }
-  } else if(ntype == "CR") {
-    nm = values["nrpm"].as<int>() * (chr.len_mpbl/(double)p.genome.len_mpbl);
-    dn = chr.bothnread_nonred();
-    w = dn ? nm/dn: 0;
-    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % (long)dn % nm % w;
-    if(w>2) PRINTWARNING_W(w);
-  } else if(ntype == "CD") {
-    dn = chr.depth;
-    w = dn ? values["ndepth"].as<double>()/dn: 0;
-    BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.depth % values["ndepth"].as<double>() % w;
-    if(w>2) PRINTWARNING_W(w);
-  }
-
-  for(int i=0; i<chr.nbin; ++i) {
-    if(wigarray[i]) wigarray[i] *= w;
-  }
-
-  chr.setWeight(w);
-  if(ntype == "GR" || ntype == "GD") p.genome.setWeight(w);
-  else {
-    for(int i=0; i<STRANDNUM; i++) p.genome.seq[i].nread_rpm += chr.seq[i].nread_rpm;
-  }
+/*
+void GCnorm(const variables_map &values, Mapfile &p, SeqStats &chr){
+  printf("\nNormalize with GC distribution...\n");
+  // estimate the GC distribution of the sample
+  make_GCdist(values, p, chr);
+  // weight each read
+  weight_read(values, p, chr);
   return;
-}
+  }*/
+
 
 vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
@@ -154,14 +127,14 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   if (values.count("mp")) {
     /* GC normalization */
     if(values.count("genome")) {
-      //GCnorm(p, mapfile, g);
+      //      GCnorm(values, p, chr);
     } else {
       int binsize = values["binsize"].as<int>();
       int mpthre = values["mpthre"].as<double>()*binsize;
-      auto mparray = readMpblbp(values, chr);
+      auto mparray = readMpbl(values, chr);
       for(int i=0; i<chr.nbin; ++i) {
 	if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
-	//	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
+	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
       }
     }
   }
@@ -170,6 +143,50 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);
 	       
   return wigarray;
+}
+
+template <class T, class S>
+double setw(T nm, S dn)
+{
+  return (dn ? nm/(double)dn: 0);
+}
+
+void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray)
+{
+  double w(0);
+  string ntype(values["ntype"].as<string>());
+  
+  if(ntype == "GR") {
+    double dn(p.genome.bothnread_nonred());
+    w = setw(values["nrpm"].as<int>(), dn);
+    if(chr.name == p.lastchr) {
+      BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (long)dn % values["nrpm"].as<int>() % w;
+      if(w>2) PRINTWARNING_W(w);
+    }
+  } else if(ntype == "GD") {
+    w = setw(values["ndepth"].as<double>(), p.genome.depth);
+    if(chr.name == p.lastchr) {
+      BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.depth % values["ndepth"].as<double>() % w;
+      if(w>2) PRINTWARNING_W(w);
+    }
+  } else if(ntype == "CR") {
+    double nm = values["nrpm"].as<int>() * (chr.len_mpbl/(double)p.genome.len_mpbl);
+    double dn = chr.bothnread_nonred();
+    w = setw(nm, dn);
+    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % (long)dn % nm % w;
+    if(w>2) PRINTWARNING_W(w);
+  } else if(ntype == "CD") {
+    w = setw(values["ndepth"].as<double>(), chr.depth);
+    BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.depth % values["ndepth"].as<double>() % w;
+    if(w>2) PRINTWARNING_W(w);
+  }
+
+  for(int i=0; i<chr.nbin; ++i) { if(wigarray[i]) wigarray[i] *= w;}
+
+  chr.setWeight(w);
+  if(ntype == "GR" || ntype == "GD") p.genome.setWeight(w);
+  else { for(int i=0; i<STRANDNUM; i++) p.genome.seq[i].nread_rpm += chr.seq[i].nread_rpm;}
+  return;
 }
 
 void outputWig(const variables_map &values, Mapfile &p, string filename)
