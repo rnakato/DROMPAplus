@@ -1,5 +1,7 @@
 CC = g++
+
 CFLAGS += -std=c++11 -Wall -O2
+LIBS += -lboost_system -lboost_filesystem
 TARGET = gtf2refFlat compare_bed2tss peak_occurance multibed2gene
 SRCDIR = ./alglib-3.10.0/src
 
@@ -18,13 +20,13 @@ echo:
 	@echo "CFLAGS = $(CFLAGS)"
 
 gtf2refFlat: $(OBJSgtf)
-	$(CC) -o $@ $^ 
+	$(CC) -o $@ $^ $(LIBS)
 compare_bed2tss: $(OBJScom)
-	$(CC) -o $@ $^ 
+	$(CC) -o $@ $^ $(LIBS)
 peak_occurance: $(OBJSpo) 
-	$(CC) -o $@ $^ $(OBALGLIB)
+	$(CC) -o $@ $^ $(OBALGLIB) $(LIBS)
 multibed2gene: $(OBJSmg)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 .SUFFIXES: .o .cpp
 .cpp.o:

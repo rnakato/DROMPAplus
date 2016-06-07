@@ -6,7 +6,6 @@
 #include <iostream>
 #include <string>
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
 using namespace std;
@@ -31,8 +30,5 @@ void printr(ofstream &out, T a, S b)
   double r = b ? a*100/(double)b: 0;
   out << boost::format("%1% (%2$.1f%%)\t") % a % r;
 };
-
-void isFile(string);
-string IntToString(int n);
 
 #endif /* _UTIL_H_ */

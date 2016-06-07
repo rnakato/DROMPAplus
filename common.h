@@ -16,14 +16,14 @@
 #define VALUE2WIGARRAY(v) ((v) * 1000.0)
 #define WIGARRAY2VALUE(v) ((v) * (1.0/1000.0))
 
-typedef enum{
+enum PWfile_Type {
   TYPE_BINARY,
   TYPE_COMPRESSWIG,
   TYPE_UNCOMPRESSWIG,
   TYPE_BEDGRAPH,
   TYPE_BIGWIG,
   PWFILETYPENUM
-} PWfile_Type;
+};
 
 template <class T>
 class var {

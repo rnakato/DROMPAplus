@@ -10,6 +10,7 @@
 #include "util.h"
 #include "common.h"
 #include "macro.h"
+#include "readdata.h"
 
 using namespace boost::program_options;
 

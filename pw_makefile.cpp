@@ -4,6 +4,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include "pw_makefile.h"
+#include "readdata.h"
 #include "macro.h"
 
 #define PRINTWARNING_W(w) cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
@@ -77,30 +78,6 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
   return;
 }
 
-vector<int> readMpbl(const variables_map &values, const SeqStats &chr)
-{
-  int binsize = values["binsize"].as<int>();
-  string filename = values["mp"].as<string>() + "/map_fragL150_" + chr.name + "_bin" + IntToString(binsize) +".txt";
-  vector<int> mparray(chr.nbin, 0);
-
-  isFile(filename);
-  ifstream in(filename);
-
-  string lineStr;
-  while (!in.eof()) {
-    getline(in, lineStr);
-    if(lineStr.empty()) continue;
-    vector<string> v;
-    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-
-    int n(stoi(v[0])/binsize);
-    double val(stof(v[1])*binsize);
-    mparray[n] = val;
-  }
-
-  return mparray;
-}
-
 /*
 void GCnorm(const variables_map &values, Mapfile &p, SeqStats &chr){
   printf("\nNormalize with GC distribution...\n");
@@ -131,7 +108,7 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     } else {
       int binsize = values["binsize"].as<int>();
       int mpthre = values["mpthre"].as<double>()*binsize;
-      auto mparray = readMpbl(values, chr);
+      auto mparray = readMpbl(values["mp"].as<string>(), chr.name, values["binsize"].as<int>(), chr.nbin);
       for(int i=0; i<chr.nbin; ++i) {
 	if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
 	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;

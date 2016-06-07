@@ -3,27 +3,7 @@
  */
 #include "pw_gc.h"
 #include "pw_makefile.h"
-
-vector<char> readMpbl_binary(const variables_map &values, const SeqStats &chr)
-{
-  string filename = values["mp"].as<string>() + "/map_" + chr.name + "_binary.txt";
-  vector<char> mparray(chr.len, 0);
-
-  isFile(filename);
-  int n(0);
-  char c;
-  ifstream in(filename);
-  while (!in.eof()) {
-    c = in.get();
-    if(c==' ') continue;
-    if(c=='1') ++mparray[n];
-    ++n;
-    if(n >= chr.len-1) break;
-  }
-
-  return mparray;
-}
-
+#include "readdata.h"
 
 void make_GCdist(const variables_map &values, Mapfile &p)
 {
@@ -39,14 +19,11 @@ void make_GCdist(const variables_map &values, Mapfile &p)
   cout << "chromosome for GC distribution: " << p.chr[nchr].name << endl;
 
   // mappability
-  auto array = readMpbl_binary(values, p.chr[nchr]); 
-  // ignore bed regions
-  for(auto bed: p.vbed) {
-    if(bed.chr == p.chr[nchr].name) {
-      for(int i=bed.start; i<=bed.end; ++i) array[i] = 0;
-    }
-  }
-
+  vector<char> array; 
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), p.chr[nchr].name, p.chr[nchr].len);
+  else array = readMpbl_binary(p.chr[nchr].len);
+  if(values.count("bed")) arraySetBed(array, p.chr[nchr].name, p.vbed);
+  
   /*// make fastaGCarray
   char *fstfile = alloc_str_new(p->genomefile, 50);
   sprintf(fstfile, "%s/%s.fa", p->genomefile, g->chr[chrref].name);

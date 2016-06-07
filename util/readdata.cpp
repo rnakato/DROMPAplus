@@ -1,6 +1,9 @@
 #include "readdata.h"
+#include "macro.h"
 #include "warn.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <sstream>
 
 using namespace std;
 
@@ -242,4 +245,77 @@ map<string, int> read_genometable(const string& fileName)
     gt[chr] = stoi(v[1]);
   }
   return gt;
+}
+
+vector<int> readMpbl(string mpfile, string chrname, int binsize, int nbin)
+{
+  string filename = mpfile + "/map_fragL150_" + chrname + "_bin" + IntToString(binsize) +".txt";
+  vector<int> mparray(nbin, 0);
+
+  isFile(filename);
+  ifstream in(filename);
+
+  string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty()) continue;
+    vector<string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+
+    int n(stoi(v[0])/binsize);
+    double val(stof(v[1])*binsize);
+    mparray[n] = val;
+  }
+
+  return mparray;
+}
+
+vector<char> readMpbl_binary(string mpfile, string chrname, int chrlen)
+{
+  string filename = mpfile + "/map_" + chrname + "_binary.txt";
+  vector<char> mparray(chrlen, UNMAPPABLE);
+
+  isFile(filename);
+  int n(0);
+  char c;
+  ifstream in(filename);
+  while (!in.eof()) {
+    c = in.get();
+    if(c==' ') continue;
+    if(c=='1') mparray[n]=MAPPABLE;
+    ++n;
+    if(n >= chrlen-1) break;
+  }
+
+  return mparray;
+}
+
+vector<char> readMpbl_binary(int chrlen)
+{
+  vector<char> mparray(chrlen, MAPPABLE);
+  return mparray;
+}
+
+vector<char> arraySetBed(vector<char> &array, string chrname, vector<bed> vbed)
+{
+  for(auto bed: vbed) {
+    if(bed.chr == chrname) {
+      for(int i=bed.start; i<=bed.end; ++i) array[i] = INBED;
+    } 
+  }
+
+  return array;
+}
+
+void isFile(string str)
+{
+  boost::filesystem::path const file(str);
+  if(!boost::filesystem::exists(file)) PRINTERR(str << " does not exist.");
+}
+
+string IntToString(int n)
+{
+  ostringstream stream;
+  stream << n;
+  return stream.str();
 }

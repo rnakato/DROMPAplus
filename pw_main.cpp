@@ -87,6 +87,33 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   return;
 }
 
+void calcGenomeCoverage(const variables_map &values, Mapfile &p)
+{
+  cout << "calculate genome coverage.." << flush;
+  for (auto &chr:p.chr) {
+    vector<char> array;
+    if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
+    else array = readMpbl_binary(chr.len);
+    if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
+
+    for(int strand=0; strand<STRANDNUM; ++strand) {
+      for (auto &x: chr.seq[strand].vRead) {
+	if(x.duplicate) continue;
+	int s(min(x.F3, x.F5));
+	int e(max(x.F3, x.F5));
+	for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=COVREAD;
+      }
+    }
+    int n(0), n1(0);
+    for(int i=0; i<chr.len; ++i) {
+      if(array[i] == MAPPABLE || array[i] == COVREAD) ++n1;
+      if(array[i] == COVREAD) ++n;
+    }
+    chr.gcov = n/(double)n1;
+  }
+  cout << "done." << endl;
+  return;
+}
 
 int main(int argc, char* argv[])
 {
@@ -110,6 +137,9 @@ int main(int argc, char* argv[])
     p.calcFRiP();
   }
 
+  // Genome coverage
+  calcGenomeCoverage(values, p);
+  
   // GC contents
   if (values.count("genome")) make_GCdist(values, p);
 

@@ -13,6 +13,8 @@
 
 using namespace std;
 
+enum optstatus {UNMAPPABLE, MAPPABLE, INBED, COVREAD};
+
 int countmp(unordered_map<string, unordered_map<string, genedata>> &);
 vector<string> scanGeneName(const unordered_map<string, unordered_map<string, genedata>> &);
 unordered_map<string, unordered_map<string, genedata>> extract_mp(const unordered_map<string, unordered_map<string, genedata>> &, const vector<string>);
@@ -23,6 +25,14 @@ unordered_map<string, unordered_map<string, genedata>> construct_gmp(const unord
 void printMap(const unordered_map<string, unordered_map<string, genedata>> &);
 void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &);
 map<string, int> read_genometable(const string&);
+
+vector<int> readMpbl(string, string, int, int);
+vector<char> readMpbl_binary(int);
+vector<char> readMpbl_binary(string, string, int);
+vector<char> arraySetBed(vector<char> &, string, vector<bed>);
+void isFile(string);
+string IntToString(int n);
+
 
 template <class T>
 vector<T> parseBed(const string& fileName)

@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS += -std=c++11 -Wall -O2 -Iutil 
-LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lpthread -lz
+LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lz
 TARGET = parse2wig+ drompa+
 SRCDIR = util
 

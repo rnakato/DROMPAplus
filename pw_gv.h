@@ -7,6 +7,7 @@
 #include "seq.h"
 #include "common.h"
 #include "util.h"
+#include "readdata.h"
 //#include <seqan/bam_io.h>
 #include <map>
 #include <fstream>
@@ -198,12 +199,8 @@ class SeqStats {
     for(int i=0; i<STRANDNUM; i++) seq[i].nread_rpm = seq[i].nread_nonred * w;
   }
   void calcFRiP(const vector<bed> vbed) {
-    vector<char> array(len,0);
-    for(auto bed: vbed) {
-      if(bed.chr == name) {
-	for(int i=bed.start; i<=bed.end; ++i) array[i] = 1;
-      }
-    }
+    vector<char> array(len,MAPPABLE);
+    arraySetBed(array, name, vbed);
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto &x: seq[strand].vRead) {
 	if(x.duplicate) continue;
