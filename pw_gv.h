@@ -135,7 +135,7 @@ class strandData {
   long nread_red;
   double nread_rpm;
   double nread_afterGC;
- strandData(): nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
+ strandData(): nread(0), nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
   void setnread() { nread = vRead.size(); }
   void print() {
     cout << nread << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
@@ -180,6 +180,7 @@ class SeqStats {
   void addnread(const SeqStats &x) { 
     for(int i=0; i<STRANDNUM; i++) {
       seq[i].nread += x.seq[i].nread;
+      cout <<seq[i].nread <<"\t" << x.seq[i].nread<< endl;
     }
   }
   void addnread_red(const SeqStats &x) { 
@@ -207,7 +208,7 @@ class SeqStats {
 	int s(min(x.F3, x.F5));
 	int e(max(x.F3, x.F5));
 	for(int i=s; i<=e; ++i) {
-	  if(array[i]) {
+	  if(array[i]==INBED) {
 	    x.inpeak = 1;
 	    nread_inbed++;
 	    break;
@@ -232,6 +233,10 @@ public:
   int tv;
   double r4cmp;
   vector<bed> vbed;
+
+  // GC bias
+  vector<double> GCweight;
+  int maxGC;
 
   Mapfile(const variables_map &values);
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }

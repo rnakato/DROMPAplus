@@ -78,17 +78,6 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
   return;
 }
 
-/*
-void GCnorm(const variables_map &values, Mapfile &p, SeqStats &chr){
-  printf("\nNormalize with GC distribution...\n");
-  // estimate the GC distribution of the sample
-  make_GCdist(values, p, chr);
-  // weight each read
-  weight_read(values, p, chr);
-  return;
-  }*/
-
-
 vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
   vector<int> wigarray(chr.nbin, 0);
@@ -104,14 +93,14 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   if (values.count("mp")) {
     /* GC normalization */
     if(values.count("genome")) {
-      //      GCnorm(values, p, chr);
+      //      weight_read(p);
     } else {
       int binsize = values["binsize"].as<int>();
       int mpthre = values["mpthre"].as<double>()*binsize;
       auto mparray = readMpbl(values["mp"].as<string>(), chr.name, values["binsize"].as<int>(), chr.nbin);
       for(int i=0; i<chr.nbin; ++i) {
 	if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
-	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
+	//	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
       }
     }
   }

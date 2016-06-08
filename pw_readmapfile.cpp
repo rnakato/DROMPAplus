@@ -218,13 +218,11 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
 
 void check_redundant_reads(const variables_map &values, Mapfile &p)
 {
-  int threshold;
   int strand;
-  if(values["thre_pb"].as<int>()) threshold = values["thre_pb"].as<int>();
-  else threshold = max(1, (int)(p.genome.bothnread() *10/(double)p.genome.len_mpbl));
+  if(values["thre_pb"].as<int>()) p.thre4filtering = values["thre_pb"].as<int>();
+  else p.thre4filtering = max(1, (int)(p.genome.bothnread() *10/(double)p.genome.len_mpbl));
   
-  cout << "\nChecking redundant reads: redundancy threshold " << threshold << endl;
-  p.thre4filtering = threshold;
+  cout << "\nChecking redundant reads: redundancy threshold " << p.thre4filtering << endl;
 
   // Library complexity
   double r = values["ncmp"].as<int>()/(double)p.genome.bothnread();

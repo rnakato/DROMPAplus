@@ -9,7 +9,7 @@ CFLAGS += -DDEBUG
 endif
 
 OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
-OBJS_COMMON = util.o
+#OBJS_COMMON = util.o
 OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o $(OBJS_COMMON)
 OBJS_DD = drompa+.o $(OBJS_COMMON)
 

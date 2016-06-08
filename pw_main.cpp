@@ -27,8 +27,11 @@ void init_dump(const variables_map &);
 void output_stats(const variables_map &values, Mapfile &p);
 
 Mapfile::Mapfile(const variables_map &values):
-  genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), r4cmp(0)
+  genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), r4cmp(0), maxGC(0)
 {
+  vector<double> gcw(values["flen4gc"].as<int>(),0);
+  GCweight = gcw;
+
   vector<string> v;
   string lineStr;
 
@@ -90,6 +93,7 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
 void calcGenomeCoverage(const variables_map &values, Mapfile &p)
 {
   cout << "calculate genome coverage.." << flush;
+  long nall(0), n1all(0);
   for (auto &chr:p.chr) {
     vector<char> array;
     if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
@@ -110,7 +114,11 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
       if(array[i] == COVREAD) ++n;
     }
     chr.gcov = n/(double)n1;
+    nall += n;
+    n1all += n1;
   }
+  p.genome.gcov = nall/(double)n1all;
+  
   cout << "done." << endl;
   return;
 }
@@ -141,8 +149,10 @@ int main(int argc, char* argv[])
   calcGenomeCoverage(values, p);
   
   // GC contents
-  if (values.count("genome")) make_GCdist(values, p);
-
+  if (values.count("genome")) {
+    make_GCdist(values, p);
+    weightRead(values, p);
+  }
   /* make and output wigdata */
   makewig(values, p);
 
@@ -169,7 +179,7 @@ void checkParam(const variables_map &values)
   if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") printerr("invalid --ntype.\n");
 
   if (values.count("genome")) {
-    if(!values.count("mpbin")) printerr("-GC option requires -mpbin option.\n");
+    if(!values.count("mp")) printerr("-GC option requires --mp option.\n");
     isFile(values["genome"].as<string>());
   }
 
@@ -253,9 +263,8 @@ void setOpts(options_description &allopts){
     ;  
   options_description optmp("Mappability normalization",100);
   optmp.add_options()
-    ("mp",        value<string>(),	  "Mappability file")  // mpbin ni touitu?
+    ("mp",        value<string>(),	  "Mappability file")
     ("mpthre",    value<double>()->default_value(0.3),	  "Threshold of low mappability regions")
-    ("mpbin",        value<string>(),	  "mpbinaryfile")
     ;
   options_description optgc("GC bias normalization\n   (require large time and memory)",100);
   optgc.add_options()
@@ -310,13 +319,12 @@ void init_dump(const variables_map &values){
   printf("\n");
   if (values.count("mp")) {
     printf("Mappability normalization:\n");
-    BPRINT("\tfile prefix: %1%\n") % values["mp"].as<string>();
+    BPRINT("\tFile directory: %1%\n") % values["mp"].as<string>();
     BPRINT("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
   }
   if (values.count("genome")) {
     printf("Correcting GC bias:\n");
     BPRINT("\tChromosome directory: %1%\n") % values["genome"].as<string>();
-    BPRINT("\tmappability binary prefix: %1%\n") % values["mpbin"].as<string>();
     BPRINT("\tLength for GC distribution: %1%\n") % values["flen4gc"].as<int>();
   }
   printf("======================================\n");
@@ -373,7 +381,7 @@ void output_stats(const variables_map &values, Mapfile &p)
   if(p.tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % p.complexity() % p.nt_nonred % p.nt_all;
   else     out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % p.complexity() % p.nt_nonred % p.nt_all;
  
-  //  if(values.count("genome")) out << "GC summit: %d\n", mapfile->maxGC);
+  if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
   // out << "Poisson: lambda = %f\n", mapfile->wstats.genome->ave);
   // out << "Negative binomial: p=%f, n=%f, p0=%f\n", mapfile->wstats.genome->nb_p, mapfile->wstats.genome->nb_n, mapfile->wstats.genome->nb_p0);
 
