@@ -300,7 +300,13 @@ vector<char> arraySetBed(vector<char> &array, string chrname, vector<bed> vbed)
 {
   for(auto bed: vbed) {
     if(bed.chr == chrname) {
-      for(int i=bed.start; i<=bed.end; ++i) array[i] = INBED;
+      int s(bed.start);
+      int e(bed.end);
+      if(e>=array.size()) {
+	cerr << "Warning: bedfile" << bed.start <<"-"<<bed.end << " > array size " << array.size()<< endl;
+	e = array.size()-1;
+      }
+      for(int i=s; i<=e; ++i) array[i] = INBED;
     } 
   }
 

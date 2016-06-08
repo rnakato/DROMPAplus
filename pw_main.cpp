@@ -95,6 +95,7 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   cout << "calculate genome coverage.." << flush;
   long nall(0), n1all(0);
   for (auto &chr:p.chr) {
+    cout << chr.name << ".." << flush;
     vector<char> array;
     if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
     else array = readMpbl_binary(chr.len);
@@ -105,6 +106,10 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
 	if(x.duplicate) continue;
 	int s(min(x.F3, x.F5));
 	int e(max(x.F3, x.F5));
+	if(e>=array.size()) {
+	  cerr << "Warning: " << chr.name<< " read " << s <<"-"<< e << " > array size " << array.size()<< endl;
+	  e = array.size()-1;
+	}
 	for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=COVREAD;
       }
     }
