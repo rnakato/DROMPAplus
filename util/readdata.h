@@ -13,7 +13,7 @@
 
 using namespace std;
 
-enum optstatus {UNMAPPABLE, MAPPABLE, INBED, COVREAD};
+enum optstatus {UNMAPPABLE, MAPPABLE, INBED, COVREAD_ALL, COVREAD_NORM};
 
 int countmp(unordered_map<string, unordered_map<string, genedata>> &);
 vector<string> scanGeneName(const unordered_map<string, unordered_map<string, genedata>> &);

@@ -17,6 +17,9 @@
 #include "readdata.h"
 #include "pw_makefile.h"
 #include "pw_gc.h"
+#include "pw_hamming.h"
+
+#define NUM_GCOV 5000000
 
 using namespace std;
 using namespace boost::program_options;
@@ -27,7 +30,7 @@ void init_dump(const variables_map &);
 void output_stats(const variables_map &values, Mapfile &p);
 
 Mapfile::Mapfile(const variables_map &values):
-  genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), r4cmp(0), maxGC(0)
+  genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
 {
   vector<double> gcw(values["flen4gc"].as<int>(),0);
   GCweight = gcw;
@@ -93,7 +96,16 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
 void calcGenomeCoverage(const variables_map &values, Mapfile &p)
 {
   cout << "calculate genome coverage.." << flush;
-  long nall(0), n1all(0);
+
+  // ignore peak region
+  double r = NUM_GCOV/(double)(p.genome.bothnread_nonred() - p.genome.nread_inbed);
+  if(r>1){
+    cerr << "Warning: number of reads is < "<< (int)(NUM_GCOV/NUM_1M) << " million.\n";
+    p.gv = 1;
+  }
+  double r4cmp = r*RAND_MAX;
+  
+  int val=0;
   for (auto &chr:p.chr) {
     cout << chr.name << ".." << flush;
     vector<char> array;
@@ -104,25 +116,29 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto &x: chr.seq[strand].vRead) {
 	if(x.duplicate) continue;
+
+	if(rand() >= r4cmp) val=COVREAD_ALL; else val=COVREAD_NORM;
+
 	int s(min(x.F3, x.F5));
 	int e(max(x.F3, x.F5));
-	if(e>=array.size()) {
-	  cerr << "Warning: " << chr.name<< " read " << s <<"-"<< e << " > array size " << array.size()<< endl;
+	if(e>=(int)array.size()) {
+	  cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size()<< endl;
 	  e = array.size()-1;
 	}
-	for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=COVREAD;
+	for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
       }
     }
-    int n(0), n1(0);
     for(int i=0; i<chr.len; ++i) {
-      if(array[i] == MAPPABLE || array[i] == COVREAD) ++n1;
-      if(array[i] == COVREAD) ++n;
+      if(array[i] == MAPPABLE || array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++chr.nbp;
+      if(array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++chr.ncov;
+      if(array[i] == COVREAD_NORM) ++chr.ncovnorm;
     }
-    chr.gcov = n/(double)n1;
-    nall += n;
-    n1all += n1;
+    chr.calcGcov();
+    p.genome.nbp      += chr.nbp;
+    p.genome.ncov     += chr.ncov;
+    p.genome.ncovnorm += chr.ncovnorm;
   }
-  p.genome.gcov = nall/(double)n1all;
+  p.genome.calcGcov();
   
   cout << "done." << endl;
   return;
@@ -139,7 +155,7 @@ int main(int argc, char* argv[])
   Mapfile p(values);
   read_mapfile(values, p);
 
-  /*  if(p->ccp) pw_ccp(p, mapfile, g->chrmax, (int)g->chr[g->chrmax].len);*/
+  if(values.count("hd")) hammingDist(p);
 
   // BED file
   if (values.count("bed")) {
@@ -279,7 +295,7 @@ void setOpts(options_description &allopts){
     ;
   options_description optother("Others",100);
   optother.add_options()
-    ("ccp", 	  "make cross-correlation profile")
+    ("hd", 	  "make hamming distance profile")
     ("version,v", "print version")
     ("help,h", "show help message")
     ;
@@ -311,7 +327,7 @@ void init_dump(const variables_map &values){
   }
   BPRINT("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
   if (values.count("bed")) BPRINT("Bed file: %1%\n") % values["bed"].as<string>();
-  if (values.count("ccp")) BPRINT("Make cross-correlation profile.\n");
+  if (values.count("hd")) BPRINT("Make hamming-distance profile.\n");
 
   string ntype = values["ntype"].as<string>();
   BPRINT("\nTotal read normalization: %1%\n") % ntype;
@@ -358,16 +374,12 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
     p.seq[STRAND_PLUS].printafterGC(out);
     p.seq[STRAND_MINUS].printafterGC(out);
   }
-  /* read depth */
-  //out << p.depth <<"\t";
   out << boost::format("%1$.3f\t") % p.depth;
-  /* weight */
   if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
-  /* read number after rpkm normalization */
   if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
-  /* genome coverage */
-  out << p.gcov << "\t";
-  /* FRiP */
+  if(mapfile.gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % p.gcovRaw % p.gcovNorm;
+  else out << boost::format("%1$.3f\t%2$.3f\t") % p.gcovRaw % p.gcovNorm;
+  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
   out << endl;
@@ -399,7 +411,7 @@ void output_stats(const variables_map &values, Mapfile &p)
   out << "read depth\t";
   out << "scaling weight\t";
   out << "normalized read number\t";
-  out << "genome coverage\t";
+  out << "gcov (Raw)\tgcov (Normed)\t";
   if(values.count("bed")) out << "FRiP\t";
   out << endl;
   out << "\t\t\t\t";

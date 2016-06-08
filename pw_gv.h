@@ -8,7 +8,6 @@
 #include "common.h"
 #include "util.h"
 #include "readdata.h"
-//#include <seqan/bam_io.h>
 #include <map>
 #include <fstream>
 #include <boost/format.hpp>
@@ -157,7 +156,10 @@ class SeqStats {
   long len, len_mpbl;
   int nbin;
   double p_mpbl;  /* mappability */
-  double gcov;    /* genome coverage for bin */
+  // genome coverage
+  long nbp;
+  int ncov, ncovnorm;
+  double gcovRaw, gcovNorm;
 
   strandData seq[STRANDNUM];
   double depth;
@@ -166,7 +168,7 @@ class SeqStats {
   long nread_inbed;
   double FRiP;
 
- SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), gcov(0), depth(0), w(0), nread_inbed(0), FRiP(0) { }
+ SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) { }
   void addfrag(const FragmentSingle &frag) {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
@@ -194,6 +196,10 @@ class SeqStats {
   }
   void calcdepth(int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
+  }
+  void calcGcov() {
+    gcovRaw  = nbp ? ncov / (double)nbp: 0;
+    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
   }
   void setWeight(double weight) {
     w = weight;
@@ -230,7 +236,7 @@ public:
   // PCR bias
   int thre4filtering;
   int nt_all, nt_nonred, nt_red;
-  int tv;
+  int tv, gv;
   double r4cmp;
   vector<bed> vbed;
 
