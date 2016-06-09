@@ -88,11 +88,11 @@ void parse_sam(const variables_map &values, string inputfile, Mapfile &p)
 }
 
 void outputDist(const variables_map &values, Mapfile &p){
-  string outputfile = values["odir"].as<string>() + "/" + values["output"].as<string>() + ".readlength_dist.xls";
+  string outputfile = p.oprefix + ".readlength_dist.xls";
 
   p.dist.printReadlen(outputfile, values.count("pair"));
   if(values.count("pair")) {
-    outputfile = values["odir"].as<string>() + "/" + values["output"].as<string>() + ".fragmentlength_dist.xls";
+    outputfile = p.oprefix + ".fragmentlength_dist.xls";
     p.dist.printFraglen(outputfile);
   }
 

@@ -31,8 +31,11 @@ void hammingDist(Mapfile &p)
       (fwd >>= 1);
       hd[step]=((fwd ^ rev).count());
     }
-    for(int i=0;i<1000;++i) cout << i << "\t" << hd[i] << endl;
-    exit(0);
+
+    string filename = p.oprefix + ".hammingdistance.xls";
+    ofstream out(filename);
+    for(int i=0;i<1000;++i) out << i << "\t" << hd[i] << endl;
+    break; // zantei
   }
 
   return;

@@ -244,6 +244,8 @@ public:
   vector<double> GCweight;
   int maxGC;
 
+  string oprefix;
+
   Mapfile(const variables_map &values);
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
   void addfrag(const FragmentSingle &frag) {

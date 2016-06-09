@@ -32,6 +32,8 @@ void output_stats(const variables_map &values, Mapfile &p);
 Mapfile::Mapfile(const variables_map &values):
   genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
 {
+  oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
+  dist.eflen = values["flen"].as<int>();
   vector<double> gcw(values["flen4gc"].as<int>(),0);
   GCweight = gcw;
 
@@ -72,8 +74,6 @@ Mapfile::Mapfile(const variables_map &values):
     x.p_mpbl = x.len_mpbl/(double)x.len;
     genome.p_mpbl = genome.len_mpbl/(double)genome.len;
   }
-
-  dist.eflen = values["flen"].as<int>();
 }
 
 void printVersion()
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
   Mapfile p(values);
   read_mapfile(values, p);
 
-  if(values.count("hd")) hammingDist(p);
+  if(values.count("hd") && !values.count("pair")) hammingDist(p);
 
   // BED file
   if (values.count("bed")) {
@@ -388,7 +388,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
 
 void output_stats(const variables_map &values, Mapfile &p)
 {
-  string filename = values["odir"].as<string>() + "/" + values["output"].as<string>() + "." + IntToString(values["binsize"].as<int>()) + ".csv";
+  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".csv";
   ofstream out(filename);
 
   out << "parse2wig version " << VERSION << endl;

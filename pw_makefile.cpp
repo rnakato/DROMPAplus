@@ -31,9 +31,7 @@ void makewig(const variables_map &values, Mapfile &p)
     }*/
 
   int oftype = values["of"].as<int>();
-  string odir = values["odir"].as<string>();
-  string prefix = values["output"].as<string>();
-  string filename = odir + "/" + prefix;
+  string filename(p.oprefix);
 
   if(oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG){
     filename += ".wig";
@@ -47,7 +45,7 @@ void makewig(const variables_map &values, Mapfile &p)
     outputBedGraph(values, p, filename);
     if(oftype==TYPE_BIGWIG) {
       printf("Convert to bigWig...\n");
-      string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<string>() + " " + odir + "/" + prefix + ".bw";
+      string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<string>() + " " + p.oprefix + ".bw";
       if(system(command.c_str())) PRINTERR("conversion failed.");
       remove(filename.c_str()); 
     }
