@@ -51,6 +51,14 @@ Mapfile::Mapfile(const variables_map &values):
     chr.push_back(s);
     lastchr = v[0];
   }
+  long lenmax(0);
+
+  for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
+    if(lenmax < itr->len) {
+      lenmax = itr->len;
+      lchr = itr;
+    }
+  }
 
   // mappability
   if (values.count("mp")) {
@@ -295,7 +303,7 @@ void setOpts(options_description &allopts){
     ;
   options_description optother("Others",100);
   optother.add_options()
-    ("hd", 	  "make hamming distance profile")
+    ("hd", 	  "make hamming-distance plot")
     ("version,v", "print version")
     ("help,h", "show help message")
     ;
@@ -327,7 +335,7 @@ void init_dump(const variables_map &values){
   }
   BPRINT("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
   if (values.count("bed")) BPRINT("Bed file: %1%\n") % values["bed"].as<string>();
-  if (values.count("hd")) BPRINT("Make hamming-distance profile.\n");
+  if (values.count("hd")) BPRINT("Make hamming-distance plot.\n");
 
   string ntype = values["ntype"].as<string>();
   BPRINT("\nTotal read normalization: %1%\n") % ntype;
@@ -411,7 +419,7 @@ void output_stats(const variables_map &values, Mapfile &p)
   out << "read depth\t";
   out << "scaling weight\t";
   out << "normalized read number\t";
-  out << "gcov (Raw)\tgcov (Normed)\t";
+  out << "gcov (Raw)\tgcov (Normed)\tbp num\t";
   if(values.count("bed")) out << "FRiP\t";
   out << endl;
   out << "\t\t\t\t";

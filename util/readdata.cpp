@@ -302,7 +302,7 @@ vector<char> arraySetBed(vector<char> &array, string chrname, vector<bed> vbed)
     if(bed.chr == chrname) {
       int s(bed.start);
       int e(bed.end);
-      if(e>=array.size()) {
+      if(e>=(int)array.size()) {
 	cerr << "Warning: bedfile" << bed.start <<"-"<<bed.end << " > array size " << array.size()<< endl;
 	e = array.size()-1;
       }

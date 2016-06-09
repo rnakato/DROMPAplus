@@ -26,6 +26,9 @@
 #define NUM_DARRAY 100
 #define READARRAY_NUM 50000 
 
+#define HD_FROM 500
+#define HD_WIDTH 1500
+
 class WigStatsMember {
   int max;
   int *darray_all, *darray_bg;
@@ -43,11 +46,13 @@ class WigStats{
 
 class Dist{
  public:
+  int lenF3;
+  int lenF5;
+  int eflen;
   vector<int> readlen;
   vector<int> readlen_F5;
   vector<int> fraglen; /* +1: over DIST_FRAGLEN_MAX */
-  int eflen;
- Dist(): eflen(0) {
+ Dist(): lenF3(0), lenF5(0), eflen(0) {
     vector<int> v(DIST_READLEN_MAX,0);
     readlen = v;
     vector<int> v2(DIST_READLEN_MAX,0);
@@ -57,13 +62,28 @@ class Dist{
   }
   void printReadlen(string &outputfile, bool pair) {
     long sum(0);
-    for(int i=0; i<DIST_READLEN_MAX; ++i) sum += readlen[i];
+    int max(0);
+    for(int i=0; i<DIST_READLEN_MAX; ++i) {
+      sum += readlen[i];
+      if(max<readlen[i]) {
+	max = readlen[i];
+	lenF3 = i;
+      }
+    }
     ofstream out(outputfile);
     out << "F3 read length distribution" << endl;
     out << "length\tread number\tproportion" << endl;
     for(int i=0; i<DIST_READLEN_MAX; ++i) if(readlen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen[i] % (readlen[i]/(double)sum);
 
     if(pair) {
+      max=0;
+      for(int i=0; i<DIST_READLEN_MAX; ++i) {
+	sum += readlen_F5[i];
+	if(max<readlen_F5[i]) {
+	  max = readlen_F5[i];
+	  lenF5 = i;
+	}
+      }
       out << "\n\nF5 read length distribution" << endl;
       out << "length\tread number\tproportion" << endl;
       for(int i=0; i<DIST_READLEN_MAX; ++i) if(readlen_F5[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen_F5[i] % (readlen_F5[i]/(double)sum);
@@ -157,8 +177,7 @@ class SeqStats {
   int nbin;
   double p_mpbl;  /* mappability */
   // genome coverage
-  long nbp;
-  int ncov, ncovnorm;
+  long nbp, ncov, ncovnorm;
   double gcovRaw, gcovNorm;
 
   strandData seq[STRANDNUM];
@@ -167,8 +186,14 @@ class SeqStats {
   /* FRiP */
   long nread_inbed;
   double FRiP;
+  
+  // Hamming distance plot;
+  vector<int> hd;
 
- SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) { }
+ SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
+    vector<int> h(HD_WIDTH,0);
+    hd = h;
+  }
   void addfrag(const FragmentSingle &frag) {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
@@ -182,7 +207,7 @@ class SeqStats {
   void addnread(const SeqStats &x) { 
     for(int i=0; i<STRANDNUM; i++) {
       seq[i].nread += x.seq[i].nread;
-      cout <<seq[i].nread <<"\t" << x.seq[i].nread<< endl;
+      //      cout <<seq[i].nread <<"\t" << x.seq[i].nread<< endl;
     }
   }
   void addnread_red(const SeqStats &x) { 
@@ -228,9 +253,11 @@ class SeqStats {
   
 class Mapfile {
 public:
+  string oprefix;
   Dist dist;
   SeqStats genome;
   vector<SeqStats> chr;
+  vector<SeqStats>::iterator lchr; // longest chromosome
   string lastchr;
 
   // PCR bias
@@ -243,8 +270,6 @@ public:
   // GC bias
   vector<double> GCweight;
   int maxGC;
-
-  string oprefix;
 
   Mapfile(const variables_map &values);
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
