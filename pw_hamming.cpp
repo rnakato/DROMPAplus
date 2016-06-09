@@ -65,7 +65,6 @@ void hammingDist(Mapfile &p)
   // get RSC
   double RSC=(max_hd_fl-hdg[fl])/(double)(max_hd_fl-hdg[rl]);
 
-  
   string filename = p.oprefix + ".hdp.csv";
   ofstream out(filename);
   for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << hdg[i] << endl;

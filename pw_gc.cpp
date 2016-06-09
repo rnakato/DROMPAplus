@@ -84,34 +84,33 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
 
 void make_GCdist(const variables_map &values, Mapfile &p)
 {
-  /* use longest chromosome as reference genome */
-  long lenmax(0);
+  /*  long lenmax(0);
   int nchr = 0;
   for(size_t i=0; i<p.chr.size(); ++i) {
     if(lenmax < p.chr[i].len) {
       lenmax = p.chr[i].len;
       nchr = i;
     }
-  }
-  cout << "chromosome for GC distribution: " << p.chr[nchr].name << endl;
-  int chrlen(p.chr[nchr].len);
+    }*/
+  cout << "chromosome for GC distribution: " << p.lchr->name << endl;
+  int chrlen(p.lchr->len);
   int flen(values["flen4gc"].as<int>());
   
   // mappability
   vector<char> array; 
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), p.chr[nchr].name, chrlen);
-  else array = readMpbl_binary(p.chr[nchr].len);
-  if(values.count("bed")) arraySetBed(array, p.chr[nchr].name, p.vbed);
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), p.lchr->name, chrlen);
+  else array = readMpbl_binary(p.lchr->len);
+  if(values.count("bed")) arraySetBed(array, p.lchr->name, p.vbed);
   
   // make fastaGCarray
-  string fa= values["genome"].as<string>() + "/" + p.chr[nchr].name + ".fa";
+  string fa= values["genome"].as<string>() + "/" + p.lchr->name + ".fa";
   
   auto FastaArray = makeFastaArray(fa, chrlen, flen);
   
   // make GCarray for genome
   auto gDist = makeDistGenome(FastaArray, array, chrlen, flen);
   // make GCarray for reads
-  auto rDist = makeDistRead(p, FastaArray, array, p.chr[nchr], chrlen, flen);
+  auto rDist = makeDistRead(p, FastaArray, array, *p.lchr, chrlen, flen);
   
   output_GCdist(values, p, gDist, rDist, flen);
 
