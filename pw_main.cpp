@@ -262,7 +262,7 @@ void setOpts(options_description &allopts){
     ;
   options_description optIO("Input/Output",100);
   optIO.add_options()
-    ("binsize,b",   value<int>()->default_value(100),	  "bin size")
+    ("binsize,b",   value<int>()->default_value(50),	  "bin size")
     ("ftype,f",     value<string>()->default_value("SAM"), "{SAM|BAM|BOWTIE|TAGALIGN}: format of input file (default:SAM)\nTAGALIGN could be gzip'ed (extension: tagAlign.gz)")
     ("of",        value<int>()->default_value(0),	  "output format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
     ("odir",        value<string>()->default_value("parse2wigdir"),	  "output directory name")

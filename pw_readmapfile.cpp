@@ -23,7 +23,7 @@ void do_bampe(const variables_map &values, Mapfile &p, T &in)
 {
   int maxins(values["maxins"].as<int>());
 
-  string lineStr; 
+  string lineStr;
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0]=='@') continue;
