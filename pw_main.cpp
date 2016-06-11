@@ -10,30 +10,24 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include "pw_readmapfile.h"
-#include "util.h"
-#include "common.h"
-#include "warn.h"
-#include "macro.h"
 #include "readdata.h"
 #include "pw_makefile.h"
+#include "pw_gv.h"
 #include "pw_gc.h"
-#include "pw_hamming.h"
 
 #define NUM_GCOV 5000000
-
-using namespace std;
-using namespace boost::program_options;
 
 variables_map getOpts(int argc, char* argv[]);
 void setOpts(options_description &);
 void init_dump(const variables_map &);
 void output_stats(const variables_map &values, Mapfile &p);
+void calcGenomeCoverage(const variables_map &values, Mapfile &p);
 
 Mapfile::Mapfile(const variables_map &values):
-  genome("Genome"), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
+  genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
 {
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
-  dist.eflen = values["flen"].as<int>();
+  
   vector<double> gcw(values["flen4gc"].as<int>(),0);
   GCweight = gcw;
 
@@ -101,57 +95,6 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   return;
 }
 
-void calcGenomeCoverage(const variables_map &values, Mapfile &p)
-{
-  cout << "calculate genome coverage.." << flush;
-
-  // ignore peak region
-  double r = NUM_GCOV/(double)(p.genome.bothnread_nonred() - p.genome.nread_inbed);
-  if(r>1){
-    cerr << "Warning: number of reads is < "<< (int)(NUM_GCOV/NUM_1M) << " million.\n";
-    p.gv = 1;
-  }
-  double r4cmp = r*RAND_MAX;
-  
-  int val=0;
-  for (auto &chr:p.chr) {
-    cout << chr.name << ".." << flush;
-    vector<char> array;
-    if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
-    else array = readMpbl_binary(chr.len);
-    if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
-
-    for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &x: chr.seq[strand].vRead) {
-	if(x.duplicate) continue;
-
-	if(rand() >= r4cmp) val=COVREAD_ALL; else val=COVREAD_NORM;
-
-	int s(min(x.F3, x.F5));
-	int e(max(x.F3, x.F5));
-	if(e>=(int)array.size()) {
-	  cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size()<< endl;
-	  e = array.size()-1;
-	}
-	for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
-      }
-    }
-    for(int i=0; i<chr.len; ++i) {
-      if(array[i] == MAPPABLE || array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++chr.nbp;
-      if(array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++chr.ncov;
-      if(array[i] == COVREAD_NORM) ++chr.ncovnorm;
-    }
-    chr.calcGcov();
-    p.genome.nbp      += chr.nbp;
-    p.genome.ncov     += chr.ncov;
-    p.genome.ncovnorm += chr.ncovnorm;
-  }
-  p.genome.calcGcov();
-  
-  cout << "done." << endl;
-  return;
-}
-
 int main(int argc, char* argv[])
 {
   variables_map values = getOpts(argc, argv);
@@ -162,8 +105,6 @@ int main(int argc, char* argv[])
   /* read mapfile */
   Mapfile p(values);
   read_mapfile(values, p);
-
-  if(values.count("hd") && !values.count("pair")) hammingDist(p);
 
   // BED file
   if (values.count("bed")) {
@@ -211,7 +152,7 @@ void checkParam(const variables_map &values)
     if(!values.count("mp")) printerr("-GC option requires --mp option.\n");
     isFile(values["genome"].as<string>());
   }
-
+  
   return;
 }
 
@@ -270,7 +211,8 @@ void setOpts(options_description &allopts){
     ;
   options_description optsingle("For single-end read",100);
   optsingle.add_options()
-    ("flen",        value<int>()->default_value(150), "expected fragment length\n(Automatically calculated in paired-end mode)")
+    ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
+    ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
     ;
   options_description optpair("For paired-end read",100);
   optpair.add_options()
@@ -303,7 +245,6 @@ void setOpts(options_description &allopts){
     ;
   options_description optother("Others",100);
   optother.add_options()
-    ("hd", 	  "make hamming-distance plot")
     ("version,v", "print version")
     ("help,h", "show help message")
     ;
@@ -324,7 +265,8 @@ void init_dump(const variables_map &values){
   BPRINT("Binsize: %1% bp\n")        % values["binsize"].as<int>();
   if (!values.count("pair")) {
     cout << "Single-end mode: ";
-    BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
+    BPRINT("fragment length will be estimated from hamming distance\n");
+    if (values.count("nomodel")) BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
   } else {
     cout << "Paired-end mode: ";
     BPRINT("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
@@ -335,7 +277,6 @@ void init_dump(const variables_map &values){
   }
   BPRINT("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
   if (values.count("bed")) BPRINT("Bed file: %1%\n") % values["bed"].as<string>();
-  if (values.count("hd")) BPRINT("Make hamming-distance plot.\n");
 
   string ntype = values["ntype"].as<string>();
   BPRINT("\nTotal read normalization: %1%\n") % ntype;
@@ -406,6 +347,9 @@ void output_stats(const variables_map &values, Mapfile &p)
   if(p.tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % p.complexity() % p.nt_nonred % p.nt_all;
   else     out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % p.complexity() % p.nt_nonred % p.nt_all;
  
+  if(!values.count("nomodel")) out << "Estimated fragment length: " << p.dist.eflen << endl;
+  else out << "Predefined fragment length: " << p.flen_def << endl;
+  if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
   if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
   // out << "Poisson: lambda = %f\n", mapfile->wstats.genome->ave);
   // out << "Negative binomial: p=%f, n=%f, p0=%f\n", mapfile->wstats.genome->nb_p, mapfile->wstats.genome->nb_n, mapfile->wstats.genome->nb_p0);
@@ -435,5 +379,55 @@ void output_stats(const variables_map &values, Mapfile &p)
 
   cout << "stats is output in " << filename << "." << endl;
 
+  return;
+}
+
+vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &p, double r4cmp)
+{
+  vector<char> array;
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
+  else array = readMpbl_binary(chr.len);
+  if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
+  
+  int val(0);
+  int size = array.size();
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto &x: chr.seq[strand].vRead) {
+      if(x.duplicate) continue;
+      
+      if(rand() >= r4cmp) val=COVREAD_ALL; else val=COVREAD_NORM;
+      
+      int s(min(x.F3, x.F5));
+      int e(max(x.F3, x.F5));
+      if(e >= size) {
+	cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size()<< endl;
+	e = size-1;
+      }
+      for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
+    }
+  }
+  return array;
+}
+
+void calcGenomeCoverage(const variables_map &values, Mapfile &p)
+{
+  cout << "calculate genome coverage.." << flush;
+
+  // ignore peak region
+  double r = NUM_GCOV/(double)(p.genome.bothnread_nonred() - p.genome.nread_inbed);
+  if(r>1){
+    cerr << "Warning: number of reads is < "<< (int)(NUM_GCOV/NUM_1M) << " million.\n";
+    p.gv = 1;
+  }
+  double r4cmp = r*RAND_MAX;
+
+  for (auto &chr:p.chr) {
+    cout << chr.name << ".." << flush;
+    auto array = makeGcovArray(values, chr, p, r4cmp);
+    chr.calcGcov(array);
+    p.genome.addGcov(chr);
+  }
+  
+  cout << "done." << endl;
   return;
 }

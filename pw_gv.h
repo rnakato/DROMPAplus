@@ -4,13 +4,17 @@
 #ifndef _PW_GV_H_
 #define _PW_GV_H_
 
+#include <fstream>
+#include <boost/format.hpp>
 #include "seq.h"
 #include "common.h"
 #include "util.h"
+#include "warn.h"
+#include "macro.h"
 #include "readdata.h"
-#include <map>
-#include <fstream>
-#include <boost/format.hpp>
+
+using namespace std;
+using namespace boost::program_options;
 
 /* default parameter */
 #define FRAGMENT_LEN 150
@@ -51,7 +55,10 @@ class Dist{
   int eflen;
   vector<int> readlen;
   vector<int> readlen_F5;
-  vector<int> fraglen; /* +1: over DIST_FRAGLEN_MAX */
+  vector<int> fraglen;
+  // Hamming distance plot;
+  vector<int> hd;
+
  Dist(): lenF3(0), lenF5(0), eflen(0) {
     vector<int> v(DIST_READLEN_MAX,0);
     readlen = v;
@@ -59,54 +66,15 @@ class Dist{
     readlen_F5 = v2;
     vector<int> v3(DIST_FRAGLEN_MAX,0);
     fraglen = v3;
+    vector<int> h(HD_WIDTH,0);
+    hd = h;
   }
-  void printReadlen(string &outputfile, bool pair) {
-    long sum(0);
-    int max(0);
-    for(int i=0; i<DIST_READLEN_MAX; ++i) {
-      sum += readlen[i];
-      if(max<readlen[i]) {
-	max = readlen[i];
-	lenF3 = i;
-      }
-    }
-    ofstream out(outputfile);
-    out << "F3 read length distribution" << endl;
-    out << "length\tread number\tproportion" << endl;
-    for(int i=0; i<DIST_READLEN_MAX; ++i) if(readlen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen[i] % (readlen[i]/(double)sum);
-
-    if(pair) {
-      max=0;
-      for(int i=0; i<DIST_READLEN_MAX; ++i) {
-	sum += readlen_F5[i];
-	if(max<readlen_F5[i]) {
-	  max = readlen_F5[i];
-	  lenF5 = i;
-	}
-      }
-      out << "\n\nF5 read length distribution" << endl;
-      out << "length\tread number\tproportion" << endl;
-      for(int i=0; i<DIST_READLEN_MAX; ++i) if(readlen_F5[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen_F5[i] % (readlen_F5[i]/(double)sum);
-    }
-  }
-
-  void printFraglen(string &outputfile) {
-    int flen_max=0;
-    long sum(0);
-    for(int i=0; i<DIST_FRAGLEN_MAX; ++i) {
-      if(flen_max < fraglen[i]){
-	flen_max = fraglen[i];
-	eflen = i;
-      }
-      sum += readlen[i];
-    }
-    ofstream out(outputfile);
-    out << "length\tread number\tproportion" << endl;
-    for(int i=0; i<DIST_FRAGLEN_MAX; ++i) if(fraglen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % fraglen[i] % (fraglen[i]/(double)sum);
-  }
+  void setlenF3() { lenF3 = getmaxi(readlen); }
+  void setlenF5() { lenF5 = getmaxi(readlen_F5); }
+  void setFraglen() { eflen = getmaxi(fraglen); }
 };
 
-class FragmentSingle {
+class Fragment {
 public:
   string name;
   string chr;
@@ -114,11 +82,11 @@ public:
   Strand strand;
   int fraglen;
   int readlen_F3;
-
- FragmentSingle(vector<string> v, int flen=0):
-  name(v[0]), chr(v[2]), fraglen(flen), readlen_F3(v[9].length())
+  
+ Fragment(vector<string> v, bool pair):
+  name(v[0]), chr(v[2]), fraglen(0), readlen_F3(v[9].length())
     {
-      if(!fraglen) fraglen = abs(stoi(v[8]));
+      if(pair) fraglen = abs(stoi(v[8]));
       int sv = stoi(v[1]); // bitwise FLAG
       if(sv&16) {
 	strand = STRAND_MINUS;
@@ -140,7 +108,7 @@ class Read {
   int weight;
   int duplicate;
   int inpeak;
- Read(const FragmentSingle &frag): F3(frag.F3), weight(1), duplicate(0), inpeak(0) {
+ Read(const Fragment &frag): F3(frag.F3), weight(1), duplicate(0), inpeak(0) {
     if(frag.strand == STRAND_PLUS) F5 = frag.F3 + frag.fraglen;
     else F5 = frag.F3 - frag.fraglen;
   }
@@ -154,20 +122,15 @@ class strandData {
   long nread_red;
   double nread_rpm;
   double nread_afterGC;
+
  strandData(): nread(0), nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
   void setnread() { nread = vRead.size(); }
   void print() {
     cout << nread << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
   }
-  void printnonred(ofstream &out) {
-    printr(out, nread_nonred, nread);
-  }
-  void printred(ofstream &out) {
-    printr(out, nread_red, nread);
-  }
-  void printafterGC(ofstream &out) {
-    printr(out, nread_afterGC, nread);
-  }
+  void printnonred(ofstream &out)  { printr(out, nread_nonred,  nread); }
+  void printred(ofstream &out)     { printr(out, nread_red,     nread); }
+  void printafterGC(ofstream &out) { printr(out, nread_afterGC, nread); }
 };
 
 class SeqStats {
@@ -186,15 +149,9 @@ class SeqStats {
   /* FRiP */
   long nread_inbed;
   double FRiP;
-  
-  // Hamming distance plot;
-  vector<int> hd;
 
- SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
-    vector<int> h(HD_WIDTH,0);
-    hd = h;
-  }
-  void addfrag(const FragmentSingle &frag) {
+ SeqStats(string s, int l=0): name(s),len(l), len_mpbl(l), nbin(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {}
+  void addfrag(const Fragment &frag) {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
   }
@@ -216,15 +173,34 @@ class SeqStats {
       seq[i].nread_red    += x.seq[i].nread_red;
     }
   }
+  void addGcov(const SeqStats &x) {
+    nbp      += x.nbp;
+    ncov     += x.ncov;
+    ncovnorm += x.ncovnorm;
+    gcovRaw  = nbp ? ncov / (double)nbp: 0;
+    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+  }
   void print() {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }
   void calcdepth(int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
   }
-  void calcGcov() {
+  void calcGcov(const vector<char> &array) {
+    for(int i=0; i<len; ++i) {
+      if(array[i] == MAPPABLE || array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++nbp;
+      if(array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++ncov;
+      if(array[i] == COVREAD_NORM) ++ncovnorm;
+    }
     gcovRaw  = nbp ? ncov / (double)nbp: 0;
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+  }
+  void setF5(int flen) {
+    int d;
+    for(int strand=0; strand<STRANDNUM; ++strand) {
+      if(strand == STRAND_PLUS) d = flen; else d = -flen;
+      for (auto &x: seq[strand].vRead) x.F5 = x.F3 + d;
+    }
   }
   void setWeight(double weight) {
     w = weight;
@@ -258,7 +234,9 @@ public:
   SeqStats genome;
   vector<SeqStats> chr;
   vector<SeqStats>::iterator lchr; // longest chromosome
+
   string lastchr;
+  int flen_def;
 
   // PCR bias
   int thre4filtering;
@@ -273,7 +251,7 @@ public:
 
   Mapfile(const variables_map &values);
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
-  void addfrag(const FragmentSingle &frag) {
+  void addfrag(const Fragment &frag) {
     dist.readlen[frag.readlen_F3]++;
     dist.fraglen[frag.fraglen]++;
     int on(0);
@@ -285,9 +263,18 @@ public:
     }
     if(!on) cerr << "Warning: " << frag.chr << " is not in genometable." << endl;
   }
-  void calcdepth() {
-    for (auto &x:chr) x.calcdepth(dist.eflen);
-    genome.calcdepth(dist.eflen);
+  void calcdepth(const variables_map &values) {
+    int flen;
+    if(!values.count("nomodel")) flen = dist.eflen;
+    else flen = flen_def;
+    for (auto &x:chr) x.calcdepth(flen);
+    genome.calcdepth(flen);
+  }
+  void setF5(const variables_map &values) {
+    int flen;
+    if(!values.count("nomodel")) flen = dist.eflen;
+    else flen = flen_def;
+    for (auto &x:chr) x.setF5(flen);
   }
   void setnread() {
     for (auto &x:chr) {

@@ -11,12 +11,50 @@
 #include "common.h"
 #include "macro.h"
 #include "readdata.h"
+#include "pw_hamming.h"
 
 using namespace boost::program_options;
 
+void parse_sam(const variables_map &values, string inputfile, Mapfile &p);
+void outputDist(const variables_map &values, Mapfile &p);
 void check_redundant_reads(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
+
+void read_mapfile(const variables_map &values, Mapfile &p){
+  vector<string> v;
+  boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
+  for(auto inputfile: v) {
+    isFile(inputfile);
+    BPRINT("Parsing %1%...\n") % inputfile;
+    string ftype = values["ftype"].as<string>();
+    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p);
+    //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
+    // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
+    printf("done.\n");
+  }
+  p.setnread();
+
+  /* output distributions of read length and fragment length */
+  outputDist(values, p);
+
+  /* PCR bias filtering and ignore enrichregions */
+  check_redundant_reads(values, p);
+  p.setnread_red();
+
+  // estimate fragment length
+  if(!values.count("pair") && !values.count("nomodel")) hammingDist(p);
+  p.setF5(values);
+  
+  // calculate sequencing depth
+  p.calcdepth(values);
+
+#ifdef DEBUG
+  p.printstats();
+#endif
+
+  return;
+}
 
 template <class T>
 void do_bampe(const variables_map &values, Mapfile &p, T &in)
@@ -37,7 +75,7 @@ void do_bampe(const variables_map &values, Mapfile &p, T &in)
       p.addF5(v[9].length());
       continue;
     }
-    FragmentSingle frag(v);
+    Fragment frag(v, values.count("pair"));
     if(frag.fraglen > maxins) continue;
     //frag.print();
     p.addfrag(frag);
@@ -59,7 +97,7 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
     // unmapped reads, low quality reads
     if(sv&4 || sv&512 || sv&1024) continue;
     if(sv&64 || sv&128) cerr << "Warning: parsing paired-end file as single-end." << endl;
-    FragmentSingle frag(v, p.dist.eflen);  ////// fraglenを推定することにすれば？？？？
+    Fragment frag(v, values.count("pair"));
     //    frag.print();
     p.addfrag(frag);
   }
@@ -87,45 +125,33 @@ void parse_sam(const variables_map &values, string inputfile, Mapfile &p)
   return;
 }
 
-void outputDist(const variables_map &values, Mapfile &p){
-  string outputfile = p.oprefix + ".readlength_dist.xls";
-
-  p.dist.printReadlen(outputfile, values.count("pair"));
-  if(values.count("pair")) {
-    outputfile = p.oprefix + ".fragmentlength_dist.xls";
-    p.dist.printFraglen(outputfile);
-  }
-
+void printDist(ofstream &out, vector<int> readlen, string str, long nread)
+{
+  out << "\n" << str << " read length distribution" << endl;
+  out << "length\tread number\tproportion" << endl;
+  for(int i=0; i<DIST_READLEN_MAX; ++i)
+    if(readlen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen[i] % (readlen[i]/(double)nread);
   return;
 }
 
-void read_mapfile(const variables_map &values, Mapfile &p){
-  vector<string> v;
-  boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
-  for(auto inputfile: v) {
-    isFile(inputfile);
-    BPRINT("Parsing %1%...\n") % inputfile;
-    string ftype = values["ftype"].as<string>();
-    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p);
-    //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
-    // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
-    printf("done.\n");
+void outputDist(const variables_map &values, Mapfile &p)
+{
+
+  p.dist.setlenF3();
+  if(values.count("pair")) p.dist.setlenF5();
+  
+  string outputfile = p.oprefix + ".readlength_dist.xls";
+  ofstream out(outputfile);
+  printDist(out, p.dist.readlen, "F3", p.genome.bothnread());
+  if(values.count("pair")) printDist(out, p.dist.readlen_F5, "F5", p.genome.bothnread());
+  out.close();
+  
+  if(values.count("pair")) {
+    p.dist.setFraglen();
+    outputfile = p.oprefix + ".fragmentlength_dist.xls";
+    ofstream out(outputfile);
+    printDist(out, p.dist.fraglen, "fragment", p.genome.bothnread());
   }
-
-  /* output distributions of read length and fragment length */
-  outputDist(values, p);
-
-  /* PCR bias filtering and ignore enrichregions */
-  p.setnread();
-  check_redundant_reads(values, p);
-  p.setnread_red();
-
-  // calculate depth
-  p.calcdepth();
-
-#ifdef DEBUG
-  p.printstats();
-#endif
 
   return;
 }
@@ -241,7 +267,7 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
   }
 
 #ifdef DEBUG
-  BPRINT("nt_all %1%, nt_nonred %2%, nt_red %3%, complexity %4%\n") % p.nt_all % p.nt_nonred % p.nt_red % p.complexity();
+  BPRINT("\nnt_all %1%, nt_nonred %2%, nt_red %3%, complexity %4%\n") % p.nt_all % p.nt_nonred % p.nt_red % p.complexity();
 #endif
 
   printf("done.\n");
@@ -262,7 +288,6 @@ void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandDat
 
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
-  //  int Fmin, Fmax;
   unordered_map<string, int> mp;
   for(int strand=0; strand<STRANDNUM; ++strand) {
     hashFilterAll(mp, chr.seq[strand], p.thre4filtering);

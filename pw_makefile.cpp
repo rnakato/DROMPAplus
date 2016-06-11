@@ -63,7 +63,7 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
   int s, e;
   s = min(x.F3, x.F5);
   e = max(x.F3, x.F5);
-  if(values["rcenter"].as<int>()) {  /* consider only center region of fragments */
+  if(values["rcenter"].as<int>()) {  // consider only center region of fragments
     s = (s + e - values["rcenter"].as<int>())/2;
     e = s + values["rcenter"].as<int>();
   }

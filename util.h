@@ -8,11 +8,8 @@
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
 
-using namespace std;
-using namespace boost::program_options;
-
 template <class T>
-void chkminus(const variables_map &values, string x, int lim)
+void chkminus(const boost::program_options::variables_map &values, std::string x, int lim)
 {
   if (values.count(x)) {
     T val = values[x].as<T>();
@@ -25,10 +22,25 @@ void chkminus(const variables_map &values, string x, int lim)
 }
 
 template <class T, class S>
-void printr(ofstream &out, T a, S b)
+  void printr(std::ofstream &out, T a, S b)
 {
   double r = b ? a*100/(double)b: 0;
   out << boost::format("%1% (%2$.1f%%)\t") % a % r;
+};
+
+template <class T>
+int getmaxi(std::vector<T> v)
+{
+  T max(0);
+  int maxi(0);
+  int size = v.size();
+  for(int i=0; i<size; ++i) {
+    if(max < v[i]) {
+      max = v[i];
+      maxi = i;
+    }
+  }
+  return maxi;
 };
 
 #endif /* _UTIL_H_ */
