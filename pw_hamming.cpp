@@ -61,10 +61,11 @@ void hammingDist(Mapfile &p)
     }
     }*/
 
+  long sum = accumulate(p.dist.hd.begin(), p.dist.hd.end(), 0);
   string filename = p.oprefix + ".hdp.csv";
   ofstream out(filename);
-  out << "Shift\tHamming distance" << endl;
-  for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << p.dist.hd[i] << endl;
+  out << "Shift\tHamming distance\tProportion" << endl;
+  for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << p.dist.hd[i] << "\t" << p.dist.hd[i]/(double)sum << endl;
   
   //  double RSC=(max_hd_fl-p.dist.hd[fl])/(double)(max_hd_fl-p.dist.hd[rl]);
   //  out << "RSC: " << RSC << endl;

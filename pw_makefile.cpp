@@ -5,12 +5,10 @@
 #include <boost/algorithm/string.hpp>
 #include "pw_makefile.h"
 #include "readdata.h"
-#include "macro.h"
 
 #define PRINTWARNING_W(w) cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
 
-using namespace boost::program_options;
-
+void addReadToWigArray(const variables_map &, vector<int> &, const Read, long);
 vector<int> makeWigarray(const variables_map &, Mapfile &, SeqStats &);
 void norm2rpm(const variables_map &, Mapfile &, SeqStats &, vector<int> &);
 void outputWig(const variables_map &, Mapfile &, string);
@@ -20,16 +18,6 @@ void outputBinary(const variables_map &, Mapfile &, string);
 void makewig(const variables_map &values, Mapfile &p)
 {
   printf("Convert read data to array: \n");
-
-  /*  p.wstats.thre = define_wstats_thre(p, mapfile, g);
-  p.wstats.n_darray = max(NUM_DARRAY, p.wstats.thre);
-  p.wstats.genome->darray_all = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.genome->darray_all");
-  p.wstats.genome->darray_bg  = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.genome->darray_bg");
-  for(chr=1; chr<g->chrnum; chr++){
-    p.wstats.chr[chr].darray_all = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.chr[chr]->darray_all");
-    p.wstats.chr[chr].darray_bg  = (int *)my_calloc(p.wstats.n_darray +1, sizeof(int), "wstats.chr[chr]->darray_bg");
-    }*/
-
   int oftype = values["of"].as<int>();
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>());
 
@@ -72,7 +60,7 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
 
   int sbin(s/values["binsize"].as<int>());
   int ebin(e/values["binsize"].as<int>());
-  for(int j=sbin; j<=ebin; ++j) wigarray[j] += VALUE2WIGARRAY(1);
+  for(int j=sbin; j<=ebin; ++j) wigarray[j] += VALUE2WIGARRAY(x.getWeight());
   return;
 }
 
@@ -87,25 +75,32 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     }
   }
 
-  /* mappability */
+  // Mappability normalization
   if (values.count("mp")) {
-    /* GC normalization */
-    if(values.count("genome")) {
-      //      weight_read(p);
-    } else {
-      int binsize = values["binsize"].as<int>();
-      int mpthre = values["mpthre"].as<double>()*binsize;
-      auto mparray = readMpbl(values["mp"].as<string>(), chr.name, values["binsize"].as<int>(), chr.nbin);
-      for(int i=0; i<chr.nbin; ++i) {
-	if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
-	//	cout << chr.name << ", " << i << ", " << mparray[i] << ", " << wigarray[i] << endl;
-      }
+    int binsize = values["binsize"].as<int>();
+    int mpthre = values["mpthre"].as<double>()*binsize;
+    int mpthre_dist = 0.8*binsize;
+    auto mparray = readMpbl(values["mp"].as<string>(), chr.name, values["binsize"].as<int>(), chr.nbin);
+    vector<int> mappablearray;
+    for(int i=0; i<chr.nbin; ++i) {
+      if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
+      chr.addmpDist(mparray[i]/(double)binsize);
+      if(mparray[i] > mpthre_dist) mappablearray.push_back(mparray[i]);
     }
+    chr.getWigStats(mappablearray);
+  } else {
+    chr.getWigStats(wigarray);
   }
-
+  p.genome.addWigStats(chr);
+  
   /* Total read normalization */
   if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);
-	       
+
+#ifdef DEBUG
+  chr.printWigStats();
+  chr.printmpDist();
+#endif
+
   return wigarray;
 }
 
@@ -168,6 +163,10 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
     }
   }
   
+#ifdef DEBUG
+  p.genome.printWigStats();
+#endif
+
   return;
 }
 

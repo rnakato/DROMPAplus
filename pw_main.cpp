@@ -14,14 +14,14 @@
 #include "pw_makefile.h"
 #include "pw_gv.h"
 #include "pw_gc.h"
-
-#define NUM_GCOV 5000000
+#include "alglib.h"
 
 variables_map getOpts(int argc, char* argv[]);
 void setOpts(options_description &);
 void init_dump(const variables_map &);
-void output_stats(const variables_map &values, Mapfile &p);
+void output_stats(const variables_map &values, const Mapfile &p);
 void calcGenomeCoverage(const variables_map &values, Mapfile &p);
+void output_wigstats(const variables_map &values, Mapfile &p);
 
 Mapfile::Mapfile(const variables_map &values):
   genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
@@ -102,7 +102,6 @@ int main(int argc, char* argv[])
   boost::filesystem::path dir(values["odir"].as<string>());
   boost::filesystem::create_directory(dir);
 
-  /* read mapfile */
   Mapfile p(values);
   read_mapfile(values, p);
 
@@ -123,12 +122,16 @@ int main(int argc, char* argv[])
     make_GCdist(values, p);
     weightRead(values, p);
   }
-  /* make and output wigdata */
+
+  // make and output wigdata
   makewig(values, p);
 
-  /* output stats */
+  // output stats
   output_stats(values, p);
+  output_wigstats(values, p);
 
+  // peakcall?? ZINB??
+  
   return 0;
 }
 
@@ -149,7 +152,7 @@ void checkParam(const variables_map &values)
   if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") printerr("invalid --ntype.\n");
 
   if (values.count("genome")) {
-    if(!values.count("mp")) printerr("-GC option requires --mp option.\n");
+    //    if(!values.count("mp")) printerr("--genome option requires --mp option.\n");
     isFile(values["genome"].as<string>());
   }
   
@@ -295,13 +298,12 @@ void init_dump(const variables_map &values){
   if (values.count("genome")) {
     printf("Correcting GC bias:\n");
     BPRINT("\tChromosome directory: %1%\n") % values["genome"].as<string>();
-    BPRINT("\tLength for GC distribution: %1%\n") % values["flen4gc"].as<int>();
   }
   printf("======================================\n");
   return;
 }
 
-void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Mapfile &mapfile)
+void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &p, const Mapfile &mapfile)
 {
   /* genome data */
   out << p.name << "\t" << p.len  << "\t" << p.len_mpbl << "\t" << p.p_mpbl << "\t";
@@ -317,6 +319,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
   printr(out, p.bothnread_red(), p.bothnread());
   p.seq[STRAND_PLUS].printred(out);
   p.seq[STRAND_MINUS].printred(out);
+
   /* reads after GCnorm */
   if(values.count("genome")) {
     printr(out, p.bothnread_afterGC(), p.bothnread());
@@ -328,14 +331,14 @@ void print_SeqStats(const variables_map &values, ofstream &out, SeqStats &p, Map
   if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
   if(mapfile.gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % p.gcovRaw % p.gcovNorm;
   else out << boost::format("%1$.3f\t%2$.3f\t") % p.gcovRaw % p.gcovNorm;
-  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
+  //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
   out << endl;
   return;
 }
 
-void output_stats(const variables_map &values, Mapfile &p)
+void output_stats(const variables_map &values, const Mapfile &p)
 {
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".csv";
   ofstream out(filename);
@@ -363,7 +366,7 @@ void output_stats(const variables_map &values, Mapfile &p)
   out << "read depth\t";
   out << "scaling weight\t";
   out << "normalized read number\t";
-  out << "gcov (Raw)\tgcov (Normed)\tbp num\t";
+  out << "gcov (Raw)\tgcov (Normed)\t";
   if(values.count("bed")) out << "FRiP\t";
   out << endl;
   out << "\t\t\t\t";
@@ -374,9 +377,17 @@ void output_stats(const variables_map &values, Mapfile &p)
   out << endl;
 
   /*** SeqStats ***/
-  print_SeqStats(values, out, p.genome, p);
-  for(auto x:p.chr) print_SeqStats(values, out, x, p);
-
+  /*  print_SeqStats(values, out, p.genome, p);
+  cout << "jjj" << p.lchr->name << endl; 
+  cout << "jjjjjj" << p.chr[0].name << endl; 
+  printf("test\n");
+  for(auto itr = p.chr.begin(); itr != p.chr.end(); ++itr) {
+    print_SeqStats(values, out, *itr, p);
+    }*/
+  /*  for(SeqStats &x:p.chr) {
+    cout << x.name << endl; 
+    print_SeqStats(values, out, x, p);
+    }*/
   cout << "stats is output in " << filename << "." << endl;
 
   return;
@@ -420,7 +431,7 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
     p.gv = 1;
   }
   double r4cmp = r*RAND_MAX;
-
+  
   for (auto &chr:p.chr) {
     cout << chr.name << ".." << flush;
     auto array = makeGcovArray(values, chr, p, r4cmp);
@@ -429,5 +440,30 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   }
   
   cout << "done." << endl;
+  return;
+}
+
+void output_wigstats(const variables_map &values, Mapfile &p)
+{
+  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".binarray_dist.csv";
+  ofstream out(filename);
+ 
+  out << boost::format("%5%: ave=%1%, var=%2%, p=%3%, n=%4%\n") % p.lchr->ave % p.lchr->var % p.lchr->nb_p % p.lchr->nb_n % p.lchr->name;
+  //  out << "Poisson: lambda = " << p.genome.ave << endl;
+  //  out << "Negative binomial: p=%f, n=%f, p0=%f\n", p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0;
+  out << "<genome>\n";
+  out << "read number\tAll regions\tprop all\tBG regions\tprop bg\tPoisson simulated\tNB simulated (" << p.lchr->name << ")\tNB simulated (genome)" << endl;
+
+  for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
+    out << boost::format("%1%\t%2%\t%3%\t") % i % p.genome.wigDist[i] % (p.genome.wigDist[i]/(double)p.genome.nbin);
+    out << boost::format("%1%\t%2%\t") % p.chr[0].wigDist[i] % (p.chr[0].wigDist[i]/(double)p.chr[0].nbin);
+    out << getPoisson(i, p.lchr->ave) << "\t";
+    out << getNegativeBinomial(i, p.lchr->nb_p, p.lchr->nb_n) << "\t";
+    /*    out << "%f\t", pw_get_negative_binomial(i, p.chr[g->chrmax].nb_p, p.chr[g->chrmax].nb_n);
+	  out << "%f\t", pw_get_zeroinflated_negative_binomial(i, p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0);
+	 */
+    out << endl;
+  }
+  
   return;
 }

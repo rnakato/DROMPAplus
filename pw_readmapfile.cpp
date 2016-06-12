@@ -140,7 +140,7 @@ void outputDist(const variables_map &values, Mapfile &p)
   p.dist.setlenF3();
   if(values.count("pair")) p.dist.setlenF5();
   
-  string outputfile = p.oprefix + ".readlength_dist.xls";
+  string outputfile = p.oprefix + ".readlength_dist.csv";
   ofstream out(outputfile);
   printDist(out, p.dist.readlen, "F3", p.genome.bothnread());
   if(values.count("pair")) printDist(out, p.dist.readlen_F5, "F5", p.genome.bothnread());

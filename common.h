@@ -40,4 +40,17 @@ class var {
   }
 };
 
+template <class T>
+class temp {
+  int on;
+  std::string str;
+ temp(): on(0){}
+  void print() {
+    if(!on) {
+      std::cout << str << std::endl;
+      on++;
+    }
+  }
+};
+
 #endif /* _COMMON_H_ */
