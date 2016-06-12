@@ -353,7 +353,6 @@ void output_stats(const variables_map &values, const Mapfile &p)
   if(!values.count("nomodel")) out << "Estimated fragment length: " << p.dist.eflen << endl;
   else out << "Predefined fragment length: " << p.flen_def << endl;
   if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
-  if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
   // out << "Poisson: lambda = %f\n", mapfile->wstats.genome->ave);
   // out << "Negative binomial: p=%f, n=%f, p0=%f\n", mapfile->wstats.genome->nb_p, mapfile->wstats.genome->nb_n, mapfile->wstats.genome->nb_p0);
 
@@ -377,17 +376,14 @@ void output_stats(const variables_map &values, const Mapfile &p)
   out << endl;
 
   /*** SeqStats ***/
-  /*  print_SeqStats(values, out, p.genome, p);
-  cout << "jjj" << p.lchr->name << endl; 
-  cout << "jjjjjj" << p.chr[0].name << endl; 
-  printf("test\n");
+  print_SeqStats(values, out, p.genome, p);
   for(auto itr = p.chr.begin(); itr != p.chr.end(); ++itr) {
     print_SeqStats(values, out, *itr, p);
-    }*/
-  /*  for(SeqStats &x:p.chr) {
+  }
+  for(SeqStats &x:p.chr) {
     cout << x.name << endl; 
     print_SeqStats(values, out, x, p);
-    }*/
+  }
   cout << "stats is output in " << filename << "." << endl;
 
   return;
@@ -459,9 +455,7 @@ void output_wigstats(const variables_map &values, Mapfile &p)
     out << boost::format("%1%\t%2%\t") % p.chr[0].wigDist[i] % (p.chr[0].wigDist[i]/(double)p.chr[0].nbin);
     out << getPoisson(i, p.lchr->ave) << "\t";
     out << getNegativeBinomial(i, p.lchr->nb_p, p.lchr->nb_n) << "\t";
-    /*    out << "%f\t", pw_get_negative_binomial(i, p.chr[g->chrmax].nb_p, p.chr[g->chrmax].nb_n);
-	  out << "%f\t", pw_get_zeroinflated_negative_binomial(i, p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0);
-	 */
+    out << getZINB(i, p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0);
     out << endl;
   }
   
