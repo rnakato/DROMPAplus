@@ -353,10 +353,8 @@ void output_stats(const variables_map &values, const Mapfile &p)
   if(!values.count("nomodel")) out << "Estimated fragment length: " << p.dist.eflen << endl;
   else out << "Predefined fragment length: " << p.flen_def << endl;
   if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
-  // out << "Poisson: lambda = %f\n", mapfile->wstats.genome->ave);
-  // out << "Negative binomial: p=%f, n=%f, p0=%f\n", mapfile->wstats.genome->nb_p, mapfile->wstats.genome->nb_n, mapfile->wstats.genome->nb_p0);
 
-  /* Global stats */
+  // Global stats
   out << "\n\tlength\tmappable base\tmappability\t";
   out << "total reads\t\t\t\t";
   out << "nonredundant reads\t\t\t";
@@ -375,12 +373,12 @@ void output_stats(const variables_map &values, const Mapfile &p)
   if(values.count("genome")) out << "both\tforward\treverse\t";
   out << endl;
 
-  /*** SeqStats ***/
+  // SeqStats
   print_SeqStats(values, out, p.genome, p);
   for(auto itr = p.chr.begin(); itr != p.chr.end(); ++itr) {
     print_SeqStats(values, out, *itr, p);
   }
-  for(SeqStats &x:p.chr) {
+  for(auto x:p.chr) {
     cout << x.name << endl; 
     print_SeqStats(values, out, x, p);
   }
@@ -455,7 +453,7 @@ void output_wigstats(const variables_map &values, Mapfile &p)
     out << boost::format("%1%\t%2%\t") % p.chr[0].wigDist[i] % (p.chr[0].wigDist[i]/(double)p.chr[0].nbin);
     out << getPoisson(i, p.lchr->ave) << "\t";
     out << getNegativeBinomial(i, p.lchr->nb_p, p.lchr->nb_n) << "\t";
-    out << getZINB(i, p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0);
+    out << getZINB(i, p.lchr->nb_p, p.lchr->nb_n, p.lchr->nb_p0);
     out << endl;
   }
   
