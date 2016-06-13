@@ -75,7 +75,7 @@ void do_bampe(const variables_map &values, Mapfile &p, T &in)
       p.addF5(v[9].length());
       continue;
     }
-    Fragment frag(v, values.count("pair"));
+    Fragment frag(v, values.count("pair"), sv);
     if(frag.fraglen > maxins) continue;
     //frag.print();
     p.addfrag(frag);
@@ -97,7 +97,7 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
     // unmapped reads, low quality reads
     if(sv&4 || sv&512 || sv&1024) continue;
     if(sv&64 || sv&128) cerr << "Warning: parsing paired-end file as single-end." << endl;
-    Fragment frag(v, values.count("pair"));
+    Fragment frag(v, values.count("pair"), sv);
     //    frag.print();
     p.addfrag(frag);
   }

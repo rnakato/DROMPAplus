@@ -70,11 +70,10 @@ public:
   int fraglen;
   int readlen_F3;
 
- Fragment(vector<string> &v, bool pair):
+ Fragment(const vector<string> &v, const bool pair, const int sv):
   chr(v[2]), fraglen(0), readlen_F3(v[9].length()) //name(v[0]), 
     {
       if(pair) fraglen = abs(stoi(v[8]));
-      int sv = stoi(v[1]); // bitwise FLAG
       if(sv&16) {
 	strand = STRAND_MINUS;
 	F3 = stoi(v[3]) + readlen_F3 -1; //SAM
