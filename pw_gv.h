@@ -69,8 +69,8 @@ public:
   Strand strand;
   int fraglen;
   int readlen_F3;
-  
- Fragment(vector<string> v, bool pair):
+
+ Fragment(vector<string> &v, bool pair):
   name(v[0]), chr(v[2]), fraglen(0), readlen_F3(v[9].length())
     {
       if(pair) fraglen = abs(stoi(v[8]));
@@ -202,7 +202,8 @@ class SeqStats {
     else ++mpDist[(int)(p*NUM_MPDIST)];
   }
   void printmpDist() {
-    for(int i=0; i<NUM_MPDIST; ++i) BPRINT("~%1%%%\t%2%\t%3%\n") % ((i+1)*100/NUM_MPDIST) % mpDist[i] % (mpDist[i]/(double)nbin); 
+    long num =  accumulate(mpDist.begin(), mpDist.end(), 0);
+    for(int i=0; i<NUM_MPDIST; ++i) BPRINT("~%1%%%\t%2%\t%3%\n") % ((i+1)*100/NUM_MPDIST) % mpDist[i] % (mpDist[i]/(double)num); 
   }
 
   void getWigStats(const vector<int> &wigarray) {
