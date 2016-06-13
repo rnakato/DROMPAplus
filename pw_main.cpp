@@ -15,6 +15,7 @@
 #include "pw_gv.h"
 #include "pw_gc.h"
 #include "alglib.h"
+#include "statistics.h"
 
 variables_map getOpts(int argc, char* argv[]);
 void setOpts(options_description &);
@@ -126,11 +127,13 @@ int main(int argc, char* argv[])
   // make and output wigdata
   makewig(values, p);
 
+  // peakcall?? ZINB??
+  estimateZINB(p);
+  
   // output stats
   output_stats(values, p);
   output_wigstats(values, p);
 
-  // peakcall?? ZINB??
   
   return 0;
 }
@@ -332,6 +335,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   if(mapfile.gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % p.gcovRaw % p.gcovNorm;
   else out << boost::format("%1$.3f\t%2$.3f\t") % p.gcovRaw % p.gcovNorm;
   //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
+  out << boost::format("%1$.3f\t%2$.3f\t") % p.ave % p.var;
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
   out << endl;
@@ -364,6 +368,7 @@ void output_stats(const variables_map &values, const Mapfile &p)
   out << "scaling weight\t";
   out << "normalized read number\t";
   out << "gcov (Raw)\tgcov (Normed)\t";
+  out << "bin mean\tbin variance\t";
   if(values.count("bed")) out << "FRiP\t";
   out << endl;
   out << "\t\t\t\t";
@@ -375,13 +380,8 @@ void output_stats(const variables_map &values, const Mapfile &p)
 
   // SeqStats
   print_SeqStats(values, out, p.genome, p);
-  for(auto itr = p.chr.begin(); itr != p.chr.end(); ++itr) {
-    print_SeqStats(values, out, *itr, p);
-  }
-  for(auto x:p.chr) {
-    cout << x.name << endl; 
-    print_SeqStats(values, out, x, p);
-  }
+  for(auto x:p.chr) print_SeqStats(values, out, x, p);
+  
   cout << "stats is output in " << filename << "." << endl;
 
   return;
@@ -446,14 +446,14 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   //  out << "Poisson: lambda = " << p.genome.ave << endl;
   //  out << "Negative binomial: p=%f, n=%f, p0=%f\n", p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0;
   out << "<genome>\n";
-  out << "read number\tAll regions\tprop all\tBG regions\tprop bg\tPoisson simulated\tNB simulated (" << p.lchr->name << ")\tNB simulated (genome)" << endl;
+  out << "read number\tAll regions\tprop all\tBG regions\tprop bg\tPoisson simulated\tNB simulated (" << p.lchr->name << ")\tZINB simulated (genome)" << endl;
 
   for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
     out << boost::format("%1%\t%2%\t%3%\t") % i % p.genome.wigDist[i] % (p.genome.wigDist[i]/(double)p.genome.nbin);
     out << boost::format("%1%\t%2%\t") % p.chr[0].wigDist[i] % (p.chr[0].wigDist[i]/(double)p.chr[0].nbin);
     out << getPoisson(i, p.lchr->ave) << "\t";
     out << getNegativeBinomial(i, p.lchr->nb_p, p.lchr->nb_n) << "\t";
-    out << getZINB(i, p.lchr->nb_p, p.lchr->nb_n, p.lchr->nb_p0);
+    out << getZINB(i, p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0);
     out << endl;
   }
   

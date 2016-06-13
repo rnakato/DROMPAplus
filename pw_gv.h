@@ -346,4 +346,7 @@ public:
   }
 };
 
+void estimateZINB(Mapfile &);
+
+
 #endif /* _PW_GV_H_ */
