@@ -63,7 +63,7 @@ class Dist{
 
 class Fragment {
 public:
-  string name;
+  //  string name;
   string chr;
   int F3;
   Strand strand;
@@ -71,7 +71,7 @@ public:
   int readlen_F3;
 
  Fragment(vector<string> &v, bool pair):
-  name(v[0]), chr(v[2]), fraglen(0), readlen_F3(v[9].length())
+  chr(v[2]), fraglen(0), readlen_F3(v[9].length()) //name(v[0]), 
     {
       if(pair) fraglen = abs(stoi(v[8]));
       int sv = stoi(v[1]); // bitwise FLAG
@@ -84,7 +84,7 @@ public:
       }
     }
   void print() {
-    cout << name << ", " << chr << ", " << F3 << ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+    cout << chr << ", " << F3 << ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
   }
 };
 
