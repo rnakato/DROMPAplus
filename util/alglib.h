@@ -5,6 +5,6 @@
 #include "alglib-3.10.0/src/specialfunctions.h"
 
 double stdNormdist(double x, double m, double myu);
-double getPoisson(int i, double m);
+//double _getPoisson(int i, double m);
 
 #endif  // ALGLIB_H

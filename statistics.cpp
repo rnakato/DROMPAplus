@@ -2,7 +2,7 @@
  * This file is a part of DROMPA sources.
  */
 #include "statistics.h"
-#include "pw_gv.h"
+#include "macro.h"
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_multimin.h>
@@ -10,17 +10,22 @@
 
 using namespace std;
 
-double getNegativeBinomial(int k, double p, double n)
+double _getPoisson(int i, double m)
+{
+  return gsl_ran_poisson_pdf(i, m);
+}
+
+double _getNegativeBinomial(int k, double p, double n)
 {
   return gsl_ran_negative_binomial_pdf(k, p, n);
 }
 
-double getZINB(int k, double p, double n, double p0)
+double _getZINB(int k, double p, double n, double p0)
 {
-  double r;
+  double r(0);
   if(!k) {
     r = p0 + (1 - p0) * gsl_ran_negative_binomial_pdf(0, p, n);
-  }else{
+  }else {
     r = (1 - p0) * gsl_ran_negative_binomial_pdf(k, p, n);
   }
   return r;
@@ -42,23 +47,23 @@ gsl_vector *gsl_vector_new(int ndim, double init)
 
 double f_zinb_const(const gsl_vector *v, void *params)
 {
-  double p, n, r, fxy(0), p0;
   double *par = (double *)params;
-  p = gsl_vector_get(v, 0);
+  double p = gsl_vector_get(v, 0);
   if(p <= 0) p = 0.01;
   if(p >= 1) p = 0.99;
-  n = gsl_vector_get(v, 1);
-  p0 = gsl_vector_get(v, 2);
+  double n = gsl_vector_get(v, 1);
+  double p0 = gsl_vector_get(v, 2);
   if(p0 < 0) p0 = 0;
   if(p0 > 1) p0 = 1.0;
-  //  LOG("zinb_const p=%f, n=%f, p0=%f\n", p, n, p0);
-  
-  for(int i=0; i<NUM_WIGDISTARRAY; i++){
+
+  double r(0), fxy(0);
+  int thre = par[0];
+  for(int i=0; i<thre; ++i) {
     if(!i) r = p0 + (1 - p0) * gsl_ran_negative_binomial_pdf(0, p, n);
     else   r =      (1 - p0) * gsl_ran_negative_binomial_pdf(i, p, n);
-    //    printf("%d: %f - %f\n", i, par[i] , r);
-    fxy += (par[i] - r)*(par[i] - r);
+    fxy += (par[i+1] - r)*(par[i+1] - r);
   }
+  //  BPRINT("zinb_const p=%1%, n=%2%, p0=%3% thre=%4% fxy = %5%\n") % p % n % p0 % thre % fxy;
   return fxy;
 }
 
@@ -77,47 +82,78 @@ void func_iteration(gsl_multimin_fminimizer *s)
 #ifdef DEBUG   
     BPRINT("%1% p=%2% n=%3% p0=%4% f() = %5% size = %6%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_vector_get(s->x, 2) % gsl_multimin_fminimizer_minimum(s) % size;
 #endif
-  } while(status == GSL_CONTINUE && iter < 1000);
+  } while (status == GSL_CONTINUE && iter < 1000);
 
   return;
 }
 
-void estimateZINB(Mapfile &p)
+void iterateZINB(void *par, double nb_p_pre, double nb_n_pre, double &nb_p, double &nb_n, double &nb_p0)
 {
   size_t ndim(3);
-
-  // initialization 
-  int thre = NUM_WIGDISTARRAY;
-  double par[thre];
-  for(int i=0; i<thre; ++i) {
-    if(!p.genome.wigDist[i]) par[i] = 0;
-    else par[i] = p.genome.wigDist[i] /(double)p.genome.nbin;
-#ifdef DEBUG   
-    BPRINT("par[%1%]=%2%, darray_bg=%3%, num=%4%\n") % i % par[i] % p.genome.wigDist[i] % p.genome.nbin;
-#endif
-  }
   gsl_multimin_fminimizer *s = gsl_multimin_fminimizer_new(ndim);
   gsl_vector *x = gsl_vector_alloc(ndim);
-  gsl_vector_set(x, 0, p.lchr->nb_p);
-  gsl_vector_set(x, 1, p.lchr->nb_n);
+  gsl_vector_set(x, 0, nb_p_pre);
+  gsl_vector_set(x, 1, nb_n_pre);
   gsl_vector_set(x, 2, 0.02); // p0
   gsl_vector *ss = gsl_vector_new(ndim, 0.1); // step size 
 
   gsl_multimin_function minex_func;
   minex_func.n = ndim;
   minex_func.f = &f_zinb_const;
+  minex_func.params = par;
+  gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
+
+  func_iteration(s);
+
+  nb_p  = gsl_vector_get(s->x, 0);
+  if(nb_p <= 0) nb_p = 0.01;
+  if(nb_p >= 1) nb_p = 0.99;
+  nb_n  = gsl_vector_get(s->x, 1);
+  nb_p0 = gsl_vector_get(s->x, 2);
+  if(nb_p0 < 0) nb_p0 = 0.0;
+  if(nb_p0 > 1) nb_p0 = 1.0;
+
+  gsl_vector_free(x);
+  gsl_vector_free(ss);
+  gsl_multimin_fminimizer_free(s);
+  return;
+}
+
+double f_poisson(const gsl_vector *v, void *params)
+{
+  double *par = (double *)params;
+  double p = gsl_vector_get(v, 0);
+  if(p <= 0) p = 0.01;
+  if(p >= 1) p = 0.99;
+
+  double fxy(0);
+  int thre = par[0];
+  for(int i=0; i<thre; ++i) {
+    double r = _getPoisson(i, p);
+    fxy += (par[i+1] - r)*(par[i+1] - r);
+  }
+  return fxy;
+}
+
+void iteratePoisson(void *par, double ave_pre, double &ave)
+{
+  size_t ndim(1);
+  gsl_multimin_fminimizer *s = gsl_multimin_fminimizer_new(ndim);
+  gsl_vector *x = gsl_vector_alloc(ndim);
+  gsl_vector_set(x, 0, ave_pre);
+  gsl_vector *ss = gsl_vector_new(ndim, 0.1); // step size 
+
+  gsl_multimin_function minex_func;
+  minex_func.n = ndim;
+  minex_func.f = &f_poisson;
   minex_func.params = (void *)&par;
   gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
 
   func_iteration(s);
 
-  p.genome.nb_p  = gsl_vector_get(s->x, 0);
-  if(p.genome.nb_p <= 0) p.genome.nb_p = 0.01;
-  if(p.genome.nb_p >= 1) p.genome.nb_p = 0.99;
-  p.genome.nb_n  = gsl_vector_get(s->x, 1);
-  p.genome.nb_p0 = gsl_vector_get(s->x, 2);
-  if(p.genome.nb_p0 < 0) p.genome.nb_p0 = 0.0;
-  if(p.genome.nb_p0 > 1) p.genome.nb_p0 = 1.0;
+  ave = gsl_vector_get(s->x, 0);
+  if(ave <= 0) ave = 0.01;
+  if(ave >= 1) ave = 0.99;
 
   gsl_vector_free(x);
   gsl_vector_free(ss);

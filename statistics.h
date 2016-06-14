@@ -12,8 +12,11 @@
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
-double getNegativeBinomial(int k, double p, double n);
-double getZINB(int k, double p, double n, double p0);
+double _getNegativeBinomial(int k, double p, double n);
+double _getZINB(int k, double p, double n, double p0);
+void iterateZINB(void *, double, double, double &, double &, double &);
+double _getPoisson(int i, double m);
+void iteratePoisson(void *par, double ave_pre, double &ave);
 
 template <class T>
 T getPercentile(std::vector<T> array, double per)

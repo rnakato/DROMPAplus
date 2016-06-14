@@ -14,7 +14,6 @@
 #include "pw_makefile.h"
 #include "pw_gv.h"
 #include "pw_gc.h"
-#include "alglib.h"
 #include "statistics.h"
 
 variables_map getOpts(int argc, char* argv[]);
@@ -128,7 +127,7 @@ int main(int argc, char* argv[])
   makewig(values, p);
 
   // peakcall?? ZINB??
-  estimateZINB(p);
+  p.estimateZINB();
   
   // output stats
   output_stats(values, p);
@@ -446,14 +445,16 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   //  out << "Poisson: lambda = " << p.genome.ave << endl;
   //  out << "Negative binomial: p=%f, n=%f, p0=%f\n", p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0;
   out << "<genome>\n";
-  out << "read number\tAll regions\tprop all\tBG regions\tprop bg\tPoisson simulated\tNB simulated (" << p.lchr->name << ")\tZINB simulated (genome)" << endl;
+  out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson simulated chr\tPoisson simulated genome\tNB simulated (" << p.lchr->name << ")\tZINB simulated (genome)" << endl;
 
   for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
-    out << boost::format("%1%\t%2%\t%3%\t") % i % p.genome.wigDist[i] % (p.genome.wigDist[i]/(double)p.genome.nbin);
-    out << boost::format("%1%\t%2%\t") % p.chr[0].wigDist[i] % (p.chr[0].wigDist[i]/(double)p.chr[0].nbin);
-    out << getPoisson(i, p.lchr->ave) << "\t";
-    out << getNegativeBinomial(i, p.lchr->nb_p, p.lchr->nb_n) << "\t";
-    out << getZINB(i, p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0);
+    out << i << "\t";
+    p.genome.printwigDist(out, i);
+    p.lchr->printwigDist(out, i);
+    out << p.lchr->getPoisson(i) << "\t";
+    out << p.genome.getPoisson(i) << "\t";
+    out << p.lchr->getNegativeBinomial(i) << "\t";
+    out << p.genome.getZINB(i);
     out << endl;
   }
   

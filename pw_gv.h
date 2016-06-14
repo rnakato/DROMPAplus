@@ -13,6 +13,7 @@
 #include "macro.h"
 #include "readdata.h"
 #include "statistics.h"
+#include "alglib.h"
 
 using namespace std;
 using namespace boost::program_options;
@@ -130,7 +131,7 @@ class SeqStats {
  public:
   string name;
   long len, len_mpbl;
-  int nbin, nbindist, nbindist_nonzero;
+  int nbin, nbindist;
   double p_mpbl;  /* mappability */
   // genome coverage
   long nbp, ncov, ncovnorm;
@@ -147,7 +148,7 @@ class SeqStats {
   long nread_inbed;
   double FRiP;
 
- SeqStats(string s, int l=0): num95(0), name(s),len(l), len_mpbl(l), nbin(0), nbindist(0), nbindist_nonzero(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
+ SeqStats(string s, int l=0): num95(0), name(s),len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
     vector<long> v(NUM_MPDIST,0); // 5% div
     mpDist = v;
     vector<long> v2(NUM_WIGDISTARRAY,0);
@@ -196,6 +197,9 @@ class SeqStats {
     gcovRaw  = nbp ? ncov / (double)nbp: 0;
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
   }
+  void printwigDist(ofstream &out, const int i) {
+    out << boost::format("%1%\t%2%\t") % wigDist[i] % (wigDist[i]/(double)nbindist);
+  }
   void addmpDist(const double p) {
     if(!RANGE(p,0,1)) cout << "Warning: mappability " << p << " should be [0,1]" << endl;
     else ++mpDist[(int)(p*NUM_MPDIST)];
@@ -212,7 +216,6 @@ class SeqStats {
     int size=wigDist.size();
     vector<int> ar;
     for(auto x: wigarray) {
-      if(!x) ++nbindist_nonzero;
       int v = WIGARRAY2VALUE(x);
       if(v < size) ++wigDist[v];
       if(x >= num95) continue;
@@ -226,7 +229,6 @@ class SeqStats {
   }
   void addWigStats(const SeqStats &x) {
     nbindist += x.nbindist;
-    nbindist_nonzero += x.nbindist_nonzero;
     for(uint i=0; i<wigDist.size(); ++i) wigDist[i] += x.wigDist[i]; 
   }
   void printWigStats() {
@@ -261,6 +263,15 @@ class SeqStats {
       }
     }
     FRiP = nread_inbed/(double)bothnread_nonred();
+  }
+  double getPoisson(const int i) {
+    return _getPoisson(i, ave);
+  }
+  double getNegativeBinomial(const int i) {
+    return _getNegativeBinomial(i, nb_p, nb_n);
+  }
+  double getZINB(const int i) {
+    return _getZINB(i, nb_p, nb_n, nb_p0);
   }
 };
   
@@ -344,9 +355,20 @@ public:
     else flen = flen_def;
     return flen;
   }
+
+  void estimateZINB() {
+    int thre = 10; //NUM_WIGDISTARRAY;
+    double par[thre+1];
+    par[0] = thre;
+    for(int i=0; i<thre; ++i) par[i+1] = genome.wigDist[i] /(double)genome.nbindist;
+
+    printf("test\n");
+    iteratePoisson(&par, lchr->ave, genome.ave);
+    printf("test2\n");
+    iterateZINB(&par, lchr->nb_p, lchr->nb_n, genome.nb_p, genome.nb_n, genome.nb_p0);
+
+    return;
+  }
 };
-
-void estimateZINB(Mapfile &);
-
 
 #endif /* _PW_GV_H_ */

@@ -8,18 +8,11 @@ double stdNormdist(double x, double m, double myu)
   return p;
 }
 
-double getPoisson(int i, double m)
+/*double _getPoisson(int i, double m)
 {
   double p;
   if(!i) p = alglib::poissondistribution(i, 1);
   else p = alglib::poissondistribution(i, 1) - alglib::poissondistribution(i-1, 1);
   return p;
 }
-
-double getNegativeBinomial(int i, double m)
-{
-  double p;
-  if(!i) p = alglib::poissondistribution(i, 1);
-  else p = alglib::poissondistribution(i, 1) - alglib::poissondistribution(i-1, 1);
-  return p;
-}
+*/
