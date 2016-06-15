@@ -98,7 +98,7 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 
 #ifdef DEBUG
   chr.printWigStats();
-  chr.printmpDist();
+  if (values.count("mp")) chr.printmpDist();
 #endif
 
   return wigarray;

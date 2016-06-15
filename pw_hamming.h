@@ -7,5 +7,6 @@
 #include "pw_gv.h"
 
 void hammingDist(Mapfile &p);
+void pw_ccp(Mapfile &p);
 
 #endif /* _PW_HAMMING_H_ */

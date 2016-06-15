@@ -43,7 +43,10 @@ void read_mapfile(const variables_map &values, Mapfile &p){
   p.setnread_red();
 
   // estimate fragment length
-  if(!values.count("pair") && !values.count("nomodel")) hammingDist(p);
+  if(!values.count("pair") && !values.count("nomodel")) {
+    hammingDist(p);
+    pw_ccp(p);
+  }
   p.setF5(values);
   
   // calculate sequencing depth

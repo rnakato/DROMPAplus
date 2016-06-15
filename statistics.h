@@ -30,12 +30,14 @@ T getPercentile(std::vector<T> array, double per)
 };
 
 template <class T>
-void getMoment(const std::vector<T> v, double &mean, double &var)
+void getMoment(const std::vector<T> v, double &mean, double &var, int size=0)
 {
-  mean = std::accumulate(v.begin(), v.end(), 0.0) / (double)v.size();
+  if(!size) size = v.size();
+  for(int i=0; i<size; ++i) mean += v[i];
+  mean /= (double)size;
   var=0;
-  for(auto x:v) var += (x - mean)*(x - mean);
-  var /= (double)(v.size() -1);
+  for(int i=0; i<size; ++i) var += (v[i] - mean)*(v[i] - mean);
+  var /= (double)(size -1);
   return;
 }
 
