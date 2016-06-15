@@ -20,6 +20,17 @@ double _getNegativeBinomial(int k, double p, double n)
   return gsl_ran_negative_binomial_pdf(k, p, n);
 }
 
+double _getZIP(int k, double p, double p0)
+{
+  double r(0);
+  if(!k) {
+    r = p0 + (1 - p0) * gsl_ran_poisson_pdf(k, p);
+  }else {
+    r = (1 - p0) * gsl_ran_poisson_pdf(k, p);
+  }
+  return r;
+}
+
 double _getZINB(int k, double p, double n, double p0)
 {
   double r(0);
@@ -67,7 +78,7 @@ double f_zinb_const(const gsl_vector *v, void *params)
   return fxy;
 }
 
-void func_iteration(gsl_multimin_fminimizer *s)
+void func_iteration(gsl_multimin_fminimizer *s, size_t ndim)
 {
   size_t iter(0);
   int status;
@@ -79,8 +90,9 @@ void func_iteration(gsl_multimin_fminimizer *s)
     size = gsl_multimin_fminimizer_size(s);       /* sのその時点での最小点の最良推定値を返す */
     status = gsl_multimin_test_size(size, 1e-3);  /* sizeが閾値(1e-3)より小さければGSL_SUCCESS を、そうでなければGSL_CONTINUEを返す。 */
     if(status == GSL_SUCCESS) { cout << "converged to minimum at" << endl; }
-#ifdef DEBUG   
-    BPRINT("%1% p=%2% n=%3% p0=%4% f() = %5% size = %6%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_vector_get(s->x, 2) % gsl_multimin_fminimizer_minimum(s) % size;
+#ifdef DEBUG
+    if(ndim==2) BPRINT("%1% p=%2% p0=%3% f() = %4% size = %5%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_multimin_fminimizer_minimum(s) % size;
+    else BPRINT("%1% p=%2% n=%3% p0=%4% f() = %5% size = %6%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_vector_get(s->x, 2) % gsl_multimin_fminimizer_minimum(s) % size;
 #endif
   } while (status == GSL_CONTINUE && iter < 1000);
 
@@ -103,7 +115,7 @@ void iterateZINB(void *par, double nb_p_pre, double nb_n_pre, double &nb_p, doub
   minex_func.params = par;
   gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
 
-  func_iteration(s);
+  func_iteration(s, ndim);
 
   nb_p  = gsl_vector_get(s->x, 0);
   if(nb_p <= 0) nb_p = 0.01;
@@ -123,38 +135,46 @@ double f_poisson(const gsl_vector *v, void *params)
 {
   double *par = (double *)params;
   double p = gsl_vector_get(v, 0);
+  double p0 = gsl_vector_get(v, 1);
   if(p <= 0) p = 0.01;
   if(p >= 1) p = 0.99;
 
   double fxy(0);
   int thre = par[0];
+  double r;
   for(int i=0; i<thre; ++i) {
-    double r = _getPoisson(i, p);
+    if(!i) r = p0 + (1 - p0) * _getPoisson(i, p); 
+    else   r =      (1 - p0) * _getPoisson(i, p);
     fxy += (par[i+1] - r)*(par[i+1] - r);
   }
   return fxy;
 }
 
-void iteratePoisson(void *par, double ave_pre, double &ave)
+void iteratePoisson(void *par, double ave_pre, double &ave, double &p0)
 {
-  size_t ndim(1);
+  size_t ndim(2);
+  
   gsl_multimin_fminimizer *s = gsl_multimin_fminimizer_new(ndim);
   gsl_vector *x = gsl_vector_alloc(ndim);
   gsl_vector_set(x, 0, ave_pre);
+  gsl_vector_set(x, 1, 0.02); // p0
   gsl_vector *ss = gsl_vector_new(ndim, 0.1); // step size 
 
   gsl_multimin_function minex_func;
   minex_func.n = ndim;
   minex_func.f = &f_poisson;
-  minex_func.params = (void *)&par;
+  minex_func.params = par;
   gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
 
-  func_iteration(s);
+  func_iteration(s, ndim);
 
   ave = gsl_vector_get(s->x, 0);
   if(ave <= 0) ave = 0.01;
   if(ave >= 1) ave = 0.99;
-
+  p0 = gsl_vector_get(s->x, 1);
+  if(p0 < 0) p0 = 0.0;
+  if(p0 > 1) p0 = 1.0;
+  
   gsl_vector_free(x);
   gsl_vector_free(ss);
   gsl_multimin_fminimizer_free(s);

@@ -13,7 +13,6 @@
 #include "macro.h"
 #include "readdata.h"
 #include "statistics.h"
-#include "alglib.h"
 
 using namespace std;
 using namespace boost::program_options;
@@ -139,7 +138,7 @@ class SeqStats {
   // statistics of wigarray
   vector<long> mpDist;
   vector<long> wigDist;
-  double ave, var, nb_p, nb_n, nb_p0;
+  double ave, var, nb_p, nb_n, nb_p0, pois_p0;
 
   strandData seq[STRANDNUM];
   double depth;
@@ -270,6 +269,9 @@ class SeqStats {
   double getNegativeBinomial(const int i) {
     return _getNegativeBinomial(i, nb_p, nb_n);
   }
+  double getZIP(const int i) {
+    return _getZIP(i, ave, pois_p0);
+  }
   double getZINB(const int i) {
     return _getZINB(i, nb_p, nb_n, nb_p0);
   }
@@ -362,9 +364,7 @@ public:
     par[0] = thre;
     for(int i=0; i<thre; ++i) par[i+1] = genome.wigDist[i] /(double)genome.nbindist;
 
-    printf("test\n");
-    iteratePoisson(&par, lchr->ave, genome.ave);
-    printf("test2\n");
+    iteratePoisson(&par, lchr->ave, genome.ave, genome.pois_p0);
     iterateZINB(&par, lchr->nb_p, lchr->nb_n, genome.nb_p, genome.nb_n, genome.nb_p0);
 
     return;

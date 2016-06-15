@@ -442,8 +442,6 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   ofstream out(filename);
  
   out << boost::format("%5%: ave=%1%, var=%2%, p=%3%, n=%4%\n") % p.lchr->ave % p.lchr->var % p.lchr->nb_p % p.lchr->nb_n % p.lchr->name;
-  //  out << "Poisson: lambda = " << p.genome.ave << endl;
-  //  out << "Negative binomial: p=%f, n=%f, p0=%f\n", p.genome.nb_p, p.genome.nb_n, p.genome.nb_p0;
   out << "<genome>\n";
   out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson simulated chr\tPoisson simulated genome\tNB simulated (" << p.lchr->name << ")\tZINB simulated (genome)" << endl;
 
@@ -454,7 +452,7 @@ void output_wigstats(const variables_map &values, Mapfile &p)
     out << p.lchr->getPoisson(i) << "\t";
     out << p.genome.getPoisson(i) << "\t";
     out << p.lchr->getNegativeBinomial(i) << "\t";
-    out << p.genome.getZINB(i);
+    out << p.genome.getZIP(i);
     out << endl;
   }
   
