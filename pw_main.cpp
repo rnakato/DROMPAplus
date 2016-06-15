@@ -133,7 +133,6 @@ int main(int argc, char* argv[])
   output_stats(values, p);
   output_wigstats(values, p);
 
-  
   return 0;
 }
 
@@ -443,17 +442,16 @@ void output_wigstats(const variables_map &values, Mapfile &p)
  
   out << boost::format("%5%: ave=%1%, var=%2%, p=%3%, n=%4%\n") % p.lchr->ave % p.lchr->var % p.lchr->nb_p % p.lchr->nb_n % p.lchr->name;
   out << "<genome>\n";
-  out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson simulated chr\tPoisson simulated genome\tNB simulated (" << p.lchr->name << ")\tZINB simulated (genome)" << endl;
+  out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson estimated chr\t ZIPoisson estimated genome\tNB estimated (" << p.lchr->name << ")\tZINB estimated (genome)" << endl;
 
   for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
     out << i << "\t";
     p.genome.printwigDist(out, i);
     p.lchr->printwigDist(out, i);
     out << p.lchr->getPoisson(i) << "\t";
-    out << p.genome.getPoisson(i) << "\t";
+    out << p.genome.getZIP(i) << "\t";
     out << p.lchr->getNegativeBinomial(i) << "\t";
-    out << p.genome.getZIP(i);
-    out << endl;
+    out << p.genome.getZINB(i) << endl;
   }
   
   return;
