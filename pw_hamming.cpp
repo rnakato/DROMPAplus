@@ -93,10 +93,10 @@ void func(short *x, int num, double &ave, double &var)
 
 void pw_ccp(Mapfile &p)
 {
-  cout << "Making cross-correlation profile..." << flush;
-  vector<short> fwd(p.lchr->len,0);
-  vector<short> rev(p.lchr->len,0);
-  
+  printf("Making cross-correlation profile...\n");
+  short *fwd = (short *)calloc(p.lchr->len, sizeof(short));
+  short *rev = (short *)calloc(p.lchr->len, sizeof(short));
+
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x: p.lchr->seq[strand].vRead) {
       if(x.duplicate) continue;
@@ -118,21 +118,20 @@ void pw_ccp(Mapfile &p)
   ofstream out(filename);
   out << "Strand shift\tCross correlation\tProportion" << endl;
   int start = HD_FROM;
-  int num = p.lchr->len - HD_WIDTH;
+  int num = p.lchr->len-HD_WIDTH;
 
   double mx,xx;
   double my,yy;
-  getMoment(fwd, mx, xx);
-  getMoment(rev, my, yy);
-  double bunbo = sqrt(xx) * sqrt(yy);
-  
+  func(fwd, num, mx, xx);
+  func(rev, num, my, yy);
+
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
     for(int j=0; j<num; ++j) xy += (fwd[j +start +i] - mx) * (rev[j +start] - my);
-    out << i << "\t" << (xy / bunbo) << endl;
+    out << i << "\t" << xy / (xx*yy) << endl;
   }
 
-  cout << "done." << endl;
-  
+  free(fwd);
+  free(rev);
   return;
 }
