@@ -70,20 +70,21 @@ public:
   int fraglen;
   int readlen_F3;
 
- Fragment(const vector<string> &v, const bool pair, const int sv):
-  chr(v[2]), fraglen(0), readlen_F3(v[9].length()) //name(v[0]), 
-    {
-      if(pair) fraglen = abs(stoi(v[8]));
-      if(sv&16) {
-	strand = STRAND_MINUS;
-	F3 = stoi(v[3]) + readlen_F3 -1; //SAM
-      } else {
-	strand = STRAND_PLUS;
-	F3 = stoi(v[3]) -1;  //SAM
-      }
-    }
-  void print() {
-    cout << chr << ", " << F3 << ", "<< strand << ", " << "fraglen " << fraglen << "," <<readlen_F3 << endl;
+ Fragment(): fraglen(0), readlen_F3(0) {}
+ void addSAM(const vector<string> &v, const bool pair, const int sv) {
+   chr = v[2];
+   readlen_F3 = v[9].length();
+   if(pair) fraglen = abs(stoi(v[8]));
+   if(sv&16) {
+     strand = STRAND_MINUS;
+     F3 = stoi(v[3]) + readlen_F3 -1; //SAM
+   } else {
+     strand = STRAND_PLUS;
+     F3 = stoi(v[3]) -1;  //SAM
+   }
+ }
+ void print() {
+   BPRINT("chr:%1%\tposi:%2%\tstrand:%3%\tfraglen:%4%\treadlen:%5%\n") % chr % F3 % strand % fraglen % readlen_F3;
   }
 };
 

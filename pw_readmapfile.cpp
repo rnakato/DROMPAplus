@@ -16,6 +16,7 @@
 using namespace boost::program_options;
 
 void parse_sam(const variables_map &values, string inputfile, Mapfile &p);
+void parse_bowtie(const variables_map &values, string inputfile, Mapfile &p);
 void outputDist(const variables_map &values, Mapfile &p);
 void check_redundant_reads(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
@@ -29,7 +30,7 @@ void read_mapfile(const variables_map &values, Mapfile &p){
     BPRINT("Parsing %1%...\n") % inputfile;
     string ftype = values["ftype"].as<string>();
     if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p);
-    //else if(ftype == "BOWTIE")   parse_bowtie(values, inputfile, g); 
+    else if(ftype == "BOWTIE") parse_bowtie(values, inputfile, p); 
     // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
     printf("done.\n");
   }
@@ -78,7 +79,8 @@ void do_bampe(const variables_map &values, Mapfile &p, T &in)
       p.addF5(v[9].length());
       continue;
     }
-    Fragment frag(v, values.count("pair"), sv);
+    Fragment frag;
+    frag.addSAM(v, values.count("pair"), sv);
     if(frag.fraglen > maxins) continue;
     //frag.print();
     p.addfrag(frag);
@@ -100,8 +102,10 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
     // unmapped reads, low quality reads
     if(sv&4 || sv&512 || sv&1024) continue;
     if(sv&64 || sv&128) cerr << "Warning: parsing paired-end file as single-end." << endl;
-    Fragment frag(v, values.count("pair"), sv);
-    //    frag.print();
+    Fragment frag;
+    frag.addSAM(v, values.count("pair"), sv);
+    //    cout << lineStr << endl;
+    // frag.print();
     p.addfrag(frag);
   }
 
@@ -125,6 +129,78 @@ void parse_sam(const variables_map &values, string inputfile, Mapfile &p)
     else do_bamse(values, p, in);
   }
 
+  return;
+}
+
+void parse_bowtie(const variables_map &values, string inputfile, Mapfile &p)
+{
+  int maxins(values["maxins"].as<int>());
+  ifstream in(inputfile);
+  if(!in) PRINTERR("Could not open " << inputfile << ".");
+
+  string chr_F3, chr_F5, nametemp("");
+  int F5(0);
+  Fragment fragpair;
+  
+  string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty()) continue;
+
+    vector<string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+
+    if (values.count("pair")) {
+      vector<string> read;
+      boost::split(read, v[0], boost::algorithm::is_any_of("/"));
+      if(nametemp != "" && nametemp != read[0]) PRINTERR("Error:  Invalid read pair." << nametemp <<"-" << read[0]);
+      if(read[1] == "1") {  // F3 read
+	chr_F3 = v[2];
+	fragpair.readlen_F3 = v[4].length();
+	if(v[1] == "+") { 
+	  fragpair.strand = STRAND_PLUS;
+	  fragpair.F3 = stoi(v[3]);
+	} else {
+	  fragpair.strand = STRAND_MINUS;
+	  fragpair.F3 = stoi(v[3]) + fragpair.readlen_F3;
+	}
+      } else {  
+	chr_F5 = v[2];
+	if(v[1] == "+") { 
+	  F5 = stoi(v[3]);
+	} else {
+	  F5 = stoi(v[3]) + v[4].length();
+	}
+	p.addF5(v[4].length());
+      }
+      if(chr_F3 != "" || chr_F5 != ""){
+	if(chr_F3 == chr_F5) {
+	  fragpair.chr = chr_F3;
+	  fragpair.fraglen = abs(F5 - fragpair.F3);
+	  if(fragpair.fraglen <= maxins) p.addfrag(fragpair);
+	}
+	chr_F3 = "";
+	chr_F5 = "";
+	nametemp = "";
+      }
+    } else {
+      if(v[0].find("/2") != string::npos) PRINTERR("Warning: parsing paired-end file as single-end");
+      Fragment frag;
+      frag.chr = v[2];
+      frag.readlen_F3 = v[4].length();
+      if(v[1] == "+") { 
+	frag.strand = STRAND_PLUS;
+	frag.F3 = stoi(v[3]);
+      } else {
+	frag.strand = STRAND_MINUS;
+	frag.F3 = stoi(v[3]) + frag.readlen_F3;
+      }
+      //      cout << lineStr << endl;
+      //      frag.print();
+      p.addfrag(frag);
+    }
+
+  }
   return;
 }
 

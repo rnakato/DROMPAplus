@@ -10,3 +10,4 @@ Requirements
  sudo apt-get install zlib1g-dev 
  apt-get install libgtk2.0-dev 
 
+ cpdf-binaries-master

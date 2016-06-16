@@ -400,11 +400,10 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
       
       if(rand() >= r4cmp) val=COVREAD_ALL; else val=COVREAD_NORM;
       
-      int s(min(x.F3, x.F5));
-      int e(max(x.F3, x.F5));
-      if(e >= size) {
-	cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size()<< endl;
-	e = size-1;
+      int s(max(0, min(x.F3, x.F5)));
+      int e(min(max(x.F3, x.F5), size-1));
+      if(s >= size || e < 0) {
+	cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size() << endl;
       }
       for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
     }

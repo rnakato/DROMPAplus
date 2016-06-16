@@ -87,7 +87,8 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
       if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
       if(mparray[i] > mpthre_dist) mappablearray.push_back(wigarray[i]);
     }
-    chr.getWigStats(mappablearray);
+    //    chr.getWigStats(mappablearray);
+    chr.getWigStats(wigarray);
   } else {
     chr.getWigStats(wigarray);
   }
