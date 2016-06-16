@@ -9,37 +9,36 @@
 #include "statistics.h"
 #include <boost/dynamic_bitset.hpp>
 
-void hammingDist(Mapfile &p)
+void hammingDistChr(SeqStats &chr,  vector<int> &hd)
 {
-  cout << "Estimate fragment length.." << flush;
-  
-  //  for(auto &chr: p.chr) {
-  //  cout << p.lchr->name <<".." << flush;
-  boost::dynamic_bitset<> fwd(p.lchr->len + HD_FROM);
-  boost::dynamic_bitset<> rev(p.lchr->len + HD_FROM);
-
+  cout << chr.name <<".." << flush;
+  boost::dynamic_bitset<> fwd(chr.len + HD_FROM);
+  boost::dynamic_bitset<> rev(chr.len + HD_FROM);
   for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: p.lchr->seq[strand].vRead) {
+    for (auto x: chr.seq[strand].vRead) {
       if(x.duplicate) continue;
-      int pos(p.lchr->len-1-x.F3);
-      if(!RANGE(pos, 0, p.lchr->len-1)) continue;
+      int pos(chr.len -1 -x.F3);
+      if(!RANGE(pos, 0, chr.len-1)) continue;
       if(strand==STRAND_PLUS) fwd.set(pos + HD_FROM);
       else                    rev.set(pos);
     }
   }
-  
   for(int i=0; i<HD_WIDTH; ++i) {
     (fwd >>= 1);
-    p.dist.hd[i]=((fwd ^ rev).count());
+    hd[i]=((fwd ^ rev).count());
   }
-  //  }
-  
-  //  vector<int> hdg(HD_WIDTH,0);
-  //for(int i=0; i<HD_WIDTH; ++i) {
-    //    for(auto chr: p.chr) hdg[i] += chr.hd[i];
-  //   hdg[i] = p.dist.hd[i];
-  // }
+  return;
+}
 
+void hammingDist(Mapfile &p)
+{
+  cout << "Estimate fragment length.." << flush;
+
+  if(p.lchr->len > NUM_10M) hammingDistChr(*p.lchr, p.dist.hd);
+  else {
+    for(auto &chr: p.chr) hammingDistChr(chr, p.dist.hd);
+  }
+ 
   // get fragment length FL and HD[FL] run through from (i_num-1),...,2*read_len+1
   int min_hd_fl=p.dist.hd[HD_WIDTH-1];
   int max_hd_fl=p.dist.hd[HD_WIDTH-1];

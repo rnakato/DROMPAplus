@@ -4,6 +4,10 @@
 #include <algorithm>
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
 #include <ext/stdio_filebuf.h>
 #include "pw_gv.h"
 #include "pw_readmapfile.h"
@@ -15,8 +19,9 @@
 
 using namespace boost::program_options;
 
-void parse_sam(const variables_map &values, string inputfile, Mapfile &p);
-void parse_bowtie(const variables_map &values, string inputfile, Mapfile &p);
+void parseSam(const variables_map &values, string inputfile, Mapfile &p);
+void parseBowtie(const variables_map &values, string inputfile, Mapfile &p);
+void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p);
 void outputDist(const variables_map &values, Mapfile &p);
 void check_redundant_reads(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
@@ -29,9 +34,9 @@ void read_mapfile(const variables_map &values, Mapfile &p){
     isFile(inputfile);
     BPRINT("Parsing %1%...\n") % inputfile;
     string ftype = values["ftype"].as<string>();
-    if(ftype == "SAM" || ftype == "BAM") parse_sam(values, inputfile, p);
-    else if(ftype == "BOWTIE") parse_bowtie(values, inputfile, p); 
-    // else if(ftype == "TAGALIGN") parse_tagAlign(values, inputfile, g);
+    if(ftype == "SAM" || ftype == "BAM") parseSam(values, inputfile, p);
+    else if(ftype == "BOWTIE") parseBowtie(values, inputfile, p);
+    else if(ftype == "TAGALIGN") parseTagAlign(values, inputfile, p);
     printf("done.\n");
   }
   p.setnread();
@@ -112,7 +117,7 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
   return;
 }
 
-void parse_sam(const variables_map &values, string inputfile, Mapfile &p)
+void parseSam(const variables_map &values, string inputfile, Mapfile &p)
 {
   if(values["ftype"].as<string>()=="SAM") {  // SAM
     ifstream in(inputfile);
@@ -132,7 +137,7 @@ void parse_sam(const variables_map &values, string inputfile, Mapfile &p)
   return;
 }
 
-void parse_bowtie(const variables_map &values, string inputfile, Mapfile &p)
+void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 {
   int maxins(values["maxins"].as<int>());
   ifstream in(inputfile);
@@ -200,6 +205,56 @@ void parse_bowtie(const variables_map &values, string inputfile, Mapfile &p)
       p.addfrag(frag);
     }
 
+  }
+  return;
+}
+
+template <class T>
+void funcTagAlign(const variables_map &values, Mapfile &p, T & in)
+{
+  string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty()) continue;
+
+    vector<string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    if(v.size() < 6) PRINTERR("Use tagAlign (BED3+3) file");
+    
+    if (values.count("pair")) PRINTERR("tagAlign format does not support paired-end file.\n");
+    else {
+      int start(stoi(v[1]));
+      int end(stoi(v[2]));
+      Fragment frag;
+      frag.chr = v[0];
+      frag.readlen_F3 = abs(end - start);
+      if(v[5] == "+") {
+	frag.strand = STRAND_PLUS;
+	frag.F3 = start;
+      } else {
+	frag.strand = STRAND_MINUS;
+	frag.F3 = start + frag.readlen_F3;
+      }
+      //      cout << lineStr << endl;
+      //      frag.print();
+      p.addfrag(frag);
+    }
+  }
+  return;
+}
+
+void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p)
+{
+  if(inputfile.find(".gz") != string::npos) {
+    boost::iostreams::filtering_istream in;
+    in.push(boost::iostreams::gzip_decompressor());
+    in.push(boost::iostreams::file_source(inputfile));
+    //    istream in = io;
+    funcTagAlign(values, p, in);
+  } else {
+    ifstream in(inputfile);
+    if(!in) PRINTERR("Could not open " << inputfile << ".");
+    funcTagAlign(values, p, in);
   }
   return;
 }
