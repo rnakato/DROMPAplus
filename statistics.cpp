@@ -59,11 +59,11 @@ gsl_vector *gsl_vector_new(int ndim, double init)
 double f_zinb_const(const gsl_vector *v, void *params)
 {
   double *par = (double *)params;
-  double p = gsl_vector_get(v, 0);
+  double p  = gsl_vector_get(v, 0);
+  double n  = gsl_vector_get(v, 1);
+  double p0 = gsl_vector_get(v, 2);
   if(p <= 0) p = 0.01;
   if(p >= 1) p = 0.99;
-  double n = gsl_vector_get(v, 1);
-  double p0 = gsl_vector_get(v, 2);
   if(p0 < 0) p0 = 0;
   if(p0 > 1) p0 = 1.0;
 
@@ -73,8 +73,9 @@ double f_zinb_const(const gsl_vector *v, void *params)
     if(!i) r = p0 + (1 - p0) * gsl_ran_negative_binomial_pdf(0, p, n);
     else   r =      (1 - p0) * gsl_ran_negative_binomial_pdf(i, p, n);
     fxy += (par[i+1] - r)*(par[i+1] - r);
+    //BPRINT("i=%1% par[i+1]=%2% r=%3% xx=%4%\n") % i % par[i+1] % r % ((par[i+1] - r)*(par[i+1] - r));
   }
-  //  BPRINT("zinb_const p=%1%, n=%2%, p0=%3% thre=%4% fxy = %5%\n") % p % n % p0 % thre % fxy;
+  //  BPRINT("fxy=%1% p=%2% n=%3% p0=%4% thre=%5%\n") % fxy % p % n % p0 % thre;
   return fxy;
 }
 
@@ -106,7 +107,7 @@ void iterateZINB(void *par, double nb_p_pre, double nb_n_pre, double &nb_p, doub
   gsl_vector *x = gsl_vector_alloc(ndim);
   gsl_vector_set(x, 0, nb_p_pre);
   gsl_vector_set(x, 1, nb_n_pre);
-  gsl_vector_set(x, 2, 0.02); // p0
+  gsl_vector_set(x, 2, 0.2); // p0
   gsl_vector *ss = gsl_vector_new(ndim, 0.1); // step size 
 
   gsl_multimin_function minex_func;

@@ -33,8 +33,8 @@ using namespace boost::program_options;
 #define NUM_WIGDISTARRAY 200
 #define NUM_MPDIST 20
 
-#define HD_FROM 500
-#define HD_WIDTH 1500
+#define HD_FROM 300
+#define HD_WIDTH 1000
 
 class Dist{
  public:
@@ -360,12 +360,20 @@ public:
   }
 
   void estimateZINB() {
-    int thre = 10; //NUM_WIGDISTARRAY;
+    int thre = 9;
+    long num(0);
+    do{
+      ++thre;
+      num=0;
+      for(int i=0; i<thre; ++i) num += genome.wigDist[i];
+      //      cout << num << ", " << genome.nbindist << endl;
+    } while(num*2 < genome.nbindist);
+    
     double par[thre+1];
     par[0] = thre;
     for(int i=0; i<thre; ++i) par[i+1] = genome.wigDist[i] /(double)genome.nbindist;
 
-    iteratePoisson(&par, lchr->ave, genome.ave, genome.pois_p0);
+    //    iteratePoisson(&par, lchr->ave, genome.ave, genome.pois_p0);
     iterateZINB(&par, lchr->nb_p, lchr->nb_n, genome.nb_p, genome.nb_n, genome.nb_p0);
 
     return;

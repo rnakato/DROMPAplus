@@ -391,7 +391,7 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
   else array = readMpbl_binary(chr.len);
   if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
-  
+
   int val(0);
   int size = array.size();
   for(int strand=0; strand<STRANDNUM; ++strand) {
@@ -441,14 +441,14 @@ void output_wigstats(const variables_map &values, Mapfile &p)
  
   out << boost::format("%5%: ave=%1%, var=%2%, p=%3%, n=%4%\n") % p.lchr->ave % p.lchr->var % p.lchr->nb_p % p.lchr->nb_n % p.lchr->name;
   out << "<genome>\n";
-  out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson estimated chr\t ZIPoisson estimated genome\tNB estimated (" << p.lchr->name << ")\tZINB estimated (genome)" << endl;
+  out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson estimated chr\tNB estimated (" << p.lchr->name << ")\tZINB estimated (genome)" << endl;
 
   for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
     out << i << "\t";
     p.genome.printwigDist(out, i);
     p.lchr->printwigDist(out, i);
     out << p.lchr->getPoisson(i) << "\t";
-    out << p.genome.getZIP(i) << "\t";
+    //    out << p.genome.getZIP(i) << "\t";
     out << p.lchr->getNegativeBinomial(i) << "\t";
     out << p.genome.getZINB(i) << endl;
   }
