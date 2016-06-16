@@ -33,8 +33,8 @@ using namespace boost::program_options;
 #define NUM_WIGDISTARRAY 200
 #define NUM_MPDIST 20
 
-#define HD_FROM 300
-#define HD_WIDTH 1000
+#define HD_FROM 200
+#define HD_WIDTH 600
 
 class Dist{
  public:

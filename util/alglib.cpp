@@ -8,6 +8,10 @@ double stdNormdist(double x, double m, double myu)
   return p;
 }
 
+double getNormdist(double s)
+{
+  return alglib::normaldistribution(s);
+}
 /*double _getPoisson(int i, double m)
 {
   double p;

@@ -6,10 +6,33 @@
 
 #include "pw_hamming.h"
 #include "macro.h"
+#include "alglib.h"
 #include "statistics.h"
 #include <boost/dynamic_bitset.hpp>
 
-void hammingDistChr(SeqStats &chr,  vector<int> &hd)
+template <class T>
+void GaussianSmoothing(vector<T> &hd)
+{
+  int size = hd.size();
+  double m0;
+  double m1(hd[0]);
+  double m2(hd[1]);
+  double m3(hd[2]);
+  double w0(getNormdist(0));
+  double w1(getNormdist(-1));
+  double w2(getNormdist(-2));
+  double w3(getNormdist(-3));
+  for(int i=3; i<size-3; ++i) {
+    m0 = hd[i];
+    hd[i] = w3*m3 + w2*m2 + w1*m1 + w0*m0 + w1*hd[i+1] + w2*hd[i+2] + w3*hd[i+3];
+    m3 = m2;
+    m2 = m1;
+    m1 = m0;
+  }
+  return;
+}
+
+void hammingDistChr(SeqStats &chr, vector<int> &hd)
 {
   cout << chr.name <<".." << flush;
   boost::dynamic_bitset<> fwd(chr.len + HD_FROM);
@@ -38,8 +61,10 @@ void hammingDist(Mapfile &p)
   else {
     for(auto &chr: p.chr) hammingDistChr(chr, p.dist.hd);
   }
- 
-  // get fragment length FL and HD[FL] run through from (i_num-1),...,2*read_len+1
+  
+  GaussianSmoothing(p.dist.hd);
+  
+   // get fragment length FL and HD[FL] run through from (i_num-1),...,2*read_len+1
   int min_hd_fl=p.dist.hd[HD_WIDTH-1];
   int max_hd_fl=p.dist.hd[HD_WIDTH-1];
   int bd = 2*p.dist.lenF3;
@@ -115,7 +140,7 @@ void pw_ccp(Mapfile &p)
 
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
-  out << "Strand shift\tCross correlation\tProportion" << endl;
+  out << "Strand shift\tCross correlation" << endl;
   int start = HD_FROM;
   int num = p.lchr->len-HD_WIDTH;
 
