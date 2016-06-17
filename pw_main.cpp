@@ -249,6 +249,7 @@ void setOpts(options_description &allopts){
     ;
   options_description optother("Others",100);
   optother.add_options()
+    ("threads,p",    value<int>()->default_value(1),  "number of threads to launch")
     ("version,v", "print version")
     ("help,h", "show help message")
     ;
@@ -423,11 +424,14 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   }
   double r4cmp = r*RAND_MAX;
   
-  for (auto &chr:p.chr) {
-    cout << chr.name << ".." << flush;
-    auto array = makeGcovArray(values, chr, p, r4cmp);
-    chr.calcGcov(array);
-    p.genome.addGcov(chr);
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(values["threads"].as<int>())
+#endif
+  for(uint i=0; i<p.chr.size(); ++i) {
+    //    cout << p.chr[i].name << ".." << flush;
+    auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
+    p.chr[i].calcGcov(array);
+    p.genome.addGcov(p.chr[i]);
   }
   
   cout << "done." << endl;

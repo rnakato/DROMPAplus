@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <boost/format.hpp>
+#include <omp.h>
 #include "seq.h"
 #include "common.h"
 #include "util.h"

@@ -5,6 +5,7 @@
 #include "pw_makefile.h"
 #include "readdata.h"
 #include "macro.h"
+#include <omp.h>
 
 #define FRAG_IGNORE 5
 #define GCDIST_THRE 1e-5
@@ -158,19 +159,23 @@ void weightRead(const variables_map &values, Mapfile &p)
   int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
 
   cout << "add weight to reads..." << flush;
-  for(auto &x:p.chr) {
-    cout << x.name << ".." << flush;
-    string fa = values["genome"].as<string>() + "/" + x.name + ".fa";
-    auto FastaArray = makeFastaArray(fa, x.len, flen4gc);
 
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(values["threads"].as<int>())
+#endif
+  for(uint i=0; i<p.chr.size(); ++i) {
+    //    cout << p.chr[i].name << ".." << flush;
+    string fa = values["genome"].as<string>() + "/" + p.chr[i].name + ".fa";
+    auto FastaArray = makeFastaArray(fa, p.chr[i].len, flen4gc);
+    
     for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &read: x.seq[strand].vRead) {
+      for (auto &read: p.chr[i].seq[strand].vRead) {
 	if(read.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = min(read.F3 + FRAG_IGNORE, (int)x.len -1);
+	if(strand==STRAND_PLUS) posi = min(read.F3 + FRAG_IGNORE, (int)p.chr[i].len -1);
 	else                    posi = max(read.F3 - flen + FRAG_IGNORE, 0);
 	gc = FastaArray[posi];
 	if(gc != -1) read.multiplyWeight(p.GCweight[gc]);
-	x.seq[strand].nread_afterGC += read.getWeight();
+	p.chr[i].seq[strand].nread_afterGC += read.getWeight();
       }
     }
   }

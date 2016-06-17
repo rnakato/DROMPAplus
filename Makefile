@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS += -std=c++11 -Wall -O2 -Iutil 
-LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams -lz -lgsl -lgslcblas
+CFLAGS += -std=c++11 -Wall -O2 -Iutil -fopenmp
+LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams -lz -lgsl -lgslcblas -fopenmp
 TARGET = parse2wig+ drompa+
 SRCDIR = util
 ALGLBDIR = $(SRCDIR)/alglib-3.10.0/src

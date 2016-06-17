@@ -236,7 +236,7 @@ void funcTagAlign(const variables_map &values, Mapfile &p, T & in)
 	frag.F3 = start + frag.readlen_F3;
       }
       //      cout << lineStr << endl;
-      //      frag.print();
+      //frag.print();
       p.addfrag(frag);
     }
   }
@@ -246,10 +246,10 @@ void funcTagAlign(const variables_map &values, Mapfile &p, T & in)
 void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p)
 {
   if(inputfile.find(".gz") != string::npos) {
-    boost::iostreams::filtering_istream in;
-    in.push(boost::iostreams::gzip_decompressor());
-    in.push(boost::iostreams::file_source(inputfile));
-    //    istream in = io;
+    string command = "zcat " + inputfile;
+    FILE *fp = popen(command.c_str(), "r");
+    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, ios_base::in);
+    istream in(static_cast<streambuf *>(p_fb));
     funcTagAlign(values, p, in);
   } else {
     ifstream in(inputfile);
@@ -399,7 +399,7 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
        for(strand=0; strand<STRANDNUM; strand++) filtering_eachchr_single(values, p, chr.seq[strand]);
      }
   }
-
+  
 #ifdef DEBUG
   BPRINT("\nnt_all %1%, nt_nonred %2%, nt_red %3%, complexity %4%\n") % p.nt_all % p.nt_nonred % p.nt_red % p.complexity();
 #endif
