@@ -154,7 +154,7 @@ void pw_ccp(Mapfile &p, int numthreads)
   func(fwd, num, mx, xx);
   func(rev, num, my, yy);
   map<int, double> mp;
-  
+
 #pragma omp parallel for num_threads(numthreads)
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
