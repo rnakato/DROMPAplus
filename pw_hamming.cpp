@@ -3,49 +3,64 @@
  * Copyright (c) 2015, Peter Robinson and Peter Hansen - Charite Universitätsmedizin Berlin
  * http://compbio.charite.de/
  */
-
 #include "pw_hamming.h"
 #include "macro.h"
 #include "alglib.h"
 #include "statistics.h"
+#include <map>
 #include <boost/dynamic_bitset.hpp>
+#include <omp.h>
+#include <math.h>   
 
 template <class T>
 void GaussianSmoothing(vector<T> &hd)
 {
   int size = hd.size();
+
+  vector<double> w(4,0);
+  double var=1;
+  for(int j=0; j<4; ++j) w[j] = exp((double)(-j*j)/2*var*var);
+  double r = 1/(w[0] + (w[1]+w[2]+w[3]) *2);
+
   double m0;
   double m1(hd[0]);
   double m2(hd[1]);
   double m3(hd[2]);
-  double w0(getNormdist(0));
-  double w1(getNormdist(-1));
-  double w2(getNormdist(-2));
-  double w3(getNormdist(-3));
   for(int i=3; i<size-3; ++i) {
     m0 = hd[i];
-    hd[i] = w3*m3 + w2*m2 + w1*m1 + w0*m0 + w1*hd[i+1] + w2*hd[i+2] + w3*hd[i+3];
+    hd[i] = (w[0]*m0 + w[1]*(m1 + hd[i+1]) + w[2]*(m2 + hd[i+2]) + w[3]*(m3 + hd[i+3]))*r;
     m3 = m2;
     m2 = m1;
     m1 = m0;
   }
+  
   return;
 }
 
-void hammingDistChr(SeqStats &chr, vector<int> &hd)
+void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
 {
   cout << chr.name <<".." << flush;
   boost::dynamic_bitset<> fwd(chr.len + HD_FROM);
   boost::dynamic_bitset<> rev(chr.len + HD_FROM);
+  
   for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: chr.seq[strand].vRead) {
-      if(x.duplicate) continue;
-      int pos(chr.len -1 -x.F3);
+#pragma omp parallel for num_threads(numthreads)
+    for(uint i=0; i<chr.seq[strand].vRead.size(); ++i) {
+      if(chr.seq[strand].vRead[i].duplicate) continue;
+      int pos(chr.len -1 - chr.seq[strand].vRead[i].F3);
       if(!RANGE(pos, 0, chr.len-1)) continue;
       if(strand==STRAND_PLUS) fwd.set(pos + HD_FROM);
       else                    rev.set(pos);
     }
   }
+    /*for (auto x: chr.seq[strand].vRead) {
+      if(x.duplicate) continue;
+      int pos(chr.len -1 -x.F3);
+      if(!RANGE(pos, 0, chr.len-1)) continue;
+      if(strand==STRAND_PLUS) fwd.set(pos + HD_FROM);
+      else                    rev.set(pos);
+      }
+      }*/
   for(int i=0; i<HD_WIDTH; ++i) {
     (fwd >>= 1);
     hd[i]=((fwd ^ rev).count());
@@ -53,13 +68,13 @@ void hammingDistChr(SeqStats &chr, vector<int> &hd)
   return;
 }
 
-void hammingDist(Mapfile &p)
+void hammingDist(Mapfile &p, int numthreads)
 {
   cout << "Estimate fragment length.." << flush;
 
-  if(p.lchr->len > NUM_10M) hammingDistChr(*p.lchr, p.dist.hd);
+  if(p.lchr->len > NUM_10M) hammingDistChr(*p.lchr, p.dist.hd, numthreads);
   else {
-    for(auto &chr: p.chr) hammingDistChr(chr, p.dist.hd);
+    for(auto &chr: p.chr) hammingDistChr(chr, p.dist.hd, numthreads);
   }
   
   GaussianSmoothing(p.dist.hd);
@@ -115,7 +130,7 @@ void func(short *x, int num, double &ave, double &var)
   var = sqrt(var);
 }
 
-void pw_ccp(Mapfile &p)
+void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
   short *fwd = (short *)calloc(p.lchr->len, sizeof(short));
@@ -131,16 +146,6 @@ void pw_ccp(Mapfile &p)
     }
   }
 
-  /*
-  TYPE_WIGARRAY qnt99 = calc_qnt(plus, chrlen, 0.99);
-  for(i=0; i<chrlen; i++){
-    if(plus[i]  > qnt99) plus[i]  = qnt99;
-    if(minus[i] > qnt99) minus[i] = qnt99;
-    }*/
-
-  string filename = p.oprefix + ".ccp.csv";
-  ofstream out(filename);
-  out << "Strand shift\tCross correlation" << endl;
   int start = HD_FROM;
   int num = p.lchr->len-HD_WIDTH;
 
@@ -148,13 +153,20 @@ void pw_ccp(Mapfile &p)
   double my,yy;
   func(fwd, num, mx, xx);
   func(rev, num, my, yy);
-
+  map<int, double> mp;
+  
+#pragma omp parallel for num_threads(numthreads)
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
     for(int j=0; j<num; ++j) xy += (fwd[j +start +i] - mx) * (rev[j +start] - my);
-    out << i << "\t" << xy / (xx*yy) << endl;
+    mp[i] = xy / (xx*yy);
   }
 
+  string filename = p.oprefix + ".ccp.csv";
+  ofstream out(filename);
+  out << "Strand shift\tCross correlation" << endl;
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) out << itr->first << "\t" << itr->second << endl;
+  
   free(fwd);
   free(rev);
   return;

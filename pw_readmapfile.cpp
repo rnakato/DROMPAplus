@@ -50,8 +50,8 @@ void read_mapfile(const variables_map &values, Mapfile &p){
 
   // estimate fragment length
   if(!values.count("pair") && !values.count("nomodel")) {
-    hammingDist(p);
-    pw_ccp(p);
+    hammingDist(p, values["threads"].as<int>());
+    pw_ccp(p, values["threads"].as<int>());
   }
   p.setF5(values);
   
@@ -392,11 +392,12 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
   }
   p.r4cmp = r*RAND_MAX;
 
-  for (auto &chr: p.chr) {
-     cout << chr.name << ".." << flush;
-     if (values.count("pair")) filtering_eachchr_pair(values, p, chr);
+#pragma omp parallel for num_threads(values["threads"].as<int>())
+  for(uint i=0; i<p.chr.size(); ++i) {
+    //     cout << p.chr[i].name << ".." << flush;
+     if (values.count("pair")) filtering_eachchr_pair(values, p, p.chr[i]);
      else {
-       for(strand=0; strand<STRANDNUM; strand++) filtering_eachchr_single(values, p, chr.seq[strand]);
+       for(strand=0; strand<STRANDNUM; strand++) filtering_eachchr_single(values, p, p.chr[i].seq[strand]);
      }
   }
   

@@ -160,9 +160,7 @@ void weightRead(const variables_map &values, Mapfile &p)
 
   cout << "add weight to reads..." << flush;
 
-#ifdef _OPENMP
 #pragma omp parallel for num_threads(values["threads"].as<int>())
-#endif
   for(uint i=0; i<p.chr.size(); ++i) {
     //    cout << p.chr[i].name << ".." << flush;
     string fa = values["genome"].as<string>() + "/" + p.chr[i].name + ".fa";
