@@ -444,7 +444,7 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   ofstream out(filename);
  
   out << boost::format("%5%: ave=%1%, var=%2%, p=%3%, n=%4%\n") % p.lchr->ave % p.lchr->var % p.lchr->nb_p % p.lchr->nb_n % p.lchr->name;
-  out << "<genome>\n";
+  out << boost::format("Zero-inflated negative binomial: p=%1%, n=%2%, p0=%3%\n") % p.genome.nb_p % p.genome.nb_n % p.genome.nb_p0;
   out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson estimated chr\tNB estimated (" << p.lchr->name << ")\tZINB estimated (genome)" << endl;
 
   for(int i=0; i<NUM_WIGDISTARRAY; ++i) {

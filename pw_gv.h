@@ -368,7 +368,12 @@ public:
       num=0;
       for(int i=0; i<thre; ++i) num += genome.wigDist[i];
       //      cout << num << ", " << genome.nbindist << endl;
-    } while(num*2 < genome.nbindist);
+    } while(num < genome.nbindist*0.8);
+#ifdef DEBUG
+    BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % genome.nbindist;
+#endif
+
+
     
     double par[thre+1];
     par[0] = thre;
