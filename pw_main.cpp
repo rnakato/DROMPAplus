@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
   makewig(values, p);
 
   // peakcall?? ZINB??
-  p.estimateZINB();
+  p.estimateZINB();  // each chromosome
   
   // output stats
   output_stats(values, p);
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 
 void checkParam(const variables_map &values)
 {
-  vector<string> intopts = {"binsize", "flen", "maxins" , "nrpm", "flen4gc"};
+  vector<string> intopts = {"binsize", "flen", "maxins" , "nrpm", "flen4gc", "threads"};
   for (auto x: intopts) chkminus<int>(values, x, 0);
   vector<string> intopts2 = {"rcenter", "thre_pb"};
   for (auto x: intopts2) chkminus<int>(values, x, -1);
@@ -268,6 +268,7 @@ void init_dump(const variables_map &values){
   BPRINT("\tFormat: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
   BPRINT("Genome-table file: %1%\n") % values["gt"].as<string>();
   BPRINT("Binsize: %1% bp\n")        % values["binsize"].as<int>();
+  BPRINT("Number of threads: %1%\n") % values["threads"].as<int>();
   if (!values.count("pair")) {
     cout << "Single-end mode: ";
     BPRINT("fragment length will be estimated from hamming distance\n");

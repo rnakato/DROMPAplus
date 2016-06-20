@@ -116,14 +116,14 @@ void hammingDist(Mapfile &p, int numthreads)
   return;
 }
 
-void func(short *x, int num, double &ave, double &var)
+void func(short *x, int max, double &ave, double &var)
 {
   double dx;
   ave=0; var=0;
   
-  for(int i=0; i<num; ++i) ave += x[i];
-  ave /= (double)num;
-  for(int i=0; i<num; ++i) {
+  for(int i=0; i<max; ++i) ave += x[i];
+  ave /= (double)max;
+  for(int i=0; i<max; ++i) {
     dx = x[i] - ave;
     var += dx * dx;
   }
@@ -146,21 +146,22 @@ void pw_ccp(Mapfile &p, int numthreads)
     }
   }
 
-  int start = HD_FROM;
-  int num = p.lchr->len-HD_WIDTH;
+  int max = p.lchr->len - HD_WIDTH;
 
   double mx,xx;
   double my,yy;
-  func(fwd, num, mx, xx);
-  func(rev, num, my, yy);
+  func(fwd, max, mx, xx);
+  func(rev, max, my, yy);
   map<int, double> mp;
 
+  printf("ccptest\n");
 #pragma omp parallel for num_threads(numthreads)
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
-    for(int j=0; j<num; ++j) xy += (fwd[j +start +i] - mx) * (rev[j +start] - my);
+    for(int j=HD_FROM; j<max; ++j) xy += (fwd[j+i] - mx) * (rev[j] - my);
     mp[i] = xy / (xx*yy);
   }
+  printf("ccptest2\n");
 
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);

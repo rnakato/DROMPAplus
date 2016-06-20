@@ -355,7 +355,7 @@ public:
   }
   int getflen(const variables_map &values) {
     int flen;
-    if(!values.count("nomodel")) flen = dist.eflen;
+    if(!values.count("nomodel") || values.count("pair")) flen = dist.eflen;
     else flen = flen_def;
     return flen;
   }

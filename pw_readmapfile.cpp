@@ -143,7 +143,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
   ifstream in(inputfile);
   if(!in) PRINTERR("Could not open " << inputfile << ".");
 
-  string chr_F3, chr_F5, nametemp("");
+  string chr_F3(""), chr_F5(""), nametemp("");
   int F5(0);
   Fragment fragpair;
   
@@ -178,11 +178,13 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 	}
 	p.addF5(v[4].length());
       }
-      if(chr_F3 != "" || chr_F5 != ""){
+      if(chr_F3 != "" && chr_F5 != ""){
+	//	cout << chr_F3 <<"\t"<< chr_F5 << endl;
 	if(chr_F3 == chr_F5) {
 	  fragpair.chr = chr_F3;
 	  fragpair.fraglen = abs(F5 - fragpair.F3);
 	  if(fragpair.fraglen <= maxins) p.addfrag(fragpair);
+	  //	  fragpair.print();
 	}
 	chr_F3 = "";
 	chr_F5 = "";
