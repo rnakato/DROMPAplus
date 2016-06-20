@@ -259,11 +259,11 @@ void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p)
   return;
 }
 
-void printDist(ofstream &out, vector<int> readlen, string str, long nread)
+void printDist(ofstream &out, vector<int> readlen, int lenmax, string str, long nread)
 {
   out << "\n" << str << " read length distribution" << endl;
   out << "length\tread number\tproportion" << endl;
-  for(int i=0; i<DIST_READLEN_MAX; ++i)
+  for(int i=0; i<lenmax; ++i)
     if(readlen[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % readlen[i] % (readlen[i]/(double)nread);
   return;
 }
@@ -276,15 +276,15 @@ void outputDist(const variables_map &values, Mapfile &p)
   
   string outputfile = p.oprefix + ".readlength_dist.csv";
   ofstream out(outputfile);
-  printDist(out, p.dist.readlen, "F3", p.genome.bothnread());
-  if(values.count("pair")) printDist(out, p.dist.readlen_F5, "F5", p.genome.bothnread());
+  printDist(out, p.dist.readlen, DIST_READLEN_MAX, "F3", p.genome.bothnread());
+  if(values.count("pair")) printDist(out, p.dist.readlen_F5, DIST_FRAGLEN_MAX, "F5", p.genome.bothnread());
   out.close();
   
   if(values.count("pair")) {
     p.dist.setFraglen();
     outputfile = p.oprefix + ".fragmentlength_dist.xls";
     ofstream out(outputfile);
-    printDist(out, p.dist.fraglen, "fragment", p.genome.bothnread());
+    printDist(out, p.dist.fraglen, DIST_FRAGLEN_MAX, "fragment", p.genome.bothnread());
   }
 
   return;
