@@ -11,3 +11,9 @@ Requirements
  apt-get install libgtk2.0-dev 
 
  cpdf-binaries-master
+
+- CentOS
+ sudo yum install gcc-c++
+ sudo yum install boost-devel
+ sudo yum install gsl-devel
+ sudo yum install zlib-devel
