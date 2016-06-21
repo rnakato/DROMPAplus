@@ -277,6 +277,12 @@ class SeqStats {
   double getZINB(const int i) {
     return _getZINB(i, nb_p, nb_n, nb_p0);
   }
+  void estimateParam(const int thre) {
+    double par[thre+1];
+    par[0] = thre;
+    for(int i=0; i<thre; ++i) par[i+1] = wigDist[i] /(double)nbindist;
+    iterateZINB(&par, nb_p, nb_n, nb_p, nb_n, nb_p0);
+  }
 };
   
 class Mapfile {
@@ -373,8 +379,6 @@ public:
     BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % genome.nbindist;
 #endif
 
-
-    
     double par[thre+1];
     par[0] = thre;
     for(int i=0; i<thre; ++i) par[i+1] = genome.wigDist[i] /(double)genome.nbindist;
@@ -382,6 +386,8 @@ public:
     //    iteratePoisson(&par, lchr->ave, genome.ave, genome.pois_p0);
     iterateZINB(&par, lchr->nb_p, lchr->nb_n, genome.nb_p, genome.nb_n, genome.nb_p0);
 
+    for (auto &x:chr) x.estimateParam(thre);
+    
     return;
   }
 };

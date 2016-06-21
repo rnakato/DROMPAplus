@@ -79,15 +79,11 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   if (values.count("mp")) {
     int binsize = values["binsize"].as<int>();
     int mpthre = values["mpthre"].as<double>()*binsize;
-    int mpthre_dist = 0.5*binsize;
     auto mparray = readMpbl(values["mp"].as<string>(), chr.name, values["binsize"].as<int>(), chr.nbin);
-    vector<int> mappablearray;
     for(int i=0; i<chr.nbin; ++i) {
       chr.addmpDist(mparray[i]/(double)binsize);
       if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
-      if(mparray[i] > mpthre_dist) mappablearray.push_back(wigarray[i]);
     }
-    //    chr.getWigStats(mappablearray);
     chr.getWigStats(wigarray);
   } else {
     chr.getWigStats(wigarray);

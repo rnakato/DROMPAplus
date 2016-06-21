@@ -24,7 +24,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p);
 void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p);
 void outputDist(const variables_map &values, Mapfile &p);
 void check_redundant_reads(const variables_map &values, Mapfile &p);
-void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq);
+void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr);
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
 
 void read_mapfile(const variables_map &values, Mapfile &p){
@@ -342,14 +342,14 @@ void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int th
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
 	++mp[str];
-	seq.nread_nonred++;
+	++seq.nread_nonred;
       } else {
 	x.duplicate = 1;
-	seq.nread_red++;
+	++seq.nread_red;
       }
     } else {
       mp[str] = 1;
-      seq.nread_nonred++;
+      ++seq.nread_nonred;
     }
   }
   return;
@@ -366,13 +366,13 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
 	++mp[str];
-	p.nt_nonred++;
+	++p.nt_nonred;
       } else {
-	p.nt_red++;
+	++p.nt_red;
       }
     } else {
       mp[str] = 1;
-      p.nt_nonred++;
+      ++p.nt_nonred;
     }
   }
   return;
@@ -380,7 +380,6 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
 
 void check_redundant_reads(const variables_map &values, Mapfile &p)
 {
-  int strand;
   if(values["thre_pb"].as<int>()) p.thre4filtering = values["thre_pb"].as<int>();
   else p.thre4filtering = max(1, (int)(p.genome.bothnread() *10/(double)p.genome.len_mpbl));
   
@@ -396,11 +395,8 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
 
 #pragma omp parallel for num_threads(values["threads"].as<int>())
   for(uint i=0; i<p.chr.size(); ++i) {
-    //     cout << p.chr[i].name << ".." << flush;
      if (values.count("pair")) filtering_eachchr_pair(values, p, p.chr[i]);
-     else {
-       for(strand=0; strand<STRANDNUM; strand++) filtering_eachchr_single(values, p, p.chr[i].seq[strand]);
-     }
+     else                      filtering_eachchr_single(values, p, p.chr[i]);
   }
   
 #ifdef DEBUG
@@ -412,14 +408,17 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
 }
 
 
-void filtering_eachchr_single(const variables_map &values, Mapfile &p, strandData &seq)
+void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
-  unordered_map<int, int> mp;
-  hashFilterAll(mp, seq, p.thre4filtering);
-  
-  unordered_map<int, int> mp2;
-  hashFilterCmp(mp2, p, seq, p.thre4filtering);
+  for(int strand=0; strand<STRANDNUM; strand++) {
 
+    unordered_map<int, int> mp;
+    hashFilterAll(mp, chr.seq[strand], p.thre4filtering);
+    
+    unordered_map<int, int> mp2;
+    hashFilterCmp(mp2, p, chr.seq[strand], p.thre4filtering);
+  }
+  
   return;
 }
 

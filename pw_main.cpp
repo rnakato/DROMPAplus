@@ -338,6 +338,9 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   out << boost::format("%1$.3f\t%2$.3f\t") % p.ave % p.var;
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
+  out << boost::format("%1%\t%2%\t%3%") % p.nb_p % p.nb_n % p.nb_p0 ;
+  
+
   out << endl;
   return;
 }
@@ -370,6 +373,7 @@ void output_stats(const variables_map &values, const Mapfile &p)
   out << "gcov (Raw)\tgcov (Normed)\t";
   out << "bin mean\tbin variance\t";
   if(values.count("bed")) out << "FRiP\t";
+  out << "nb_p\tnb_n\tnb_p0\t";
   out << endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
@@ -444,18 +448,24 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".binarray_dist.csv";
   ofstream out(filename);
  
-  out << boost::format("%5%: ave=%1%, var=%2%, p=%3%, n=%4%\n") % p.lchr->ave % p.lchr->var % p.lchr->nb_p % p.lchr->nb_n % p.lchr->name;
-  out << boost::format("Zero-inflated negative binomial: p=%1%, n=%2%, p0=%3%\n") % p.genome.nb_p % p.genome.nb_n % p.genome.nb_p0;
-  out << "read number\tnum of bins genome\tprop genome\tnum of bins chr\tprop chr\tPoisson estimated chr\tNB estimated (" << p.lchr->name << ")\tZINB estimated (genome)" << endl;
+  out << "\tGenome\t\t\t";
+  for (auto x:p.chr) out << x.name << "\t\t\t\t";
+  out << endl;
+  out << "read number\tnum of bins genome\tprop\tZINB estimated\t";
+  for (auto x:p.chr) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
+  out << endl;
 
   for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
     out << i << "\t";
     p.genome.printwigDist(out, i);
-    p.lchr->printwigDist(out, i);
-    out << p.lchr->getPoisson(i) << "\t";
+    out << p.genome.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
-    out << p.lchr->getNegativeBinomial(i) << "\t";
-    out << p.genome.getZINB(i) << endl;
+    for (auto x:p.chr) {
+      x.printwigDist(out, i);
+      out << x.getPoisson(i) << "\t";
+      out << x.getZINB(i) << "\t";
+    }
+    out << endl;
   }
   
   return;
