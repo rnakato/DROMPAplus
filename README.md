@@ -8,7 +8,7 @@ Requirements
  sudo apt-get install libboost-all-dev
  sudo apt-get install libgsl-dev 
  sudo apt-get install zlib1g-dev 
- apt-get install libgtk2.0-dev 
+ sudo apt-get install libgtk2.0-dev 
 
  cpdf-binaries-master
 
