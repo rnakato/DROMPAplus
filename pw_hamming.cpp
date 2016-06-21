@@ -154,14 +154,12 @@ void pw_ccp(Mapfile &p, int numthreads)
   func(rev, max, my, yy);
   map<int, double> mp;
 
-  printf("ccptest\n");
-#pragma omp parallel for num_threads(numthreads)
+#pragma omp parallel for num_threads(numthreads) private(fwd, rev)
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
     for(int j=HD_FROM; j<max; ++j) xy += (fwd[j+i] - mx) * (rev[j] - my);
     mp[i] = xy / (xx*yy);
   }
-  printf("ccptest2\n");
 
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
