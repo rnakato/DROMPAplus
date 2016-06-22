@@ -46,10 +46,10 @@ class Peak : public bed {
   void print(ofstream &out, int id, int binsize) const {
     out << chr << "\t" << start*binsize << "\t" << end*binsize << "\t"
 	<< ((end - start +1)*binsize-1) << "\t" << (summit*binsize -binsize/2) << "\t" << pileup << "\t"
-	 << p_inter << "\t" << enrich << "\t" << q << "\tpeak " << id;
+	 << p_inter << "\t" << enrich << "\t" << q << "\tpeak " << id << endl;
   }
   void printHead (ofstream &out) const {
-    out << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\t-log10(qvalue)\tname";
+    out << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\t-log10(qvalue)\tname" << endl;
   }
 };
 
