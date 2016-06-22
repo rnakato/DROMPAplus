@@ -44,23 +44,14 @@ void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
   boost::dynamic_bitset<> rev(chr.len + HD_FROM);
   
   for(int strand=0; strand<STRANDNUM; ++strand) {
-#pragma omp parallel for num_threads(numthreads)
-    for(uint i=0; i<chr.seq[strand].vRead.size(); ++i) {
-      if(chr.seq[strand].vRead[i].duplicate) continue;
-      int pos(chr.len -1 - chr.seq[strand].vRead[i].F3);
-      if(!RANGE(pos, 0, chr.len-1)) continue;
-      if(strand==STRAND_PLUS) fwd.set(pos + HD_FROM);
-      else                    rev.set(pos);
-    }
-  }
-    /*for (auto x: chr.seq[strand].vRead) {
+    for (auto x: chr.seq[strand].vRead) {
       if(x.duplicate) continue;
       int pos(chr.len -1 -x.F3);
       if(!RANGE(pos, 0, chr.len-1)) continue;
       if(strand==STRAND_PLUS) fwd.set(pos + HD_FROM);
       else                    rev.set(pos);
-      }
-      }*/
+    }
+  }
   for(int i=0; i<HD_WIDTH; ++i) {
     (fwd >>= 1);
     hd[i]=((fwd ^ rev).count());
@@ -82,6 +73,8 @@ void hammingDist(Mapfile &p, int numthreads)
    // get fragment length FL and HD[FL] run through from (i_num-1),...,2*read_len+1
   int min_hd_fl=p.dist.hd[HD_WIDTH-1];
   int max_hd_fl=p.dist.hd[HD_WIDTH-1];
+
+  cout << p.dist.lenF3 << endl;
   int bd = 2*p.dist.lenF3;
   for(int i=HD_WIDTH-1; i>=bd+1; --i) {
     if(p.dist.hd[i] < min_hd_fl) {
@@ -154,9 +147,10 @@ void pw_ccp(Mapfile &p, int numthreads)
   func(rev, max, my, yy);
   map<int, double> mp;
 
-#pragma omp parallel for num_threads(numthreads) private(fwd, rev)
+#pragma omp parallel for num_threads(numthreads) //private(fwd, rev)
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
+#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
     for(int j=HD_FROM; j<max; ++j) xy += (fwd[j+i] - mx) * (rev[j] - my);
     mp[i] = xy / (xx*yy);
   }
