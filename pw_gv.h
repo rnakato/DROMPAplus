@@ -277,14 +277,30 @@ class SeqStats {
   double getZINB(const int i) {
     return _getZINB(i, nb_p, nb_n, nb_p0);
   }
-  void estimateParam(const int thre) {
+  int getwigDistthre() {
+    int thre(9);
+    long num;
+    do{
+      ++thre;
+      num=0;
+      for(int i=0; i<thre; ++i) num += wigDist[i];
+    } while(num < nbindist*0.8);
+#ifdef DEBUG
+    BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % nbindist;
+#endif
+    return thre;
+  }
+  
+  void estimateParam() {
+    int thre = getwigDistthre();
     double par[thre+1];
     par[0] = thre;
     for(int i=0; i<thre; ++i) par[i+1] = wigDist[i] /(double)nbindist;
     iterateZINB(&par, nb_p, nb_n, nb_p, nb_n, nb_p0);
   }
 };
-  
+
+
 class Mapfile {
 public:
   string oprefix;
@@ -302,6 +318,7 @@ public:
   int tv, gv;
   double r4cmp;
   vector<bed> vbed;
+  vector<Peak> vPeak;
 
   // GC bias
   vector<double> GCweight;
@@ -367,18 +384,7 @@ public:
   }
 
   void estimateZINB() {
-    int thre = 9;
-    long num(0);
-    do{
-      ++thre;
-      num=0;
-      for(int i=0; i<thre; ++i) num += genome.wigDist[i];
-      //      cout << num << ", " << genome.nbindist << endl;
-    } while(num < genome.nbindist*0.8);
-#ifdef DEBUG
-    BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % genome.nbindist;
-#endif
-
+    int thre = genome.getwigDistthre();
     double par[thre+1];
     par[0] = thre;
     for(int i=0; i<thre; ++i) par[i+1] = genome.wigDist[i] /(double)genome.nbindist;
@@ -386,7 +392,7 @@ public:
     //    iteratePoisson(&par, lchr->ave, genome.ave, genome.pois_p0);
     iterateZINB(&par, lchr->nb_p, lchr->nb_n, genome.nb_p, genome.nb_n, genome.nb_p0);
 
-    for (auto &x:chr) x.estimateParam(thre);
+    //    for (auto &x:chr) x.estimateParam(thre);
     
     return;
   }

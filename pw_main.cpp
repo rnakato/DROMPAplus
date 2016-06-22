@@ -95,6 +95,20 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   return;
 }
 
+void outputPeak(const variables_map &values, Mapfile &p)
+{
+  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".peak.xls";
+  int binsize = values["binsize"].as<int>();
+  ofstream out(filename);
+
+  p.vPeak[0].printHead(out);
+  for(uint i=0; i<p.vPeak.size(); ++i) {
+    p.vPeak[i].print(out, i, binsize);
+  }
+  return;
+}
+
+
 int main(int argc, char* argv[])
 {
   variables_map values = getOpts(argc, argv);
@@ -126,9 +140,10 @@ int main(int argc, char* argv[])
   // make and output wigdata
   makewig(values, p);
 
-  // peakcall?? ZINB??
-  p.estimateZINB();  // each chromosome
+  outputPeak(values, p);
   
+  p.estimateZINB();  // each chromosome
+
   // output stats
   output_stats(values, p);
   output_wigstats(values, p);

@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include "pw_makefile.h"
 #include "readdata.h"
+#include "statistics.h"
 
 #define PRINTWARNING_W(w) cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
 
@@ -64,6 +65,35 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
   return;
 }
 
+void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray)
+{
+  int size = wigarray.size();
+  int ext(0), pnum(0);
+  double pthre(-log10(0.001));
+
+  for(int i=0; i<size; ++i) {
+    double val(WIGARRAY2VALUE(wigarray[i]));
+    double p(getlogpZINB(val, chr.nb_p, chr.nb_n));
+
+    if(!ext) {
+      if(p > pthre) {
+	Peak peak(i, i, chr.name, val, p);
+	mapfile.vPeak.push_back(peak);
+	++pnum;
+	ext=1;
+      }
+    } else {
+      if(p > pthre) {
+	mapfile.vPeak[pnum-1].renew(i, val, p);
+      } else {
+	ext=0;
+      }
+    }
+  }
+  return;
+}
+
+
 vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
   vector<int> wigarray(chr.nbin, 0);
@@ -89,6 +119,9 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     chr.getWigStats(wigarray);
   }
   p.genome.addWigStats(chr);
+
+  chr.estimateParam();
+  peakcall(p, chr, wigarray);
   
   /* Total read normalization */
   if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);

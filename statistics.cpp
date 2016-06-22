@@ -181,3 +181,12 @@ void iteratePoisson(void *par, double ave_pre, double &ave, double &p0)
   gsl_multimin_fminimizer_free(s);
   return;
 }
+
+double getlogpZINB(double k, double p, double n)
+{
+  double r, pval;
+  if(!k) pval = 0;
+  else pval = gsl_cdf_negative_binomial_Q(k, p, n);
+  if(!pval) r = 0; else r = -log10(pval);
+  return r;
+}

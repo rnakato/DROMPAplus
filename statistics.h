@@ -14,6 +14,7 @@ double _getZINB(int k, double p, double n, double p0);
 void iterateZINB(void *, double, double, double &, double &, double &);
 double _getPoisson(int i, double m);
 void iteratePoisson(void *par, double ave_pre, double &ave, double &p0);
+double getlogpZINB(double k, double p, double n);
 
 template <class T>
 T getPercentile(std::vector<T> array, double per)
