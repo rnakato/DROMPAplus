@@ -135,6 +135,7 @@ void pw_ccp(Mapfile &p, int numthreads)
   printf("Making cross-correlation profile...\n");
 
   map<int, double> mp;
+  for(int i=-HD_FROM; i<HD_WIDTH; i+=5) mp[i] = 0;
 
   for (auto chr: p.chr) {
     cout << chr.name << endl;
@@ -174,7 +175,7 @@ void pw_ccp(Mapfile &p, int numthreads)
       for(int j=HD_FROM; j<max; ++j) {
 	xy += (fwd[j+i] - mx) * (rev[j] - my);
       }
-      mp[i] = (xy / (xx*yy)) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+      mp[i] += (xy / (xx*yy)) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
     }
 
     free(fwd);
