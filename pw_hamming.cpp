@@ -39,7 +39,7 @@ void GaussianSmoothing(vector<T> &hd)
 
 void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
 {
-  cout << chr.name <<".." << flush;
+  //  cout << chr.name <<".." << flush;
 
     int start(0);
     int end(chr.len);
@@ -81,7 +81,7 @@ void hammingDist(Mapfile &p, int numthreads)
   int min_hd_fl=p.dist.hd[HD_WIDTH-1];
   int max_hd_fl=p.dist.hd[HD_WIDTH-1];
 
-  cout << p.dist.lenF3 << endl;
+  //  cout << p.dist.lenF3 << endl;
   int bd = 2*p.dist.lenF3;
   for(int i=HD_WIDTH-1; i>=bd+1; --i) {
     if(p.dist.hd[i] < min_hd_fl) {
@@ -116,18 +116,18 @@ void hammingDist(Mapfile &p, int numthreads)
   return;
 }
 
-void func(short *x, int max, double &ave, double &var)
+void func(char *x, int max, double &ave, double &var)
 {
   double dx;
   ave=0; var=0;
   
-  for(int i=0; i<max; ++i) ave += x[i];
+  for(int i=HD_FROM; i<max; ++i) ave += x[i];
   ave /= (double)max;
-  for(int i=0; i<max; ++i) {
+  for(int i=HD_FROM; i<max; ++i) {
     dx = x[i] - ave;
     var += dx * dx;
   }
-  var = sqrt(var);
+  var = sqrt(var/double(max-1));
 }
 
 void pw_ccp(Mapfile &p, int numthreads)
@@ -140,12 +140,15 @@ void pw_ccp(Mapfile &p, int numthreads)
   for (auto chr: p.chr) {
     cout << chr.name << endl;
     int start(0);
-    int end(chr.len);
+    //    int end(chr.len);
+    int end(2*NUM_100M);
     int width(end-start);
 
-    short *fwd = (short *)calloc(width, sizeof(short));
-    short *rev = (short *)calloc(width, sizeof(short));
+    printf("test\n");
+    char *fwd = (char *)calloc(width, sizeof(char));
+    char *rev = (char *)calloc(width, sizeof(char));
 
+    printf("test2\n");
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto x: chr.seq[strand].vRead) {
 	if(x.duplicate) continue;
@@ -156,11 +159,13 @@ void pw_ccp(Mapfile &p, int numthreads)
       }
     }
     
-    int num99 = getPercentile(fwd, width, 0.99);
+    printf("test3\n");
+    /*    int num99 = getPercentile(fwd, width, 0.99);
     for(int i=0; i<width; ++i){
+      cout << fwd[i] << "\t" << rev[i] << endl;
       if(fwd[i] > num99) fwd[i] = num99;
       if(rev[i] > num99) rev[i] = num99;
-    }
+      }*/
     
     int max = width - HD_WIDTH;
     double mx,xx;
@@ -175,11 +180,13 @@ void pw_ccp(Mapfile &p, int numthreads)
       for(int j=HD_FROM; j<max; ++j) {
 	xy += (fwd[j+i] - mx) * (rev[j] - my);
       }
+      xy /= (double)(max - HD_FROM - 1);
       mp[i] += (xy / (xx*yy)) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
     }
 
     free(fwd);
     free(rev);
+    break;
   }
   
   string filename = p.oprefix + ".ccp.csv";
@@ -201,8 +208,8 @@ void pw_ccp_old(Mapfile &p, int numthreads)
   //int end(NUM_100M);
   int width(end-start);
 
-  short *fwd = (short *)calloc(width, sizeof(short));
-  short *rev = (short *)calloc(width, sizeof(short));
+  char *fwd = (char *)calloc(width, sizeof(char));
+  char *rev = (char *)calloc(width, sizeof(char));
 
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x: p.lchr->seq[strand].vRead) {
