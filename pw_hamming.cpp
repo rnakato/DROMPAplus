@@ -40,16 +40,23 @@ void GaussianSmoothing(vector<T> &hd)
 void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
 {
   cout << chr.name <<".." << flush;
-  boost::dynamic_bitset<> fwd(chr.len + HD_FROM);
-  boost::dynamic_bitset<> rev(chr.len + HD_FROM);
+
+    int start(0);
+    int end(chr.len);
+    //int start(NUM_1M);
+    //int end(NUM_100M);
+  int width(end-start);  
+  
+  boost::dynamic_bitset<> fwd(width + HD_FROM);
+  boost::dynamic_bitset<> rev(width + HD_FROM);
   
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x: chr.seq[strand].vRead) {
       if(x.duplicate) continue;
       int pos(chr.len -1 -x.F3);
-      if(!RANGE(pos, 0, chr.len-1)) continue;
-      if(strand==STRAND_PLUS) fwd.set(pos + HD_FROM);
-      else                    rev.set(pos);
+      if(!RANGE(pos, start, end-1)) continue;
+      if(strand==STRAND_PLUS) fwd.set(pos - start + HD_FROM);
+      else                    rev.set(pos - start);
     }
   }
   for(int i=0; i<HD_WIDTH; ++i) {
@@ -126,32 +133,106 @@ void func(short *x, int max, double &ave, double &var)
 void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
-  short *fwd = (short *)calloc(p.lchr->len, sizeof(short));
-  short *rev = (short *)calloc(p.lchr->len, sizeof(short));
+
+  map<int, double> mp;
+
+  for (auto chr: p.chr) {
+    cout << chr.name << endl;
+    int start(0);
+    int end(chr.len);
+    int width(end-start);
+
+    short *fwd = (short *)calloc(width, sizeof(short));
+    short *rev = (short *)calloc(width, sizeof(short));
+
+    for(int strand=0; strand<STRANDNUM; ++strand) {
+      for (auto x: chr.seq[strand].vRead) {
+	if(x.duplicate) continue;
+	int pos(chr.len-1-x.F3);
+	if(!RANGE(pos, start, end-1)) continue;
+	if(strand==STRAND_PLUS) ++fwd[pos];
+	else                    ++rev[pos];
+      }
+    }
+    
+    int num99 = getPercentile(fwd, width, 0.99);
+    for(int i=0; i<width; ++i){
+      if(fwd[i] > num99) fwd[i] = num99;
+      if(rev[i] > num99) rev[i] = num99;
+    }
+    
+    int max = width - HD_WIDTH;
+    double mx,xx;
+    double my,yy;
+    func(fwd, max, mx, xx);
+    func(rev, max, my, yy);
+    
+#pragma omp parallel for num_threads(numthreads)
+    for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
+      double xy(0);
+#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
+      for(int j=HD_FROM; j<max; ++j) {
+	xy += (fwd[j+i] - mx) * (rev[j] - my);
+      }
+      mp[i] = (xy / (xx*yy)) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+    }
+
+    free(fwd);
+    free(rev);
+  }
+  
+  string filename = p.oprefix + ".ccp.csv";
+  ofstream out(filename);
+  out << "Strand shift\tCross correlation" << endl;
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
+    out << itr->first << "\t" << itr->second << endl;
+  }
+  return;
+}
+
+void pw_ccp_old(Mapfile &p, int numthreads)
+{
+  printf("Making cross-correlation profile...\n");
+
+  int start(0);
+  int end(p.lchr->len);
+  //  int start(NUM_1M);
+  //int end(NUM_100M);
+  int width(end-start);
+
+  short *fwd = (short *)calloc(width, sizeof(short));
+  short *rev = (short *)calloc(width, sizeof(short));
 
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x: p.lchr->seq[strand].vRead) {
       if(x.duplicate) continue;
       int pos(p.lchr->len-1-x.F3);
-      if(!RANGE(pos, 0, p.lchr->len-1)) continue;
+      if(!RANGE(pos, start, end-1)) continue;
       if(strand==STRAND_PLUS) ++fwd[pos];
       else                    ++rev[pos];
     }
   }
 
-  int max = p.lchr->len - HD_WIDTH;
+  int num99 = getPercentile(fwd, width, 0.99);
+  for(int i=0; i<width; ++i){
+    if(fwd[i] > num99) fwd[i] = num99;
+    if(rev[i] > num99) rev[i] = num99;
+  }
 
+  int max = width - HD_WIDTH;
   double mx,xx;
   double my,yy;
   func(fwd, max, mx, xx);
   func(rev, max, my, yy);
+  
   map<int, double> mp;
-
-#pragma omp parallel for num_threads(numthreads) //private(fwd, rev)
+#pragma omp parallel for num_threads(numthreads)
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) {
     double xy(0);
 #pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-    for(int j=HD_FROM; j<max; ++j) xy += (fwd[j+i] - mx) * (rev[j] - my);
+    for(int j=HD_FROM; j<max; ++j) {
+      xy += (fwd[j+i] - mx) * (rev[j] - my);
+    }
     mp[i] = xy / (xx*yy);
   }
 

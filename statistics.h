@@ -31,6 +31,19 @@ T getPercentile(std::vector<T> array, double per)
 };
 
 template <class T>
+T getPercentile(T *array, int binnum, double per)
+{
+  std::vector<T> sortarray;
+
+  for(int i=0; i<binnum; ++i) {
+    if(array[i]) sortarray.push_back(array[i]);
+  }
+  std::sort(sortarray.begin(), sortarray.end());
+
+  return sortarray[(int)(sortarray.size()*per)];
+};
+
+template <class T>
 void getMoment(const std::vector<T> v, double &mean, double &var, int size=0)
 {
   if(!size) size = v.size();

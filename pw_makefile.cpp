@@ -67,9 +67,11 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
 
 void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray)
 {
+  cout << "call peak..." << flush;
+ 
   int size = wigarray.size();
-  int ext(0), pnum(0);
-  double pthre(-log10(0.001));
+  int ext(0);
+  double pthre(3);
 
   for(int i=0; i<size; ++i) {
     double val(WIGARRAY2VALUE(wigarray[i]));
@@ -79,17 +81,17 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
       if(p > pthre) {
 	Peak peak(i, i, chr.name, val, p);
 	mapfile.vPeak.push_back(peak);
-	++pnum;
 	ext=1;
       }
     } else {
       if(p > pthre) {
-	mapfile.vPeak[pnum-1].renew(i, val, p);
+	mapfile.vPeak[mapfile.vPeak.size()-1].renew(i, val, p);
       } else {
 	ext=0;
       }
     }
   }
+  cout << "done." << endl;
   return;
 }
 
