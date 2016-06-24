@@ -102,7 +102,6 @@ void hammingDist(Mapfile &p, int numthreads)
     }
     }*/
 
-  long sum = accumulate(p.dist.hd.begin(), p.dist.hd.end(), 0);
   string filename = p.oprefix + ".hdp.csv";
   ofstream out(filename);
   out << "Strand shift\tHamming distance" << endl;
@@ -126,8 +125,11 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 
   for (auto chr: p.chr) {
     cout << chr.name << endl;
-    int start(0);
-    int end(chr.len);
+    //int start(0);
+    //int end(chr.len);
+    int start(1.213*NUM_100M);
+    int end(1.214*NUM_100M);
+    
     int width(end-start);
 
     char *fwd = (char *)calloc(width, sizeof(char));
@@ -142,6 +144,10 @@ void pw_Jaccard(Mapfile &p, int numthreads)
       }
     }
 
+    for(int j=HD_FROM; j< width - HD_WIDTH; ++j) {
+      if(fwd[j] && rev[j + p.dist.lenF3]) cout << (j+start) << "\t" << (int)fwd[j]<< "\t" <<  (int)rev[j + p.dist.lenF3]<< "\t" << p.dist.lenF3 << endl;
+    }
+
     int max = width - HD_WIDTH;
     int xx(0), yy(0);
     for(int i=HD_FROM; i<max; ++i) {
@@ -150,7 +156,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     }
 
 #pragma omp parallel for num_threads(numthreads)
-    for(int step=-HD_FROM; step<HD_WIDTH; step+=5) {
+    for(int step=-HD_FROM; step<HD_WIDTH; ++step) {
       int xy(0);
 #pragma omp parallel for num_threads(numthreads) reduction(+:xy)
       for(int j=HD_FROM; j<max; ++j) {
@@ -161,6 +167,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     
     free(fwd);
     free(rev);
+    break;
   }
   
   string filename = p.oprefix + ".jaccard.csv";
@@ -169,6 +176,8 @@ void pw_Jaccard(Mapfile &p, int numthreads)
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     out << itr->first << "\t" << itr->second << endl;
   }
+
+  exit (0);
   return;
 }
 

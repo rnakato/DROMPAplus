@@ -50,8 +50,8 @@ void read_mapfile(const variables_map &values, Mapfile &p){
 
   // estimate fragment length
   if(!values.count("pair") && !values.count("nomodel")) {
-    hammingDist(p, values["threads"].as<int>());
-    pw_ccp(p, values["threads"].as<int>());
+    //    hammingDist(p, values["threads"].as<int>());
+    //pw_ccp(p, values["threads"].as<int>());
     pw_Jaccard(p, values["threads"].as<int>());
   }
   p.setF5(values);
