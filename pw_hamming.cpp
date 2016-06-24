@@ -42,8 +42,6 @@ void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
   //  cout << chr.name <<".." << flush;
   int start(0);
   int end(chr.len);
-  //int start(NUM_1M);
-  //int end(NUM_100M);
   int width(end-start);  
 
   boost::dynamic_bitset<> fwd(width + HD_FROM);
@@ -60,7 +58,7 @@ void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
   }
   for(int i=0; i<HD_WIDTH; ++i) {
     (fwd >>= 1);
-    hd[i]=((fwd ^ rev).count());
+    hd[i] += ((fwd ^ rev).count());
   }
   return;
 }
@@ -68,11 +66,15 @@ void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
 void hammingDist(Mapfile &p, int numthreads)
 {
   cout << "Estimate fragment length.." << flush;
-
-  if(p.lchr->len > NUM_10M) hammingDistChr(*p.lchr, p.dist.hd, numthreads);
+  
+#pragma omp parallel for num_threads(numthreads)
+  for(uint i=0; i<p.chr.size(); ++i) {
+    hammingDistChr(p.chr[i], p.dist.hd, numthreads);
+  }
+  /*  if(p.lchr->len > NUM_10M) hammingDistChr(*p.lchr, p.dist.hd, numthreads);
   else {
     for(auto &chr: p.chr) hammingDistChr(chr, p.dist.hd, numthreads);
-  }
+    }*/
 
   GaussianSmoothing(p.dist.hd);
 
@@ -103,8 +105,8 @@ void hammingDist(Mapfile &p, int numthreads)
   long sum = accumulate(p.dist.hd.begin(), p.dist.hd.end(), 0);
   string filename = p.oprefix + ".hdp.csv";
   ofstream out(filename);
-  out << "Strand shift\tHamming distance\tProportion" << endl;
-  for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << p.dist.hd[i] << "\t" << p.dist.hd[i]/(double)sum << endl;
+  out << "Strand shift\tHamming distance" << endl;
+  for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << p.dist.hd[i] << endl;
   
   //  double RSC=(max_hd_fl-p.dist.hd[fl])/(double)(max_hd_fl-p.dist.hd[rl]);
   //  out << "RSC: " << RSC << endl;
@@ -117,7 +119,7 @@ void hammingDist(Mapfile &p, int numthreads)
 
 void pw_Jaccard(Mapfile &p, int numthreads)
 {
-  printf("Making cross-correlation profile...\n");
+  printf("Making Jacard index profile...\n");
 
   map<int, double> mp;
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) mp[i] = 0;
@@ -126,7 +128,6 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     cout << chr.name << endl;
     int start(0);
     int end(chr.len);
-
     int width(end-start);
 
     char *fwd = (char *)calloc(width, sizeof(char));
@@ -153,19 +154,18 @@ void pw_Jaccard(Mapfile &p, int numthreads)
       int xy(0);
 #pragma omp parallel for num_threads(numthreads) reduction(+:xy)
       for(int j=HD_FROM; j<max; ++j) {
-	xy += fwd[j]*rev[j+step];
+	xy += fwd[j] * rev[j+step];
       }
-      mp[step] += xy/(double)(xx+yy-xy);
+      mp[step] += xy/(double)(xx+yy-xy) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
     }
     
     free(fwd);
     free(rev);
-    break;
   }
   
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
-  out << "Strand shift\tCross correlation" << endl;
+  out << "Strand shift\tJaccard index" << endl;
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     out << itr->first << "\t" << itr->second << endl;
   }
@@ -196,22 +196,18 @@ void pw_ccp(Mapfile &p, int numthreads)
 
   for (auto chr: p.chr) {
     cout << chr.name << endl;
-    // int start(0);
-    //    int end(chr.len);
+    int start(0);
+    int end(chr.len);
     //int start(1.5*NUM_100M);
     //int end(2*NUM_100M);
-    int start(1.213*NUM_100M);
-    int end(1.214*NUM_100M);
-    //    int start(121558202);
-    //    int end(121658202);
-
+    //    int start(1.213*NUM_100M);
+    //int end(1.214*NUM_100M);
+    
     int width(end-start);
 
-    printf("test\n");
     char *fwd = (char *)calloc(width, sizeof(char));
     char *rev = (char *)calloc(width, sizeof(char));
 
-    printf("test2\n");
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto x: chr.seq[strand].vRead) {
 	if(x.duplicate) continue;
@@ -221,8 +217,6 @@ void pw_ccp(Mapfile &p, int numthreads)
       }
     }
 
-    printf("test3\n");
-    
     int max = width - HD_WIDTH;
     double mx,xx;
     double my,yy;
@@ -242,7 +236,6 @@ void pw_ccp(Mapfile &p, int numthreads)
     
     free(fwd);
     free(rev);
-    break;
   }
   
   string filename = p.oprefix + ".ccp.csv";
