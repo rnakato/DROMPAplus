@@ -8,5 +8,6 @@
 
 void hammingDist(Mapfile &p, int numthreads);
 void pw_ccp(Mapfile &p, int numthreads);
+void pw_Jaccard(Mapfile &p, int numthreads);
 
 #endif /* _PW_HAMMING_H_ */
