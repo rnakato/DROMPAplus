@@ -92,7 +92,9 @@ void hammingDist(Mapfile &p, int numthreads)
     if(max_hd_fl < p.dist.hd[i]) max_hd_fl = p.dist.hd[i];
   }
 
-  long sum = accumulate(p.dist.hd.begin(), p.dist.hd.end(), 0);
+  //  long sum = accumulate(p.dist.hd.begin(), p.dist.hd.end(), 0);
+  long sum(0);
+  for(uint i=0; i<p.dist.hd.size(); ++i) sum += p.dist.hd[i];
 
   string filename = p.oprefix + ".hdp.csv";
   ofstream out(filename);
