@@ -91,44 +91,33 @@ void hammingDist(Mapfile &p, int numthreads)
     }
     if(max_hd_fl < p.dist.hd[i]) max_hd_fl = p.dist.hd[i];
   }
-  
-  // get phantom peak RL and HD[RL] run through from 1,...,2*read_len
-  /*  int rl=0;
-  int min_hd_rl=p.dist.hd[0];
-  for(int i=1; i<=bd; ++i) {
-    if(p.dist.hd[i] < min_hd_rl) {
-      min_hd_rl = p.dist.hd[i];
-      rl = i;
-    }
-    }*/
+
+  long sum = accumulate(p.dist.hd.begin(), p.dist.hd.end(), 0);
 
   string filename = p.oprefix + ".hdp.csv";
   ofstream out(filename);
-  out << "Strand shift\tHamming distance" << endl;
-  for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << p.dist.hd[i] << endl;
-  
-  //  double RSC=(max_hd_fl-p.dist.hd[fl])/(double)(max_hd_fl-p.dist.hd[rl]);
-  //  out << "RSC: " << RSC << endl;
+  out << "Strand shift\tHamming distance\tProp" << endl;
+  for(int i=0; i<HD_WIDTH; ++i) out << (i - HD_FROM) << "\t" << p.dist.hd[i] << "\t" << (p.dist.hd[i]/(double)sum) << endl;
 
   cout << "done." << endl;
   cout << "Estimated fragment length: " << p.dist.eflen << endl;
-  
+
   return;
 }
 
 void pw_Jaccard(Mapfile &p, int numthreads)
 {
-  printf("Making Jacard index profile...\n");
+  printf("Making Jaccard index profile...\n");
 
   map<int, double> mp;
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) mp[i] = 0;
 
   for (auto chr: p.chr) {
     cout << chr.name << endl;
-    //int start(0);
-    //int end(chr.len);
-    int start(1.213*NUM_100M);
-    int end(1.214*NUM_100M);
+    int start(0);
+    int end(chr.len);
+    //    int start(1.213*NUM_100M);
+    //int end(1.214*NUM_100M);
     
     int width(end-start);
 
@@ -144,9 +133,9 @@ void pw_Jaccard(Mapfile &p, int numthreads)
       }
     }
 
-    for(int j=HD_FROM; j< width - HD_WIDTH; ++j) {
+    /*    for(int j=HD_FROM; j< width - HD_WIDTH; ++j) {
       if(fwd[j] && rev[j + p.dist.lenF3]) cout << (j+start) << "\t" << (int)fwd[j]<< "\t" <<  (int)rev[j + p.dist.lenF3]<< "\t" << p.dist.lenF3 << endl;
-    }
+      }*/
 
     int max = width - HD_WIDTH;
     int xx(0), yy(0);
@@ -163,21 +152,24 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 	xy += fwd[j] * rev[j+step];
       }
       mp[step] += xy/(double)(xx+yy-xy) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+      //cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
     }
-    
+
     free(fwd);
     free(rev);
-    break;
-  }
-  
-  string filename = p.oprefix + ".jaccard.csv";
-  ofstream out(filename);
-  out << "Strand shift\tJaccard index" << endl;
-  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-    out << itr->first << "\t" << itr->second << endl;
+    //    break;
   }
 
-  exit (0);
+  double jsum(0);
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) jsum += itr->second;
+
+  string filename = p.oprefix + ".jaccard.csv";
+  ofstream out(filename);
+  out << "Strand shift\tJaccard index\tprop\tfor 10M" << endl;
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
+    out << itr->first << "\t" << itr->second  << "\t" << (itr->second/jsum) << "\t" << (itr->second*NUM_10M/(double)p.genome.bothnread_nonred()) << endl;
+  }
+
   return;
 }
 
@@ -231,7 +223,7 @@ void pw_ccp(Mapfile &p, int numthreads)
     double my,yy;
     calcMeanSD(fwd, max, mx, xx);
     calcMeanSD(rev, max, my, yy);
-    
+
 #pragma omp parallel for num_threads(numthreads)
     for(int step=-HD_FROM; step<HD_WIDTH; step+=5) {
       double xy(0);
@@ -246,12 +238,15 @@ void pw_ccp(Mapfile &p, int numthreads)
     free(fwd);
     free(rev);
   }
-  
+
+  double sum(0);
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
+
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
-  out << "Strand shift\tCross correlation" << endl;
+  out << "Strand shift\tCross correlation\tprop" << endl;
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-    out << itr->first << "\t" << itr->second << endl;
+    out << itr->first << "\t" << itr->second << "\t" << (itr->second/sum) << endl;
   }
   return;
 }
