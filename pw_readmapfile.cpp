@@ -54,6 +54,14 @@ void read_mapfile(const variables_map &values, Mapfile &p){
     hammingDist(p, values["threads"].as<int>());
     pw_ccp(p, values["threads"].as<int>());
   }
+
+
+  
+  exit(0);
+
+
+
+
   p.setF5(values);
   
   // calculate sequencing depth

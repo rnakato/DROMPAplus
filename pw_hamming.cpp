@@ -12,6 +12,11 @@
 #include <omp.h>
 #include <math.h>   
 
+#define CHR1ONLY 1
+#define HD_NG_FROM 4000
+#define HD_NG_TO   5000
+#define HD_NG_STEP 100
+
 template <class T>
 void GaussianSmoothing(vector<T> &hd)
 {
@@ -65,10 +70,14 @@ void hammingDistChr(SeqStats &chr, vector<int> &hd, int numthreads)
 
 void hammingDist(Mapfile &p, int numthreads)
 {
-  cout << "Estimate fragment length.." << flush;
+  cout << "Making Hamming distance plot.." << flush;
   
 #pragma omp parallel for num_threads(numthreads)
+#ifdef CHR1ONLY
+  for(uint i=0; i<1; ++i) {
+#else 
   for(uint i=0; i<p.chr.size(); ++i) {
+#endif
     hammingDistChr(p.chr[i], p.dist.hd, numthreads);
   }
   /*  if(p.lchr->len > NUM_10M) hammingDistChr(*p.lchr, p.dist.hd, numthreads);
@@ -76,7 +85,7 @@ void hammingDist(Mapfile &p, int numthreads)
     for(auto &chr: p.chr) hammingDistChr(chr, p.dist.hd, numthreads);
     }*/
 
-  GaussianSmoothing(p.dist.hd);
+  //  GaussianSmoothing(p.dist.hd);
 
    // get fragment length FL and HD[FL] run through from (i_num-1),...,2*read_len+1
   int min_hd_fl=p.dist.hd[HD_WIDTH-1];
@@ -107,12 +116,64 @@ void hammingDist(Mapfile &p, int numthreads)
   return;
 }
 
+
+double getControlRatio(map<int, double> &mp)
+{
+  double r(0);
+  int n(0);
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
+    r += itr->second; 
+    ++n;
+  }
+  r /= n;
+  r = 1/r;
+  return r;
+}
+ 
+ void outputMap(ofstream &out, map<int, double> &mp, map<int, double> &mpnc, string str)
+{
+  double sum(0);
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
+
+  double r = getControlRatio(mpnc);
+  double nsc(0);
+  int nsci(0);
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
+    if(nsc < itr->second*r) {
+      nsc = itr->second*r;
+      nsci = itr->first;
+    }
+  }
+  
+  out << "NSC\t"<< nsc << endl;
+  out << str << "\t" << nsci << endl;
+  out << "Strand shift\tCross correlation\tprop\tper control" << endl;
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
+    out << itr->first << "\t" << itr->second << "\t" << (itr->second/sum)<< "\t" << (itr->second*r) << endl;
+  }
+  return;
+}
+
+ double getJaccard(vector<char> fwd, vector<char> rev, int step, int xx, int yy, int max, double r, int numthreads)
+{
+  int xy(0);
+#pragma omp parallel for num_threads(numthreads)
+  for(int j=HD_FROM; j<max; ++j) {
+    xy += fwd[j] * rev[j+step];
+    //cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
+  }
+  double val = xy/(double)(xx+yy-xy) * r;
+  return val;
+}
+ 
 void pw_Jaccard(Mapfile &p, int numthreads)
 {
   printf("Making Jaccard index profile...\n");
 
   map<int, double> mp;
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) mp[i] = 0;
+  map<int, double> mpnc;
+  for(int i=HD_NG_FROM; i<HD_NG_TO; i+=HD_NG_STEP) mpnc[i] = 0;
 
   for (auto chr: p.chr) {
     cout << chr.name << endl;
@@ -123,8 +184,8 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     
     int width(end-start);
 
-    char *fwd = (char *)calloc(width, sizeof(char));
-    char *rev = (char *)calloc(width, sizeof(char));
+    vector<char> fwd(width,0);
+    vector<char> rev(width,0);
 
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto x: chr.seq[strand].vRead) {
@@ -148,30 +209,22 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 
 #pragma omp parallel for num_threads(numthreads)
     for(int step=-HD_FROM; step<HD_WIDTH; ++step) {
-      int xy(0);
-#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-      for(int j=HD_FROM; j<max; ++j) {
-	xy += fwd[j] * rev[j+step];
-      }
-      mp[step] += xy/(double)(xx+yy-xy) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
-      //cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
+      mp[step] += getJaccard(fwd, rev, step, xx, yy, max, chr.bothnread_nonred()/(double)p.genome.bothnread_nonred(), numthreads);
+    }
+    
+    for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
+      mpnc[step] += getJaccard(fwd, rev, step, xx, yy, max, chr.bothnread_nonred()/(double)p.genome.bothnread_nonred(), numthreads);
     }
 
-    free(fwd);
-    free(rev);
-    //    break;
+#ifdef CHR1ONLY
+    break;
+#endif
   }
-
-  double jsum(0);
-  for(auto itr = mp.begin(); itr != mp.end(); ++itr) jsum += itr->second;
 
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
-  out << "Strand shift\tJaccard index\tprop\tfor 10M" << endl;
-  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-    out << itr->first << "\t" << itr->second  << "\t" << (itr->second/jsum) << "\t" << (itr->second*NUM_10M/(double)p.genome.bothnread_nonred()) << endl;
-  }
-
+  outputMap(out, mp, mpnc, "Jaccard index");
+  
   return;
 }
 
@@ -188,15 +241,16 @@ void calcMeanSD(char *x, int max, double &ave, double &sd)
   }
   sd = sqrt(var/double(max-1));
 }
-
-
+ 
 void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
 
   map<int, double> mp;
   for(int i=-HD_FROM; i<HD_WIDTH; i+=5) mp[i] = 0;
-
+  map<int, double> mpnc;
+  for(int i=HD_NG_FROM; i<HD_NG_TO; i+=HD_NG_STEP) mpnc[i] = 0;
+  
   for (auto chr: p.chr) {
     cout << chr.name << endl;
     int start(0);
@@ -236,20 +290,28 @@ void pw_ccp(Mapfile &p, int numthreads)
       xy /= (double)(max - HD_FROM - 1);
       mp[step] += (xy / (xx*yy)) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
     }
+
+    for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
+      double xy(0);
+#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
+      for(int j=HD_FROM; j<max; ++j) {
+	xy += (fwd[j] - mx) * (rev[j+step] - my);
+      }
+      xy /= (double)(max - HD_FROM - 1);
+      mpnc[step] += (xy / (xx*yy)) * (chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+    }
     
     free(fwd);
     free(rev);
+#ifdef CHR1ONLY
+    break;
+#endif
   }
-
-  double sum(0);
-  for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
 
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
-  out << "Strand shift\tCross correlation\tprop" << endl;
-  for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-    out << itr->first << "\t" << itr->second << "\t" << (itr->second/sum) << endl;
-  }
+  outputMap(out, mp, mpnc, "Estimated fragment length");
+  
   return;
 }
 
