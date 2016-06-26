@@ -124,9 +124,11 @@ double getControlRatio(map<int, double> &mp)
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     r += itr->second; 
     ++n;
+    cout << itr->second << endl;
   }
   r /= n;
   r = 1/r;
+  cout << r << endl;
   return r;
 }
  
@@ -160,7 +162,7 @@ double getControlRatio(map<int, double> &mp)
 #pragma omp parallel for num_threads(numthreads)
   for(int j=HD_FROM; j<max; ++j) {
     xy += fwd[j] * rev[j+step];
-    //cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
+    //    cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
   }
   double val = xy/(double)(xx+yy-xy) * r;
   return val;

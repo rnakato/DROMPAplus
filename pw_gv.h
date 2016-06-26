@@ -35,7 +35,7 @@ using namespace boost::program_options;
 #define NUM_MPDIST 20
 
 #define HD_FROM 200
-#define HD_WIDTH 600
+#define HD_WIDTH 5000
 
 class Dist{
  public:
