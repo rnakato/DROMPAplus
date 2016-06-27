@@ -54,7 +54,7 @@ class shiftDist{
 
     out << "NSC\t"<< nsc << endl;
     out << "Estimated fragment length\t" << nsci << endl;
-    out << "Background enrichment\t" << bk << endl;
+    out << "Background enrichment\t" << (bk*NUM_10M/p.genome.bothnread_nonred()) << endl;
     out << "Strand shift\t" << str << "\tprop\tper 10M reads\tper control" << endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
       out << itr->first << "\t" << itr->second << "\t" << (itr->second/getmpsum())<< "\t" << (itr->second*NUM_10M/p.genome.bothnread_nonred()) << "\t" << (itr->second*r) << endl;
