@@ -9,13 +9,14 @@
 class shiftDist{
   map<int, double> mp;
   map<int, double> nc;
+  double bk;
   double r;
   
  public:
   double nsc;
   int nsci;
   
-  shiftDist(): r(0), nsc(0), nsci(0) {}
+ shiftDist(): bk(0), r(0), nsc(0), nsci(0) {}
 
   void addmp(int i, double val) {
     mp[i] += val;
@@ -33,11 +34,11 @@ class shiftDist{
   void setControlRatio() {
     int n(0);
     for(auto itr = nc.begin(); itr != nc.end(); ++itr) {
-      r += itr->second;
+      bk += itr->second;
       ++n;
     }
-    r /= n;
-    r = 1/r;
+    bk /= n;
+    r = 1/bk;
   }
   void getflen(int lenF3) {
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
@@ -47,9 +48,16 @@ class shiftDist{
       }
     }
   }
-  void output(ofstream &out) {
+  void outputmp(ofstream &out, const Mapfile &p, const string str) {
+    setControlRatio();
+    getflen(p.dist.lenF3);
+
+    out << "NSC\t"<< nsc << endl;
+    out << "Estimated fragment length\t" << nsci << endl;
+    out << "Background enrichment\t" << bk << endl;
+    out << "Strand shift\t" << str << "\tprop\tper 10M reads\tper control" << endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-      out << itr->first << "\t" << itr->second << "\t" << (itr->second/getmpsum())<< "\t" << (itr->second*r) << endl;
+      out << itr->first << "\t" << itr->second << "\t" << (itr->second/getmpsum())<< "\t" << (itr->second*NUM_10M/p.genome.bothnread_nonred()) << "\t" << (itr->second*r) << endl;
     }
   }
 };

@@ -12,7 +12,7 @@
 #include <omp.h>
 #include <math.h>   
 
-//#define CHR1ONLY 1
+#define CHR1ONLY 1
 #define HD_NG_FROM 4000
 #define HD_NG_TO   5000
 #define HD_NG_STEP 100
@@ -107,19 +107,6 @@ void hammingDist(Mapfile &p, int numthreads)
   return;
 }
 
-
-void outputMap(ofstream &out, shiftDist &dist, string str, int lenF3)
-{
-  dist.setControlRatio();
-  dist.getflen(lenF3);
-
-  out << "NSC\t"<< dist.nsc << endl;
-  out << "Estimated fragment length\t" << dist.nsci << endl;
-  out << "Strand shift\t" << str << "\tprop\tper control" << endl;
-  dist.output(out);
-  return;
-}
-
 double getJaccard(vector<char> &fwd, vector<char> &rev, int step, int xx, int yy, int max, int numthreads)
 {
   int xy(0);
@@ -182,7 +169,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
-  outputMap(out, dist, "Jaccard index", p.dist.lenF3);
+  dist.outputmp(out, p, "Jaccard index");
   
   return;
 }
@@ -266,7 +253,7 @@ void pw_ccp(Mapfile &p, int numthreads)
 
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
-  outputMap(out, dist, "Cross correlation", p.dist.lenF3);
+  dist.outputmp(out, p, "Cross correlation");
   
   return;
 }
