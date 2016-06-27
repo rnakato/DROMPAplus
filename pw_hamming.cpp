@@ -124,15 +124,15 @@ double getControlRatio(map<int, double> &mp)
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     r += itr->second; 
     ++n;
-    cout << itr->second << endl;
+    //cout << itr->second << endl;
   }
   r /= n;
   r = 1/r;
-  cout << r << endl;
+  //  cout << r << endl;
   return r;
 }
  
- void outputMap(ofstream &out, map<int, double> &mp, map<int, double> &mpnc, string str)
+ void outputMap(ofstream &out, map<int, double> &mp, map<int, double> &mpnc, string str, int lenF3)
 {
   double sum(0);
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
@@ -141,7 +141,7 @@ double getControlRatio(map<int, double> &mp)
   double nsc(0);
   int nsci(0);
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-    if(nsc < itr->second*r) {
+    if(itr->first > lenF3*2 && nsc < itr->second*r) {
       nsc = itr->second*r;
       nsci = itr->first;
     }
@@ -156,10 +156,10 @@ double getControlRatio(map<int, double> &mp)
   return;
 }
 
- double getJaccard(vector<char> fwd, vector<char> rev, int step, int xx, int yy, int max, double r, int numthreads)
+double getJaccard(vector<char> &fwd, vector<char> &rev, int step, int xx, int yy, int max, double r, int numthreads)
 {
   int xy(0);
-#pragma omp parallel for num_threads(numthreads)
+#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
   for(int j=HD_FROM; j<max; ++j) {
     xy += fwd[j] * rev[j+step];
     //    cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
@@ -225,7 +225,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
-  outputMap(out, mp, mpnc, "Jaccard index");
+  outputMap(out, mp, mpnc, "Jaccard index", p.dist.lenF3);
   
   return;
 }
@@ -312,7 +312,7 @@ void pw_ccp(Mapfile &p, int numthreads)
 
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
-  outputMap(out, mp, mpnc, "Estimated fragment length");
+  outputMap(out, mp, mpnc, "Estimated fragment length", p.dist.lenF3);
   
   return;
 }
