@@ -14,31 +14,37 @@
 
 using namespace std;
 
-vector<vector<string>> cmds({
-    {"PC_SHARP", "peak-calling (for sharp mode)"},
-    {"PC_ENRICH", "peak-calling (enrichment ratio)"},
-    {"GV", "global-view visualization"},
-    {"PD", "peak density"},
-    {"CI", "compare peak-intensity between two samples"},
-    {"CG", "output ChIP-reads in each gene body"},
-    {"GOVERLOOK", "genome-wide overlook of peak positions"},
-    {"PROFILE", "make R script of averaged read density"},
-    {"HEATMAP", "make heatmap of multiple samples"},
-    {"TR", "calculate the travelling ratio (pausing index) for each gene"},
+
+//             PC_BROAD    peak-calling (for broad mode)
+//             FRIP        accumulate read counts in bed regions specified
+//             3DMAP       accumulate read counts in bed regions specified
+
+vector<Command> cmds({
+    {"PC_SHARP", "peak-calling (for sharp mode)",
+	{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+    {"PC_ENRICH","peak-calling (enrichment ratio)",
+	{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+      {"GV",
+	    "global-view visualization",
+	      {OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+	  {"PD",
+	      "peak density",
+		{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+	    {"CI",
+		"compare peak-intensity between two samples",
+		  {OPTREQ, OPTIO, OPTOTHER}},
+	      {"CG",
+		  "output ChIP-reads in each gene body",
+		    {OPTREQ, OPTIO, OPTCG, OPTOTHER}},
+		{"GOVERLOOK",
+		    "genome-wide overlook of peak positions",
+		      {OPTREQ, OPTIO, OPTOTHER}},
+	    {"PROFILE",   "make R script of averaged read density",
+		{OPTREQ, OPTIO, OPTPROF, OPTOTHER}},
+	      {"HEATMAP",   "make heatmap of multiple samples", {OPTREQ, OPTIO, OPTPROF, OPTOTHER}},
+		{"TR",        "calculate the travelling ratio (pausing index) for each gene", {OPTREQ, OPTIO, OPTPROF, OPTOTHER}},
 });
 
-unordered_map<string, function<int(int, char*[])>> cmdmp({
-    {"PC_SHARP", func_PCSHARP},
-    {"PC_ENRICH", func_ENRICH},
-    {"GV", func_GV},
-    {"PD", func_PD},
-    {"CI", func_CI},
-    {"CG", func_CG},
-    {"GOVERLOOK", func_GOVERLOOK},
-    {"PROFILE", func_PROFILE},
-    {"HEATMAP", func_HEATMAP},
-    {"TR", func_TR},
-});  
 
 void help_global() {
     auto helpmsg = R"(
@@ -51,11 +57,8 @@ void help_global() {
     Command:)";
 
     cerr << "\n    DROMPA v" << VERSION << helpmsg << endl;
-    for(size_t i=0; i<cmds.size(); ++i) {
-      cout << setw(8) << " " << left << setw(12) << cmds[i][0]
-	   << left << setw(40) << cmds[i][1] << endl;
-    }
-    cerr << endl;
+    for(size_t i=0; i<cmds.size(); ++i) cmds[i].print();
+      cerr << endl;
     return;
 }
 
@@ -96,135 +99,25 @@ int main(int argc, char* argv[])
     
     if (values.count("version")) printVersion();
 
-    auto cmd = cmdmp.find(values["command"].as<string>());
-    if (cmd == cmdmp.end()) {
-      cerr << "   Invalid command: " << values["command"].as<string>() << endl;
+    // check command and param
+    int on(0);
+    string cmd = values["command"].as<string>();
+    for(size_t i=0; i<cmds.size(); ++i) {
+      if(cmd == cmds[i].name) {
+	cmds[i].getOpts(argc-1, argv+1);
+	on++;
+      }
+    }
+    
+    if (!on) {
+      cerr << "  Invalid command: " << values["command"].as<string>() << endl;
       help_global();
       exit(0);
-    } else {
-      cmd->second(argc-1, argv+1);
     }
 
   } catch (exception &e) {
     cout << e.what() << endl;
   }
   
-  return 0;
-}
-
-variables_map getOpts(int argc, char* argv[], const opt &opts)
-{
-  if (argc ==1) {
-    BPRINT("%1%:  %2%\n") % cmds[2][0] % cmds[2][1];
-    BPRINT("Usage: drompa %1% [options] -p <output> -gt <genometable> -i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]\n\n") % argv[0]; 
-    cout << opts.opts << endl;
-    exit(0);
-  }
-  
-  variables_map values;
-  try {
-    store(parse_command_line(argc, argv, opts.opts), values);
-    
-    if (values.count("help")) {
-      BPRINT("%1%:  %2%\n") % cmds[2][0] % cmds[2][1];
-      BPRINT("Usage: drompa %1% [options] -p <output> -gt <genometable> -i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]\n\n") % argv[0]; 
-      cout << opts.opts << endl;
-      exit(0);
-    }
-    
-    notify(values);
-    cout << values["gt"].as<string>() << endl;
-  } catch (exception &e) {
-    cout << e.what() << endl;
-  }
-  
-  return values;
-}
-
-int func_PCSHARP(int argc, char* argv[])
-{
-  
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-
-  return 0;
-}
-
-int func_ENRICH(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-  return 0;
-}
-int func_GV(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-  return 0;
-}
-int func_PD(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTPD, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-
-  return 0;
-}
-int func_CI(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-  return 0;
-}
-int func_CG(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTCG, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-
-  return 0;
-}
-int func_GOVERLOOK(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-  return 0;
-}
-int func_PROFILE(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTPROF, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-  return 0;
-}
-
-int func_HEATMAP(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTPROF, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
-  return 0;
-}
-
-int func_TR(int argc, char* argv[])
-{
-  opt allopts("Options");
-  allopts.add({OPTREQ, OPTIO, OPTTR, OPTOTHER});
-
-  variables_map values = getOpts(argc, argv, allopts);
   return 0;
 }
