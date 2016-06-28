@@ -295,6 +295,7 @@ void Command::checkParam() {
 void Command::InitDump()
 {
   uint i;
+  vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
   vector<string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
   vector<string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
   vector<string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };

@@ -273,7 +273,8 @@ void setOpts(options_description &allopts){
 }
 
 void init_dump(const variables_map &values){
-
+  vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+ 
   BPRINT("\n======================================\n");
   BPRINT("parse2wig version %1%\n\n") % VERSION;
   BPRINT("Input file %1%\n")         % values["input"].as<string>();

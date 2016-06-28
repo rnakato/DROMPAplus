@@ -17,9 +17,6 @@
 #define VALUE2WIGARRAY(v) ((v) * 1000.0)
 #define WIGARRAY2VALUE(v) ((v) * (1.0/1000.0))
 
-vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
-
-
 enum PWfile_Type {
   TYPE_BINARY,
   TYPE_COMPRESSWIG,
