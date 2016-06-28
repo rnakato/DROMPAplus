@@ -82,7 +82,7 @@ void printVersion()
 {
   cerr << "parse2wig version " << VERSION << endl;
   exit(0);
-}  
+}
 
 void help_global()
 {
@@ -187,7 +187,7 @@ variables_map getOpts(int argc, char* argv[])
     store(parsed, values);
     
     if (values.count("version")) printVersion();
-    
+
     if (argc ==1) {
       help_global();
       cerr << "Use --help option for more information on the other options\n\n";

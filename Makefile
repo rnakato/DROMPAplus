@@ -13,7 +13,7 @@ OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
 OBJS_ALGLIB = $(ALGLBDIR)/specialfunctions.cpp $(ALGLBDIR)/ap.cpp $(ALGLBDIR)/alglibinternal.cpp $(SRCDIR)/alglib.o
 OBJS_COMMON = statistics.o
 OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_hamming.o $(OBJS_COMMON)
-OBJS_DD = drompa+.o $(OBJS_COMMON)
+OBJS_DD = dd_main.o $(OBJS_COMMON)
 
 HEADS_UTIL = common.h util.h statistics.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
 HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h pw_gc.h pw_hamming.h $(HEADS_UTIL)
