@@ -71,10 +71,10 @@ void hammingDist(Mapfile &p, int numthreads)
 {
   cout << "Making Hamming distance plot.." << flush;
 
-#pragma omp parallel for num_threads(numthreads)
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
 #else 
+#pragma omp parallel for num_threads(numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
 #endif
     hammingDistChr(p.chr[i], p.dist.hd);
@@ -107,28 +107,22 @@ void hammingDist(Mapfile &p, int numthreads)
   return;
 }
 
-double getJaccard(vector<char> &fwd, vector<char> &rev, int step, int xx, int yy, int max, int numthreads)
-{
-  int xy(0);
-#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-  for(int j=HD_FROM; j<max; ++j) {
-    xy += fwd[j] * rev[j+step];
-    //    cout << step<< "\t" << (xy/(double)(xx+yy-xy)) << "\t" << xy << "\t" << xx<< "\t" << yy << endl;
-  }
-  double val = xy/(double)(xx+yy-xy);
-  return val;
-}
- 
 void pw_Jaccard(Mapfile &p, int numthreads)
 {
   printf("Making Jaccard index profile...\n");
 
   shiftDist dist;
 
-  for (auto chr: p.chr) {
-    cout << chr.name << endl;
+#ifdef CHR1ONLY
+  for(uint i=0; i<1; ++i) {
+#else 
+#pragma omp parallel for num_threads(numthreads)
+  for(uint i=0; i<p.chr.size(); ++i) {
+#endif
+    //  for (auto chr: p.chr) {
+    cout << p.chr[i].name << endl;
     int start(0);
-    int end(chr.len);
+    int end(p.chr[i].len);
     //    int start(1.213*NUM_100M);
     //int end(1.214*NUM_100M);
     
@@ -138,7 +132,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     vector<char> rev(width,0);
 
     for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto x: chr.seq[strand].vRead) {
+      for (auto x: p.chr[i].seq[strand].vRead) {
 	if(x.duplicate) continue;
 	if(!RANGE(x.F3, start, end-1)) continue;
 	if(strand==STRAND_PLUS) ++fwd[x.F3 - start];
@@ -152,19 +146,27 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 
     int xx = accumulate(fwd.begin(), fwd.end(), 0);
     int yy = accumulate(rev.begin(), rev.end(), 0);
+    int xysum(xx+yy);
     int max(width - HD_NG_TO);
-#pragma omp parallel for num_threads(numthreads)
+    double rchr(p.chr[i].bothnread_nonred()/(double)p.genome.bothnread_nonred());
+
+    //#pragma omp parallel for num_threads(numthreads)
     for(int step=-HD_FROM; step<HD_WIDTH; ++step) {
-      dist.addmp(step, getJaccard(fwd, rev, step, xx, yy, max, numthreads) * chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+      int xy(0);
+      //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
+      for(int j=HD_FROM; j<max; ++j) xy += fwd[j] * rev[j+step];
+      dist.mp[step] += xy/(double)(xysum-xy);
     }
     
     for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
-      dist.addnc(step, getJaccard(fwd, rev, step, xx, yy, max, numthreads) * chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+      int xy(0);
+      //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
+      for(int j=HD_FROM; j<max; ++j) xy += fwd[j] * rev[j+step];
+      dist.nc[step] += xy/(double)(xysum-xy);
     }
-
-#ifdef CHR1ONLY
-    break;
-#endif
+    
+    for(auto itr = dist.mp.begin(); itr != dist.mp.end(); ++itr) itr->second *= rchr;
+    for(auto itr = dist.nc.begin(); itr != dist.nc.end(); ++itr) itr->second *= rchr;
   }
 
   string filename = p.oprefix + ".jaccard.csv";
@@ -189,29 +191,22 @@ void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
   sd = sqrt(var/double(max -HD_FROM -1));
 }
 
-
-double getCC(vector<char> &fwd, vector<char> &rev, int step, double mx, double my, double xx, double yy, int max, int numthreads)
-{
-  double xy(0);
-#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-  for(int j=HD_FROM; j<max; ++j) {
-    xy += (fwd[j] - mx) * (rev[j+step] - my);
-  }
-  xy /= (double)(max - HD_FROM - 1);
-  double cc = xy / (xx*yy);
-  return cc;
-}
-
 void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
 
   shiftDist dist;
   
-  for (auto chr: p.chr) {
-    cout << chr.name << endl;
+#ifdef CHR1ONLY
+  for(uint i=0; i<1; ++i) {
+#else 
+#pragma omp parallel for num_threads(numthreads)
+  for(uint i=0; i<p.chr.size(); ++i) {
+#endif
+    //  for (auto chr: p.chr) {
+    cout << p.chr[i].name << endl;
     int start(0);
-    int end(chr.len);
+    int end(p.chr[i].len);
     //int start(1.5*NUM_100M);
     //int end(2*NUM_100M);
     //    int start(1.213*NUM_100M);
@@ -223,7 +218,7 @@ void pw_ccp(Mapfile &p, int numthreads)
     vector<char> rev(width,0);
 
     for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto x: chr.seq[strand].vRead) {
+      for (auto x: p.chr[i].seq[strand].vRead) {
 	if(x.duplicate) continue;
 	if(!RANGE(x.F3, start, end-1)) continue;
 	if(strand==STRAND_PLUS) ++fwd[x.F3 - start];
@@ -237,18 +232,25 @@ void pw_ccp(Mapfile &p, int numthreads)
     calcMeanSD(fwd, max, mx, xx);
     calcMeanSD(rev, max, my, yy);
 
-#pragma omp parallel for num_threads(numthreads)
+    double rchr(p.chr[i].bothnread_nonred()/(double)p.genome.bothnread_nonred());
+
+    //#pragma omp parallel for num_threads(numthreads)
     for(int step=-HD_FROM; step<HD_WIDTH; step+=5) {
-      dist.addmp(step, getCC(fwd, rev, step, mx, my, xx, yy, max, numthreads) * chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+      double xy(0);
+      //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
+      for(int j=HD_FROM; j<max; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+      dist.mp[step] += xy;
     }
 
     for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
-      dist.addnc(step, getCC(fwd, rev, step, mx, my, xx, yy, max, numthreads) * chr.bothnread_nonred()/(double)p.genome.bothnread_nonred());
+      double xy(0);
+      //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
+      for(int j=HD_FROM; j<max; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+      dist.nc[step] += xy;
     }
-
-#ifdef CHR1ONLY
-    break;
-#endif
+    
+    for(auto itr = dist.mp.begin(); itr != dist.mp.end(); ++itr) itr->second *= rchr / (xx*yy*(max - HD_FROM - 1));
+    for(auto itr = dist.nc.begin(); itr != dist.nc.end(); ++itr) itr->second *= rchr / (xx*yy*(max - HD_FROM - 1));
   }
 
   string filename = p.oprefix + ".ccp.csv";

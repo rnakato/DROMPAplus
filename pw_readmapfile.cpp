@@ -9,6 +9,7 @@
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <ext/stdio_filebuf.h>
+#include <time.h>
 #include "pw_gv.h"
 #include "pw_readmapfile.h"
 #include "util.h"
@@ -50,9 +51,16 @@ void read_mapfile(const variables_map &values, Mapfile &p){
 
   // estimate fragment length
   if(!values.count("pair") && !values.count("nomodel")) {
+    clock_t t1 = clock();
     pw_Jaccard(p, values["threads"].as<int>());
+    clock_t t2 = clock();
+    cout << "Jaccard: " << (double)(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
     hammingDist(p, values["threads"].as<int>());
+    clock_t t3 = clock();
+    cout << "Hamming: " << (double)(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
     pw_ccp(p, values["threads"].as<int>());
+    clock_t t4 = clock();
+    cout << "ccp: " << (double)(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
   }
 
 
