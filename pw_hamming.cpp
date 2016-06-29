@@ -73,7 +73,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     jaccardfunc_vector(p, p.chr[i]);
     //jaccardfunc_bitset(p, p.chr[i]);
 
-    if(chrname2int(p.chr[i].name)) p.genome.addjac(p.chr[i]);
+    if(p.chr[i].isautosome()) p.genome.addjac(p.chr[i]);
 
     string filename = p.oprefix + ".jaccard." + p.chr[i].name +".csv";
     ofstream out(filename);
@@ -99,7 +99,7 @@ void pw_ccp(Mapfile &p, int numthreads)
 #endif
     ccpfunc(p, p.chr[i]);
       
-    if(chrname2int(p.chr[i].name)) p.genome.addccp(p.chr[i]);
+    if(p.chr[i].isautosome()) p.genome.addccp(p.chr[i]);
     
     string filename = p.oprefix + ".ccp." + p.chr[i].name +".csv";
     ofstream out(filename);

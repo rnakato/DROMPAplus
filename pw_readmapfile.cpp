@@ -177,7 +177,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
       boost::split(read, v[0], boost::algorithm::is_any_of("/"));
       if(nametemp != "" && nametemp != read[0]) PRINTERR("Error:  Invalid read pair." << nametemp <<"-" << read[0]);
       if(read[1] == "1") {  // F3 read
-	chr_F3 = v[2];
+	chr_F3 = rmchr(v[2]);
 	fragpair.readlen_F3 = v[4].length();
 	if(v[1] == "+") { 
 	  fragpair.strand = STRAND_PLUS;
@@ -187,7 +187,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 	  fragpair.F3 = stoi(v[3]) + fragpair.readlen_F3;
 	}
       } else {  
-	chr_F5 = v[2];
+	chr_F5 = rmchr(v[2]);
 	if(v[1] == "+") { 
 	  F5 = stoi(v[3]);
 	} else {
@@ -210,7 +210,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
     } else {
       if(v[0].find("/2") != string::npos) PRINTERR("Warning: parsing paired-end file as single-end");
       Fragment frag;
-      frag.chr = v[2];
+      frag.chr = rmchr(v[2]);
       frag.readlen_F3 = v[4].length();
       if(v[1] == "+") { 
 	frag.strand = STRAND_PLUS;
@@ -245,7 +245,7 @@ void funcTagAlign(const variables_map &values, Mapfile &p, T & in)
       int start(stoi(v[1]));
       int end(stoi(v[2]));
       Fragment frag;
-      frag.chr = v[0];
+      frag.chr = rmchr(v[0]);
       frag.readlen_F3 = abs(end - start);
       if(v[5] == "+") {
 	frag.strand = STRAND_PLUS;

@@ -23,8 +23,9 @@ void output_stats(const variables_map &values, const Mapfile &p);
 void calcGenomeCoverage(const variables_map &values, Mapfile &p);
 void output_wigstats(const variables_map &values, Mapfile &p);
 
+
 Mapfile::Mapfile(const variables_map &values):
-  genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
+  yeast(false), genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
 {
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
   
@@ -37,16 +38,28 @@ Mapfile::Mapfile(const variables_map &values):
   // genome_table
   ifstream in(values["gt"].as<string>());
   if(!in) PRINTERR("Could nome open " << values["gt"].as<string>() << ".");
+
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0] == '#') continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     SeqStats s(v[0], stoi(v[1]));
+    if(s.name == "I" || s.name == "II" || s.name == "III") yeast = true;
+    
     chr.push_back(s);
-    lastchr = v[0];
+    lastchr = s.name;
   }
   long lenmax(0);
 
+  for(auto &x:chr) if(yeast) x.yeaston();
+  
+#ifdef DEBUG
+  cout << "chr\tautosome" << endl;
+  for(auto x:chr) {
+    cout << x.name << "\t" << x.isautosome() << endl;
+  }
+#endif
+  
   for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
     if(lenmax < itr->len) {
       lenmax = itr->len;

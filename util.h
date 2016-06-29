@@ -9,6 +9,8 @@
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
 
+
+std::string rmchr(const std::string &chr);
 void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w=1);
 int chrname2int(std::string str);
 

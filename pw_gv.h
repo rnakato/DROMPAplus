@@ -105,7 +105,6 @@ class Dist{
 
 class Fragment {
 public:
-  //  string name;
   string chr;
   int F3;
   Strand strand;
@@ -114,7 +113,7 @@ public:
 
  Fragment(): fraglen(0), readlen_F3(0) {}
  void addSAM(const vector<string> &v, const bool pair, const int sv) {
-   chr = v[2];
+   chr = rmchr(v[2]);
    readlen_F3 = v[9].length();
    if(pair) fraglen = abs(stoi(v[8]));
    if(sv&16) {
@@ -169,6 +168,7 @@ class strandData {
 };
 
 class SeqStats {
+  bool yeast;
   int num95;
  public:
   string name;
@@ -194,7 +194,9 @@ class SeqStats {
   shiftDist ccp;
   double rchr;
   
- SeqStats(string s, int l=0): num95(0), name(s),len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0), rchr(0) {
+ SeqStats(string s, int l=0): yeast(false), num95(0), len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0), rchr(0) {
+    name = rmchr(s);
+    
     vector<long> v(NUM_MPDIST,0); // 5% div
     mpDist = v;
     vector<long> v2(NUM_WIGDISTARRAY,0);
@@ -230,10 +232,16 @@ class SeqStats {
   }
 
   void addjac(const SeqStats &x) {
+#ifdef DEBUG
+  cout << "addjac" << endl;
+#endif
     addmp(jac.mp, x.jac.mp, x.rchr);
     addmp(jac.nc, x.jac.nc, x.rchr);
   }
   void addccp(const SeqStats &x) {
+#ifdef DEBUG
+  cout << "addccp" << endl;
+#endif
     addmp(ccp.mp, x.ccp.mp, x.rchr);
     addmp(ccp.nc, x.ccp.nc, x.rchr);
   }
@@ -352,10 +360,40 @@ class SeqStats {
     for(int i=0; i<thre; ++i) par[i+1] = wigDist[i] /(double)nbindist;
     iterateZINB(&par, nb_p, nb_n, nb_p, nb_n, nb_p0);
   }
+  void yeaston() { yeast = true; }
+
+  bool isautosome() {
+    int chrnum(0);
+    try {
+      chrnum = stoi(name);
+    } catch (std::invalid_argument e) {  // 数値以外
+      if(yeast) { 
+	if(name=="I")         chrnum = 1;
+	else if(name=="II")   chrnum = 2;
+	else if(name=="III")  chrnum = 3;
+	else if(name=="IV")   chrnum = 4;
+	else if(name=="V")    chrnum = 5;
+	else if(name=="VI")   chrnum = 6;
+	else if(name=="VII")  chrnum = 7;
+	else if(name=="VIII") chrnum = 8;
+	else if(name=="IX")   chrnum = 9;
+	else if(name=="X")    chrnum = 10;
+	else if(name=="XI")   chrnum = 11;
+	else if(name=="XII")  chrnum = 12;
+	else if(name=="XIII") chrnum = 13;
+	else if(name=="XIV")  chrnum = 14;
+	else if(name=="XV")   chrnum = 15;
+	else if(name=="XVI")  chrnum = 16;
+      }
+    }
+    if(chrnum) return true;
+    else       return false;
+  }
 };
 
 class Mapfile {
-public:
+  bool yeast;
+ public:
   string oprefix;
   Dist dist;
   SeqStats genome;
