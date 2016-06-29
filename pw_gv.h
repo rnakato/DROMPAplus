@@ -228,6 +228,15 @@ class SeqStats {
     gcovRaw  = nbp ? ncov / (double)nbp: 0;
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
   }
+
+  void addjac(const SeqStats &x) {
+    addmp(jac.mp, x.jac.mp, x.rchr);
+    addmp(jac.nc, x.jac.nc, x.rchr);
+  }
+  void addccp(const SeqStats &x) {
+    addmp(ccp.mp, x.ccp.mp, x.rchr);
+    addmp(ccp.nc, x.ccp.nc, x.rchr);
+  }
   void print() {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }
@@ -344,7 +353,6 @@ class SeqStats {
     iterateZINB(&par, nb_p, nb_n, nb_p, nb_n, nb_p0);
   }
 };
-
 
 class Mapfile {
 public:

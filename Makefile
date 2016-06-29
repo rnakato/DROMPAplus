@@ -11,7 +11,7 @@ endif
 
 OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
 OBJS_ALGLIB = $(ALGLBDIR)/specialfunctions.cpp $(ALGLBDIR)/ap.cpp $(ALGLBDIR)/alglibinternal.cpp $(SRCDIR)/alglib.o
-OBJS_COMMON = statistics.o
+OBJS_COMMON = statistics.o util.o
 OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_hamming.o $(OBJS_COMMON)
 OBJS_DD = dd_main.o $(OBJS_COMMON)
 

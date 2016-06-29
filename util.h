@@ -5,8 +5,11 @@
 #define _UTIL_H_
 #include <iostream>
 #include <string>
+#include <map>
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
+
+void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w=1);
 
 template <class T>
 void chkminus(const boost::program_options::variables_map &values, std::string x, int lim)
@@ -14,7 +17,7 @@ void chkminus(const boost::program_options::variables_map &values, std::string x
   if (values.count(x)) {
     T val = values[x].as<T>();
     if(val <= lim) {
-      cerr << "Error: invalid " << x << ": " << val << endl;
+      std::cerr << "Error: invalid " << x << ": " << val << std::endl;
       exit(1);
     }
   }
