@@ -12,7 +12,6 @@
 
 std::string rmchr(const std::string &chr);
 void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w=1);
-int chrname2int(std::string str);
 
 template <class T>
 void chkminus(const boost::program_options::variables_map &values, std::string x, int lim)

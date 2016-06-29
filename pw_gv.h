@@ -35,8 +35,7 @@ using namespace boost::program_options;
 #define NUM_MPDIST 20
 
 #define HD_FROM 200
-//#define HD_WIDTH 5000
-#define HD_WIDTH 600
+#define HD_TO   600
 
 class shiftDist{
   double bk;
@@ -86,7 +85,7 @@ class Dist{
   vector<int> readlen;
   vector<int> readlen_F5;
   vector<int> fraglen;
-  vector<int> hd;
+  //  vector<int> hd;
 
  Dist(): lenF3(0), lenF5(0), eflen(0) {
     vector<int> v(DIST_READLEN_MAX,0);
@@ -95,8 +94,8 @@ class Dist{
     readlen_F5 = v2;
     vector<int> v3(DIST_FRAGLEN_MAX,0);
     fraglen = v3;
-    vector<int> h(HD_WIDTH,0);
-    hd = h;
+    //    vector<int> h(HD_WIDTH,0);
+    //hd = h;
   }
   void setlenF3() { lenF3 = getmaxi(readlen); }
   void setlenF5() { lenF5 = getmaxi(readlen_F5); }
@@ -192,6 +191,7 @@ class SeqStats {
 
   shiftDist jac;
   shiftDist ccp;
+  shiftDist hd;
   double rchr;
   
  SeqStats(string s, int l=0): yeast(false), num95(0), len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0), rchr(0) {
@@ -244,6 +244,13 @@ class SeqStats {
 #endif
     addmp(ccp.mp, x.ccp.mp, x.rchr);
     addmp(ccp.nc, x.ccp.nc, x.rchr);
+  }
+  void addhd(const SeqStats &x) {
+#ifdef DEBUG
+    cout << "addhd" << endl;
+#endif
+    addmp(hd.mp, x.hd.mp, x.rchr);
+    addmp(hd.nc, x.hd.nc, x.rchr);
   }
   void print() {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
