@@ -38,6 +38,46 @@ using namespace boost::program_options;
 //#define HD_WIDTH 5000
 #define HD_WIDTH 600
 
+class shiftDist{
+  double bk;
+  
+ public:
+  map<int, double> mp;
+  map<int, double> nc;
+  double r;
+  double nsc;
+  int nsci;
+  
+ shiftDist(): bk(0), r(0), nsc(0), nsci(0) {}
+
+  double getmpsum() {
+    double sum(0);
+    for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
+    return sum;
+  }
+  
+  void setControlRatio() {
+    int n(0);
+    for(auto itr = nc.begin(); itr != nc.end(); ++itr) {
+      bk += itr->second;
+      ++n;
+    }
+    bk /= n;
+    r = 1/bk;
+  }
+  void getflen(int lenF3) {
+    for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
+      if(itr->first > lenF3*2 && nsc < itr->second*r) {
+	nsc = itr->second*r;
+	nsci = itr->first;
+      }
+    }
+  }
+  double getBackEnrich(long nread) {
+    return bk *NUM_10M /(double)nread;
+  }
+};
+
 class Dist{
  public:
   int lenF3;
@@ -150,7 +190,11 @@ class SeqStats {
   long nread_inbed;
   double FRiP;
 
- SeqStats(string s, int l=0): num95(0), name(s),len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
+  shiftDist jac;
+  shiftDist ccp;
+  double rchr;
+  
+ SeqStats(string s, int l=0): num95(0), name(s),len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0), rchr(0) {
     vector<long> v(NUM_MPDIST,0); // 5% div
     mpDist = v;
     vector<long> v2(NUM_WIGDISTARRAY,0);
@@ -359,7 +403,10 @@ public:
     }
   }
   void setnread_red() {
-    for (auto &x:chr) genome.addnread_red(x);
+    for (auto &x:chr) {
+      genome.addnread_red(x);
+      x.rchr = x.bothnread_nonred()/(double)genome.bothnread_nonred();
+    }
   }
   double complexity() const { return nt_nonred/(double)nt_all; }
   void printstats() {

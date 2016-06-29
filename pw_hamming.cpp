@@ -12,7 +12,7 @@
 #include <omp.h>
 #include <math.h>   
 
-#define CHR1ONLY 1
+//#define CHR1ONLY 1
 #define HD_NG_FROM 4000
 #define HD_NG_TO   5000
 #define HD_NG_STEP 100
@@ -40,6 +40,21 @@ void GaussianSmoothing(vector<T> &hd)
   }
   
   return;
+}
+
+
+void outputmp(ofstream &out, shiftDist &dist, const Mapfile &p, const string str) {
+  dist.setControlRatio();
+  dist.getflen(p.dist.lenF3);
+  double sum(dist.getmpsum());
+  
+  out << "NSC\t"<< dist.nsc << endl;
+  out << "Estimated fragment length\t" << dist.nsci << endl;
+  out << "Background enrichment\t" << dist.getBackEnrich(p.genome.bothnread_nonred()) << endl;
+  out << "Strand shift\t" << str << "\tprop\tper 10M reads\tper control" << endl;
+  for(auto itr = dist.mp.begin(); itr != dist.mp.end(); ++itr) {
+    out << itr->first << "\t" << itr->second << "\t" << (itr->second/sum)<< "\t" << (itr->second*NUM_10M/p.genome.bothnread_nonred()) << "\t" << (itr->second * dist.r) << endl;
+  }
 }
 
 void hammingDistChr(SeqStats &chr, vector<int> &hd)
@@ -111,7 +126,7 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 {
   printf("Making Jaccard index profile...\n");
 
-  shiftDist dist;
+  //  shiftDist dist;
 
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
@@ -148,30 +163,33 @@ void pw_Jaccard(Mapfile &p, int numthreads)
     int yy = accumulate(rev.begin(), rev.end(), 0);
     int xysum(xx+yy);
     int max(width - HD_NG_TO);
-    double rchr(p.chr[i].bothnread_nonred()/(double)p.genome.bothnread_nonred());
+    //    double rchr(p.chr[i].bothnread_nonred()/(double)p.genome.bothnread_nonred());
 
     //#pragma omp parallel for num_threads(numthreads)
     for(int step=-HD_FROM; step<HD_WIDTH; ++step) {
       int xy(0);
       //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
       for(int j=HD_FROM; j<max; ++j) xy += fwd[j] * rev[j+step];
-      dist.mp[step] += xy/(double)(xysum-xy);
+      p.chr[i].jac.mp[step] += xy/(double)(xysum-xy);
     }
     
     for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
       int xy(0);
       //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
       for(int j=HD_FROM; j<max; ++j) xy += fwd[j] * rev[j+step];
-      dist.nc[step] += xy/(double)(xysum-xy);
+      p.chr[i].jac.nc[step] += xy/(double)(xysum-xy);
     }
     
-    for(auto itr = dist.mp.begin(); itr != dist.mp.end(); ++itr) itr->second *= rchr;
-    for(auto itr = dist.nc.begin(); itr != dist.nc.end(); ++itr) itr->second *= rchr;
+    for(auto itr = p.chr[i].jac.mp.begin(); itr != p.chr[i].jac.mp.end(); ++itr) p.genome.jac.mp[itr->first] += itr->second * p.chr[i].rchr;
+    for(auto itr = p.chr[i].jac.nc.begin(); itr != p.chr[i].jac.nc.end(); ++itr) p.genome.jac.nc[itr->first] += itr->second * p.chr[i].rchr;
+    string filename = p.oprefix + ".jaccard." + p.chr[i].name +".csv";
+    ofstream out(filename);
+    outputmp(out, p.chr[i].jac, p, "Jaccard index");
   }
 
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
-  dist.outputmp(out, p, "Jaccard index");
+  outputmp(out, p.genome.jac, p, "Jaccard index");
   
   return;
 }
@@ -195,7 +213,7 @@ void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
 
-  shiftDist dist;
+  //  shiftDist dist;
   
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
@@ -232,30 +250,33 @@ void pw_ccp(Mapfile &p, int numthreads)
     calcMeanSD(fwd, max, mx, xx);
     calcMeanSD(rev, max, my, yy);
 
-    double rchr(p.chr[i].bothnread_nonred()/(double)p.genome.bothnread_nonred());
+    //    double rchr(p.chr[i].bothnread_nonred()/(double)p.genome.bothnread_nonred());
 
     //#pragma omp parallel for num_threads(numthreads)
     for(int step=-HD_FROM; step<HD_WIDTH; step+=5) {
       double xy(0);
       //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
       for(int j=HD_FROM; j<max; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
-      dist.mp[step] += xy;
+      p.chr[i].ccp.mp[step] += xy;
     }
 
     for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
       double xy(0);
       //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
       for(int j=HD_FROM; j<max; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
-      dist.nc[step] += xy;
+      p.chr[i].ccp.nc[step] += xy;
     }
     
-    for(auto itr = dist.mp.begin(); itr != dist.mp.end(); ++itr) itr->second *= rchr / (xx*yy*(max - HD_FROM - 1));
-    for(auto itr = dist.nc.begin(); itr != dist.nc.end(); ++itr) itr->second *= rchr / (xx*yy*(max - HD_FROM - 1));
+    for(auto itr = p.chr[i].ccp.mp.begin(); itr != p.chr[i].ccp.mp.end(); ++itr) p.genome.ccp.mp[itr->first] += itr->second * p.chr[i].rchr;
+    for(auto itr = p.chr[i].ccp.nc.begin(); itr != p.chr[i].ccp.nc.end(); ++itr) p.genome.ccp.nc[itr->first] += itr->second * p.chr[i].rchr;
+    string filename = p.oprefix + ".ccp." + p.chr[i].name +".csv";
+    ofstream out(filename);
+    outputmp(out, p.chr[i].ccp, p, "Cross correlation");
   }
-
+  
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
-  dist.outputmp(out, p, "Cross correlation");
+  outputmp(out, p.genome.ccp, p, "Cross correlation");
   
   return;
 }
