@@ -70,6 +70,7 @@ Mapfile::Mapfile(const variables_map &values):
   }
 
   for(auto &x:chr) {
+
     genome.len += x.len;
     genome.len_mpbl += x.len_mpbl;
     genome.nbin += x.nbin = x.len/values["binsize"].as<int>() +1;

@@ -12,7 +12,7 @@
 #include <omp.h>
 #include <math.h>   
 
-#define CHR1ONLY 1
+//#define CHR1ONLY 1
 #define HD_NG_FROM 4000
 #define HD_NG_TO   5000
 #define HD_NG_STEP 100
@@ -72,8 +72,9 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 #endif
     jaccardfunc_vector(p, p.chr[i]);
     //jaccardfunc_bitset(p, p.chr[i]);
-    
-    p.genome.addjac(p.chr[i]);
+
+    if(chrname2int(p.chr[i].name)) p.genome.addjac(p.chr[i]);
+
     string filename = p.oprefix + ".jaccard." + p.chr[i].name +".csv";
     ofstream out(filename);
     outputmp(out, p.chr[i].jac, p, "Jaccard index");
@@ -97,6 +98,12 @@ void pw_ccp(Mapfile &p, int numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
 #endif
     ccpfunc(p, p.chr[i]);
+      
+    if(chrname2int(p.chr[i].name)) p.genome.addccp(p.chr[i]);
+    
+    string filename = p.oprefix + ".ccp." + p.chr[i].name +".csv";
+    ofstream out(filename);
+    outputmp(out, p.chr[i].ccp, p, "Cross correlation");
   }
   
   string filename = p.oprefix + ".ccp.csv";
@@ -123,7 +130,6 @@ void jaccardfunc_bitset(Mapfile &p, SeqStats &chr)
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x: chr.seq[strand].vRead) {
       if(x.duplicate) continue;
-
       int pos(chr.len -1 -x.F3);
       if(!RANGE(pos, start, end-1)) continue;
       if(strand==STRAND_PLUS) fwd.set(pos - start + HD_FROM);
@@ -135,13 +141,12 @@ void jaccardfunc_bitset(Mapfile &p, SeqStats &chr)
   int yy = rev.count();
   int xysum(xx+yy);
   
-  //#pragma omp parallel for num_threads(numthreads)
   for(int i=-HD_FROM; i<HD_WIDTH; ++i) {
     (fwd >>= 1);
     int xy((fwd & rev).count());
     chr.jac.mp[i] = xy/(double)(xysum-xy);
   }
-  
+
   for(int i=HD_NG_FROM; i<HD_NG_TO; ++i) {
     (fwd >>= 1);
     int xy((fwd & rev).count());
@@ -263,12 +268,6 @@ void ccpfunc(Mapfile &p, SeqStats &chr)
   double val(1/(xx*yy*(max - HD_FROM - 1)));
   for(auto itr = chr.ccp.mp.begin(); itr != chr.ccp.mp.end(); ++itr) itr->second *= val;
   for(auto itr = chr.ccp.nc.begin(); itr != chr.ccp.nc.end(); ++itr) itr->second *= val;
-  
-  p.genome.addccp(chr);
-
-  string filename = p.oprefix + ".ccp." + chr.name +".csv";
-  ofstream out(filename);
-  outputmp(out, chr.ccp, p, "Cross correlation");
 
   return;
 }
