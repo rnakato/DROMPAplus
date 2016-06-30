@@ -142,6 +142,7 @@ void pw_ccp(Mapfile &p, int numthreads)
     agroup.create_thread(bind(ccpfunc, boost::ref(p), p.chr[i], numthreads));
     //    ccpfunc(p, p.chr[i], numthreads);
   }
+  agroup.join_all();
   
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
@@ -164,6 +165,7 @@ void hammingDist(Mapfile &p, int numthreads)
     agroup.create_thread(bind(func_bitset, boost::ref(p), p.chr[i], HAMMING));
     //    func_bitset(p, p.chr[i], HAMMING);
   }
+  agroup.join_all();
 
   //  GaussianSmoothing(p.dist.hd);
 
