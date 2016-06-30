@@ -410,7 +410,7 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
   }
   p.r4cmp = r*RAND_MAX;
 
-#pragma omp parallel for num_threads(values["threads"].as<int>())
+  //#pragma omp parallel for num_threads(values["threads"].as<int>())
   for(uint i=0; i<p.chr.size(); ++i) {
      if (values.count("pair")) filtering_eachchr_pair(values, p, p.chr[i]);
      else                      filtering_eachchr_single(values, p, p.chr[i]);

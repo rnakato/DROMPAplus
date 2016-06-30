@@ -458,9 +458,7 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   }
   double r4cmp = r*RAND_MAX;
   
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(values["threads"].as<int>())
-#endif
+  //#pragma omp parallel for num_threads(values["threads"].as<int>())
   for(uint i=0; i<p.chr.size(); ++i) {
     //    cout << p.chr[i].name << ".." << flush;
     auto array = makeGcovArray(values, p.chr[i], p, r4cmp);

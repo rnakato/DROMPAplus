@@ -1,46 +1,90 @@
 #include "pw_hamming.h"
 #include "macro.h"
-#include "alglib.h"
-#include "statistics.h"
 #include <map>
 #include <boost/dynamic_bitset.hpp>
-#include <omp.h>
+#include <boost/thread.hpp>
 #include <math.h>   
 
-#define CHR1ONLY 1
-#define HD_NG_FROM 4000
-#define HD_NG_TO   5000
-#define HD_NG_STEP 100
+//#define CHR1ONLY 1
 
 enum functype {JACCARD, CCP, HAMMING};
 
-void jaccardfunc_vector(Mapfile &p, SeqStats &chr);
+void jaccardfunc_vector(Mapfile &p, SeqStats &chr, int numthreads);
 void func_bitset(Mapfile &p, SeqStats &chr, functype type);
-void ccpfunc(Mapfile &p, SeqStats &chr);
-  
-template <class T>
-void GaussianSmoothing(vector<T> &hd)
+void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads);
+
+void shiftDist::funcCCP(vector<char> &fwd, vector<char> &rev, int start, int end)
 {
-  int size = hd.size();
-
-  vector<double> w(4,0);
-  double var=1;
-  for(int j=0; j<4; ++j) w[j] = exp((double)(-j*j)/2*var*var);
-  double r = 1/(w[0] + (w[1]+w[2]+w[3]) *2);
-
-  double m0;
-  double m1(hd[0]);
-  double m2(hd[1]);
-  double m3(hd[2]);
-  for(int i=3; i<size-3; ++i) {
-    m0 = hd[i];
-    hd[i] = (w[0]*m0 + w[1]*(m1 + hd[i+1]) + w[2]*(m2 + hd[i+2]) + w[3]*(m3 + hd[i+3]))*r;
-    m3 = m2;
-    m2 = m1;
-    m1 = m0;
+  int width = end - start - ng_to;
+  double mx,xx;
+  double my,yy;
+  calcMeanSD(fwd, width, mx, xx);
+  calcMeanSD(rev, width, my, yy);
+  
+  for(int step=-mp_from; step<mp_to; step+=5) {
+    double xy(0);
+    for(int j=mp_from; j<width; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    mp[step] = xy;
   }
   
-  return;
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
+    double xy(0);
+    for(int j=mp_from; j<width; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    nc[step] = xy;
+  }
+
+  double val = 1/(xx*yy*(width - mp_from - 1));
+  for(auto itr = mp.begin(); itr != mp.end(); ++itr) itr->second *= val;
+  for(auto itr = nc.begin(); itr != nc.end(); ++itr) itr->second *= val;
+}
+
+void shiftDist::funcJaccard(vector<char> &fwd, vector<char> &rev, int start, int end)
+{
+  int width = end - start - ng_to;
+  int xx = accumulate(fwd.begin(), fwd.end(), 0);
+  int yy = accumulate(rev.begin(), rev.end(), 0);
+  
+  for(int step=-mp_from; step<mp_to; step+=mp_step) {
+    mp[step] = getJaccard(step, width, xx+yy, fwd, rev);
+  }
+  
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
+    nc[step] = getJaccard(step, width, xx+yy, fwd, rev);
+  }
+}
+
+void shiftDist::funcJaccard(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end)
+{
+  int xx = fwd.count();
+  int yy = rev.count();
+  int xysum(xx+yy);
+  
+  fwd <<= mp_from;
+  for(int step=-mp_from; step<mp_to; step+=mp_step) {
+    fwd >>= 1;
+    int xy((fwd & rev).count());
+    mp[step] = xy/(double)(xysum-xy);
+  }
+  
+  for(int step=ng_from; step<ng_to; ++step) {
+    fwd >>= 1;
+    int xy((fwd & rev).count());
+    nc[step] = xy/(double)(xysum-xy);
+  }
+}
+
+void shiftDist::funcHamming(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end)
+{
+  fwd <<= mp_from;
+  for(int step=-mp_from; step<mp_to; step+=mp_step) {
+    fwd >>= 1;
+    mp[step] = (fwd ^ rev).count();
+  }
+  
+  for(int step=ng_from; step<ng_to; ++step) {
+    fwd >>= 1;
+    nc[step] = (fwd ^ rev).count();
+  }
 }
 
 void outputmp(ofstream &out, shiftDist &dist, const Mapfile &p, const string str) {
@@ -61,21 +105,21 @@ void pw_Jaccard(Mapfile &p, int numthreads)
 {
   printf("Making Jaccard index profile...\n");
 
+  boost::thread_group agroup;
+
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
 #else 
-#pragma omp parallel for num_threads(numthreads)
+    //#pragma omp parallel for num_threads(numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
 #endif
-    //jaccardfunc_vector(p, p.chr[i]);
-    func_bitset(p, p.chr[i], JACCARD);
-
-    if(p.chr[i].isautosome()) p.genome.addjac(p.chr[i]);
-
-    string filename = p.oprefix + ".jaccard." + p.chr[i].name +".csv";
-    ofstream out(filename);
-    outputmp(out, p.chr[i].jac, p, "Jaccard index");
+    agroup.create_thread(bind(jaccardfunc_vector, boost::ref(p), p.chr[i], numthreads));
+    //    agroup.create_thread(bind(func_bitset, boost::ref(p), p.chr[i], JACCARD));
+    //    jaccardfunc_vector(p, p.chr[i], numthreads);
+    //func_bitset(p, p.chr[i], JACCARD);
   }
+
+  agroup.join_all();
 
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
@@ -88,19 +132,15 @@ void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
 
+  boost::thread_group agroup;
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
 #else 
-#pragma omp parallel for num_threads(numthreads)
+    //#pragma omp parallel for num_threads(numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
 #endif
-    ccpfunc(p, p.chr[i]);
-      
-    if(p.chr[i].isautosome()) p.genome.addccp(p.chr[i]);
-    
-    string filename = p.oprefix + ".ccp." + p.chr[i].name +".csv";
-    ofstream out(filename);
-    outputmp(out, p.chr[i].ccp, p, "Cross correlation");
+    agroup.create_thread(bind(ccpfunc, boost::ref(p), p.chr[i], numthreads));
+    //    ccpfunc(p, p.chr[i], numthreads);
   }
   
   string filename = p.oprefix + ".ccp.csv";
@@ -110,191 +150,19 @@ void pw_ccp(Mapfile &p, int numthreads)
   return;
 }
 
-template <class T>
-void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
-{
-  double dx, var(0);
-
-  ave=0;
-  for(int i=HD_FROM; i<max; ++i) ave += x[i];
-  ave /= (double)(max - HD_FROM);
-  for(int i=HD_FROM; i<max; ++i) {
-    dx = x[i] - ave;
-    var += dx * dx;
-  }
-  sd = sqrt(var/double(max -HD_FROM -1));
-}
-
-void ccpfunc(Mapfile &p, SeqStats &chr)
-{
-  cout << chr.name << endl;
-  int start(0);
-  int end(chr.len);
-  //int start(1.5*NUM_100M);
-  //int end(2*NUM_100M);
-  //    int start(1.213*NUM_100M);
-  //int end(1.214*NUM_100M);
-  
-  int width(end-start);
-  
-  vector<char> fwd(width,0);
-  vector<char> rev(width,0);
-  
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: chr.seq[strand].vRead) {
-      if(x.duplicate) continue;
-      if(!RANGE(x.F3, start, end-1)) continue;
-      if(strand==STRAND_PLUS) ++fwd[x.F3 - start];
-      else                    ++rev[x.F3 - start];
-    }
-  }
-  
-  int max = width - HD_NG_TO;
-  double mx,xx;
-  double my,yy;
-  calcMeanSD(fwd, max, mx, xx);
-  calcMeanSD(rev, max, my, yy);
-
-  //#pragma omp parallel for num_threads(numthreads)
-  for(int step=-HD_FROM; step<HD_TO; step+=5) {
-    double xy(0);
-    //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-    for(int j=HD_FROM; j<max; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
-    chr.ccp.mp[step] += xy;
-  }
-  
-  for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
-    double xy(0);
-    //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-    for(int j=HD_FROM; j<max; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
-    chr.ccp.nc[step] += xy;
-  }
-
-  double val(1/(xx*yy*(max - HD_FROM - 1)));
-  for(auto itr = chr.ccp.mp.begin(); itr != chr.ccp.mp.end(); ++itr) itr->second *= val;
-  for(auto itr = chr.ccp.nc.begin(); itr != chr.ccp.nc.end(); ++itr) itr->second *= val;
-
-  return;
-}
- 
-void jaccardfunc_vector(Mapfile &p, SeqStats &chr)
-{
-  cout << chr.name << endl;
-  int start(0);
-  int end(chr.len);
-  //    int start(1.213*NUM_100M);
-  //int end(1.214*NUM_100M);
-  
-  int width(end-start);
-  
-  vector<char> fwd(width,0);
-  vector<char> rev(width,0);
-  
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: chr.seq[strand].vRead) {
-      if(x.duplicate) continue;
-      if(!RANGE(x.F3, start, end-1)) continue;
-      if(strand==STRAND_PLUS) ++fwd[x.F3 - start];
-      else                    ++rev[x.F3 - start];
-    }
-  }
-  
-  /*    for(int j=HD_FROM; j< width - HD_TO; ++j) {
-	if(fwd[j] && rev[j + p.dist.lenF3]) cout << (j+start) << "\t" << (int)fwd[j]<< "\t" <<  (int)rev[j + p.dist.lenF3]<< "\t" << p.dist.lenF3 << endl;
-	}*/
-
-  int xx = accumulate(fwd.begin(), fwd.end(), 0);
-  int yy = accumulate(rev.begin(), rev.end(), 0);
-  int xysum(xx+yy);
-  
-  //#pragma omp parallel for num_threads(numthreads)
-  for(int step=-HD_FROM; step<HD_TO; ++step) {
-    int xy(0);
-    //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-    for(int j=HD_FROM; j<width - HD_NG_TO; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
-    chr.jac.mp[step] = xy/(double)(xysum-xy);
-    cout << xy << "\t" << xx << "\t" << yy << "\t" << endl; 
-  }
-  
-  for(int step=HD_NG_FROM; step<HD_NG_TO; step+=HD_NG_STEP) {
-    int xy(0);
-    //#pragma omp parallel for num_threads(numthreads) reduction(+:xy)
-    for(int j=HD_FROM; j<width - HD_NG_TO; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
-    chr.jac.nc[step] = xy/(double)(xysum-xy);
-  }
-
-  return;
-}
-
- void func_bitset(Mapfile &p, SeqStats &chr, functype type)
-{
-  cout << chr.name << endl;
-  int start(0);
-  int end(chr.len);
-  //    int start(1.213*NUM_100M);
-  //int end(1.214*NUM_100M);
-  
-  int width(end-start);
-  
-  boost::dynamic_bitset<> fwd(width + HD_FROM);
-  boost::dynamic_bitset<> rev(width + HD_FROM);
-
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: chr.seq[strand].vRead) {
-      if(x.duplicate) continue;
-      int pos(chr.len -1 -x.F3);
-      if(!RANGE(pos, start, end-1)) continue;
-      if(strand==STRAND_PLUS) fwd.set(pos - start + HD_FROM);
-      else                    rev.set(pos - start);
-    }
-  }
-  
-  int xx = fwd.count();
-  int yy = rev.count();
-  int xysum(xx+yy);
-  
-  for(int i=-HD_FROM; i<HD_TO; ++i) {
-    (fwd >>= 1);
-    if(type==JACCARD) {
-      int xy((fwd & rev).count());
-      chr.jac.mp[i] = xy/(double)(xysum-xy);
-      cout << xy << "\t" << xx << "\t" << yy << "\t" << endl; 
-    } else if(type==HAMMING) {
-      chr.hd.mp[i] = ((fwd ^ rev).count());
-    }
-  }
-
-  for(int i=HD_NG_FROM; i<HD_NG_TO; ++i) {
-    (fwd >>= 1);
-    if(type==JACCARD) {
-      int xy((fwd & rev).count());
-      chr.jac.nc[i] = xy/(double)(xysum-xy);
-    } else if(type==HAMMING) {
-      chr.hd.nc[i] = ((fwd ^ rev).count());
-    }
-  }
-
-  return;
-}
-
 void hammingDist(Mapfile &p, int numthreads)
 {
   cout << "Making Hamming distance plot.." << flush;
 
+  boost::thread_group agroup;
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
 #else 
-#pragma omp parallel for num_threads(numthreads)
+    //#pragma omp parallel for num_threads(numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
 #endif
-    func_bitset(p, p.chr[i], HAMMING);
-    //    hammingDistChr(p.chr[i], p.dist.hd);
-    
-    if(p.chr[i].isautosome()) p.genome.addhd(p.chr[i]);
-
-    string filename = p.oprefix + ".hdp." + p.chr[i].name +".csv";
-    ofstream out(filename);
-    outputmp(out, p.chr[i].hd, p, "Hamming distance");
+    agroup.create_thread(bind(func_bitset, boost::ref(p), p.chr[i], HAMMING));
+    //    func_bitset(p, p.chr[i], HAMMING);
   }
 
   //  GaussianSmoothing(p.dist.hd);
@@ -317,4 +185,149 @@ void hammingDist(Mapfile &p, int numthreads)
 
   return;
 }
+
+vector<char> genVector(const strandData &seq, int start, int end)
+{
+  vector<char> array((end-start), 0);
+  for (auto x: seq.vRead) {
+    if(!x.duplicate && RANGE(x.F3, start, end-1))
+      ++array[x.F3 - start];
+  }
+  return array;
+}
+
+void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads)
+{
+  cout << chr.name << endl;
+  int start(0);
+  int end(chr.len);
+  //int start(1.5*NUM_100M);
+  //int end(2*NUM_100M);
+  //    int start(1.213*NUM_100M);
+  //int end(1.214*NUM_100M);
   
+  auto fwd = genVector(chr.seq[STRAND_PLUS], start, end);
+  auto rev = genVector(chr.seq[STRAND_MINUS], start, end);
+
+  chr.ccp.funcCCP(fwd, rev, start, end);
+
+  if(chr.isautosome()) p.genome.addccp(chr);
+  
+  string filename = p.oprefix + ".ccp." + chr.name +".csv";
+  ofstream out(filename);
+  outputmp(out, chr.ccp, p, "Cross correlation");
+  return;
+}
+
+double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev)
+{
+  int xy(0);
+  for(int j=HD_FROM; j<end; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
+  return (xy/(double)(xysum-xy));
+  //    cout << xy << "\t" << xx << "\t" << yy << "\t" << endl;
+  //  return;
+}
+
+void jaccardfunc_vector(Mapfile &p, SeqStats &chr, int numthreads)
+{
+  cout << chr.name << endl;
+  //  chr.jac.setSE(1.213*NUM_100M, 1.214*NUM_100M);
+  int start(0);
+  int end(chr.len);
+  
+  auto fwd = genVector(chr.seq[STRAND_PLUS], start, end);
+  auto rev = genVector(chr.seq[STRAND_MINUS], start, end);
+
+  chr.jac.funcJaccard(fwd, rev, start, end);
+
+  if(chr.isautosome()) p.genome.addjac(chr);
+  
+  string filename = p.oprefix + ".jaccard." + chr.name +".csv";
+  ofstream out(filename);
+  outputmp(out, chr.jac, p, "Jaccard index");
+    
+  return;
+}
+
+ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end, long chrlen)
+{
+  boost::dynamic_bitset<> array(end - start + HD_FROM);
+  for (auto x: seq.vRead) {
+    if(x.duplicate) continue;
+    int pos(chrlen -1 -x.F3);
+    if(!RANGE(pos, start, end-1)) continue;
+    array.set(pos - start);
+  }
+  return array;
+}
+ 
+void func_bitset(Mapfile &p, SeqStats &chr, functype type)
+{
+  cout << chr.name << endl;
+  int start(0);
+  int end(chr.len);
+  //    int start(1.213*NUM_100M);
+  //int end(1.214*NUM_100M);
+  
+  //  int width(end-start);
+  
+  auto fwd = genBitset(chr.seq[STRAND_PLUS], start, end, chr.len);
+  auto rev = genBitset(chr.seq[STRAND_MINUS], start, end, chr.len);
+  
+  if(type==JACCARD) chr.jac.funcJaccard(fwd, rev, start, end);
+  else if(type==HAMMING) chr.hd.funcHamming(fwd, rev, start, end);
+
+  if(type==JACCARD) {
+    if(chr.isautosome()) p.genome.addjac(chr);
+    string filename = p.oprefix + ".jaccard." + chr.name +".csv";
+    ofstream out(filename);
+    outputmp(out, chr.jac, p, "Jaccard index");
+  } else if(type==HAMMING) {
+    if(chr.isautosome()) p.genome.addhd(chr);
+
+    string filename = p.oprefix + ".hdp." + chr.name +".csv";
+    ofstream out(filename);
+    outputmp(out, chr.hd, p, "Hamming distance");
+  }
+
+  //  fwd <<= HD_FROM;
+  /*  boost::dynamic_bitset<> fwd(width + HD_FROM);
+  boost::dynamic_bitset<> rev(width + HD_FROM);
+
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto x: chr.seq[strand].vRead) {
+      if(x.duplicate) continue;
+      int pos(chr.len -1 -x.F3);
+      if(!RANGE(pos, start, end-1)) continue;
+      if(strand==STRAND_PLUS) fwd.set(pos - start + HD_FROM);
+      else                    rev.set(pos - start);
+    }
+    }*/
+  
+  /*  int xx = fwd.count();
+  int yy = rev.count();
+  int xysum(xx+yy);
+
+  for(int i=-HD_FROM; i<HD_TO; ++i) {
+    (fwd >>= 1);
+    if(type==JACCARD) {
+      int xy((fwd & rev).count());
+      chr.jac.mp[i] = xy/(double)(xysum-xy);
+      //      cout << xy << "\t" << xx << "\t" << yy << "\t" << endl; 
+    } else if(type==HAMMING) {
+      chr.hd.mp[i] = ((fwd ^ rev).count());
+    }
+  }
+
+  for(int i=NG_FROM; i<NG_TO; ++i) {
+    (fwd >>= 1);
+    if(type==JACCARD) {
+      int xy((fwd & rev).count());
+      chr.jac.nc[i] = xy/(double)(xysum-xy);
+    } else if(type==HAMMING) {
+      chr.hd.nc[i] = ((fwd ^ rev).count());
+    }
+    }*/
+
+  return;
+}

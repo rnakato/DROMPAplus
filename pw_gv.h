@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <boost/format.hpp>
+#include <boost/dynamic_bitset.hpp>
 #include <omp.h>
 #include "seq.h"
 #include "common.h"
@@ -36,8 +37,34 @@ using namespace boost::program_options;
 
 #define HD_FROM 200
 #define HD_TO   600
+#define NG_FROM 4000
+#define NG_TO   5000
+#define NG_STEP 100
+
+double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev);
+
+template <class T>
+void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
+{
+  double dx, var(0);
+
+  ave=0;
+  for(int i=HD_FROM; i<max; ++i) ave += x[i];
+  ave /= (double)(max - HD_FROM);
+  for(int i=HD_FROM; i<max; ++i) {
+    dx = x[i] - ave;
+    var += dx * dx;
+  }
+  sd = sqrt(var/double(max -HD_FROM -1));
+}
 
 class shiftDist{
+  int mp_from;
+  int mp_to;
+  int mp_step;
+  int ng_from;
+  int ng_to;
+  int ng_step;
   double bk;
   
  public:
@@ -47,8 +74,7 @@ class shiftDist{
   double nsc;
   int nsci;
   
- shiftDist(): bk(0), r(0), nsc(0), nsci(0) {}
-
+ shiftDist(): mp_from(HD_FROM), mp_to(HD_TO), mp_step(1), ng_from(NG_FROM), ng_to(NG_TO), ng_step(NG_STEP), bk(0), r(0), nsc(0), nsci(0) {}
   double getmpsum() {
     double sum(0);
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
@@ -75,6 +101,10 @@ class shiftDist{
   double getBackEnrich(long nread) {
     return bk *NUM_10M /(double)nread;
   }
+  void funcCCP(vector<char> &fwd, vector<char> &rev, int start, int end);
+  void funcJaccard(vector<char> &fwd, vector<char> &rev, int start, int end);
+  void funcJaccard(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
+  void funcHamming(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
 };
 
 class Dist{
@@ -392,6 +422,10 @@ class SeqStats {
 	else if(name=="XV")   chrnum = 15;
 	else if(name=="XVI")  chrnum = 16;
       }
+      if(name=="2L") chrnum = 1;
+      if(name=="2R") chrnum = 2;
+      if(name=="3L") chrnum = 3;
+      if(name=="3R") chrnum = 4;
     }
     if(chrnum) return true;
     else       return false;
