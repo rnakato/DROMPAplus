@@ -23,7 +23,6 @@ void output_stats(const variables_map &values, const Mapfile &p);
 void calcGenomeCoverage(const variables_map &values, Mapfile &p);
 void output_wigstats(const variables_map &values, Mapfile &p);
 
-
 Mapfile::Mapfile(const variables_map &values):
   yeast(false), genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
 {
@@ -52,7 +51,7 @@ Mapfile::Mapfile(const variables_map &values):
   long lenmax(0);
 
   for(auto &x:chr) if(yeast) x.yeaston();
-  
+
 #ifdef DEBUG
   cout << "chr\tautosome" << endl;
   for(auto x:chr) {
@@ -83,13 +82,38 @@ Mapfile::Mapfile(const variables_map &values):
   }
 
   for(auto &x:chr) {
-
     genome.len += x.len;
     genome.len_mpbl += x.len_mpbl;
     genome.nbin += x.nbin = x.len/values["binsize"].as<int>() +1;
     x.p_mpbl = x.len_mpbl/(double)x.len;
     genome.p_mpbl = genome.len_mpbl/(double)genome.len;
   }
+
+  // sepchr
+  vsepchr = getVsepchr(values["threads"].as<int>());
+
+#ifdef DEBUG
+  for(int i=0; i<values["threads"].as<int>(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
+#endif
+}
+
+vector<sepchr> Mapfile::getVsepchr(const int numthreads)
+{
+  vector<sepchr> vsepchr;
+  uint sepsize = genome.len/numthreads;
+  for(uint i=0; i<chr.size(); ++i) {
+    uint s = i;
+    long len(0);
+    while(len < sepsize && i<chr.size()) {
+      len += chr[i].len;
+      i++;
+    }
+    i--;
+    uint e = i;
+    sepchr sep(s,e);
+    vsepchr.push_back(sep);
+  }
+  return vsepchr;
 }
 
 void printVersion()

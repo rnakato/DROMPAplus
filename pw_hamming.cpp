@@ -3,15 +3,17 @@
 #include <map>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/thread.hpp>
-#include <math.h>   
+#include <boost/ref.hpp> 
+#include <math.h>
+#include <time.h>
 
 //#define CHR1ONLY 1
 
 enum functype {JACCARD, CCP, HAMMING};
 
-void jaccardfunc_vector(Mapfile &p, SeqStats &chr, int numthreads);
-void func_bitset(Mapfile &p, SeqStats &chr, functype type);
-void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads);
+void jaccardfunc_vector(Mapfile &p, SeqStats &chr, boost::mutex &mtx);
+void func_bitset(Mapfile &p, SeqStats &chr, functype type, boost::mutex &mtx);
+void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads, boost::mutex &mtx);
 
 void shiftDist::funcCCP(vector<char> &fwd, vector<char> &rev, int start, int end)
 {
@@ -38,7 +40,7 @@ void shiftDist::funcCCP(vector<char> &fwd, vector<char> &rev, int start, int end
   for(auto itr = nc.begin(); itr != nc.end(); ++itr) itr->second *= val;
 }
 
-void shiftDist::funcJaccard(vector<char> &fwd, vector<char> &rev, int start, int end)
+void shiftDist::funcJaccard(const vector<char> &fwd, const vector<char> &rev, int start, int end)
 {
   int width = end - start - ng_to;
   int xx = accumulate(fwd.begin(), fwd.end(), 0);
@@ -101,48 +103,49 @@ void outputmp(ofstream &out, shiftDist &dist, const Mapfile &p, const string str
   }
 }
 
+void func(Mapfile &p, uint s, uint e, boost::mutex &mtx)
+{
+  for(uint i=s; i<=e; ++i) {
+    jaccardfunc_vector(p, p.chr[i], mtx);
+    //func_bitset(p, p.chr[i], JACCARD);
+  }
+}
+
 void pw_Jaccard(Mapfile &p, int numthreads)
 {
   printf("Making Jaccard index profile...\n");
 
   boost::thread_group agroup;
-
-#ifdef CHR1ONLY
-  for(uint i=0; i<1; ++i) {
-#else 
-    //#pragma omp parallel for num_threads(numthreads)
-  for(uint i=0; i<p.chr.size(); ++i) {
-#endif
-    agroup.create_thread(bind(jaccardfunc_vector, boost::ref(p), p.chr[i], numthreads));
-    //    agroup.create_thread(bind(func_bitset, boost::ref(p), p.chr[i], JACCARD));
-    //    jaccardfunc_vector(p, p.chr[i], numthreads);
-    //func_bitset(p, p.chr[i], JACCARD);
+  boost::mutex mtx;
+  
+  for(int i=0; i<numthreads; i++) {
+    agroup.create_thread(bind(func, boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, boost::ref(mtx)));
   }
-
   agroup.join_all();
-
+  
   string filename = p.oprefix + ".jaccard.csv";
   ofstream out(filename);
   outputmp(out, p.genome.jac, p, "Jaccard index");
   
   return;
 }
-  
+
 void pw_ccp(Mapfile &p, int numthreads)
 {
   printf("Making cross-correlation profile...\n");
 
   boost::thread_group agroup;
+  boost::mutex mtx;
+  
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
-#else 
-    //#pragma omp parallel for num_threads(numthreads)
-  for(uint i=0; i<p.chr.size(); ++i) {
+#else
+    for(uint i=0; i<p.chr.size(); ++i) {
 #endif
-    agroup.create_thread(bind(ccpfunc, boost::ref(p), p.chr[i], numthreads));
+      agroup.create_thread(bind(ccpfunc, boost::ref(p), p.chr[i], numthreads, boost::ref(mtx)));
     //    ccpfunc(p, p.chr[i], numthreads);
-  }
-  agroup.join_all();
+    }
+    agroup.join_all();
   
   string filename = p.oprefix + ".ccp.csv";
   ofstream out(filename);
@@ -156,13 +159,15 @@ void hammingDist(Mapfile &p, int numthreads)
   cout << "Making Hamming distance plot.." << flush;
 
   boost::thread_group agroup;
+  boost::mutex mtx;
+  
 #ifdef CHR1ONLY
   for(uint i=0; i<1; ++i) {
 #else 
     //#pragma omp parallel for num_threads(numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
 #endif
-    agroup.create_thread(bind(func_bitset, boost::ref(p), p.chr[i], HAMMING));
+    agroup.create_thread(bind(func_bitset, boost::ref(p), p.chr[i], HAMMING, boost::ref(mtx)));
     //    func_bitset(p, p.chr[i], HAMMING);
   }
   agroup.join_all();
@@ -198,8 +203,9 @@ vector<char> genVector(const strandData &seq, int start, int end)
   return array;
 }
 
-void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads)
+void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads, boost::mutex &mtx)
 {
+
   cout << chr.name << endl;
   int start(0);
   int end(chr.len);
@@ -207,9 +213,11 @@ void ccpfunc(Mapfile &p, SeqStats &chr, int numthreads)
   //int end(2*NUM_100M);
   //    int start(1.213*NUM_100M);
   //int end(1.214*NUM_100M);
-  
-  auto fwd = genVector(chr.seq[STRAND_PLUS], start, end);
-  auto rev = genVector(chr.seq[STRAND_MINUS], start, end);
+
+  vector<char> fwd, rev;
+
+  fwd = genVector(chr.seq[STRAND_PLUS], start, end);
+  rev = genVector(chr.seq[STRAND_MINUS], start, end);
 
   chr.ccp.funcCCP(fwd, rev, start, end);
 
@@ -230,19 +238,19 @@ double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const v
   //  return;
 }
 
-void jaccardfunc_vector(Mapfile &p, SeqStats &chr, int numthreads)
+void jaccardfunc_vector(Mapfile &p, SeqStats &chr, boost::mutex &mtx)
 {
   cout << chr.name << endl;
   //  chr.jac.setSE(1.213*NUM_100M, 1.214*NUM_100M);
   int start(0);
   int end(chr.len);
-  
+
   auto fwd = genVector(chr.seq[STRAND_PLUS], start, end);
   auto rev = genVector(chr.seq[STRAND_MINUS], start, end);
 
   chr.jac.funcJaccard(fwd, rev, start, end);
 
-  if(chr.isautosome()) p.genome.addjac(chr);
+  if(chr.isautosome()) p.genome.addjac(chr, mtx);
   
   string filename = p.oprefix + ".jaccard." + chr.name +".csv";
   ofstream out(filename);
@@ -263,8 +271,9 @@ void jaccardfunc_vector(Mapfile &p, SeqStats &chr, int numthreads)
   return array;
 }
  
-void func_bitset(Mapfile &p, SeqStats &chr, functype type)
+ void func_bitset(Mapfile &p, SeqStats &chr, functype type, boost::mutex &mtx)
 {
+  
   cout << chr.name << endl;
   int start(0);
   int end(chr.len);
@@ -280,7 +289,7 @@ void func_bitset(Mapfile &p, SeqStats &chr, functype type)
   else if(type==HAMMING) chr.hd.funcHamming(fwd, rev, start, end);
 
   if(type==JACCARD) {
-    if(chr.isautosome()) p.genome.addjac(chr);
+    if(chr.isautosome()) p.genome.addjac(chr, mtx);
     string filename = p.oprefix + ".jaccard." + chr.name +".csv";
     ofstream out(filename);
     outputmp(out, chr.jac, p, "Jaccard index");

@@ -7,7 +7,7 @@
 #include <fstream>
 #include <boost/format.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include <omp.h>
+#include <boost/thread.hpp>
 #include "seq.h"
 #include "common.h"
 #include "util.h"
@@ -102,7 +102,7 @@ class shiftDist{
     return bk *NUM_10M /(double)nread;
   }
   void funcCCP(vector<char> &fwd, vector<char> &rev, int start, int end);
-  void funcJaccard(vector<char> &fwd, vector<char> &rev, int start, int end);
+  void funcJaccard(const vector<char> &fwd, const vector<char> &rev, int start, int end);
   void funcJaccard(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
   void funcHamming(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
 };
@@ -115,7 +115,6 @@ class Dist{
   vector<int> readlen;
   vector<int> readlen_F5;
   vector<int> fraglen;
-  //  vector<int> hd;
 
  Dist(): lenF3(0), lenF5(0), eflen(0) {
     vector<int> v(DIST_READLEN_MAX,0);
@@ -261,9 +260,10 @@ class SeqStats {
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
   }
 
-  void addjac(const SeqStats &x) {
+  void addjac(const SeqStats &x, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
 #ifdef DEBUG
-  cout << "addjac" << endl;
+    cout << "addjac" << endl;
 #endif
     addmp(jac.mp, x.jac.mp, x.rchr);
     addmp(jac.nc, x.jac.nc, x.rchr);
@@ -432,6 +432,13 @@ class SeqStats {
   }
 };
 
+class sepchr {
+ public:
+  uint s;
+  uint e;
+ sepchr(uint start, uint end): s(start), e(end) {}
+};
+
 class Mapfile {
   bool yeast;
  public:
@@ -440,6 +447,7 @@ class Mapfile {
   SeqStats genome;
   vector<SeqStats> chr;
   vector<SeqStats>::iterator lchr; // longest chromosome
+  vector<sepchr> vsepchr;
 
   string lastchr;
   int flen_def;
@@ -461,6 +469,8 @@ class Mapfile {
   vector<int> wigDist;
 
   Mapfile(const variables_map &values);
+  vector<sepchr> getVsepchr(const int);
+  
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
   void addfrag(const Fragment &frag) {
     dist.readlen[frag.readlen_F3]++;
