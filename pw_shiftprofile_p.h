@@ -20,15 +20,25 @@ class _shiftDist {
  public:
   map<int, double> mp;
   map<int, double> nc;
+  int start;
+  int end;
+  int width;
+  int width4mp;
   long nread;
   double r;
   double bk;
   double nsc;
   int nsci;
   double rchr;
+
+  int numthreads;
   
- _shiftDist(const Mapfile &p, long n=0): lenF3(p.dist.lenF3), nread(n), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
-  
+ _shiftDist(const Mapfile &p, int s=0, int e=0, int ng_to=0, long n=0, int nthre=0): lenF3(p.dist.lenF3), start(s), end(e), width(e-s), width4mp(width-ng_to), nread(n), r(0), bk(0), nsc(0), nsci(0), rchr(1), numthreads(nthre) {}
+
+  void setmp(int i, double val, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
+    mp[i] = val;
+  }
   double getmpsum() {
     double sum(0);
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
@@ -78,21 +88,31 @@ class shiftDist {
   int ng_from;
   int ng_to;
   int ng_step;
+  vector<range> seprange;
   
  public:
   string name;
   _shiftDist genome;
   vector<_shiftDist> chr;
   
- shiftDist(string n, const Mapfile &p): mp_from(HD_FROM), mp_to(HD_TO), mp_step(1), ng_from(NG_FROM), ng_to(NG_TO), ng_step(NG_STEP), name(n), genome(p) {
+ shiftDist(string n, const Mapfile &p, int numthreads): mp_from(HD_FROM), mp_to(HD_TO), mp_step(1), ng_from(NG_FROM), ng_to(NG_TO), ng_step(NG_STEP), name(n), genome(p) {
     for(auto x:p.chr) {
       if(x.isautosome()) genome.nread += x.bothnread_nonred();
     }
     for(auto x:p.chr) {
-      _shiftDist v(p, x.bothnread_nonred());
+      _shiftDist v(p, 0, x.len, ng_to, x.bothnread_nonred(), numthreads);
       v.rchr = v.nread/(double)genome.nread;
-      cout << v.rchr << "\t"<< v.nread << "\t"<< genome.nread << endl;
       chr.push_back(v);
+    }
+    // seprange
+    int length(mp_to+mp_from);
+    int sepsize = length/numthreads +1;
+    for(int i=0; i<numthreads; i++) {
+      int s = i*sepsize;
+      int e = (i+1)*sepsize;
+      if(i==numthreads-1) e = length;
+      range sep(s - mp_from, e - mp_from);
+      seprange.push_back(sep);
     }
   }
   void add2genome(const _shiftDist &x, boost::mutex &mtx) {
@@ -107,53 +127,53 @@ class shiftDist {
 
 class shiftJacVec : public shiftDist {
  public:
- shiftJacVec(const Mapfile &p): shiftDist("Jaccard index", p) {}
+ shiftJacVec(const Mapfile &p, int numthreads): shiftDist("Jaccard index", p, numthreads) {}
   
-  void setDist(int i, const vector<char> &fwd, const vector<char> &rev, int start, int end);
-  void execchr(const Mapfile &p, int i, int start, int end, boost::mutex &mtx) {
-    auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  start, end);
-    auto rev = genVector(p.chr[i].seq[STRAND_MINUS], start, end);
-    
-    setDist(i, fwd, rev, start, end);
+  void setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev);
+  void execchr(const Mapfile &p, int i) {
+    auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+
+    setDist(chr[i], fwd, rev);
   }
 };
 
 class shiftJacBit : public shiftDist {
  public:
- shiftJacBit(const Mapfile &p): shiftDist("Jaccard index", p) {}
-  
-  void setDist(int i, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
-  void execchr(const Mapfile &p, int i, int start, int end, boost::mutex &mtx) {
-    auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  start, end, p.chr[i].len);
-    auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], start, end, p.chr[i].len);
-    
-    setDist(i, fwd, rev, start, end);
+ shiftJacBit(const Mapfile &p, int numthreads): shiftDist("Jaccard index", p, numthreads) {}
+
+  void setDist(_shiftDist &chr, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev);
+  void execchr(const Mapfile &p, int i) {
+    auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end, p.chr[i].len);
+    auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end, p.chr[i].len);
+
+    setDist(chr[i], fwd, rev);
   }
 };
 
 class shiftCcp : public shiftDist {
  public:
- shiftCcp(const Mapfile &p): shiftDist("Cross correlation", p) {}
+ shiftCcp(const Mapfile &p, int numthreads): shiftDist("Cross correlation", p, numthreads) {}
   
-  void setDist(int i, const vector<char> &fwd, const vector<char> &rev, int start, int end);
-  void execchr(const Mapfile &p, int i, int start, int end, boost::mutex &mtx) {
-    auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  start, end);
-    auto rev = genVector(p.chr[i].seq[STRAND_MINUS], start, end);
-    
-    setDist(i, fwd, rev, start, end);
+  void setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev);
+  void execchr(const Mapfile &p, int i) {
+    auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+
+    setDist(chr[i], fwd, rev);
   }
 };
 
 class shiftHamming : public shiftDist {
  public:
- shiftHamming(const Mapfile &p): shiftDist("Hamming distance", p) {}
+ shiftHamming(const Mapfile &p, int numthreads): shiftDist("Hamming distance", p, numthreads) {}
 
-  void setDist(int i, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
-  void execchr(const Mapfile &p, int i, int start, int end, boost::mutex &mtx) {
-    auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  start, end, p.chr[i].len);
-    auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], start, end, p.chr[i].len);
+  void setDist(_shiftDist &chr, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev);
+  void execchr(const Mapfile &p, int i) {
+    auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end, p.chr[i].len);
+    auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end, p.chr[i].len);
     
-    setDist(i, fwd, rev, start, end);
+    setDist(chr[i], fwd, rev);
   }
 };
 

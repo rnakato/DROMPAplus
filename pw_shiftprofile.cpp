@@ -8,11 +8,62 @@
 
 //#define CHR1ONLY 1
 
+double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev)
+{
+  int xy(0);
+  for(int j=HD_FROM; j<end; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
+  return (xy/(double)(xysum-xy));
+}
+
+void genThreadJacVec(_shiftDist &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
+{
+  for(int step=s; step<e; ++step) {
+    chr.setmp(step, getJaccard(step, chr.width4mp, xysum, fwd, rev), mtx);
+  }
+}
+
+void shiftJacVec::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev)
+{
+  int xx = accumulate(fwd.begin(), fwd.end(), 0);
+  int yy = accumulate(rev.begin(), rev.end(), 0);
+
+  boost::thread_group agroup;
+  boost::mutex mtx;
+  for(uint i=0; i<seprange.size(); i++) {
+    agroup.create_thread(bind(genThreadJacVec, boost::ref(chr), xx+yy, boost::cref(fwd), boost::cref(rev), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+  }
+  agroup.join_all();
+
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
+    chr.nc[step] = getJaccard(step, chr.width4mp, xx+yy, fwd, rev);
+  }
+}
+
+void shiftJacBit::setDist(_shiftDist &chr, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev)
+{
+  int xx = fwd.count();
+  int yy = rev.count();
+  int xysum(xx+yy);
+
+  fwd <<= mp_from;
+  for(int step=-mp_from; step<mp_to; step+=mp_step) {
+    fwd >>= 1;
+    int xy((fwd & rev).count());
+    chr.mp[step] = xy/(double)(xysum-xy);
+  }
+  
+  for(int step=ng_from; step<ng_to; ++step) {
+    fwd >>= 1;
+    int xy((fwd & rev).count());
+    chr.nc[step] = xy/(double)(xysum-xy);
+  }
+}
+
 template <class T>
 void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
 {
   double dx, var(0);
-
+  
   ave=0;
   for(int i=HD_FROM; i<max; ++i) ave += x[i];
   ave /= (double)(max - HD_FROM);
@@ -23,84 +74,56 @@ void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
   sd = sqrt(var/double(max -HD_FROM -1));
 }
 
-void shiftCcp::setDist(int ichr, const vector<char> &fwd, const vector<char> &rev, int start, int end)
+void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, int mp_from, const int s, const int e, boost::mutex &mtx)
 {
-  int width = end - start - ng_to;
-  double mx,xx;
-  double my,yy;
-  calcMeanSD(fwd, width, mx, xx);
-  calcMeanSD(rev, width, my, yy);
-  
-  for(int step=-mp_from; step<mp_to; step+=5) {
+  for(int step=s; step<e; ++step) {
     double xy(0);
-    for(int j=mp_from; j<width; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
-    chr[ichr].mp[step] = xy;
+    for(int j=mp_from; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    chr.setmp(step, xy, mtx);
   }
+}
+
+void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev)
+{
+  double mx, my, xx, yy;
+  // set value to mx, xx, my, yy
+  calcMeanSD(fwd, chr.width4mp, mx, xx);
+  calcMeanSD(rev, chr.width4mp, my, yy);
+
+  boost::thread_group agroup;
+  boost::mutex mtx;
+  /*  for(int step=-mp_from; step<mp_to; step+=5) {
+    double xy(0);
+    for(int j=mp_from; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    chr.mp[step] = xy;
+    }*/
+  for(uint i=0; i<seprange.size(); i++) {
+    agroup.create_thread(bind(genThreadCcp, boost::ref(chr), boost::cref(fwd), boost::cref(rev), mx, my, mp_from, seprange[i].start, seprange[i].end, boost::ref(mtx)));
+  }
+  agroup.join_all();
   
   for(int step=ng_from; step<ng_to; step+=ng_step) {
     double xy(0);
-    for(int j=mp_from; j<width; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
-    chr[ichr].nc[step] = xy;
+    for(int j=mp_from; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    chr.nc[step] = xy;
   }
 
-  double val = 1/(xx*yy*(width - mp_from - 1));
-  for(auto itr = chr[ichr].mp.begin(); itr != chr[ichr].mp.end(); ++itr) itr->second *= val;
-  for(auto itr = chr[ichr].nc.begin(); itr != chr[ichr].nc.end(); ++itr) itr->second *= val;
+  double val = 1/(xx*yy*(chr.width4mp - mp_from - 1));
+  for(auto itr = chr.mp.begin(); itr != chr.mp.end(); ++itr) itr->second *= val;
+  for(auto itr = chr.nc.begin(); itr != chr.nc.end(); ++itr) itr->second *= val;
 }
 
-double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev)
-{
-  int xy(0);
-  for(int j=HD_FROM; j<end; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
-  return (xy/(double)(xysum-xy));
-}
-
-void shiftJacVec::setDist(int ichr, const vector<char> &fwd, const vector<char> &rev, int start, int end)
-{
-  int width = end - start - ng_to;
-  int xx = accumulate(fwd.begin(), fwd.end(), 0);
-  int yy = accumulate(rev.begin(), rev.end(), 0);
-  
-  for(int step=-mp_from; step<mp_to; step+=mp_step) {
-    chr[ichr].mp[step] = getJaccard(step, width, xx+yy, fwd, rev);
-  }
-  
-  for(int step=ng_from; step<ng_to; step+=ng_step) {
-    chr[ichr].nc[step] = getJaccard(step, width, xx+yy, fwd, rev);
-  }
-}
-
-void shiftJacBit::setDist(int ichr, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end)
-{
-  int xx = fwd.count();
-  int yy = rev.count();
-  int xysum(xx+yy);
-  
-  fwd <<= mp_from;
-  for(int step=-mp_from; step<mp_to; step+=mp_step) {
-    fwd >>= 1;
-    int xy((fwd & rev).count());
-    chr[ichr].mp[step] = xy/(double)(xysum-xy);
-  }
-  
-  for(int step=ng_from; step<ng_to; ++step) {
-    fwd >>= 1;
-    int xy((fwd & rev).count());
-    chr[ichr].nc[step] = xy/(double)(xysum-xy);
-  }
-}
-
-void shiftHamming::setDist(int ichr, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end)
+void shiftHamming::setDist(_shiftDist &chr, boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev)
 {
   fwd <<= mp_from;
   for(int step=-mp_from; step<mp_to; step+=mp_step) {
     fwd >>= 1;
-    chr[ichr].mp[step] = (fwd ^ rev).count();
+    chr.mp[step] = (fwd ^ rev).count();
   }
   
   for(int step=ng_from; step<ng_to; ++step) {
     fwd >>= 1;
-    chr[ichr].nc[step] = (fwd ^ rev).count();
+    chr.nc[step] = (fwd ^ rev).count();
   }
 }
 
@@ -126,17 +149,12 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end, lon
   return array;
 }
 
-
 template <class T>
 void genThread(T &dist, const Mapfile &p, uint s, uint e, string typestr, boost::mutex &mtx) {
   for(uint i=s; i<=e; ++i) {
     cout << p.chr[i].name << endl;
-    int start(0);
-    int end(p.chr[i].len);
-  //    int start(1.213*NUM_100M);
-  //int end(1.214*NUM_100M);
-
-    dist.execchr(p, i, start, end, mtx);
+   
+    dist.execchr(p, i);
 
     if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
@@ -148,19 +166,22 @@ void genThread(T &dist, const Mapfile &p, uint s, uint e, string typestr, boost:
 template <class T>
 void makeProfile(Mapfile &p, string typestr, int numthreads)
 {
-  T dist(p);
+  T dist(p, numthreads);
   cout << "Making " << dist.name << " profile..." << endl;
 
   boost::thread_group agroup;
   boost::mutex mtx;
-  
+
 #ifdef CHR1ONLY
   genThread(dist, p, 0, 0, typestr, mtx);
 #else 
-  for(uint i=0; i<p.vsepchr.size(); i++) {
-    agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
+  /*  for(uint i=0; i<p.vsepchr.size(); i++) {
+    agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestrs, boost::ref(mtx)));
   }
-  agroup.join_all();
+  agroup.join_all();*/
+
+  genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
+  
 #endif
   
   //  GaussianSmoothing(p.dist.hd);
