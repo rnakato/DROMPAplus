@@ -93,13 +93,14 @@ Mapfile::Mapfile(const variables_map &values):
   vsepchr = getVsepchr(values["threads"].as<int>());
 
 #ifdef DEBUG
-  for(int i=0; i<values["threads"].as<int>(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
+  for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
 #endif
 }
 
 vector<sepchr> Mapfile::getVsepchr(const int numthreads)
 {
   vector<sepchr> vsepchr;
+
   uint sepsize = genome.len/numthreads;
   for(uint i=0; i<chr.size(); ++i) {
     uint s = i;

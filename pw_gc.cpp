@@ -5,7 +5,6 @@
 #include "pw_makefile.h"
 #include "readdata.h"
 #include "macro.h"
-#include <omp.h>
 
 #define FRAG_IGNORE 5
 #define GCDIST_THRE 1e-5
@@ -160,7 +159,7 @@ void weightRead(const variables_map &values, Mapfile &p)
 
   cout << "add weight to reads..." << flush;
 
-#pragma omp parallel for num_threads(values["threads"].as<int>())
+  //#pragma omp parallel for num_threads(values["threads"].as<int>())
   for(uint i=0; i<p.chr.size(); ++i) {
     //    cout << p.chr[i].name << ".." << flush;
     string fa = values["genome"].as<string>() + "/" + p.chr[i].name + ".fa";

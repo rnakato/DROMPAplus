@@ -35,78 +35,6 @@ using namespace boost::program_options;
 #define NUM_WIGDISTARRAY 200
 #define NUM_MPDIST 20
 
-#define HD_FROM 200
-#define HD_TO   600
-#define NG_FROM 4000
-#define NG_TO   5000
-#define NG_STEP 100
-
-double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev);
-
-template <class T>
-void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
-{
-  double dx, var(0);
-
-  ave=0;
-  for(int i=HD_FROM; i<max; ++i) ave += x[i];
-  ave /= (double)(max - HD_FROM);
-  for(int i=HD_FROM; i<max; ++i) {
-    dx = x[i] - ave;
-    var += dx * dx;
-  }
-  sd = sqrt(var/double(max -HD_FROM -1));
-}
-
-class shiftDist{
-  int mp_from;
-  int mp_to;
-  int mp_step;
-  int ng_from;
-  int ng_to;
-  int ng_step;
-  double bk;
-  
- public:
-  map<int, double> mp;
-  map<int, double> nc;
-  double r;
-  double nsc;
-  int nsci;
-  
- shiftDist(): mp_from(HD_FROM), mp_to(HD_TO), mp_step(1), ng_from(NG_FROM), ng_to(NG_TO), ng_step(NG_STEP), bk(0), r(0), nsc(0), nsci(0) {}
-  double getmpsum() {
-    double sum(0);
-    for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
-    return sum;
-  }
-  
-  void setControlRatio() {
-    int n(0);
-    for(auto itr = nc.begin(); itr != nc.end(); ++itr) {
-      bk += itr->second;
-      ++n;
-    }
-    bk /= n;
-    r = 1/bk;
-  }
-  void getflen(int lenF3) {
-    for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-      if(itr->first > lenF3*2 && nsc < itr->second*r) {
-	nsc = itr->second*r;
-	nsci = itr->first;
-      }
-    }
-  }
-  double getBackEnrich(long nread) {
-    return bk *NUM_10M /(double)nread;
-  }
-  void funcCCP(vector<char> &fwd, vector<char> &rev, int start, int end);
-  void funcJaccard(const vector<char> &fwd, const vector<char> &rev, int start, int end);
-  void funcJaccard(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
-  void funcHamming(boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, int start, int end);
-};
-
 class Dist{
  public:
   int lenF3;
@@ -123,8 +51,6 @@ class Dist{
     readlen_F5 = v2;
     vector<int> v3(DIST_FRAGLEN_MAX,0);
     fraglen = v3;
-    //    vector<int> h(HD_WIDTH,0);
-    //hd = h;
   }
   void setlenF3() { lenF3 = getmaxi(readlen); }
   void setlenF5() { lenF5 = getmaxi(readlen_F5); }
@@ -217,13 +143,8 @@ class SeqStats {
   /* FRiP */
   long nread_inbed;
   double FRiP;
-
-  shiftDist jac;
-  shiftDist ccp;
-  shiftDist hd;
-  double rchr;
   
- SeqStats(string s, int l=0): yeast(false), num95(0), len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0), rchr(0) {
+ SeqStats(string s, int l=0): yeast(false), num95(0), len(l), len_mpbl(l), nbin(0), nbindist(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
     name = rmchr(s);
     
     vector<long> v(NUM_MPDIST,0); // 5% div
@@ -260,28 +181,6 @@ class SeqStats {
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
   }
 
-  void addjac(const SeqStats &x, boost::mutex &mtx) {
-    boost::mutex::scoped_lock lock(mtx);
-#ifdef DEBUG
-    cout << "addjac" << endl;
-#endif
-    addmp(jac.mp, x.jac.mp, x.rchr);
-    addmp(jac.nc, x.jac.nc, x.rchr);
-  }
-  void addccp(const SeqStats &x) {
-#ifdef DEBUG
-  cout << "addccp" << endl;
-#endif
-    addmp(ccp.mp, x.ccp.mp, x.rchr);
-    addmp(ccp.nc, x.ccp.nc, x.rchr);
-  }
-  void addhd(const SeqStats &x) {
-#ifdef DEBUG
-    cout << "addhd" << endl;
-#endif
-    addmp(hd.mp, x.hd.mp, x.rchr);
-    addmp(hd.nc, x.hd.nc, x.rchr);
-  }
   void print() {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }
@@ -399,7 +298,7 @@ class SeqStats {
   }
   void yeaston() { yeast = true; }
 
-  bool isautosome() {
+  bool isautosome() const {
     int chrnum(0);
     try {
       chrnum = stoi(name);
@@ -500,10 +399,7 @@ class Mapfile {
     }
   }
   void setnread_red() {
-    for (auto &x:chr) {
-      genome.addnread_red(x);
-      x.rchr = x.bothnread_nonred()/(double)genome.bothnread_nonred();
-    }
+    for (auto &x:chr) genome.addnread_red(x);
   }
   double complexity() const { return nt_nonred/(double)nt_all; }
   void printstats() {
