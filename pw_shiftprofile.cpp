@@ -8,17 +8,17 @@
 
 //#define CHR1ONLY 1
 
-double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev)
+double getJaccard(int step, int end4mp, int xysum, const vector<char> &fwd, const vector<char> &rev)
 {
   int xy(0);
-  for(int j=MP_FROM; j<end; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
+  for(int j=MP_FROM; j<end4mp; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
   return (xy/(double)(xysum-xy));
 }
 
 void genThreadJacVec(_shiftDist &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
-    chr.setmp(step, getJaccard(step, chr.width4mp, xysum, fwd, rev), mtx);
+    chr.setmp(step, getJaccard(step, chr.end4mp, xysum, fwd, rev), mtx);
   }
 }
 
@@ -35,7 +35,7 @@ void shiftJacVec::setDist(_shiftDist &chr, const vector<char> &fwd, const vector
   agroup.join_all();
 
   for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
-    chr.nc[step] = getJaccard(step, chr.width4mp, xx+yy, fwd, rev);
+    chr.nc[step] = getJaccard(step, chr.end4mp, xx+yy, fwd, rev);
   }
 }
 
@@ -58,7 +58,7 @@ void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &
 {
   for(int step=s; step<e; ++step) {
     double xy(0);
-    for(int j=MP_FROM; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
     chr.setmp(step, xy, mtx);
   }
 }
@@ -66,8 +66,8 @@ void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &
 void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev)
 {
   double mx, my, xx, yy;
-  calcMeanSD(fwd, chr.width4mp, mx, xx);
-  calcMeanSD(rev, chr.width4mp, my, yy);
+  calcMeanSD(fwd, chr.end4mp, mx, xx);
+  calcMeanSD(rev, chr.end4mp, my, yy);
 
   boost::thread_group agroup;
   boost::mutex mtx;
@@ -78,11 +78,11 @@ void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<ch
   
   for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
     double xy(0);
-    for(int j=MP_FROM; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
     chr.nc[step] = xy;
   }
 
-  double val = 1/(xx*yy*(chr.width4mp - MP_FROM - 1));
+  double val = 1/(xx*yy*(chr.end4mp - MP_FROM - 1));
   for(auto itr = chr.mp.begin(); itr != chr.mp.end(); ++itr) itr->second *= val;
   for(auto itr = chr.nc.begin(); itr != chr.nc.end(); ++itr) itr->second *= val;
 }
@@ -142,8 +142,8 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 }
 
 template <class T>
-void genThread(T &dist, const Mapfile &p, uint s, uint e, string typestr, boost::mutex &mtx) {
-  for(uint i=s; i<=e; ++i) {
+void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr, boost::mutex &mtx) {
+  for(uint i=chr_s; i<=chr_e; ++i) {
     cout << p.chr[i].name << endl;
    
     dist.execchr(p, i);

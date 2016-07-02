@@ -23,7 +23,7 @@ class _shiftDist {
   map<int, double> nc;
   int start;
   int end;
-  int width4mp;
+  int end4mp;
   long nread;
   double r;
   double bk;
@@ -31,7 +31,7 @@ class _shiftDist {
   int nsci;
   double rchr;
 
- _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, double w=1): lenF3(p.dist.lenF3), start(s), end(e), width4mp(e-s-NG_TO), nread(n), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
+ _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, double w=1): lenF3(p.dist.lenF3), start(s), end(e), end4mp(e-s-NG_TO), nread(n), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
 
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
@@ -125,7 +125,7 @@ class shiftJacVec : public shiftDist {
  public:
   double w;
  shiftJacVec(const Mapfile &p, int numthreads): shiftDist("Jaccard index", p, numthreads), w(1) {}
-  
+
   void setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
