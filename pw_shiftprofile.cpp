@@ -8,17 +8,17 @@
 
 //#define CHR1ONLY 1
 
-double getJaccard(int step, int end, int xysum, int mp_from, const vector<char> &fwd, const vector<char> &rev)
+double getJaccard(int step, int end, int xysum, const vector<char> &fwd, const vector<char> &rev)
 {
   int xy(0);
-  for(int j=mp_from; j<end; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
+  for(int j=MP_FROM; j<end; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
   return (xy/(double)(xysum-xy));
 }
 
-void genThreadJacVec(_shiftDist &chr, int xysum, int mp_from, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
+void genThreadJacVec(_shiftDist &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
-    chr.setmp(step, getJaccard(step, chr.width4mp, xysum, mp_from, fwd, rev), mtx);
+    chr.setmp(step, getJaccard(step, chr.width4mp, xysum, fwd, rev), mtx);
   }
 }
 
@@ -30,12 +30,12 @@ void shiftJacVec::setDist(_shiftDist &chr, const vector<char> &fwd, const vector
   boost::thread_group agroup;
   boost::mutex mtx;
   for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(&genThreadJacVec, boost::ref(chr), xx+yy, mp_from, boost::cref(fwd), boost::cref(rev), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    agroup.create_thread(bind(&genThreadJacVec, boost::ref(chr), xx+yy, boost::cref(fwd), boost::cref(rev), seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
 
-  for(int step=ng_from; step<ng_to; step+=ng_step) {
-    chr.nc[step] = getJaccard(step, chr.width4mp, xx+yy, mp_from, fwd, rev);
+  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
+    chr.nc[step] = getJaccard(step, chr.width4mp, xx+yy, fwd, rev);
   }
 }
 
@@ -45,20 +45,20 @@ void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
   double dx, var(0);
   
   ave=0;
-  for(int i=HD_FROM; i<max; ++i) ave += x[i];
-  ave /= (double)(max - HD_FROM);
-  for(int i=HD_FROM; i<max; ++i) {
+  for(int i=MP_FROM; i<max; ++i) ave += x[i];
+  ave /= (double)(max - MP_FROM);
+  for(int i=MP_FROM; i<max; ++i) {
     dx = x[i] - ave;
     var += dx * dx;
   }
-  sd = sqrt(var/double(max -HD_FROM -1));
+  sd = sqrt(var/double(max - MP_FROM -1));
 }
 
-void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, int mp_from, const int s, const int e, boost::mutex &mtx)
+void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, const int s, const int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
     double xy(0);
-    for(int j=mp_from; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    for(int j=MP_FROM; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
     chr.setmp(step, xy, mtx);
   }
 }
@@ -72,17 +72,17 @@ void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<ch
   boost::thread_group agroup;
   boost::mutex mtx;
   for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(genThreadCcp, boost::ref(chr), boost::cref(fwd), boost::cref(rev), mx, my, mp_from, seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    agroup.create_thread(bind(genThreadCcp, boost::ref(chr), boost::cref(fwd), boost::cref(rev), mx, my, seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
   
-  for(int step=ng_from; step<ng_to; step+=ng_step) {
+  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
     double xy(0);
-    for(int j=mp_from; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    for(int j=MP_FROM; j<chr.width4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
     chr.nc[step] = xy;
   }
 
-  double val = 1/(xx*yy*(chr.width4mp - mp_from - 1));
+  double val = 1/(xx*yy*(chr.width4mp - MP_FROM - 1));
   for(auto itr = chr.mp.begin(); itr != chr.mp.end(); ++itr) itr->second *= val;
   for(auto itr = chr.nc.begin(); itr != chr.nc.end(); ++itr) itr->second *= val;
 }
@@ -91,16 +91,16 @@ void shiftJacBit::setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, b
 {
   int xysum(fwd.count() + rev.count());
 
-  rev <<= mp_from;
-  for(int step=-mp_from; step<mp_to; ++step) {
+  rev <<= MP_FROM;
+  for(int step=-MP_FROM; step<MP_TO; ++step) {
     rev >>= 1;
     int xy((fwd & rev).count());
     chr.mp[step] = xy/(double)(xysum-xy);
   }
-  rev >>= (ng_from - mp_to);
+  rev >>= (NG_FROM - MP_TO);
   
-  for(int step=ng_from; step<ng_to; step+=ng_step) {
-    rev >>= ng_step;
+  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
+    rev >>= NG_STEP;
     int xy((fwd & rev).count());
     chr.nc[step] = xy/(double)(xysum-xy);
   }
@@ -108,15 +108,15 @@ void shiftJacBit::setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, b
 
 void shiftHamming::setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev)
 {
-  rev <<= mp_from;
-  for(int step=-mp_from; step<mp_to; ++step) {
+  rev <<= MP_FROM;
+  for(int step=-MP_FROM; step<MP_TO; ++step) {
     rev >>= 1;
     chr.mp[step] = (fwd ^ rev).count();
   }
-  rev >>= (ng_from - mp_to);
+  rev >>= (NG_FROM - MP_TO);
   
-  for(int step=ng_from; step<ng_to; step+=ng_step) {
-    rev >>= ng_step;
+  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
+    rev >>= NG_STEP;
     chr.nc[step] = (fwd ^ rev).count();
   }
 }
@@ -151,7 +151,7 @@ void genThread(T &dist, const Mapfile &p, uint s, uint e, string typestr, boost:
     if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
     string filename = p.oprefix + "." + typestr + "." + p.chr[i].name + ".csv";
-    dist.chr[i].outputmp(filename, dist.genome.nread, dist.name);
+    dist.chr[i].outputmp(filename, dist.genome.nread, dist.name, dist.w);
   }
 }
 
@@ -179,20 +179,8 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   
   //  GaussianSmoothing(p.dist.hd);
 
-  /*  int min_hd_fl=p.dist.hd[HD_TO-1];
-  int max_hd_fl=p.dist.hd[HD_TO-1];
-
-  int bd = 2*p.dist.lenF3;
-  for(int i=HD_TO-1; i>=bd+1; --i) {
-    if(p.dist.hd[i] < min_hd_fl) {
-      min_hd_fl = p.dist.hd[i];
-      p.dist.eflen = i - HD_FROM;
-    }
-    if(max_hd_fl < p.dist.hd[i]) max_hd_fl = p.dist.hd[i];
-    }*/
-
   string filename = p.oprefix + "." + typestr + ".csv";
-  dist.genome.outputmp(filename, dist.genome.nread, dist.name);
+  dist.genome.outputmp(filename, dist.genome.nread, dist.name, dist.w);
   
   return;
 }

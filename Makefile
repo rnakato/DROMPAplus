@@ -16,7 +16,7 @@ OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_shiftprofile.o $(O
 OBJS_DD = dd_main.o $(OBJS_COMMON)
 
 HEADS_UTIL = common.h util.h statistics.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
-HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h pw_gc.h pw_shiftprofile.h pw_shiftprofile_p.h $(HEADS_UTIL)
+HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h pw_gc.h pw_shiftprofile.h $(HEADS_UTIL)
 HEADS_DD = dd_gv.h dd_opt.h $(HEADS_UTIL)
 
 SUBDIRS := $(SRCDIR)
@@ -47,5 +47,6 @@ clean:
 	cd $(SRCDIR); make clean
 	rm $(OBJS_PW) $(OBJS_DD) $(TARGET) *~
 
+pw_shiftprofile.o: pw_shiftprofile_p.h
 $(OBJS_PW): $(HEADS_PW) Makefile
 $(OBJS_DD): $(HEADS_DD) Makefile
