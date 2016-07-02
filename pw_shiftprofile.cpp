@@ -181,6 +181,9 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
 
   string filename = p.oprefix + "." + typestr + ".csv";
   dist.genome.outputmp(filename, dist.genome.nread, dist.name, dist.w);
+
+  // set fragment length;
+  p.dist.eflen = dist.genome.nsci;
   
   return;
 }

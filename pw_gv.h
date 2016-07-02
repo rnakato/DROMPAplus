@@ -119,6 +119,10 @@ class strandData {
   void printnonred(ofstream &out)  const { printr(out, nread_nonred,  nread); }
   void printred(ofstream &out)     const { printr(out, nread_red,     nread); }
   void printafterGC(ofstream &out) const { printr(out, nread_afterGC, nread); }
+  void addReadAfterGC(double w, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
+    nread_afterGC += w;
+  }
 };
 
 class SeqStats {
@@ -173,7 +177,8 @@ class SeqStats {
       seq[i].nread_red    += x.seq[i].nread_red;
     }
   }
-  void addGcov(const SeqStats &x) {
+  void addGcov(const SeqStats &x, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
     nbp      += x.nbp;
     ncov     += x.ncov;
     ncovnorm += x.ncovnorm;
@@ -189,9 +194,12 @@ class SeqStats {
   }
   void calcGcov(const vector<char> &array) {
     for(int i=0; i<len; ++i) {
-      if(array[i] == MAPPABLE    || array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++nbp;
-      if(array[i] == COVREAD_ALL || array[i] == COVREAD_NORM) ++ncov;
-      if(array[i] == COVREAD_NORM) ++ncovnorm;
+      if(array[i] >= MAPPABLE) {
+	++nbp;
+      }// MAPPABLE || COVREAD_ALL || COVREAD_NORM
+      if(array[i] >= COVREAD_ALL) {
+	++ncov;    } // COVREAD_ALL || COVREAD_NORM
+      if(array[i] == COVREAD_NORM) ++ncovnorm; 
     }
     gcovRaw  = nbp ? ncov / (double)nbp: 0;
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
@@ -368,6 +376,8 @@ class Mapfile {
   vector<int> wigDist;
 
   Mapfile(const variables_map &values);
+  void readGenomeTable(const variables_map &values);
+  void getMpbl(const variables_map &values);
   vector<sepchr> getVsepchr(const int);
   
   void addF5(const int readlen_F5) { dist.readlen_F5[readlen_F5]++; }
@@ -403,6 +413,7 @@ class Mapfile {
   }
   double complexity() const { return nt_nonred/(double)nt_all; }
   void printstats() {
+    cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << endl;
     for (auto x:chr) x.print();
     genome.print();
   }

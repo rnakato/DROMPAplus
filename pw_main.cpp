@@ -27,14 +27,41 @@ Mapfile::Mapfile(const variables_map &values):
   yeast(false), genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
 {
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
-  
+
+  readGenomeTable(values);
+  getMpbl(values);
+
+  for(auto &x:chr) {
+    genome.len += x.len;
+    genome.len_mpbl += x.len_mpbl;
+    genome.nbin += x.nbin = x.len/values["binsize"].as<int>() +1;
+    x.p_mpbl = x.len_mpbl/(double)x.len;
+    genome.p_mpbl = genome.len_mpbl/(double)genome.len;
+  }
+
+  // yeast
+  for(auto x:chr) if(x.name == "I" || x.name == "II" || x.name == "III") yeast = true;
+  for(auto &x:chr) if(yeast) x.yeaston();
+
   vector<double> gcw(values["flen4gc"].as<int>(),0);
   GCweight = gcw;
 
+  // sepchr
+  vsepchr = getVsepchr(values["threads"].as<int>());
+
+#ifdef DEBUG
+  cout << "chr\tautosome" << endl;
+  for(auto x:chr) {
+    cout << x.name << "\t" << x.isautosome() << endl;
+  }
+  for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
+#endif
+}
+
+void Mapfile::readGenomeTable(const variables_map &values)
+{
   vector<string> v;
   string lineStr;
-
-  // genome_table
   ifstream in(values["gt"].as<string>());
   if(!in) PRINTERR("Could nome open " << values["gt"].as<string>() << ".");
 
@@ -42,32 +69,26 @@ Mapfile::Mapfile(const variables_map &values):
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0] == '#') continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    SeqStats s(v[0], stoi(v[1]));
-    if(s.name == "I" || s.name == "II" || s.name == "III") yeast = true;
-    
+    SeqStats s(v[0], stoi(v[1]));    
     chr.push_back(s);
     lastchr = s.name;
   }
-  long lenmax(0);
-
-  for(auto &x:chr) if(yeast) x.yeaston();
-
-#ifdef DEBUG
-  cout << "chr\tautosome" << endl;
-  for(auto x:chr) {
-    cout << x.name << "\t" << x.isautosome() << endl;
-  }
-#endif
   
+  long lenmax(0);
   for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
     if(lenmax < itr->len) {
       lenmax = itr->len;
       lchr = itr;
     }
   }
+  return;
+}
 
-  // mappability
+void Mapfile::getMpbl(const variables_map &values)
+{
   if (values.count("mp")) {
+    string lineStr;
+    vector<string> v;
     string mpfile = values["mp"].as<string>() + "/map_fragL150_genome.txt";
     ifstream in_mpbl(mpfile);
     if(!in_mpbl) PRINTERR("Could nome open " << mpfile << ".");
@@ -79,22 +100,10 @@ Mapfile::Mapfile(const variables_map &values):
 	if(x.name == v[0]) x.len_mpbl = stoi(v[1]);
       }
     }
+  } else {
+    for(auto &x:chr) x.len_mpbl = x.len;
   }
-
-  for(auto &x:chr) {
-    genome.len += x.len;
-    genome.len_mpbl += x.len_mpbl;
-    genome.nbin += x.nbin = x.len/values["binsize"].as<int>() +1;
-    x.p_mpbl = x.len_mpbl/(double)x.len;
-    genome.p_mpbl = genome.len_mpbl/(double)genome.len;
-  }
-
-  // sepchr
-  vsepchr = getVsepchr(values["threads"].as<int>());
-
-#ifdef DEBUG
-  for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
-#endif
+  return;
 }
 
 vector<sepchr> Mapfile::getVsepchr(const int numthreads)
@@ -158,6 +167,12 @@ int main(int argc, char* argv[])
   Mapfile p(values);
   read_mapfile(values, p);
 
+  // PCR bias filtering
+  check_redundant_reads(values, p);
+  p.setnread_red();
+
+  estimateFragLength(values, p);
+
   // BED file
   if (values.count("bed")) {
     string bedfile = values["bed"].as<string>();
@@ -166,6 +181,10 @@ int main(int argc, char* argv[])
     //    printBed(p.vbed);
     p.calcFRiP();
   }
+
+#ifdef DEBUG
+  p.printstats();
+#endif
 
   // Genome coverage
   calcGenomeCoverage(values, p);
@@ -471,6 +490,20 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
   return array;
 }
 
+void calcGcovchr(const variables_map &values, Mapfile &p, int i, double r4cmp, boost::mutex &mtx)
+{
+  cout << p.chr[i].name << ".." << flush;
+  auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
+  p.chr[i].calcGcov(array);
+  p.genome.addGcov(p.chr[i], mtx);
+  return;
+}
+
+void genThread(const variables_map &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
+{
+  for(int i=s; i<e; ++i) calcGcovchr(values, p, i, r4cmp, mtx);
+}
+
 void calcGenomeCoverage(const variables_map &values, Mapfile &p)
 {
   cout << "calculate genome coverage.." << flush;
@@ -482,14 +515,15 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
     p.gv = 1;
   }
   double r4cmp = r*RAND_MAX;
-  
-  //#pragma omp parallel for num_threads(values["threads"].as<int>())
-  for(uint i=0; i<p.chr.size(); ++i) {
-    //    cout << p.chr[i].name << ".." << flush;
-    auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
-    p.chr[i].calcGcov(array);
-    p.genome.addGcov(p.chr[i]);
+
+  boost::thread_group agroup;
+  boost::mutex mtx;
+  for(uint i=0; i<p.vsepchr.size(); i++) {
+    agroup.create_thread(bind(genThread, boost::cref(values), boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, r4cmp, boost::ref(mtx)));
   }
+  agroup.join_all();
+  //  for(uint i=0; i<p.chr.size(); ++i) calcGcovchr(values, p, i, r4cmp, mtx);
+  
   
   cout << "done." << endl;
   return;

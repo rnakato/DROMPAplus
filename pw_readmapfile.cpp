@@ -12,11 +12,11 @@
 #include <time.h>
 #include "pw_gv.h"
 #include "pw_readmapfile.h"
+#include "pw_shiftprofile.h"
 #include "util.h"
 #include "common.h"
 #include "macro.h"
 #include "readdata.h"
-#include "pw_shiftprofile.h"
 
 using namespace boost::program_options;
 
@@ -24,7 +24,6 @@ void parseSam(const variables_map &values, string inputfile, Mapfile &p);
 void parseBowtie(const variables_map &values, string inputfile, Mapfile &p);
 void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p);
 void outputDist(const variables_map &values, Mapfile &p);
-void check_redundant_reads(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr);
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
 
@@ -44,43 +43,6 @@ void read_mapfile(const variables_map &values, Mapfile &p){
 
   /* output distributions of read length and fragment length */
   outputDist(values, p);
-
-  /* PCR bias filtering and ignore enrichregions */
-  check_redundant_reads(values, p);
-  p.setnread_red();
-
-  // estimate fragment length
-  if(!values.count("pair") && !values.count("nomodel")) {
-    clock_t t1 = clock();
-    strShiftProfile(p, "exjaccard", values["threads"].as<int>());
-    clock_t t2 = clock();
-    cout << "Jaccard Vec: " << (double)(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
-
-    strShiftProfile(p, "jaccard", values["threads"].as<int>());
-    clock_t t3 = clock();
-    cout << "Jaccard Bit: " << (double)(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
-    
-    strShiftProfile(p, "hdp", values["threads"].as<int>());
-    clock_t t4 = clock();
-    cout << "Hamming: " << (double)(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
-    
-    strShiftProfile(p, "ccp", values["threads"].as<int>());
-    clock_t t5 = clock();
-    cout << "ccp: " << (double)(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
-  }
-
-  
-  exit(0);
-
-
-  p.setF5(values);
-  
-  // calculate sequencing depth
-  p.calcdepth(values);
-
-#ifdef DEBUG
-  p.printstats();
-#endif
 
   return;
 }
@@ -455,6 +417,31 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
   }
 
   return;
+}
+
+void estimateFragLength(const variables_map &values, Mapfile &p)
+{
+  if(!values.count("pair") && !values.count("nomodel")) {
+    clock_t t1 = clock();
+    strShiftProfile(p, "exjaccard", values["threads"].as<int>());
+    clock_t t2 = clock();
+    cout << "Jaccard Vec: " << (double)(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
+
+    strShiftProfile(p, "jaccard", values["threads"].as<int>());
+    clock_t t3 = clock();
+    cout << "Jaccard Bit: " << (double)(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
+    
+    strShiftProfile(p, "hdp", values["threads"].as<int>());
+    clock_t t4 = clock();
+    cout << "Hamming: " << (double)(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
+    
+    strShiftProfile(p, "ccp", values["threads"].as<int>());
+    clock_t t5 = clock();
+    cout << "ccp: " << (double)(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
+  }
+
+  p.calcdepth(values);
+  p.setF5(values);
 }
 
 int check_sv(int sv)

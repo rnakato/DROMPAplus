@@ -151,31 +151,46 @@ vector<short> makeFastaArray(string filename, int length, int flen4gc)
   return array;
 }
 
-void weightRead(const variables_map &values, Mapfile &p)
+void weightReadchr(const variables_map &values, Mapfile &p, int i, boost::mutex &mtx)
 {
-  int gc, posi;
+  int posi;
   int flen(p.getflen(values));
   int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
-
-  cout << "add weight to reads..." << flush;
-
-  //#pragma omp parallel for num_threads(values["threads"].as<int>())
-  for(uint i=0; i<p.chr.size(); ++i) {
-    //    cout << p.chr[i].name << ".." << flush;
-    string fa = values["genome"].as<string>() + "/" + p.chr[i].name + ".fa";
-    auto FastaArray = makeFastaArray(fa, p.chr[i].len, flen4gc);
-    
-    for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &read: p.chr[i].seq[strand].vRead) {
-	if(read.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = min(read.F3 + FRAG_IGNORE, (int)p.chr[i].len -1);
-	else                    posi = max(read.F3 - flen + FRAG_IGNORE, 0);
-	gc = FastaArray[posi];
-	if(gc != -1) read.multiplyWeight(p.GCweight[gc]);
-	p.chr[i].seq[strand].nread_afterGC += read.getWeight();
-      }
+  cout << p.chr[i].name << ".." << flush;
+  string fa = values["genome"].as<string>() + "/" + p.chr[i].name + ".fa";
+  auto FastaArray = makeFastaArray(fa, p.chr[i].len, flen4gc);
+  
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto &x: p.chr[i].seq[strand].vRead) {
+      if(x.duplicate) continue;
+      if(strand==STRAND_PLUS) posi = min(x.F3 + FRAG_IGNORE, (int)p.chr[i].len -1);
+      else                    posi = max(x.F3 - flen + FRAG_IGNORE, 0);
+      int gc(FastaArray[posi]);
+      if(gc != -1) x.multiplyWeight(p.GCweight[gc]);
+      p.chr[i].seq[strand].addReadAfterGC(x.getWeight(), mtx);
     }
   }
+  return;
+}
+
+void genThread(const variables_map &values, Mapfile &p, int s, int e, boost::mutex &mtx)
+{
+  for(int i=s; i<e; ++i) weightReadchr(values, p, i, mtx);
+  return;
+}
+
+void weightRead(const variables_map &values, Mapfile &p)
+{
+  cout << "add weight to reads..." << flush;
+
+  boost::thread_group agroup;
+  boost::mutex mtx;
+  for(uint i=0; i<p.vsepchr.size(); i++) {
+    agroup.create_thread(bind(genThread, boost::cref(values), boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, boost::ref(mtx)));
+  }
+  agroup.join_all();
+
+  //  for(uint i=0; i<p.chr.size(); ++i) weightReadchr(values, p, i);
   printf("done.\n");
 
   // Stats
