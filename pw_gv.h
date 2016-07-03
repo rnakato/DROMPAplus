@@ -356,7 +356,6 @@ class Mapfile {
   vector<SeqStats>::iterator lchr; // longest chromosome
   vector<sepchr> vsepchr;
 
-  string lastchr;
   int flen_def;
 
   // PCR bias

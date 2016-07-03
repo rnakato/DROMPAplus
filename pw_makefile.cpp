@@ -1,7 +1,6 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
-
 #include <boost/algorithm/string.hpp>
 #include "pw_makefile.h"
 #include "readdata.h"
@@ -95,7 +94,6 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
   return;
 }
 
-
 vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
   vector<int> wigarray(chr.nbin, 0);
@@ -144,21 +142,24 @@ double setw(T nm, S dn)
 
 void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray)
 {
+  static int on(0);
   double w(0);
   string ntype(values["ntype"].as<string>());
   
   if(ntype == "GR") {
     double dn(p.genome.bothnread_nonred());
     w = setw(values["nrpm"].as<int>(), dn);
-    if(chr.name == p.lastchr) {
+    if(!on) {
       BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (long)dn % values["nrpm"].as<int>() % w;
       if(w>2) PRINTWARNING_W(w);
+      on=1;
     }
   } else if(ntype == "GD") {
     w = setw(values["ndepth"].as<double>(), p.genome.depth);
-    if(chr.name == p.lastchr) {
+    if(!on) {
       BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.depth % values["ndepth"].as<double>() % w;
       if(w>2) PRINTWARNING_W(w);
+      on=1;
     }
   } else if(ntype == "CR") {
     double nm = values["nrpm"].as<int>() * (chr.len_mpbl/(double)p.genome.len_mpbl);

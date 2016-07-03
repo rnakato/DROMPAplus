@@ -90,7 +90,7 @@ void func_iteration(gsl_multimin_fminimizer *s, size_t ndim)
     if(status) break;
     size = gsl_multimin_fminimizer_size(s);       /* sのその時点での最小点の最良推定値を返す */
     status = gsl_multimin_test_size(size, 1e-3);  /* sizeが閾値(1e-3)より小さければGSL_SUCCESS を、そうでなければGSL_CONTINUEを返す。 */
-    if(status == GSL_SUCCESS) { cout << "converged to minimum at" << endl; }
+    if(status == GSL_SUCCESS) { cout << "converged to minimum at " << iter << endl; }
 #ifdef DEBUG
     if(ndim==2) BPRINT("%1% p=%2% p0=%3% f() = %4% size = %5%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_multimin_fminimizer_minimum(s) % size;
     else BPRINT("%1% p=%2% n=%3% p0=%4% f() = %5% size = %6%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_vector_get(s->x, 2) % gsl_multimin_fminimizer_minimum(s) % size;

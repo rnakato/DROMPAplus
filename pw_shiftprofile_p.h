@@ -62,13 +62,13 @@ class _shiftDist {
       }
     }
   }
-  void outputmp(const string filename, long nread, long length, string name, double weight) {
+  void outputmp(const string filename, string name, double weight) {
     setControlRatio();
     setflen(weight);
     double sum(getmpsum());
-    double per10M = NUM_10M/(double)nread * NUM_100M/(double)length;
-    double be(bk * per10M);
-    double const_bu(0.001);
+    double rRPKM = (NUM_10M/(double)nread) / (NUM_100M/(double)len);
+    double be(bk * rRPKM);
+    double const_bu(0.024);
     
     ofstream out(filename);
     out << "NSC\t"<< nsc*weight << endl;
@@ -78,11 +78,11 @@ class _shiftDist {
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
-      out << itr->first           << "\t"
-	  << itr->second          << "\t"
-	  << (itr->second/sum)    << "\t"
-	  << (itr->second*per10M) << "\t"
-	  << (itr->second * r)    << endl;
+      out << itr->first            << "\t"
+	  << itr->second           << "\t"
+	  << (itr->second/sum)     << "\t"
+	  << (itr->second * rRPKM) << "\t"
+	  << (itr->second * r)     << endl;
     
   }
 };
@@ -100,11 +100,11 @@ class shiftDist {
     for(auto x:p.chr) {
       if(x.isautosome()) {
 	genome.nread += x.bothnread_nonred();
-	genome.len   += x.len;
+	genome.len   += x.len_mpbl;
       }
     }
     for(auto x:p.chr) {
-      _shiftDist v(p, 0, x.len, x.bothnread_nonred(), x.len);
+      _shiftDist v(p, 0, x.len, x.bothnread_nonred(), x.len_mpbl);
       v.rchr = v.nread/(double)genome.nread;
       chr.push_back(v);
     }

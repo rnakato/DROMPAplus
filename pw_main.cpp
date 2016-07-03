@@ -71,7 +71,6 @@ void Mapfile::readGenomeTable(const variables_map &values)
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     SeqStats s(v[0], stoi(v[1]));    
     chr.push_back(s);
-    lastchr = s.name;
   }
   
   long lenmax(0);
@@ -490,18 +489,14 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
   return array;
 }
 
-void calcGcovchr(const variables_map &values, Mapfile &p, int i, double r4cmp, boost::mutex &mtx)
+void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
 {
-  cout << p.chr[i].name << ".." << flush;
-  auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
-  p.chr[i].calcGcov(array);
-  p.genome.addGcov(p.chr[i], mtx);
-  return;
-}
-
-void genThread(const variables_map &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
-{
-  for(int i=s; i<e; ++i) calcGcovchr(values, p, i, r4cmp, mtx);
+  for(int i=s; i<e; ++i) {
+    cout << p.chr[i].name << ".." << flush;
+    auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
+    p.chr[i].calcGcov(array);
+    p.genome.addGcov(p.chr[i], mtx);
+  }
 }
 
 void calcGenomeCoverage(const variables_map &values, Mapfile &p)
@@ -519,11 +514,9 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   boost::thread_group agroup;
   boost::mutex mtx;
   for(uint i=0; i<p.vsepchr.size(); i++) {
-    agroup.create_thread(bind(genThread, boost::cref(values), boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, r4cmp, boost::ref(mtx)));
+    agroup.create_thread(bind(calcGcovchr, boost::cref(values), boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, r4cmp, boost::ref(mtx)));
   }
   agroup.join_all();
-  //  for(uint i=0; i<p.chr.size(); ++i) calcGcovchr(values, p, i, r4cmp, mtx);
-  
   
   cout << "done." << endl;
   return;

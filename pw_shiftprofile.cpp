@@ -151,7 +151,7 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr
     if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
     string filename = p.oprefix + "." + typestr + "." + p.chr[i].name + ".csv";
-    dist.chr[i].outputmp(filename, dist.genome.nread, dist.genome.len, dist.name, dist.w);
+    dist.chr[i].outputmp(filename, dist.name, dist.w);
   }
 }
 
@@ -180,7 +180,7 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   //  GaussianSmoothing(p.dist.hd);
 
   string filename = p.oprefix + "." + typestr + ".csv";
-  dist.genome.outputmp(filename, dist.genome.nread, dist.genome.len, dist.name, dist.w);
+  dist.genome.outputmp(filename, dist.name, dist.w);
 
   // set fragment length;
   p.dist.eflen = dist.genome.nsci;
