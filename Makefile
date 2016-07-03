@@ -17,7 +17,7 @@ OBJS_DD = dd_main.o $(OBJS_COMMON)
 
 HEADS_UTIL = common.h util.h statistics.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
 HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h pw_gc.h pw_shiftprofile.h $(HEADS_UTIL)
-HEADS_DD = dd_gv.h dd_opt.h $(HEADS_UTIL)
+HEADS_DD = dd_gv.h $(HEADS_UTIL)
 
 SUBDIRS := $(SRCDIR)
 .PHONY: all $(SUBDIRS)
@@ -47,6 +47,7 @@ clean:
 	cd $(SRCDIR); make clean
 	rm $(OBJS_PW) $(OBJS_DD) $(TARGET) *~
 
+dd_main.o: dd_opt.h
 pw_shiftprofile.o: pw_shiftprofile_p.h
 $(OBJS_PW): $(HEADS_PW) Makefile
 $(OBJS_DD): $(HEADS_DD) Makefile

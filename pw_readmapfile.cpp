@@ -427,6 +427,8 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     clock_t t2 = clock();
     cout << "Jaccard Vec: " << (double)(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
+    // NSCでは見えないbackground enrichmentの利点を示すサンプルを探す
+    
     // thresholdが2以上の時にbitを使うと、total readがおかしくなるので
     // background uniformityが1を超える可能性がある
     strShiftProfile(p, "jaccard", values["threads"].as<int>()); 

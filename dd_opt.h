@@ -70,9 +70,9 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("Required");
 	o.add_options()
-	  ("input,i",   value<vector<string>>(), "specify ChIP data, Input data and name of ChIP sample (separated by ',', <Input> and <name> can be omitted)")
-	  ("output,o",  value<string>(),	  "output prefix")
-	  ("gt",        value<string>(),	  "genome table")
+	  ("input,i",   value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample (separated by ',', <Input> and <name> can be omitted)")
+	  ("output,o",  value<string>(),	 "Output prefix")
+	  ("gt",        value<string>(),	 "Genome table")
 	  ;
 	opts.add(o);
       break;
@@ -81,13 +81,14 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("Input/Output");
 	o.add_options()
-	  ("ioverlay",  value<vector<string>>(),	      "input file to overlay")
-	  ("binsize,b", value<int>()->default_value(100), "bin size")
-	  ("binsize2",  value<int>()->default_value(100), "bin size for overlay")
-	  ("if",        value<int>(),		      "itype")
-	  ("sm",        value<int>(),		      "smoothing width") // gausian ??
-	  ("width4lmd", value<int>(),		      "width4lambda")
-	  ("norm",      value<int>(),	              "ntype")
+	  ("ioverlay",  value<vector<string>>(),	  "Input file to overlay")
+	  ("binsize,b", value<int>()->default_value(100), "Bin size")
+	  ("binsize2",  value<int>()->default_value(100), "Bin size for overlay")
+	  ("if",        value<int>()->default_value(0),   "Input file format\n     0: Binary (.bin)\n     1: Compressed wig (.wig.gz)\n     2: Uncompressed wig (.wig)\n     3: bedGraph (.bedGraph)\n")
+	  ("sm",        value<int>()->default_value(0),   "Smoothing width") // gausian ??
+	  ("width4lmd", value<int>()->default_value(100000), "Width for calculating local lambda")
+	  ("norm",      value<int>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
+	  ("rmchr",     value<int>(), "Remove chromosome-separated pdf files")
 	  ;
 	opts.add(o);
 	break;
@@ -96,11 +97,12 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("Threshold");
 	o.add_options()
-	  ("pthre_internal", value<double>(), "pthre_internal")
-	  ("pthre_enrich",   value<double>(), "pthre_enrich")
-	  ("qthre",     value<double>(),      "FDR")
-	  ("ipm",       value<double>(),      "IPmaxthre")
-	  ("ethre,e",   value<double>(),      "enrichthre")
+	  ("pthre_internal", value<double>()->default_value(1e-4), "p-value for ChIP internal")
+	  ("pthre_enrich",   value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
+	  ("qthre",          value<double>()->default_value(1),    "FDR")
+	  ("ethre,e",        value<double>()->default_value(2),    "IP/Input fold enrichment")
+	  ("ipm",            value<double>()->default_value(0),    "Read intensity of peak summit")
+	  ("nosig", "Omit highlighting peak regions")
 	  ;
 	opts.add(o);
 	break;
@@ -109,20 +111,20 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("Annotation");
 	o.add_options()
-	  ("gene,g", value<string>(),	  "gene")
-	  ("gftype", value<int>(),		  "gftype")
-	  ("ars",    value<string>(),	  "ARS")  
-	  ("ter",    value<string>(),	  "TER")
-	  ("mp",     value<string>(),  	  "mappability")
-	  ("mpthre", value<double>()->default_value(0.3), "low mappability threshold")
-	  ("gap",    value<string>(),	  "gap")
-	  ("bed,b",  value<vector<string> >(),"bed")
-	  ("inter",  value<vector<string> >(),"interaction")  // FDRde iro kaeru
-	  ("gc",     value<string>(), 	  "GC")
-	  ("gcsize", value<int>(),	 	  "gcsize")
-	  ("gd",     value<string>(), 	  "GD")
-	  ("gdsize", value<int>(),		  "gdsize")
-	  ("repeat", value<string>(),	  "repeat") 
+	  ("gene,g", value<string>(),	  "Gene annotation file")
+	  ("gftype", value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
+	  ("ars",    value<string>(),	  "ARS list (for yeast)")  
+	  ("ter",    value<string>(),	  "TER list (for S.cerevisiae)")
+	  ("mp",     value<string>(),  	  "Mappability file")
+	  ("mpthre", value<double>()->default_value(0.3), "Low mappability threshold")
+	  ("gap",    value<string>(),	  "Specify gapped regions to be shaded")
+	  ("bed,b",  value<vector<string>>(), "<bedfile>,<label>: Specify bed file and label (<label> can be omited)")
+	  ("inter",  value<vector<string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
+	  ("gc",     value<string>(), 	  "Visualize GC contents graph")
+	  ("gcsize", value<int>()->default_value(100000), "Window size for GC contents")
+	  ("gd",     value<string>(), 	  "Visualize gene density (number of genes for each window)")
+	  ("gdsize", value<int>()->default_value(100000), "Window size for gene density")
+	  ("repeat", value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
 	  ;
 	opts.add(o);
 	break;
@@ -131,42 +133,39 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("Drawing");
 	o.add_options()
-	  ("nosig",       value<int>(),     "nosig")
-	  ("chr",         value<int>(),     "chronly")
-	  ("region,r",    value<string>(),	"regions for drawing")
-	  ("genefile",    value<string>(),	"genefile")  
-	  ("pdsize",      value<int>(),	"pdsize")
-	  ("len_genefile",value<int>(),	"length")
-	  ("showars",     value<int>(),     "nosig")
-	  ("png",         value<int>(),     "png format")
-	  ("rmchr",       value<int>(),     "rmchr")
-	  ("ls",          value<int>()->default_value(1000),"line size")
-	  ("lpp",         value<int>()->default_value(1),	"line num per page")
-	  ("offbg",       value<int>(),     "png format")
-	  ("offymem",     value<int>(),     "png format")
-	  ("offylab",     value<int>(),     "png format")
-	  ("viz",         value<int>(),     "png format")
+	  ("showctag",     value<int>(),    "Display ChIP read lines")
+	  ("showitag",     value<int>(),    "Display Input read lines (0:off 1:all 2:first one)")
+	  ("showratio",    value<int>(),    "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
+	  ("showpinter",   value<int>(),    "Display -log10(p) lines for ChIP internal")
+	  ("showpenrich",  value<int>(),    "Display -log10(p) lines for ChIP/Input enrichment")
+	  ("chr",         value<int>(),     "Output the specified chromosome only")
+	  ("region,r",    value<string>(),  "Specify genomic regions for drawing")
+	  ("genefile",    value<string>(),  "Specify gene loci to visualize")  
+	  ("len_genefile",value<int>()->default_value(50000), "extended length for each gene locus")
+	  ("showars",     value<int>(),     "Display ARS only (do not display genes)")
+	  ("png",         value<int>(),     "Output with png format (Note: output each page separately)")
+	  ("ls",          value<int>()->default_value(1000), "Width for each line (kb)")
+	  ("lpp",         value<int>()->default_value(1),    "Line number per page")
+	  ("offbg",       value<int>(),     "Omit background color of read lines")
+	  ("offymem",     value<int>(),     "Omit Y memory")
+	  ("offylab",     value<int>(),     "Omit Y label")
+	  ("viz",         value<int>()->default_value(0), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTSCALE:
       {
-	options_description o("Scaling");
+	options_description o("Scale for Y axis");
 	o.add_options()
-	  ("scale_tag",    value<double>(), "scale_tag")
-	  ("scale_ratio",  value<double>(), "scale_ratio")
-	  ("scale_pvalue", value<double>(),	"scale_pvalue")
-	  ("scale_tag2",   value<double>(),	"scale_tag2")
-	  ("scale_ratio2", value<double>(),	"scale_ratio2")
-	  ("scale_pvalue2",value<double>(),	"scale_pvalue2")
-	  ("showctag",     value<int>(),    "ctag")
-	  ("showitag",     value<int>(),    "itag")
-	  ("showratio",    value<int>(),    "ratop")
-	  ("showpinter",   value<int>(),    "itag")
-	  ("showpenrich",  value<int>(),    "itag")
-	  ("bn",           value<int>(),    "itag")
-	  ("ystep",        value<double>(),	"ystep")
+	  ("scale_tag",    value<double>(), "Scale for read line")
+	  ("scale_ratio",  value<double>(), "Scale for fold enrichment")
+	  ("scale_pvalue", value<double>(), "Scale for -log10(p)")
+	  ("scale_tag2",   value<double>(), "(Overlay) Scale for read line")
+	  ("scale_ratio2", value<double>(), "(Overlay) Scale for fold enrichment")
+	  ("scale_pvalue2",value<double>(), "(Overlay) Scale for -log10(p)")
+	  ("bn",           value<int>()->default_value(2),     "Number of memories of y-axis")
+	  ("ystep",        value<double>()->default_value(20), "Height of read line")
 	  ;
 	opts.add(o);
 	break;
@@ -175,7 +174,7 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("CG");
 	o.add_options()
-	  ("cgthre",    value<double>(), "(for CG) ")
+	  ("cgthre",    value<double>(), "Minimum threshold per kbp")
 	  ;
 	opts.add(o);
 	break;
@@ -184,7 +183,7 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("TR");
 	o.add_options()
-	  ("tssthre",    value<double>(), "(for CG) ")
+	  ("tssthre",    value<double>(), "")
 	  ;
 	opts.add(o);
 	break;
@@ -194,6 +193,7 @@ void opt::add(vector<optstatus> st)
 	options_description o("PD");
 	o.add_options()
 	  ("prop",   value<double>(),  "scale_tag")
+	  ("pdsize", value<int>()->default_value(100000), "windowsize for peak density")
 	  ;
 	opts.add(o);
 	break;
@@ -202,14 +202,15 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("PROFILE AND HEATMAP");
 	o.add_options()
-	  ("ptype",   value<double>(),  "")
-	  ("stype",   value<double>(),  "")
-	  ("ntype",   value<double>(),  "")
-	  ("cw",      value<double>(),  "")
-	  ("offse",   value<double>(),  "")
-	  ("hmsort",   value<double>(),  "")
-	  ("sortgbody",value<double>(),  "")
-	  ("pdetail",   value<double>(),  "")
+	  ("ptype",   value<int>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
+	  ("stype",   value<int>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
+	  ("ntype",   value<int>(),  "Normalization type: 0; total read 1; target regions only")
+	  ("cw",      value<double>()->default_value(2500), "width from the center")
+	  ("maxval",   value<double>(),  "Upper limit for heatmap")
+	  ("offse",  "Omit the standard error in profile")
+	  ("hmsort",   value<int>(),  "Sort lists for <int>th sample")
+	  ("sortgbody",  "Sort sites by read number of gene body (default: TSS)")
+	  ("pdetail",  "")
 	  ;
 	opts.add(o);
 	break;
@@ -294,7 +295,8 @@ void Command::checkParam() {
 
 void Command::InitDump()
 {
-  uint i;
+  vector<string> str_bool = {"ON", "OFF"};
+  vector<string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
   vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
   vector<string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
   vector<string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
@@ -313,14 +315,11 @@ void Command::InitDump()
   }
   BPRINT("   ChIP/Input normalization: %s\n") %str_norm[values["norm"].as<int>()];
 
-  
-  for (auto x:) {
-    BPRINT("Input file %1%\n") % x;
-  }
-
-  if(p->ftype != FTYPE_GOVERLOOK){
+  if(name != "GOVERLOOK"){
     BPRINT("\nSamples\n");
-    vector<string> vsample(values["input"].as<vector<string>>());
+    printVOpt<string>(values, "input", "   Sample");
+    printVOpt<string>(values, "ioverlay", "   Overlayed sample");
+    /*    vector<string> vsample(values["input"].as<vector<string>>());
     for(i=0; i<vsample.size(); ++i) {
       BPRINT("   ChIP%1%: %2%\tname: %3%\tbinsize:%4%\n") % i+1 % sample[i].ChIP->argv % sample[i].linename % sample[i].binsize;
       if(sample[i].Input->argv) BPRINT("   Input%1%: %2%\n") % i+1 % sample[i].Input->argv;
@@ -331,7 +330,7 @@ void Command::InitDump()
       BPRINT("   Overlayed ChIP%1%: %2%\tname: %3%\tbinsize:%4%\n") % i+1 % sample[i].ChIP->argv % sample[i].linename % sample[i].binsize;
       if(sample[i].Input->argv) BPRINT("   Input%1%: %2%\n") % i+1 % sample[i].Input->argv;
       if(sample[i].peak_argv) BPRINT("      peak list: %1%\n") % sample[i].peak_argv;
-    }
+      }*/
   }
   for(auto x: vopts) {
     switch(x) {
@@ -345,42 +344,44 @@ void Command::InitDump()
       }
     case OPTTHRE: 
       {
-	BPRINT("   Peak intensity threshold: %1$.2f\n") % values["IPmaxthre"].as<double>();
-	BPRINT("   Enrichment threshold: %1$.2f\n")     % values["enrichthre"].as<double>();
+	BPRINT("   Peak intensity threshold: %1$.2f\n")               % values["IPmaxthre"].as<double>();
+	BPRINT("   Enrichment threshold: %1$.2f\n")                   % values["enrichthre"].as<double>();
 	BPRINT("   p-value threshold (internal, -log10): %1$.2e\n")   % values["pthre_internal"].as<double>();
 	BPRINT("   p-value threshold (enrichment, -log10): %1$.2e\n") % values["pthre_enrich"].as<double>();
-	BPRINT("   FDR threshold: %1$.2e\n") % values["FDR"].as<double>();
+	BPRINT("   FDR threshold: %1$.2e\n")                          % values["FDR"].as<double>();
   	break;
       }
     case OPTANNO:
       {
 	BPRINT("\nAnnotations:\n");
-	if(d->gene.argv)   BPRINT("   gene file: %s, format: %1%\n") %d->gene.argv, str_gftype[d->gftype];
-	if(d->arsfile)     BPRINT("   ARS file: %1%\n") % d->arsfile;
-	if(d->terfile)     BPRINT("   TER file: %1%\n") % d->terfile;
-	if(d->repeat.argv) BPRINT("   repeat file: %1%\n") %d->repeat.argv;
-	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n") %d->GC.argv;
-	if(d->GD.argv)     BPRINT("   gene density file: %1%\n") %d->GD.argv;
-	if(d->internum){
-	  for(i=0; i<d->internum; i++) BPRINT("   interaction file %d: %1%\n",i+1, d->inter[i].argv;
-					      }
-	  if(d->drawregion_argv) BPRINT("   region file: %1%\n") %d->drawregion_argv;
-	  for(i=0; i<d->bednum; i++){
-	    if(p->ftype==FTYPE_PROFILE || p->ftype==FTYPE_HEATMAP) BPRINT("   bedfile%d: %1%\n") %i+1, d->peak[i]->argv;
-	    else BPRINT("   bedfile%d: %s, name: %1%\n") %i+1, d->bed[i]->argv, d->bed[i]->name;
-	  }
-	  break;
+	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
+			     % values["gene"].as<string>() % str_gftype[values["gftype"].as<int>()];
+	printOpt<string>(values, "ars",    "   ARS file");
+	printOpt<string>(values, "ter",    "   TER file");
+	printOpt<string>(values, "repeat", "   Repeat file");
+	printOpt<string>(values, "gc", "   GCcontents file");
+	printOpt<string>(values, "gd", "   Gene density file");
+	/*	if(d->arsfile)     BPRINT("   ARS file: %1%\n")          % values["ars"].as<string>();
+	if(d->terfile)     BPRINT("   TER file: %1%\n")          % values["ter"].as<string>();
+	if(d->repeat.argv) BPRINT("   Repeat file: %1%\n")       % values["repeat"].as<string>();
+	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<string>();
+	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<string>();*/
+	printVOpt<string>(values, "inter", "   Interaction file");
+	printOpt<string>(values, "region", "   Region file");
+	printVOpt<string>(values, "bed", "   Bed file");
+	//	if(name != "PROFILE" || name != "HEATMAP") BPRINT("   name: %1%\n") % d->bed[i]->name;
+	break;
       }
     case OPTDRAW:
       {
 	BPRINT("\nFigure parameter:\n");
-	BPRINT("   display read: ChIP %s, Input %1%\n") %str_bool[d->visualize_ctag], str_Inputread[d->visualize_itag];
-	BPRINT("   display enrichment: %1%\n") %str_ratio[d->visualize_ratio];
-	BPRINT("   display pvalue (internal): %1%\n") %str_bool[d->visualize_p_inter];
-	BPRINT("   display pvalue (ChIP/Input): %1%\n") %str_bool[d->visualize_p_enrich];
-	BPRINT("   background color: %1%\n") %str_bool[d->backcolors];
-	BPRINT("   Y label: %1%\n") %str_bool[d->stroke_ylab];
-	BPRINT("   Y memory: %1%\n") %str_bool[d->stroke_ymem];
+	BPRINT("   Display read: ChIP %1%, Input %2%\n") % str_bool[values["showctag"].as<int>()] % str_bool[values["showitag"].as<int>()];
+	BPRINT("   Display enrichment: %1%\n")           % str_bool[values["showratio"].as<int>()];
+	BPRINT("   Display pvalue (internal): %1%\n")    % str_bool[values["showpinter"].as<int>()];
+	BPRINT("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[values["showpenrich"].as<int>()];
+	BPRINT("   Background color: %1%\n")             % str_bool[!values["offbg"].as<int>()];
+	BPRINT("   Y label: %1%\n")                      % str_bool[!values["offylab"].as<int>()];
+	BPRINT("   Y memory: %1%\n")                     % str_bool[!values["offymem"].as<int>()];
 	break;
       }
     case OPTSCALE:
@@ -420,10 +421,8 @@ void Command::InitDump()
     }
     return;
   }
-
-  }
   
-  if(d->chronly) BPRINT("output %1% only.\n") % values["chr"].as<int>();
+  if(values.count("chr")) BPRINT("output %1% only.\n") % values["chr"].as<int>();
 
   printf("======================================\n");
   return;

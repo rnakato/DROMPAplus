@@ -10,17 +10,38 @@
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
 
+using namespace boost::program_options;
+using namespace std;
 
-std::string rmchr(const std::string &chr);
-void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w=1);
+string rmchr(const string &chr);
+void addmp(map<int, double> &mpto, const map<int, double> &mpfrom, double w=1);
 
 template <class T>
-void chkminus(const boost::program_options::variables_map &values, std::string x, int lim)
+void printOpt(variables_map &values, string opt, string str)
+{
+  if (values.count(opt)) cout << str << ": " << values[opt].as<T>() << endl;
+  return;
+}
+
+template <class T>
+void printVOpt(variables_map &values, string opt, string str)
+{
+  if (values.count(opt)) {
+    auto v = values[opt].as<vector<T>>();
+    for(uint i=0; i<v.size(); ++i) {
+      cout << boost::format("%1% %2%: %3%\n") % str % (i+1) % v[i];
+    }
+  }
+  return;
+}
+
+template <class T>
+void chkminus(const boost::program_options::variables_map &values, string x, int lim)
 {
   if (values.count(x)) {
     T val = values[x].as<T>();
     if(val <= lim) {
-      std::cerr << "Error: invalid " << x << ": " << val << std::endl;
+      cerr << "Error: invalid " << x << ": " << val << endl;
       exit(1);
     }
   }
@@ -28,14 +49,14 @@ void chkminus(const boost::program_options::variables_map &values, std::string x
 }
 
 template <class T, class S>
-  void printr(std::ofstream &out, T a, S b)
+  void printr(ofstream &out, T a, S b)
 {
   double r = b ? a*100/(double)b: 0;
   out << boost::format("%1% (%2$.1f%%)\t") % a % r;
 };
 
 template <class T>
-int getmaxi(std::vector<T> v)
+int getmaxi(vector<T> v)
 {
   T max(0);
   int maxi(0);
@@ -50,11 +71,11 @@ int getmaxi(std::vector<T> v)
 };
 
 template <class T>
-void GaussianSmoothing(std::vector<T> &v)
+void GaussianSmoothing(vector<T> &v)
 {
   int size = v.size();
 
-  std::vector<double> w(4,0);
+  vector<double> w(4,0);
   double var=1;
   for(int j=0; j<4; ++j) w[j] = exp((double)(-j*j)/2*var*var);
   double r = 1/(w[0] + (w[1]+w[2]+w[3]) *2);
