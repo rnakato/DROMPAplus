@@ -144,14 +144,14 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 template <class T>
 void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr, boost::mutex &mtx) {
   for(uint i=chr_s; i<=chr_e; ++i) {
-    cout << p.chr[i].name << endl;
+    cout << p.chr[i].name << ".." << flush;
    
     dist.execchr(p, i);
 
     if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
     string filename = p.oprefix + "." + typestr + "." + p.chr[i].name + ".csv";
-    dist.chr[i].outputmp(filename, dist.genome.nread, dist.name, dist.w);
+    dist.chr[i].outputmp(filename, dist.genome.nread, dist.genome.len, dist.name, dist.w);
   }
 }
 
@@ -180,7 +180,7 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   //  GaussianSmoothing(p.dist.hd);
 
   string filename = p.oprefix + "." + typestr + ".csv";
-  dist.genome.outputmp(filename, dist.genome.nread, dist.name, dist.w);
+  dist.genome.outputmp(filename, dist.genome.nread, dist.genome.len, dist.name, dist.w);
 
   // set fragment length;
   p.dist.eflen = dist.genome.nsci;

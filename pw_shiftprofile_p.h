@@ -25,13 +25,14 @@ class _shiftDist {
   int end;
   int end4mp;
   long nread;
+  long len;
   double r;
   double bk;
   double nsc;
   int nsci;
   double rchr;
 
- _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, double w=1): lenF3(p.dist.lenF3), start(s), end(e), end4mp(e-s-NG_TO), nread(n), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
+ _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, long l=0, double w=1): lenF3(p.dist.lenF3), start(s), end(e), end4mp(e-s-NG_TO), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
 
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
@@ -61,16 +62,20 @@ class _shiftDist {
       }
     }
   }
-  void outputmp(const string filename, long nread, string name, double weight) {
+  void outputmp(const string filename, long nread, long length, string name, double weight) {
     setControlRatio();
     setflen(weight);
     double sum(getmpsum());
-    double per10M(NUM_10M/(double)nread);
+    double per10M = NUM_10M/(double)nread * NUM_100M/(double)length;
+    double be(bk * per10M);
+    double const_bu(0.001);
     
     ofstream out(filename);
     out << "NSC\t"<< nsc*weight << endl;
     out << "Estimated fragment length\t" << nsci << endl;
-    out << "Background enrichment\t" << bk * per10M << endl;
+    out << "Background enrichment\t" << be << endl;
+    out << "Background uniformity\t" << const_bu / be << endl;
+
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
       out << itr->first           << "\t"
@@ -93,10 +98,13 @@ class shiftDist {
   
  shiftDist(string n, const Mapfile &p, int numthreads): name(n), genome(p) {
     for(auto x:p.chr) {
-      if(x.isautosome()) genome.nread += x.bothnread_nonred();
+      if(x.isautosome()) {
+	genome.nread += x.bothnread_nonred();
+	genome.len   += x.len;
+      }
     }
     for(auto x:p.chr) {
-      _shiftDist v(p, 0, x.len, x.bothnread_nonred());
+      _shiftDist v(p, 0, x.len, x.bothnread_nonred(), x.len);
       v.rchr = v.nread/(double)genome.nread;
       chr.push_back(v);
     }
@@ -114,7 +122,7 @@ class shiftDist {
   void add2genome(const _shiftDist &x, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
 #ifdef DEBUG
-    cout << "add2genome" << endl;
+    cout << "add2genome.." << flush;
 #endif
     addmp(genome.mp, x.mp, x.rchr);
     addmp(genome.nc, x.nc, x.rchr);
