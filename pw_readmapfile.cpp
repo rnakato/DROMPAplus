@@ -427,7 +427,9 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     clock_t t2 = clock();
     cout << "Jaccard Vec: " << (double)(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
-    strShiftProfile(p, "jaccard", values["threads"].as<int>());
+    // thresholdが2以上の時にbitを使うと、total readがおかしくなるので
+    // background uniformityが1を超える可能性がある
+    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
     cout << "Jaccard Bit: " << (double)(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
     
