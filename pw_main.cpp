@@ -491,7 +491,7 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
 
 void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
 {
-  for(int i=s; i<e; ++i) {
+  for(int i=s; i<=e; ++i) {
     cout << p.chr[i].name << ".." << flush;
     auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
     p.chr[i].calcGcov(array, mtx);

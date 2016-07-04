@@ -153,7 +153,7 @@ vector<short> makeFastaArray(string filename, int length, int flen4gc)
 
 void weightReadchr(const variables_map &values, Mapfile &p, int s, int e, boost::mutex &mtx)
 {
-  for(int i=s; i<e; ++i) {
+  for(int i=s; i<=e; ++i) {
     int posi;
     int flen(p.getflen(values));
     int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
