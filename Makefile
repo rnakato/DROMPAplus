@@ -12,12 +12,12 @@ endif
 OBJS_UTIL = $(SRCDIR)/readdata.o $(SRCDIR)/warn.o
 OBJS_ALGLIB = $(ALGLBDIR)/specialfunctions.cpp $(ALGLBDIR)/ap.cpp $(ALGLBDIR)/alglibinternal.cpp $(SRCDIR)/alglib.o
 OBJS_COMMON = statistics.o util.o
-OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_shiftprofile.o $(OBJS_COMMON)
-OBJS_DD = dd_main.o $(OBJS_COMMON)
+OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_shiftprofile.o
+OBJS_DD = dd_main.o dd_readfile.o
 
 HEADS_UTIL = common.h util.h statistics.h $(SRCDIR)/readdata.h $(SRCDIR)/warn.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
 HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h pw_gc.h pw_shiftprofile.h $(HEADS_UTIL)
-HEADS_DD = dd_gv.h $(HEADS_UTIL)
+HEADS_DD = dd_gv.h dd_readfile.h $(HEADS_UTIL)
 
 SUBDIRS := $(SRCDIR)
 .PHONY: all $(SUBDIRS)
@@ -30,10 +30,10 @@ $(SUBDIRS):
 echo:
 	@echo "CFLAGS = $(CFLAGS)"
 
-parse2wig+: $(OBJS_PW)
+parse2wig+: $(OBJS_PW) $(OBJS_COMMON)
 	$(CC) -o $@ $(OBJS_UTIL) $^ $(OBJS_ALGLIB) $(LIBS)
 
-drompa+: $(OBJS_DD)
+drompa+: $(OBJS_DD) $(OBJS_COMMON)
 	$(CC) -o $@ $(OBJS_UTIL) $^ $(LIBS)
 
 pw_readmapfile.o: pw_readmapfile.cpp
@@ -45,9 +45,10 @@ pw_readmapfile.o: pw_readmapfile.cpp
 
 clean:
 	cd $(SRCDIR); make clean
-	rm $(OBJS_PW) $(OBJS_DD) $(TARGET) *~
+	rm $(OBJS_PW) $(OBJS_DD) $(OBJS_COMMON) $(TARGET) *~
 
 dd_main.o: dd_opt.h
 pw_shiftprofile.o: pw_shiftprofile_p.h
+$(OBJS_COMMON): $(HEADS_UTIL)
 $(OBJS_PW): $(HEADS_PW) Makefile
 $(OBJS_DD): $(HEADS_DD) Makefile

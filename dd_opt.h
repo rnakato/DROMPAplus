@@ -7,6 +7,7 @@
 #include "util.h"
 #include "common.h"
 #include "macro.h"
+#include "dd_readfile.h"
 
 using namespace boost::program_options;
 enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTCG, OPTPD, OPTTR, OPTPROF, OPTOVERLAY, OPTOTHER};
@@ -26,6 +27,9 @@ class Command {
   string requiredstr;
   vector<optstatus> vopts;
   variables_map values;
+
+  unordered_map<string, SampleFile> sample;
+  vector<SamplePair> samplepair;
   
  Command(string n, string d, string r, vector<optstatus> v): opts("Options"), name(n), desc(d), requiredstr(r), vopts(v) {
     opts.add(v);
@@ -237,7 +241,7 @@ void opt::add(vector<optstatus> st)
 	  ("cw",      value<double>()->default_value(2500), "width from the center")
 	  ("maxval",   value<double>(),  "Upper limit for heatmap")
 	  ("offse",  "Omit the standard error in profile")
-	  ("hmsort",   value<int>(),  "Sort lists for <int>th sample")
+	  ("hmsort",   value<int>()->default_value(1),  "Column number for sorting sites")
 	  ("sortgbody",  "Sort sites by read number of gene body (default: TSS)")
 	  ("pdetail",  "")
 	  ;
@@ -269,44 +273,57 @@ void Command::checkParam() {
     case OPTCHIP:
       {
 	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+	
+	chkrange<int>(values, "if", 0, 3);
+	chkminus<int>(values, "binsize", 0);
+
+	vector<string> v(values["input"].as<vector<string>>());
+	for(auto x:v) scan_samplestr(x, sample, samplepair);
 	break;
       }
     case OPTNORM:
       {
-	for (auto x: {"binsize", "binsize2", "sm", "width4lmd"}) chkminus<int>(values, x, 0);
-	//	if(!RANGE(values["if"].as<int>(), 0, )) printerr("invalid wigfile type.\n");
-	//if(!RANGE(values["norm"].as<int>(), 0, )) printerr("invalid wigfile type.\n");
+	chkminus<int>(values, "sm", 0);
+	chkrange<int>(values, "norm", 0, 1);
 	break;
       }
     case OPTTHRE: 
       {
 	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
+	chkminus<int>(values, "width4lmd", 0);
 	break;
       }
     case OPTANNO_PC:
       {
+	chkrange<int>(values, "gftype", 0, 3);
+	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(values[x].as<string>());
 	break;
       }
     case OPTANNO_GV:
       {
+	chkminus<int>(values, "mpthre", -1);
+	for (auto x: {"gcsize", "gdsize"}) chkminus<int>(values, x, 0);
 	break;
       }
     case OPTDRAW:
       {
-	for (auto x: {"pdsize", "len_genefile", "ls", "lpp"}) chkminus<int>(values, x, 0);
+	for (auto x: {"ls", "lpp"}) chkminus<int>(values, x, 0);
 	break;
       }
     case OPTREGION:
       {
+	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(values[x].as<string>());
+	chkminus<int>(values, "len_genefile", -1);
 	break;
       }
     case OPTSCALE:
       {
-	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","scale_tag2","scale_ratio2","scale_pvalue2","bn","ystep"}) chkminus<int>(values, x, 0);
+	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","bn","ystep"}) chkminus<int>(values, x, 0);
 	break;
       }
     case OPTOVERLAY:
       {
+	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2","binsize2"}) chkminus<int>(values, x, 0);
 	break;
       }
     case OPTCG: 
@@ -321,10 +338,15 @@ void Command::checkParam() {
       }
     case OPTPD:
       {
+	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 	break;
       }
     case OPTPROF:
       {
+	chkrange<int>(values, "ptype", 0, 4);
+	chkrange<int>(values, "stype", 0, 1);
+	chkrange<int>(values, "ntype", 0, 1);
+	for (auto x: {"cw", "maxval", "hmsort"}) chkminus<int>(values, x, 0);
 	break;
       }
       

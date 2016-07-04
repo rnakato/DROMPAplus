@@ -13,47 +13,11 @@
 
 using namespace std;
 
-
 //             PC_BROAD    peak-calling (for broad mode)
 //             FRIP        accumulate read counts in bed regions specified
 //             3DMAP       accumulate read counts in bed regions specified
 
-vector<Command> cmds({
-    {"PC_SHARP", "peak-calling (for sharp mode)",
-	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-        {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOVERLAY, OPTOTHER}},
-    {"PC_ENRICH","peak-calling (enrichment ratio)",
-	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-	{OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOTHER},
-	},
-    {"GV", "global-view visualization",
-	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-	{OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}},
-    {"PD", "peak density",
-	"-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
-	{OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}},
-    {"CI", "compare peak-intensity between two samples",
-	"-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
-	{OPTCHIP, OPTNORM, OPTOTHER}},
-    {"PROFILE", "make R script of averaged read density",
-	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-	{OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}},
-    {"HEATMAP", "make heatmap of multiple samples",
-	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-	{OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}},
-    {"CG", "output ChIP-reads in each gene body",
-	"-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
-	{OPTCHIP, OPTCG, OPTOTHER}},
-    {"TR",      "calculate the travelling ratio (pausing index) for each gene",
-	"-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
-	{OPTCHIP, OPTPROF, OPTOTHER}},
-    {"GOVERLOOK", "genome-wide overlook of peak positions",
-	"-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
-        {OPTOTHER}},
-});
-
-
-void help_global() {
+void help_global(vector<Command> &cmds) {
     auto helpmsg = R"(
     ===============
 
@@ -75,10 +39,48 @@ void printVersion()
   exit(0);
 }
 
+vector<Command> generateCommands()
+{
+  vector<Command> cmds;
+  cmds.push_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
+			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOVERLAY, OPTOTHER}));
+  cmds.push_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
+			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOTHER}));
+  cmds.push_back(Command("GV", "global-view visualization",
+			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
+  cmds.push_back(Command("PD", "peak density",
+			 "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
+			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
+  cmds.push_back(Command("CI", "compare peak-intensity between two samples",
+			 "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
+			 {OPTCHIP, OPTNORM, OPTOTHER}));
+  cmds.push_back(Command("PROFILE", "make R script of averaged read density",
+			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 {OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}));
+  cmds.push_back(Command("HEATMAP", "make heatmap of multiple samples",
+			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 {OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}));
+  cmds.push_back(Command("CG", "output ChIP-reads in each gene body",
+			 "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
+			 {OPTCHIP, OPTCG, OPTOTHER}));
+  cmds.push_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
+			 "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
+			 {OPTCHIP, OPTPROF, OPTOTHER}));
+  cmds.push_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
+			 "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
+			 {OPTOTHER}));
+  return cmds;
+}
+
 int main(int argc, char* argv[])
 {
+  auto cmds = generateCommands();
+  
   if (argc ==1) {
-    help_global();
+    help_global(cmds);
     exit(0);
   }
 
@@ -88,8 +90,7 @@ int main(int argc, char* argv[])
   command.add_options()
     ("command", value<string>(), "command to run");
   genopts.add_options()
-    ("version,v", "print version")
-    ;
+    ("version,v", "print version");
 
   positional_options_description pd;
   pd.add("command", 1);
@@ -118,7 +119,7 @@ int main(int argc, char* argv[])
     
     if (!on) {
       cerr << "  Invalid command: " << values["command"].as<string>() << endl;
-      help_global();
+      help_global(cmds);
       exit(0);
     }
 

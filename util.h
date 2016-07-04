@@ -48,6 +48,19 @@ void chkminus(const boost::program_options::variables_map &values, string x, int
   return;
 }
 
+template <class T>
+void chkrange(const boost::program_options::variables_map &values, string x, T s, T e)
+{
+  if (values.count(x)) {
+    T val = values[x].as<T>();
+    if(!RANGE(val, s, e)) {
+      cerr << "Error: invalid " << x << ": " << val << endl;
+      exit(1);
+    }
+  }
+  return;
+}
+
 template <class T, class S>
   void printr(ofstream &out, T a, S b)
 {
