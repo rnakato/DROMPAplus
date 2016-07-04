@@ -466,7 +466,7 @@ void output_stats(const variables_map &values, const Mapfile &p)
 vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &p, double r4cmp)
 {
   vector<char> array;
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), chr.name, chr.len);
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chr.len);
   else array = readMpbl_binary(chr.len);
   if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
 
@@ -494,7 +494,7 @@ void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r
   for(int i=s; i<e; ++i) {
     cout << p.chr[i].name << ".." << flush;
     auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
-    p.chr[i].calcGcov(array);
+    p.chr[i].calcGcov(array, mtx);
     p.genome.addGcov(p.chr[i], mtx);
   }
 }

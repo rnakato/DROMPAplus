@@ -192,17 +192,22 @@ class SeqStats {
   void calcdepth(const int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
   }
-  void calcGcov(const vector<char> &array) {
-    for(int i=0; i<len; ++i) {
-      if(array[i] >= MAPPABLE) {
-	++nbp;
-      }// MAPPABLE || COVREAD_ALL || COVREAD_NORM
-      if(array[i] >= COVREAD_ALL) {
-	++ncov;    } // COVREAD_ALL || COVREAD_NORM
-      if(array[i] == COVREAD_NORM) ++ncovnorm; 
+  void calcGcov(const vector<char> &array, boost::mutex &mtx) {
+    long tempnbp(0), tempncov(0), tempncovnorm(0);
+    for(long i=0; i<len; ++i) {
+      if(array[i] >= MAPPABLE)     ++tempnbp;      // MAPPABLE || COVREAD_ALL || COVREAD_NORM
+      if(array[i] >= COVREAD_ALL)  ++tempncov;     // COVREAD_ALL || COVREAD_NORM
+      if(array[i] == COVREAD_NORM) ++tempncovnorm;
     }
-    gcovRaw  = nbp ? ncov / (double)nbp: 0;
-    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      nbp      = tempnbp;
+      ncov     = tempncov;
+      ncovnorm = tempncovnorm;
+      gcovRaw  = nbp ? ncov     / (double)nbp: 0;
+      gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+      cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << endl;
+    }
   }
   void printwigDist(ofstream &out, const int i) {
     out << boost::format("%1%\t%2%\t") % wigDist[i] % (wigDist[i]/(double)nbindist);

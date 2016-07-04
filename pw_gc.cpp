@@ -51,7 +51,7 @@ void make_GCdist(const variables_map &values, Mapfile &p)
 
   // mappability
   vector<char> array; 
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), p.lchr->name, chrlen);
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chrlen);
   else array = readMpbl_binary(p.lchr->len);
   if(values.count("bed")) arraySetBed(array, p.lchr->name, p.vbed);
 
