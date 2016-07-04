@@ -9,7 +9,7 @@
 #include "macro.h"
 
 using namespace boost::program_options;
-enum optstatus {OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTCG, OPTPD, OPTTR, OPTPROF, OPTOTHER};
+enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTCG, OPTPD, OPTTR, OPTPROF, OPTOVERLAY, OPTOTHER};
 
 class opt {
 public:
@@ -23,10 +23,11 @@ class Command {
   public:
   string name;
   string desc;
+  string requiredstr;
   vector<optstatus> vopts;
   variables_map values;
   
- Command(string n, string d, vector<optstatus> v): opts("Options"), name(n), desc(d), vopts(v) {
+ Command(string n, string d, string r, vector<optstatus> v): opts("Options"), name(n), desc(d), requiredstr(r), vopts(v) {
     opts.add(v);
   };
   void print() {
@@ -35,7 +36,7 @@ class Command {
   }
   void printhelp() {
     BPRINT("%1%:  %2%\n") % name % desc;
-    BPRINT("Usage: drompa %1% [options] -o <output> -gt <genometable> -i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]\n\n") % name;
+    BPRINT("Usage: drompa %1% [options] -o <output> -gt <genometable> %2%\n\n") % name % requiredstr;
     cout << opts.opts << endl;
   }
   void checkParam();
@@ -64,31 +65,33 @@ class Command {
 
 void opt::add(vector<optstatus> st)
 {
+  options_description o("Required");
+  o.add_options()
+    ("output,o",  value<string>(),	 "Output prefix")
+    ("gt",        value<string>(),	 "Genome table")
+    ;
+  opts.add(o);
+
+
   for(auto x: st) {
     switch(x) {
-    case OPTREQ:
+    case OPTCHIP:
       {
-	options_description o("Required");
+	options_description o("Input");
 	o.add_options()
 	  ("input,i",   value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample (separated by ',', <Input> and <name> can be omitted)")
-	  ("output,o",  value<string>(),	 "Output prefix")
-	  ("gt",        value<string>(),	 "Genome table")
+	  ("if",        value<int>()->default_value(0),   "Input file format\n     0: Binary (.bin)\n     1: Compressed wig (.wig.gz)\n     2: Uncompressed wig (.wig)\n     3: bedGraph (.bedGraph)")
+	  ("binsize,b", value<int>()->default_value(100), "Bin size")
 	  ;
 	opts.add(o);
-      break;
+	break;
       }
-    case OPTIO:
+    case OPTNORM:
       {
-	options_description o("Input/Output");
+	options_description o("");
 	o.add_options()
-	  ("ioverlay",  value<vector<string>>(),	  "Input file to overlay")
-	  ("binsize,b", value<int>()->default_value(100), "Bin size")
-	  ("binsize2",  value<int>()->default_value(100), "Bin size for overlay")
-	  ("if",        value<int>()->default_value(0),   "Input file format\n     0: Binary (.bin)\n     1: Compressed wig (.wig.gz)\n     2: Uncompressed wig (.wig)\n     3: bedGraph (.bedGraph)\n")
-	  ("sm",        value<int>()->default_value(0),   "Smoothing width") // gausian ??
-	  ("width4lmd", value<int>()->default_value(100000), "Width for calculating local lambda")
 	  ("norm",      value<int>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
-	  ("rmchr",     value<int>(), "Remove chromosome-separated pdf files")
+	  ("sm",        value<int>()->default_value(0),      "Smoothing width") // gausian ??
 	  ;
 	opts.add(o);
 	break;
@@ -103,11 +106,12 @@ void opt::add(vector<optstatus> st)
 	  ("ethre,e",        value<double>()->default_value(2),    "IP/Input fold enrichment")
 	  ("ipm",            value<double>()->default_value(0),    "Read intensity of peak summit")
 	  ("nosig", "Omit highlighting peak regions")
+	  ("width4lmd", value<int>()->default_value(100000), "Width for calculating local lambda")
 	  ;
 	opts.add(o);
 	break;
       }
-    case OPTANNO:
+    case OPTANNO_PC:
       {
 	options_description o("Annotation");
 	o.add_options()
@@ -115,16 +119,23 @@ void opt::add(vector<optstatus> st)
 	  ("gftype", value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
 	  ("ars",    value<string>(),	  "ARS list (for yeast)")  
 	  ("ter",    value<string>(),	  "TER list (for S.cerevisiae)")
+	  ("repeat", value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
+	  ;
+	opts.add(o);
+	break;
+      }
+    case OPTANNO_GV:
+      {
+	options_description o("Optional data");
+	o.add_options()
 	  ("mp",     value<string>(),  	  "Mappability file")
 	  ("mpthre", value<double>()->default_value(0.3), "Low mappability threshold")
 	  ("gap",    value<string>(),	  "Specify gapped regions to be shaded")
-	  ("bed,b",  value<vector<string>>(), "<bedfile>,<label>: Specify bed file and label (<label> can be omited)")
 	  ("inter",  value<vector<string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
 	  ("gc",     value<string>(), 	  "Visualize GC contents graph")
 	  ("gcsize", value<int>()->default_value(100000), "Window size for GC contents")
 	  ("gd",     value<string>(), 	  "Visualize gene density (number of genes for each window)")
 	  ("gdsize", value<int>()->default_value(100000), "Window size for gene density")
-	  ("repeat", value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
 	  ;
 	opts.add(o);
 	break;
@@ -138,12 +149,7 @@ void opt::add(vector<optstatus> st)
 	  ("showratio",    value<int>(),    "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
 	  ("showpinter",   value<int>(),    "Display -log10(p) lines for ChIP internal")
 	  ("showpenrich",  value<int>(),    "Display -log10(p) lines for ChIP/Input enrichment")
-	  ("chr",         value<int>(),     "Output the specified chromosome only")
-	  ("region,r",    value<string>(),  "Specify genomic regions for drawing")
-	  ("genefile",    value<string>(),  "Specify gene loci to visualize")  
-	  ("len_genefile",value<int>()->default_value(50000), "extended length for each gene locus")
 	  ("showars",     value<int>(),     "Display ARS only (do not display genes)")
-	  ("png",         value<int>(),     "Output with png format (Note: output each page separately)")
 	  ("ls",          value<int>()->default_value(1000), "Width for each line (kb)")
 	  ("lpp",         value<int>()->default_value(1),    "Line number per page")
 	  ("offbg",       value<int>(),     "Omit background color of read lines")
@@ -154,6 +160,19 @@ void opt::add(vector<optstatus> st)
 	opts.add(o);
 	break;
       }
+    case OPTREGION:
+      {
+	options_description o("Region to draw");
+	o.add_options()
+	  ("chr",         value<int>(),     "Output the specified chromosome only")
+	  ("region,r",    value<string>(),  "Specify genomic regions for drawing")
+	  ("genefile",    value<string>(),  "Specify gene loci to visualize")  
+	  ("len_genefile",value<int>()->default_value(50000), "extended length for each gene locus")
+	  ;
+	opts.add(o);
+	break;
+      }
+    
     case OPTSCALE:
       {
 	options_description o("Scale for Y axis");
@@ -161,11 +180,21 @@ void opt::add(vector<optstatus> st)
 	  ("scale_tag",    value<double>(), "Scale for read line")
 	  ("scale_ratio",  value<double>(), "Scale for fold enrichment")
 	  ("scale_pvalue", value<double>(), "Scale for -log10(p)")
-	  ("scale_tag2",   value<double>(), "(Overlay) Scale for read line")
-	  ("scale_ratio2", value<double>(), "(Overlay) Scale for fold enrichment")
-	  ("scale_pvalue2",value<double>(), "(Overlay) Scale for -log10(p)")
 	  ("bn",           value<int>()->default_value(2),     "Number of memories of y-axis")
 	  ("ystep",        value<double>()->default_value(20), "Height of read line")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case OPTOVERLAY:
+      {
+	options_description o("For overlay");
+	o.add_options()
+	  ("ioverlay",  value<vector<string>>(),	  "Input file")
+	  ("binsize2",  value<int>()->default_value(100), "Bin size")
+	  ("scale_tag2",   value<double>(), "Scale for read line")
+	  ("scale_ratio2", value<double>(), "Scale for fold enrichment")
+	  ("scale_pvalue2",value<double>(), "Scale for -log10(p)")
 	  ;
 	opts.add(o);
 	break;
@@ -220,6 +249,8 @@ void opt::add(vector<optstatus> st)
       {
 	options_description o("Others");
 	o.add_options()
+	  ("rmchr",   "Remove chromosome-separated pdf files")
+	  ("png",     "Output with png format (Note: output each page separately)")
 	  ("threads,p", value<int>()->default_value(1), "number of threads to launch")
 	  ("help,h", "show help message")
 	  ;
@@ -231,14 +262,16 @@ void opt::add(vector<optstatus> st)
 }
 
 void Command::checkParam() {
+  for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+
   for(auto x: vopts) {
     switch(x) {
-    case OPTREQ:
+    case OPTCHIP:
       {
-	for (auto x: {"input", "output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 	break;
       }
-    case OPTIO:
+    case OPTNORM:
       {
 	for (auto x: {"binsize", "binsize2", "sm", "width4lmd"}) chkminus<int>(values, x, 0);
 	//	if(!RANGE(values["if"].as<int>(), 0, )) printerr("invalid wigfile type.\n");
@@ -250,7 +283,11 @@ void Command::checkParam() {
 	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
 	break;
       }
-    case OPTANNO:
+    case OPTANNO_PC:
+      {
+	break;
+      }
+    case OPTANNO_GV:
       {
 	break;
       }
@@ -259,9 +296,17 @@ void Command::checkParam() {
 	for (auto x: {"pdsize", "len_genefile", "ls", "lpp"}) chkminus<int>(values, x, 0);
 	break;
       }
+    case OPTREGION:
+      {
+	break;
+      }
     case OPTSCALE:
       {
 	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","scale_tag2","scale_ratio2","scale_pvalue2","bn","ystep"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case OPTOVERLAY:
+      {
 	break;
       }
     case OPTCG: 
@@ -334,11 +379,11 @@ void Command::InitDump()
   }
   for(auto x: vopts) {
     switch(x) {
-    case OPTREQ:
+    case OPTCHIP:
       {
 	break;
       }
-    case OPTIO:
+    case OPTNORM:
       {
 	break;
       }
@@ -351,7 +396,28 @@ void Command::InitDump()
 	BPRINT("   FDR threshold: %1$.2e\n")                          % values["FDR"].as<double>();
   	break;
       }
-    case OPTANNO:
+    case OPTANNO_PC:
+      {
+	BPRINT("\nAnnotations:\n");
+	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
+			     % values["gene"].as<string>() % str_gftype[values["gftype"].as<int>()];
+	printOpt<string>(values, "ars",    "   ARS file");
+	printOpt<string>(values, "ter",    "   TER file");
+	printOpt<string>(values, "repeat", "   Repeat file");
+	printOpt<string>(values, "gc", "   GCcontents file");
+	printOpt<string>(values, "gd", "   Gene density file");
+	/*	if(d->arsfile)     BPRINT("   ARS file: %1%\n")          % values["ars"].as<string>();
+	if(d->terfile)     BPRINT("   TER file: %1%\n")          % values["ter"].as<string>();
+	if(d->repeat.argv) BPRINT("   Repeat file: %1%\n")       % values["repeat"].as<string>();
+	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<string>();
+	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<string>();*/
+	printVOpt<string>(values, "inter", "   Interaction file");
+	printOpt<string>(values, "region", "   Region file");
+	printVOpt<string>(values, "bed", "   Bed file");
+	//	if(name != "PROFILE" || name != "HEATMAP") BPRINT("   name: %1%\n") % d->bed[i]->name;
+	break;
+      }
+    case OPTANNO_GV:
       {
 	BPRINT("\nAnnotations:\n");
 	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
@@ -384,9 +450,18 @@ void Command::InitDump()
 	BPRINT("   Y memory: %1%\n")                     % str_bool[!values["offymem"].as<int>()];
 	break;
       }
+    
+    case OPTREGION:
+      {
+	break;
+      }
     case OPTSCALE:
       {
 	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","scale_tag2","scale_ratio2","scale_pvalue2","bn","ystep"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case OPTOVERLAY:
+      {
 	break;
       }
     case OPTCG: 

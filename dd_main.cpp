@@ -7,7 +7,6 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include "common.h"
-#include "warn.h"
 #include "macro.h"
 #include "dd_gv.h"
 #include "dd_opt.h"
@@ -21,23 +20,36 @@ using namespace std;
 
 vector<Command> cmds({
     {"PC_SHARP", "peak-calling (for sharp mode)",
-	{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+        {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOVERLAY, OPTOTHER}},
     {"PC_ENRICH","peak-calling (enrichment ratio)",
-	{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+	{OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOTHER},
+	},
     {"GV", "global-view visualization",
-	{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+	{OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}},
     {"PD", "peak density",
-	{OPTREQ, OPTIO, OPTTHRE, OPTANNO, OPTDRAW, OPTSCALE, OPTOTHER}},
+	"-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
+	{OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}},
     {"CI", "compare peak-intensity between two samples",
-	{OPTREQ, OPTIO, OPTOTHER}},
-    {"CG", "output ChIP-reads in each gene body",
-	{OPTREQ, OPTIO, OPTCG, OPTOTHER}},
-    {"GOVERLOOK", "genome-wide overlook of peak positions",
-	{OPTREQ, OPTIO, OPTOTHER}},
+	"-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
+	{OPTCHIP, OPTNORM, OPTOTHER}},
     {"PROFILE", "make R script of averaged read density",
-	{OPTREQ, OPTIO, OPTPROF, OPTOTHER}},
-    {"HEATMAP",   "make heatmap of multiple samples", {OPTREQ, OPTIO, OPTPROF, OPTOTHER}},
-    {"TR",        "calculate the travelling ratio (pausing index) for each gene", {OPTREQ, OPTIO, OPTPROF, OPTOTHER}},
+	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+	{OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}},
+    {"HEATMAP", "make heatmap of multiple samples",
+	"-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+	{OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}},
+    {"CG", "output ChIP-reads in each gene body",
+	"-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
+	{OPTCHIP, OPTCG, OPTOTHER}},
+    {"TR",      "calculate the travelling ratio (pausing index) for each gene",
+	"-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
+	{OPTCHIP, OPTPROF, OPTOTHER}},
+    {"GOVERLOOK", "genome-wide overlook of peak positions",
+	"-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
+        {OPTOTHER}},
 });
 
 

@@ -266,6 +266,7 @@ variables_map getOpts(int argc, char* argv[])
     init_dump(values);
   } catch (exception &e) {
     cout << e.what() << endl;
+    exit(0);
   }
   return values;
 }
