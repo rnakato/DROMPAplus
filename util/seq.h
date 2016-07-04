@@ -35,7 +35,8 @@ class bed {
  bed(): start(0), end(0), summit(0) {}
  bed(int s, int e, string c): chr(c), start(s), end(e) {}
  bed(vector<string> s): start(stoi(s[1])), end(stoi(s[2])), summit((start + end)/2) {
-   chr = addchr(s[0]);
+   if(!s[0].find("chr")) chr = s[0].substr(3);
+   else chr = s[0];
  }
  void print() const {
    cout << chr << "\t" << start << "\t" << end;

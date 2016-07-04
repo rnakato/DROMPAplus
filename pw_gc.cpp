@@ -43,7 +43,7 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
 
 void make_GCdist(const variables_map &values, Mapfile &p)
 {
-  cout << "chromosome for GC distribution: " << p.lchr->name << endl;
+  cout << "chromosome for GC distribution: chr" << p.lchr->name << endl;
   int chrlen(p.lchr->len);
   int flen(p.getflen(values));
   int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
@@ -56,7 +56,7 @@ void make_GCdist(const variables_map &values, Mapfile &p)
   if(values.count("bed")) arraySetBed(array, p.lchr->name, p.vbed);
 
   // make fastaGCarray
-  string fa= values["genome"].as<string>() + "/" + p.lchr->name + ".fa";
+  string fa= values["genome"].as<string>() + "/chr" + p.lchr->name + ".fa";
   auto FastaArray = makeFastaArray(fa, chrlen, flen4gc);
 
   // make GCarray for genome
