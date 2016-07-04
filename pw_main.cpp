@@ -494,7 +494,7 @@ void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r
   for(int i=s; i<=e; ++i) {
     cout << p.chr[i].name << ".." << flush;
     auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
-    p.chr[i].calcGcov(array, mtx);
+    p.chr[i].calcGcov(array);
     p.genome.addGcov(p.chr[i], mtx);
   }
 }
