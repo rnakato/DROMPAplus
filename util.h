@@ -107,4 +107,15 @@ void GaussianSmoothing(vector<T> &v)
   return;
 }
 
+template <class T>
+int findIndex(vector<T> array, T value)
+{
+    auto iter = std::find(array.begin(), array.end(), value);
+    size_t index = std::distance(array.begin(), iter);
+    if(index == array.size()) index = -1;
+    
+    return index;
+}
+
+
 #endif /* _UTIL_H_ */

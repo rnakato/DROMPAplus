@@ -17,3 +17,4 @@ void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, dou
     mpto[itr->first] += itr->second * w;
   }
 }
+

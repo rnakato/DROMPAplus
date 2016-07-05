@@ -158,7 +158,7 @@ void weightReadchr(const variables_map &values, Mapfile &p, int s, int e, boost:
     int flen(p.getflen(values));
     int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
     cout << p.chr[i].name << ".." << flush;
-    string fa = values["genome"].as<string>() + "/" + p.chr[i].name + ".fa";
+    string fa = values["genome"].as<string>() + "/chr" + p.chr[i].name + ".fa";
     auto FastaArray = makeFastaArray(fa, p.chr[i].len, flen4gc);
     
     for(int strand=0; strand<STRANDNUM; ++strand) {
