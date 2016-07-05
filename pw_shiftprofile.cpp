@@ -6,8 +6,6 @@
 #include <boost/thread.hpp>
 #include <time.h>
 
-//#define CHR1ONLY 1
-
 double getJaccard(int step, int end4mp, int xysum, const vector<char> &fwd, const vector<char> &rev)
 {
   int xy(0);
@@ -39,21 +37,6 @@ void shiftJacVec::setDist(_shiftDist &chr, const vector<char> &fwd, const vector
   }
 }
 
-template <class T>
-void calcMeanSD(const vector<T> &x, int max, double &ave, double &sd)
-{
-  double dx, var(0);
-  
-  ave=0;
-  for(int i=MP_FROM; i<max; ++i) ave += x[i];
-  ave /= (double)(max - MP_FROM);
-  for(int i=MP_FROM; i<max; ++i) {
-    dx = x[i] - ave;
-    var += dx * dx;
-  }
-  sd = sqrt(var/double(max - MP_FROM -1));
-}
-
 void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, const int s, const int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
@@ -65,24 +48,23 @@ void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &
 
 void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev)
 {
-  double mx, my, xx, yy;
-  calcMeanSD(fwd, chr.end4mp, mx, xx);
-  calcMeanSD(rev, chr.end4mp, my, yy);
+  moment<char> x(fwd, MP_FROM, chr.end4mp);
+  moment<char> y(rev, MP_FROM, chr.end4mp);
 
   boost::thread_group agroup;
   boost::mutex mtx;
   for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(genThreadCcp, boost::ref(chr), boost::cref(fwd), boost::cref(rev), mx, my, seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    agroup.create_thread(bind(genThreadCcp, boost::ref(chr), boost::cref(fwd), boost::cref(rev), x.getmean(), y.getmean(), seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
   
   for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
     double xy(0);
-    for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - x.getmean()) * (rev[j+step] - y.getmean());
     chr.nc[step] = xy;
   }
 
-  double val = 1/(xx*yy*(chr.end4mp - MP_FROM - 1));
+  double val = 1/(x.getsd() * y.getsd() * (chr.end4mp - MP_FROM - 1));
   for(auto itr = chr.mp.begin(); itr != chr.mp.end(); ++itr) itr->second *= val;
   for(auto itr = chr.nc.begin(); itr != chr.nc.end(); ++itr) itr->second *= val;
 }

@@ -74,7 +74,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
 
   for(int i=0; i<size; ++i) {
     double val(WIGARRAY2VALUE(wigarray[i]));
-    double p(getlogpZINB(val, chr.nb_p, chr.nb_n));
+    double p(getlogpZINB(val, chr.ws.nb_p, chr.ws.nb_n));
 
     if(!ext) {
       if(p > pthre) {
@@ -111,24 +111,21 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     int mpthre = values["mpthre"].as<double>()*binsize;
     auto mparray = readMpbl(values["mp"].as<string>(), ("chr" + chr.name), values["binsize"].as<int>(), chr.nbin);
     for(int i=0; i<chr.nbin; ++i) {
-      chr.addmpDist(mparray[i]/(double)binsize);
+      chr.ws.addmpDist(mparray[i]/(double)binsize);
       if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
     }
-    chr.getWigStats(wigarray);
-  } else {
-    chr.getWigStats(wigarray);
   }
-  p.genome.addWigStats(chr);
+  chr.ws.getWigStats(wigarray);
+  p.genome.ws.addWigDist(chr.ws);
 
-  chr.estimateParam();
+  chr.ws.estimateParam();
   peakcall(p, chr, wigarray);
   
   /* Total read normalization */
   if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);
 
 #ifdef DEBUG
-  chr.printWigStats();
-  if (values.count("mp")) chr.printmpDist();
+  if (values.count("mp")) chr.ws.printmpDist();
 #endif
 
   return wigarray;
@@ -196,10 +193,6 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
     }
   }
   
-#ifdef DEBUG
-  p.genome.printWigStats();
-#endif
-
   return;
 }
 

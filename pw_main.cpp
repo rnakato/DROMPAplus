@@ -55,6 +55,9 @@ Mapfile::Mapfile(const variables_map &values):
     cout << x.name << "\t" << x.isautosome() << endl;
   }
   for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
+
+  printstats();
+
 #endif
 }
 
@@ -155,7 +158,6 @@ void outputPeak(const variables_map &values, Mapfile &p)
   return;
 }
 
-
 int main(int argc, char* argv[])
 {
   variables_map values = getOpts(argc, argv);
@@ -178,7 +180,7 @@ int main(int argc, char* argv[])
     isFile(bedfile);
     p.vbed = parseBed<bed>(bedfile);
     //    printBed(p.vbed);
-    p.calcFRiP();
+    p.setFRiP();
   }
 
 #ifdef DEBUG
@@ -408,12 +410,11 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   if(mapfile.gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % p.gcovRaw % p.gcovNorm;
   else out << boost::format("%1$.3f\t%2$.3f\t") % p.gcovRaw % p.gcovNorm;
   //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
-  out << boost::format("%1$.3f\t%2$.3f\t") % p.ave % p.var;
+  p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
-  out << boost::format("%1%\t%2%\t%3%") % p.nb_p % p.nb_n % p.nb_p0 ;
+  p.ws.printZINBpar(out);
   
-
   out << endl;
   return;
 }
@@ -523,6 +524,28 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   return;
 }
 
+void calcFRiP(SeqStats &chr, const vector<bed> vbed)
+{
+  vector<char> array(chr.len, MAPPABLE);
+  arraySetBed(array, chr.name, vbed);
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto &x: chr.seq[strand].vRead) {
+      if(x.duplicate) continue;
+      int s(min(x.F3, x.F5));
+      int e(max(x.F3, x.F5));
+      for(int i=s; i<=e; ++i) {
+	if(array[i]==INBED) {
+	  x.inpeak = 1;
+	  chr.nread_inbed++;
+	  break;
+	}
+      }
+    }
+  }
+  chr.setFRiP();
+  return;
+}
+
 void output_wigstats(const variables_map &values, Mapfile &p)
 {
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".binarray_dist.csv";
@@ -535,15 +558,15 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   for (auto x:p.chr) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
   out << endl;
 
-  for(int i=0; i<NUM_WIGDISTARRAY; ++i) {
+  for(size_t i=0; i<p.genome.ws.wigDist.size(); ++i) {
     out << i << "\t";
-    p.genome.printwigDist(out, i);
-    out << p.genome.getZINB(i) << "\t";
+    p.genome.ws.printwigDist(out, i);
+    out << p.genome.ws.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
     for (auto x:p.chr) {
-      x.printwigDist(out, i);
-      out << x.getPoisson(i) << "\t";
-      out << x.getZINB(i) << "\t";
+      x.ws.printwigDist(out, i);
+      out << x.ws.getPoisson(i) << "\t";
+      out << x.ws.getZINB(i) << "\t";
     }
     out << endl;
   }

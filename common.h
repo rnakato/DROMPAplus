@@ -9,10 +9,11 @@
 #include "seq.h"
 
 #define VERSION "3.3.0+"
-#define NUM_1K 1000
-#define NUM_1M 1000000
-#define NUM_10M 10000000
-#define NUM_100M 100000000
+
+enum {NUM_1K=1000,
+      NUM_1M=1000000,
+      NUM_10M=10000000,
+      NUM_100M=100000000};
 
 #define VALUE2WIGARRAY(v) ((v) * 1000.0)
 #define WIGARRAY2VALUE(v) ((v) * (1.0/1000.0))
