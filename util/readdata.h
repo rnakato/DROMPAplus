@@ -26,14 +26,13 @@ void printMap(const unordered_map<string, unordered_map<string, genedata>> &);
 void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &);
 map<string, int> read_genometable(const string&);
 
-vector<int> readMpbl(string, string, int, int);
+vector<int>  readMpbl(string, string, int, int);
 vector<char> readMpbl_binary(int);
 vector<char> readMpbl_binary(string, string, int);
 vector<char> arraySetBed(vector<char> &, string, vector<bed>);
 void isFile(string);
 string IntToString(int n);
 string rmchr(const string &chr);
-
 
 template <class T>
 vector<T> parseBed(const string& fileName)

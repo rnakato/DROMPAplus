@@ -1,7 +1,7 @@
 CC = g++
 
 CFLAGS += -std=c++11 -Wall -O2
-LIBS += -lboost_system -lboost_filesystem
+LIBS += -lboost_system -lboost_filesystem -lboost_program_options
 TARGET = gtf2refFlat compare_bed2tss peak_occurance multibed2gene
 SRCDIR = ./alglib-3.10.0/src
 

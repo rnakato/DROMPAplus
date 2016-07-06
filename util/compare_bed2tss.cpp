@@ -2,46 +2,73 @@
 #include <iostream>
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/program_options.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
 #include "warn.h"
-#include "cmdline.h"
 
-cmdline::parser argv_init(int argc, char* argv[])
+using namespace boost::program_options;
+
+variables_map argv_init(int argc, char* argv[])
 {
-  cmdline::parser p;
-  p.add<string>("genefile", 'g', "gene file", true, "");
-  p.add<string>("bed", 'b', "bed file", true, "");
-  p.add<string>("gt",  0, "genome table", false, "");
-  p.add<int>("mode", 'm', "0: with TSS; 1: with whole gene; 2:genome coverage", false, 0);
-  p.add<int>("updist", 'u', "allowed upstream distance from TSS", false, 5000);
-  p.add<int>("downdist", 'd', "allowed downstream distance from TSS", false, 5000);
-  p.add<int>("limconv",  'l', "limit distance between genes for convergent sites", false, 10000);
-  p.add("all",   'a', "output also non-neighboring sites");
-  p.add("name",  'n', "output name instead of id");
-  p.add("conv",   'c', "consider convergent sites");
-  p.add("refFlat", 'r', "refFlat format as input (default: gtf)");
-  p.add("gene",    0, "gene-level comparison (default: transcript-level)");
-  p.add("intron",  'i', "consider exon and intron (default: whole-genic)");
-  p.add("macsxls", 0, "macs xls file as input");
-  p.add("bed12",   0, "bed12 format as input");
-  p.add("help",  'h', "print this message");
-
-  if (argc==1 || !p.parse(argc, argv) || p.exist("help")) {
-    if (argc==1 || p.exist("help")) cout << "compare bed file with gene annotation file" << endl;
-    cout << p.error_full() << p.usage();
-    exit(1);
+  options_description allopts("Options");
+  allopts.add_options()
+    ("genefile,g", value<string>(), "Gene file")
+    ("bed,b",      value<string>(), "Bed file")
+    ("gt",         value<string>(), "Genome table (tab-delimited file describing the name and length of each chromosome)")
+    ("mode,m",     value<int>()->default_value(0),    "0: with TSS; 1: with whole gene; 2:genome coverage")
+    ("updist,u",   value<int>()->default_value(5000), "Allowed upstream distance from TSS")
+    ("downdist,d", value<int>()->default_value(5000), "Allowed downstream distance from TSS")
+    ("limconv,l",  value<int>()->default_value(10000), "Maxmum distance between genes for convergent sites")
+    ("all,a", "Output also non-neighboring sites")
+    ("name,n", "Output name instead of id")
+    ("conv,c", "Consider convergent sites")
+    ("refFlat,r", "refFlat format as input (default: gtf)")
+    ("gene",      "Gene-level comparison (default: transcript-level)")
+    ("intron,i",  "consider exon and intron (default: whole-genic)")
+    ("macsxls",   "macs xls file as input")
+    ("bed12", "bed12 format as input")
+    ("help,h", "print this message")
+    ;
+  
+  variables_map values;
+  
+  if (argc==1) {
+    cout << "\n" << allopts << endl;
+    exit(0);
   }
-  return p;
+  try {
+    parsed_options parsed = parse_command_line(argc, argv, allopts);
+    store(parsed, values);
+    
+    if (values.count("help")) {
+      cout << "\n" << allopts << endl;
+      exit(0);
+    }
+    vector<string> opts = {};
+    for (auto x: {"genefile", "bed", "gt"}) {
+      if (!values.count(x)) {
+	cerr << "specify --" << x << " option." << endl;
+	exit(0);
+      }
+    }
+
+    notify(values);
+
+  } catch (exception &e) {
+    cout << e.what() << endl;
+    exit(0);
+  }
+  return values;
 }
 
 template <class T>
-void merge_tss2bed(const cmdline::parser p,
+void merge_tss2bed(const variables_map &values,
 		    const unordered_map<string, unordered_map<string, genedata>> &mp,
 		    vector<T> &vbed)
 {
-  int updist = -p.get<int>("updist");
-  int downdist = p.get<int>("downdist");
+  int updist = -values["updist"].as<int>();
+  int downdist = values["downdist"].as<int>();
   for (T &x: vbed) {
     int d, dmin(-1);
     if(mp.find(x.bed.chr) != mp.end()) {
@@ -68,29 +95,28 @@ void merge_tss2bed(const cmdline::parser p,
   vbed[0].printHead();
   cout << "\tfrom TSS\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << endl;
   for (auto x: vbed) {
-    if((x.st == TSS || p.exist("all"))) x.printWithTss();
+    if(x.st == TSS || values.count("all")) x.printWithTss();
   }
 
   return;
 }
 
 template <class T>
-void merge_gene2bed(const cmdline::parser p,
+void merge_gene2bed(const variables_map &values,
 		    const unordered_map<string, unordered_map<string, genedata>> &mp,
 		    vector<T> &vbed)
 {
-  int updist = p.get<int>("updist");
-  int downdist = p.get<int>("downdist");
+  int updist = values["updist"].as<int>();
+  int downdist = values["downdist"].as<int>();
 
   vector<convsite> vconv;
-  if(p.exist("conv")) vconv = gen_convergent(p, mp);
-  int convflag = p.exist("conv");
+  if(values.count("conv")) vconv = gen_convergent(values["limconv"].as<int>(), mp);
   
   for (T &x: vbed) {
     if(mp.find(x.bed.chr) == mp.end()) continue;
 
     int on=0;
-    if(convflag) on = scanBedConv(x, vconv);
+    if(values.count("conv")) on = scanBedConv(x, vconv);
     if(on) continue;
     
     scanBedGene(x, mp, updist, downdist);
@@ -99,7 +125,7 @@ void merge_gene2bed(const cmdline::parser p,
   gdist d;
   for (auto x: vbed) d.inc(x.st);
   cout << boost::format("# Input sites total: %1%, upstream: %2%, downstream: %3%, genic: %4%, intergenic: %5%") % d.genome % d.up % d.down % d.genic % d.inter;  
-  if(p.exist("conv")) cout << boost::format(", convergent: %1%, divergent: %2%, parallel: %3%\n") % d.conv % d.div % d.par;
+  if(values.count("conv")) cout << boost::format(", convergent: %1%, divergent: %2%, parallel: %3%\n") % d.conv % d.div % d.par;
   else cout << endl;
   
   vbed[0].printHead();
@@ -115,18 +141,18 @@ void stUpdate(int &r, status st)
   return;
 }
 
-vector<int> makeGenomeArray(const cmdline::parser p, string chr, int size,
+vector<int> makeGenomeArray(const variables_map &values, string chr, int size,
 			    const unordered_map<string, unordered_map<string, genedata>> &mp,
 			    vector<convsite> &vconv)
 {
   int i,j;
-  int updist = p.get<int>("updist");
-  int downdist = p.get<int>("downdist");
+  int updist = values["updist"].as<int>();
+  int downdist = values["downdist"].as<int>();
   
   vector<int> array(size, 0);
   if(mp.find(chr) == mp.end()) goto final;
 
-  if(p.exist("conv")) {
+  if(values.count("conv")) {
     for (auto conv: vconv) {
       if(conv.chr == chr) {
 	if( conv.end >= size) cout << chr <<"," << conv.chr<<"," << conv.start<<"," << conv.end <<"," << size<< endl;
@@ -153,7 +179,7 @@ vector<int> makeGenomeArray(const cmdline::parser p, string chr, int size,
       for(i=l; i<=s; i++) stUpdate(array[i], DOWNSTREAM);
     }
     
-    if(p.exist("intron")) {
+    if(values.count("intron")) {
       for(i=0; i<itr->second.exonCount; i++) {
 	int es = itr->second.exon[i].start;
 	int ee = itr->second.exon[i].end;
@@ -173,84 +199,98 @@ vector<int> makeGenomeArray(const cmdline::parser p, string chr, int size,
   return array;
 }
 
+void print_gdist(const variables_map &values, gdist n, string str)
+{
+  cout << str << "\t";
+  if(values.count("intron")) cout << boost::format("%1%\t%2%\t%3%\t%4%\t%5%\t%6%") % n.genome % n.up % n.down % n.exon % n.intron % n.inter;
+  else cout << boost::format("%1%\t%2%\t%3%\t%4%\t%5%") % n.genome % n.up % n.genic % n.intron % n.inter;
+  if(values.count("conv")) cout << boost::format("\t%1%\t%2%\t%3%\n") % n.conv % n.div % n.par;
+  else cout << endl;
+
+  cout << str << " (%)\t";
+  if(values.count("intron")) printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 100.0, n.ratio(UPSTREAM), n.ratio(DOWNSTREAM), n.ratio(EXON), n.ratio(INTRON), n.ratio(INTERGENIC));
+  else printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 100.0, n.ratio(UPSTREAM), n.ratio(DOWNSTREAM), n.ratio(GENIC), n.ratio(INTERGENIC));
+  if(values.count("conv")) printf("\t%.2f\t%.2f\t%.2f\n", n.ratio(CONVERGENT), n.ratio(DIVERGENT), n.ratio(PARALLEL));
+  else cout << endl;
+  return;
+}
+
 template <class T>
-void count_genome(const cmdline::parser p, const unordered_map<string, unordered_map<string, genedata>> &mp, vector<T> &vbed){
+void count_genome(const variables_map &values, const unordered_map<string, unordered_map<string, genedata>> &mp, vector<T> &vbed){
 
   gdist n,s;
   vector<convsite> vconv;
-  if(p.exist("conv")) vconv = gen_convergent(p, mp);
+  if(values.count("conv")) vconv = gen_convergent(values["limconv"].as<int>(), mp);
 
-  auto gt = read_genometable(p.get<string>("gt"));
+  auto gt = read_genometable(values["gt"].as<string>());
   for(auto itr = gt.begin(); itr != gt.end(); ++itr){
     string chr(itr->first);
 
     //    cout << itr->first << "\t" << itr->second << endl;
     
-    auto array = makeGenomeArray(p, chr, itr->second, mp, vconv);
+    auto array = makeGenomeArray(values, chr, itr->second, mp, vconv);
     
     for (T &x: vbed) {
-      //      if(chr == "chr19")cout << x.bed.chr <<"," << chr << endl;
-      if(x.bed.chr != chr) continue;
-      //     cout << x.bed.chr <<","<< x.bed.summit<<"," << chr <<","<<  itr->second << endl;
-      s.inc(array[x.bed.summit]);
+      if(x.bed.chr == chr) s.inc(array[x.bed.summit]);
     }
     
     for(int i=0; i<itr->second; i++) n.inc(array[i]);
   }
   
-  if(p.exist("intron")) cout << "\tGenome\tupstream\tdownstream\texon\tintron\tintergenic";
+  if(values.count("intron")) cout << "\tGenome\tupstream\tdownstream\texon\tintron\tintergenic";
   else cout << "\tGenome\tupstream\tdownstream\tgenic\tintergenic";
-  if(p.exist("conv")) cout << "\tconvergent\tdivergent\tparallel" << endl;
+  if(values.count("conv")) cout << "\tconvergent\tdivergent\tparallel" << endl;
   else cout << endl;
 
-  print_gdist(p, s, "peak");
-  print_gdist(p, n, "base");
+  print_gdist(values, s, "peak");
+  print_gdist(values, n, "base");
   
   cout << "relative ratio\t";
-  if(p.exist("intron")) printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 1.0, s.ratio(UPSTREAM)/n.ratio(UPSTREAM), s.ratio(DOWNSTREAM)/n.ratio(DOWNSTREAM), s.ratio(EXON)/n.ratio(EXON), s.ratio(INTRON)/n.ratio(INTRON), s.ratio(INTERGENIC)/n.ratio(INTERGENIC));
+  if(values.count("intron")) printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 1.0, s.ratio(UPSTREAM)/n.ratio(UPSTREAM), s.ratio(DOWNSTREAM)/n.ratio(DOWNSTREAM), s.ratio(EXON)/n.ratio(EXON), s.ratio(INTRON)/n.ratio(INTRON), s.ratio(INTERGENIC)/n.ratio(INTERGENIC));
   else printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 100.0, s.ratio(UPSTREAM)/n.ratio(UPSTREAM), s.ratio(DOWNSTREAM)/n.ratio(DOWNSTREAM), s.ratio(GENIC)/n.ratio(GENIC), s.ratio(INTERGENIC)/n.ratio(INTERGENIC));
-  if(p.exist("conv")) printf("\t%.2f\t%.2f\t%.2f\n", s.ratio(CONVERGENT)/n.ratio(CONVERGENT), s.ratio(DIVERGENT)/n.ratio(DIVERGENT), s.ratio(PARALLEL)/n.ratio(PARALLEL));
+  if(values.count("conv")) printf("\t%.2f\t%.2f\t%.2f\n", s.ratio(CONVERGENT)/n.ratio(CONVERGENT), s.ratio(DIVERGENT)/n.ratio(DIVERGENT), s.ratio(PARALLEL)/n.ratio(PARALLEL));
   else cout << endl;
   return;
 }
 
 template <class T>
-void func(cmdline::parser p, unordered_map<string, unordered_map<string, genedata>> &mp, vector<T> &vbed)
+void func(const variables_map &values, unordered_map<string, unordered_map<string, genedata>> &mp, vector<T> &vbed)
 {
-  if(!p.get<int>("mode")) merge_tss2bed(p, mp, vbed);
-  else if (p.get<int>("mode")==1) merge_gene2bed(p, mp, vbed);
-  else if (p.get<int>("mode")==2) count_genome(p, mp, vbed);
+  int mode = values["mode"].as<int>();
+  if(!mode) merge_tss2bed(values, mp, vbed);
+  else if (mode==1) merge_gene2bed(values, mp, vbed);
+  else if (mode==2) count_genome(values, mp, vbed);
   return;
 }
 
 template <class T>
-void compare_bed(cmdline::parser p, string filename)
+void compare_bed(const variables_map &values, string filename)
 {
   auto vbed = parseBed<bed_gene<T>>(filename);
   //  printBed(vbed);
 
   unordered_map<string, unordered_map<string, genedata>> tmp; // hash for transcripts
-  if(p.exist("refFlat")) tmp = parseRefFlat(p.get<string>("genefile"));
-  else                   tmp = parseGtf(p.get<string>("genefile"), p.exist("name"));
+  if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
+  else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
   
   //printMap(tmp);
 
-  if(p.exist("gene")) {
+  if(values.count("gene")) {
     auto gmp = construct_gmp(tmp);              // hash for genes
-    func(p, gmp, vbed);
-  } else func(p, tmp, vbed);
+    func(values, gmp, vbed);
+  } else func(values, tmp, vbed);
 
   return;
 }
 
 int main(int argc, char* argv[])
 {
-  cmdline::parser p = argv_init(argc, argv);
+  variables_map values = argv_init(argc, argv);
 
-  string filename = p.get<string>("bed");
-  if(p.exist("bed12"))        compare_bed<bed12>(p, filename);
-  else if(p.exist("macsxls")) compare_bed<macsxls>(p, filename);
-  else                        compare_bed<bed>(p, filename);
+  string filename(values["bed"].as<string>());
+  if(values.count("bed12"))        compare_bed<bed12>(values, filename);
+  else if(values.count("macsxls")) compare_bed<macsxls>(values, filename);
+  else                             compare_bed<bed>(values, filename);
 
   return 0;
 }

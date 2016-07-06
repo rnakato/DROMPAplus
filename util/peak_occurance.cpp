@@ -155,7 +155,7 @@ gdist func_gene(cmdline::parser p, unordered_map<string, unordered_map<string, g
   int downdist = p.get<int>("downdist");
   
   vector<convsite> vconv;
-  if(p.exist("conv")) vconv = gen_convergent(p, mp);
+  if(p.exist("conv")) vconv = gen_convergent(p.get<int>("limconv"), mp);
   int convflag = p.exist("conv");
   
   for (T &x: vbed) {

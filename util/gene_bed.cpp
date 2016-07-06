@@ -1,22 +1,6 @@
 #include "gene_bed.h"
 #include "macro.h"
 
-void print_gdist(const cmdline::parser p, gdist n, string str)
-{
-  cout << str << "\t";
-  if(p.exist("intron")) cout << boost::format("%1%\t%2%\t%3%\t%4%\t%5%\t%6%") % n.genome % n.up % n.down % n.exon % n.intron % n.inter;
-  else cout << boost::format("%1%\t%2%\t%3%\t%4%\t%5%") % n.genome % n.up % n.genic % n.intron % n.inter;
-  if(p.exist("conv")) cout << boost::format("\t%1%\t%2%\t%3%\n") % n.conv % n.div % n.par;
-  else cout << endl;
-
-  cout << str << " (%)\t";
-  if(p.exist("intron")) printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 100.0, n.ratio(UPSTREAM), n.ratio(DOWNSTREAM), n.ratio(EXON), n.ratio(INTRON), n.ratio(INTERGENIC));
-  else printf("%.2f\t%.2f\t%.2f\t%.2f\t%.2f", 100.0, n.ratio(UPSTREAM), n.ratio(DOWNSTREAM), n.ratio(GENIC), n.ratio(INTERGENIC));
-  if(p.exist("conv")) printf("\t%.2f\t%.2f\t%.2f\n", n.ratio(CONVERGENT), n.ratio(DIVERGENT), n.ratio(PARALLEL));
-  else cout << endl;
-  return;
-}
-
 void mergeArray(vector<strRange> &array)
 {
   auto itr = array.begin();
@@ -52,7 +36,7 @@ void scanConvergent(vector<convsite> &vconv, const vector<strRange> array, int l
   return;
 }
 
-vector<convsite> gen_convergent(const cmdline::parser p, const unordered_map<string, unordered_map<string, genedata>> &mp)
+vector<convsite> gen_convergent(const int limconv, const unordered_map<string, unordered_map<string, genedata>> &mp)
 {
   vector<convsite> vconv;
   for(auto itr = mp.begin(); itr != mp.end(); ++itr){
@@ -68,7 +52,7 @@ vector<convsite> gen_convergent(const cmdline::parser p, const unordered_map<str
     sort(array.begin(), array.end(),
 	 [](const strRange& x, const strRange& y) { return x.start < y.start; });
     mergeArray(array);
-    scanConvergent(vconv, array, p.get<int>("limconv"));
+    scanConvergent(vconv, array, limconv);
   }
   return vconv;
 }

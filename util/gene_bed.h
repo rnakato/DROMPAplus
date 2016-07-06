@@ -110,7 +110,6 @@ int scanBedConv(T &x, const vector<convsite> &vconv)
   return on;
 }
 
-void print_gdist(const cmdline::parser p, gdist, string);
-vector<convsite> gen_convergent(const cmdline::parser, const unordered_map<string, unordered_map<string, genedata>> &);
+vector<convsite> gen_convergent(const int, const unordered_map<string, unordered_map<string, genedata>> &);
 
 #endif  // GENE_BED_H
