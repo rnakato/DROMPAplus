@@ -149,7 +149,7 @@ class Wigstats {
       for(int i=0; i<thre; ++i) num += wigDist[i];
     } while(num < sum*0.8);
 #ifdef DEBUG
-    BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % wigDist.size();
+    BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % sum;
 #endif
     return thre;
   }

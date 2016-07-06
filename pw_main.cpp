@@ -92,14 +92,14 @@ void Mapfile::getMpbl(const variables_map &values)
     string lineStr;
     vector<string> v;
     string mpfile = values["mp"].as<string>() + "/map_fragL150_genome.txt";
-    ifstream in_mpbl(mpfile);
-    if(!in_mpbl) PRINTERR("Could nome open " << mpfile << ".");
-    while (!in_mpbl.eof()) {
-      getline(in_mpbl, lineStr);
+    ifstream in(mpfile);
+    if(!in) PRINTERR("Could nome open " << mpfile << ".");
+    while (!in.eof()) {
+      getline(in, lineStr);
       if(lineStr.empty() || lineStr[0] == '#') continue;
       boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
       for(auto &x:chr) {
-	if(x.name == v[0]) x.len_mpbl = stoi(v[1]);
+	if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
       }
     }
   } else {
@@ -198,11 +198,10 @@ int main(int argc, char* argv[])
 
   // make and output wigdata
   makewig(values, p);
-
+  p.estimateZINB();  // for genome
+  
   outputPeak(values, p);
   
-  p.estimateZINB();  // each chromosome
-
   // output stats
   output_stats(values, p);
   output_wigstats(values, p);
