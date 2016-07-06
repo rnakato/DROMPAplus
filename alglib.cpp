@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "alglib.h"
+
 double stdNormdist(double x, double m, double myu)
 {
   double z = (x - m)/myu;
@@ -12,11 +13,3 @@ double getNormdist(double s)
 {
   return alglib::normaldistribution(s);
 }
-/*double _getPoisson(int i, double m)
-{
-  double p;
-  if(!i) p = alglib::poissondistribution(i, 1);
-  else p = alglib::poissondistribution(i, 1) - alglib::poissondistribution(i-1, 1);
-  return p;
-}
-*/

@@ -1,6 +1,8 @@
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * This file is a part of DROMPA sources.
+ */
 #include "readdata.h"
 #include "macro.h"
-#include "warn.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <sstream>
@@ -49,7 +51,7 @@ unordered_map<string, unordered_map<string, genedata>>
 vector<string> readGeneList(const string& fileName)
 {
   ifstream in(fileName);
-  if(!in) printerr("genelist file does not exist.");
+  if(!in) PRINTERR("genelist file does not exist.");
 
   vector<string> glist;
   string lineStr;
@@ -65,7 +67,7 @@ vector<string> readGeneList(const string& fileName)
 unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string& fileName)
 {
   ifstream in(fileName);
-  if(!in) printerr("refFlat file does not exist.");
+  if(!in) PRINTERR("refFlat file does not exist.");
 
   unordered_map<string, unordered_map<string, genedata>> tmp;
   string lineStr;
@@ -105,7 +107,7 @@ unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string
 unordered_map<string, unordered_map<string, genedata>> parseGtf(const string& fileName, const int nameflag)
 {
   ifstream in(fileName);
-  if(!in) printerr("gtf file does not exist.");
+  if(!in) PRINTERR("gtf file does not exist.");
 
   unordered_map<string, unordered_map<string, genedata>> tmp;
   string lineStr;
@@ -231,7 +233,7 @@ void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &
 map<string, int> read_genometable(const string& fileName)
 {
   ifstream in(fileName);
-  if(!in) printerr("genometable file does not exist.");
+  if(!in) PRINTERR("genometable file does not exist.");
 
   map<string, int> gt;
   string lineStr;

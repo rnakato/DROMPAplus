@@ -1,3 +1,6 @@
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * This file is a part of DROMPA sources.
+ */
 #ifndef READGENE_H
 #define READGENE_H
 
@@ -9,7 +12,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include "seq.h"
-#include "warn.h"
+#include "macro.h"
 
 using namespace std;
 
@@ -39,7 +42,7 @@ vector<T> parseBed(const string& fileName)
 {
   vector<T> vbed;
   ifstream in(fileName);
-  if(!in) printerr("BED file does not exist.");
+  if(!in) PRINTERR("BED file does not exist.");
 
   string lineStr;
   vector<string> v;

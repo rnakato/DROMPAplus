@@ -5,7 +5,6 @@
 #include <boost/program_options.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
-#include "warn.h"
 
 using namespace boost::program_options;
 

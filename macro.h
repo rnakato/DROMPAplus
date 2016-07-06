@@ -12,8 +12,4 @@
 #define JOIN(a,b) (a ## b)
 #define PRINTERR(...) do{ cerr << "Error: " << __VA_ARGS__ << endl; exit(1); }while(0)
 
-//#define CALCRATIO(c,i,r) ((i) ? ((c)/(double)((i)*(r))): 0)
-//#define MKSTRING(str) (# str)
-//#define FLUSH(args...) do{printf(args); fflush(stdout); }while(0)
-
 #endif /* _MACRO_H_ */

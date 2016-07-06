@@ -13,11 +13,8 @@ inline string addchr(string chr) {
   return chr;
 }
 
-typedef enum {
-  STRAND_PLUS,
-  STRAND_MINUS,
-  STRANDNUM
-} Strand;
+enum Strand {STRAND_PLUS, STRAND_MINUS, STRANDNUM};
+enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
 
 class range {
  public:
@@ -38,15 +35,9 @@ class bed {
    if(!s[0].find("chr")) chr = s[0].substr(3);
    else chr = s[0];
  }
- void print() const {
-   cout << chr << "\t" << start << "\t" << end;
- }
- void printHead () const {
-   cout << "chromosome\tstart\tend";
- }
- int length() {
-   return abs(end - start);
- }
+ void print()      const { cout << chr << "\t" << start << "\t" << end; }
+ void printHead () const { cout << "chromosome\tstart\tend"; }
+ int length() { return abs(end - start); }
 };
 
 class bed12 : public bed {
@@ -75,9 +66,9 @@ class bed12 : public bed {
  }
  void print() const {
    cout << chr << "\t" << start << "\t" << end << "\t"
-	     << name << "\t" << score << "\t" << strand << "\t"
-	     << thickStart << "\t" << thickEnd << "\t" << itemRgb << "\t"
-	     << blockCount << "\t" << blockSizes << "\t" << blockStarts;
+	<< name << "\t" << score << "\t" << strand << "\t"
+	<< thickStart << "\t" << thickEnd << "\t" << itemRgb << "\t"
+	<< blockCount << "\t" << blockSizes << "\t" << blockStarts;
  }
  void printHead () const {
    cout << "chromosome\tstart\tend\tname\tscore\tstrand\tthickStart\tthickEnd\titemRgb\tblockCount\tblockSizes\tblockStarts";
@@ -106,8 +97,8 @@ class macsxls : public bed {
  }
  void print() const {
    cout << chr << "\t" << start << "\t" << end << "\t"
-	     << len << "\t" << summit << "\t" << pileup << "\t"
-	     << p << "\t" << enrich << "\t" << q << "\t" << name;
+	<< len << "\t" << summit << "\t" << pileup << "\t"
+	<< p << "\t" << enrich << "\t" << q << "\t" << name;
  }
  void printHead () const {
    cout << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\t-log10(qvalue)\tname";
@@ -119,11 +110,11 @@ class genedata {
   string tname;
   string gname;
   string chr;
-  int   txStart;   // "Transcription start position"
-  int   txEnd;     // "Transcription end position"
-  int   cdsStart;  // "Coding region start"
-  int   cdsEnd;    // "Coding region end"
-  int   exonCount; // "Number of exons"
+  int    txStart;   // "Transcription start position"
+  int    txEnd;     // "Transcription end position"
+  int    cdsStart;  // "Coding region start"
+  int    cdsEnd;    // "Coding region end"
+  int    exonCount; // "Number of exons"
   string strand;
   vector<range> exon;
 
@@ -135,24 +126,6 @@ class genedata {
 
   genedata(): txStart(0), txEnd(0), cdsStart(0), cdsEnd(0), exonCount(0) {}
 
-  genedata &operator=(const genedata &ob2){
-    tname    = ob2.tname;
-    gname    = ob2.gname;
-    chr      = ob2.chr;
-    txStart  = ob2.txStart;
-    txEnd    = ob2.txEnd;
-    cdsStart = ob2.cdsStart;
-    cdsEnd   = ob2.cdsEnd;
-    exonCount= ob2.exonCount;
-    strand   = ob2.strand;
-    exon     = ob2.exon;
-    gsrc     = ob2.gsrc;
-    tsrc     = ob2.tsrc;
-    gtype    = ob2.gtype;
-    ttype    = ob2.ttype;
-    return *this;
-  }
-
   int length() const {
     return (txEnd - txStart);
   }
@@ -163,13 +136,9 @@ class genedata {
     }
   }
   void print() const {
-    if(this){
-      cout << tname << "\t" << gname << "\t" << strand << "\t" << txStart << "\t" << txEnd << "\t";
-    }
+    if(this) cout << tname << "\t" << gname << "\t" << strand << "\t" << txStart << "\t" << txEnd << "\t";
   }
 };
-
-enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
 
 template <class T>
 class bed_gene {
@@ -214,9 +183,7 @@ class bed_gene {
       gene = pgene;
     }
   }
-  void printHead () const {
-    bed.printHead();
-  }
+  void printHead () const { bed.printHead(); }
 };
 
 class strRange : public bed {
@@ -243,7 +210,7 @@ class fasta {
   double gcov;    /* genome coverage for bin */
   fasta (string str, int l=0): name(str), len(l), len_mpbl(0), nbin(0), p_mpbl(0), gcov(0) {}
   fasta (vector<string> &v): name(v[0]), len(stoi(v[1])), len_mpbl(0), p_mpbl(0), gcov(0) {}
-  void print (){
+  void print () const {
     cout << name << "\t" << len << "\t" << nbin << "\t" << len_mpbl << "\t"<< p_mpbl << "\t" << gcov << endl;
   }
 };
@@ -267,7 +234,7 @@ class RefGenome {
   RefGenome (map<string, int> gt, int binsize): RefGenome(gt) {
     for(auto &x: chr) genome.nbin += x.nbin = x.len/binsize +1;
   }
-  void print (){
+  void print () const {
     genome.print();
     for(auto x: chr) x.print();
     cout << "chrnum: " << chrnum << endl;

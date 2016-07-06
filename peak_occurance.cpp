@@ -9,7 +9,6 @@
 #include <boost/accumulators/statistics/variance.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
-#include "warn.h"
 #include "cmdline.h"
 #include "alglib.h"
 

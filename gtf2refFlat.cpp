@@ -3,7 +3,6 @@
 #include <algorithm>
 #include "cmdline.h"
 #include "readdata.h"
-#include "warn.h"
 
 using namespace std;
 

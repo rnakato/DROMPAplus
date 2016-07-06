@@ -11,7 +11,6 @@
 #include "seq.h"
 #include "common.h"
 #include "util.h"
-#include "warn.h"
 #include "macro.h"
 #include "readdata.h"
 #include "statistics.h"

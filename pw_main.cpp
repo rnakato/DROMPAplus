@@ -214,15 +214,15 @@ void checkParam(const variables_map &values)
   vector<string> dbopts = {"ndepth", "mpthre"};
   for (auto x: dbopts) chkminus<double>(values, x, 0);
   
-  if(!RANGE(values["of"].as<int>(), 0, PWFILETYPENUM-1)) printerr("invalid wigfile type.\n");
+  if(!RANGE(values["of"].as<int>(), 0, PWFILETYPENUM-1)) PRINTERR("invalid wigfile type.\n");
 
   string ftype = values["ftype"].as<string>();
-  if(ftype != "SAM" && ftype != "BAM" && ftype != "BOWTIE" && ftype != "TAGALIGN") printerr("invalid --ftype.\n");
+  if(ftype != "SAM" && ftype != "BAM" && ftype != "BOWTIE" && ftype != "TAGALIGN") PRINTERR("invalid --ftype.\n");
   string ntype = values["ntype"].as<string>();
-  if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") printerr("invalid --ntype.\n");
+  if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR("invalid --ntype.\n");
 
   if (values.count("genome")) {
-    //    if(!values.count("mp")) printerr("--genome option requires --mp option.\n");
+    //    if(!values.count("mp")) PRINTERR("--genome option requires --mp option.\n");
     isFile(values["genome"].as<string>());
   }
   

@@ -4,7 +4,6 @@
 #include <boost/format.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
-#include "warn.h"
 #include "cmdline.h"
 
 cmdline::parser argv_init(int argc, char* argv[])
