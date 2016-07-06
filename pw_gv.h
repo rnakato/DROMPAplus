@@ -115,7 +115,6 @@ class strandData {
   }
 };
 
-// statistics for wigarray
 class Wigstats {
   enum{n_mpDist=20, n_wigDist=200};
   long sum;
@@ -212,6 +211,36 @@ class Wigstats {
   }
 };
 
+class GenomeCoverage {
+  long nbp, ncov, ncovnorm;
+  double gcovRaw, gcovNorm;
+ public:
+ GenomeCoverage(): nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0) {}
+  void addGcov(const GenomeCoverage &x, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
+    nbp      += x.nbp;
+    ncov     += x.ncov;
+    ncovnorm += x.ncovnorm;
+    gcovRaw  = nbp ? ncov / (double)nbp: 0;
+    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+  }
+  void calcGcov(const vector<char> &array) {
+    for(size_t i=0; i<array.size(); ++i) {
+      if(array[i] >= MAPPABLE)     ++nbp;      // MAPPABLE || COVREAD_ALL || COVREAD_NORM
+      if(array[i] >= COVREAD_ALL)  ++ncov;     // COVREAD_ALL || COVREAD_NORM
+      if(array[i] == COVREAD_NORM) ++ncovnorm;
+    }
+    gcovRaw  = nbp ? ncov     / (double)nbp: 0;
+    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+    //    cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << endl;
+  }
+  void print(ofstream &out, const int gv) const {
+      if(gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % gcovRaw % gcovNorm;
+      else   out << boost::format("%1$.3f\t%2$.3f\t")   % gcovRaw % gcovNorm;
+  //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
+  }
+};
+
 class SeqStats {
   bool yeast;
  public:
@@ -219,10 +248,8 @@ class SeqStats {
   long len, len_mpbl;
   int nbin;
   double p_mpbl;  /* mappability */
-  // genome coverage
-  long nbp, ncov, ncovnorm;
-  double gcovRaw, gcovNorm;
 
+  GenomeCoverage gcov;
   Wigstats ws;
   
   strandData seq[STRANDNUM];
@@ -232,7 +259,7 @@ class SeqStats {
   long nread_inbed;
   double FRiP;
   
- SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nbin(0), p_mpbl(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
+ SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nbin(0), p_mpbl(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
     name = rmchr(s);
   }
   void addfrag(const Fragment &frag) {
@@ -254,14 +281,6 @@ class SeqStats {
       seq[i].nread_red    += x.seq[i].nread_red;
     }
   }
-  void addGcov(const SeqStats &x, boost::mutex &mtx) {
-    boost::mutex::scoped_lock lock(mtx);
-    nbp      += x.nbp;
-    ncov     += x.ncov;
-    ncovnorm += x.ncovnorm;
-    gcovRaw  = nbp ? ncov / (double)nbp: 0;
-    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
-  }
 
   void print() const {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
@@ -269,17 +288,6 @@ class SeqStats {
   void calcdepth(const int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
   }
-  void calcGcov(const vector<char> &array) {
-    for(long i=0; i<len; ++i) {
-      if(array[i] >= MAPPABLE)     ++nbp;      // MAPPABLE || COVREAD_ALL || COVREAD_NORM
-      if(array[i] >= COVREAD_ALL)  ++ncov;     // COVREAD_ALL || COVREAD_NORM
-      if(array[i] == COVREAD_NORM) ++ncovnorm;
-    }
-    gcovRaw  = nbp ? ncov     / (double)nbp: 0;
-    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
-    //    cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << endl;
-  }
-
   void setF5(int flen) {
     int d;
     for(int strand=0; strand<STRANDNUM; ++strand) {

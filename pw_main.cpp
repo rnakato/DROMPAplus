@@ -29,7 +29,7 @@ Mapfile::Mapfile(const variables_map &values):
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
 
   readGenomeTable(values);
-  getMpbl(values);
+  if(values.count("mp")) getMpbl(values);
 
   for(auto &x:chr) {
     genome.len += x.len;
@@ -88,22 +88,18 @@ void Mapfile::readGenomeTable(const variables_map &values)
 
 void Mapfile::getMpbl(const variables_map &values)
 {
-  if (values.count("mp")) {
-    string lineStr;
-    vector<string> v;
-    string mpfile = values["mp"].as<string>() + "/map_fragL150_genome.txt";
-    ifstream in(mpfile);
-    if(!in) PRINTERR("Could nome open " << mpfile << ".");
-    while (!in.eof()) {
-      getline(in, lineStr);
-      if(lineStr.empty() || lineStr[0] == '#') continue;
-      boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-      for(auto &x:chr) {
-	if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
-      }
+  string lineStr;
+  vector<string> v;
+  string mpfile = values["mp"].as<string>() + "/map_fragL150_genome.txt";
+  ifstream in(mpfile);
+  if(!in) PRINTERR("Could nome open " << mpfile << ".");
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty() || lineStr[0] == '#') continue;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    for(auto &x:chr) {
+      if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
     }
-  } else {
-    for(auto &x:chr) x.len_mpbl = x.len;
   }
   return;
 }
@@ -406,9 +402,9 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   out << boost::format("%1$.3f\t") % p.depth;
   if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
   if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
-  if(mapfile.gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % p.gcovRaw % p.gcovNorm;
-  else out << boost::format("%1$.3f\t%2$.3f\t") % p.gcovRaw % p.gcovNorm;
-  //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
+
+  p.gcov.print(out, mapfile.gv);
+  
   p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
 
@@ -495,8 +491,8 @@ void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r
   for(int i=s; i<=e; ++i) {
     cout << p.chr[i].name << ".." << flush;
     auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
-    p.chr[i].calcGcov(array);
-    p.genome.addGcov(p.chr[i], mtx);
+    p.chr[i].gcov.calcGcov(array);
+    p.genome.gcov.addGcov(p.chr[i].gcov, mtx);
   }
 }
 
