@@ -100,11 +100,11 @@ class shiftDist {
     for(auto x:p.chr) {
       if(x.isautosome()) {
 	genome.nread += x.bothnread_nonred();
-	genome.len   += x.len_mpbl;
+	genome.len   += x.getlenmpbl();
       }
     }
     for(auto x:p.chr) {
-      _shiftDist v(p, 0, x.len, x.bothnread_nonred(), x.len_mpbl);
+      _shiftDist v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
       v.rchr = v.nread/(double)genome.nread;
       chr.push_back(v);
     }

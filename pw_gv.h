@@ -21,9 +21,11 @@ using namespace boost::program_options;
 #define NUM_GCOV 5000000
 
 class SeqStats;
+class Mapfile;
+
 void calcFRiP(SeqStats &, const vector<bed>);
 
-class Dist{
+class Dist {
   enum {ReadMax=200, 
 	FragMax=1000};
  public:
@@ -241,9 +243,9 @@ class GenomeCoverage {
 
 class SeqStats {
   bool yeast;
+  long len, len_mpbl;
  public:
   string name;
-  long len, len_mpbl;
   int nbin;
   double p_mpbl;  /* mappability */
 
@@ -259,6 +261,12 @@ class SeqStats {
   
  SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nbin(0), p_mpbl(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
     name = rmchr(s);
+  }
+  void addgenome(const SeqStats &x) {
+    len += x.len;
+    len_mpbl += x.len_mpbl;
+    nbin += x.nbin;
+    p_mpbl = len_mpbl/(double)len;
   }
   void addfrag(const Fragment &frag) {
     Read r(frag);
@@ -280,6 +288,8 @@ class SeqStats {
     }
   }
 
+  long getlen()     const { return len; }
+  long getlenmpbl() const { return len_mpbl; }
   void print() const {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }
@@ -334,13 +344,8 @@ class SeqStats {
     if(chrnum) return true;
     else       return false;
   }
-};
-
-class sepchr {
- public:
-  uint s;
-  uint e;
- sepchr(uint start, uint end): s(start), e(end) {}
+  friend void getMpbl(const string, vector<SeqStats> &chr);
+  //  friend void setlenmpbl(SeqStats &x, string str, int l);
 };
 
 class Mapfile {
@@ -373,9 +378,9 @@ class Mapfile {
 
   Mapfile(const variables_map &values);
   void readGenomeTable(const variables_map &values);
-  void getMpbl(const variables_map &values);
+  //  void getMpbl(const variables_map &values);
   vector<sepchr> getVsepchr(const int);
-  
+
   void addF5(const int readlen_F5) { ++dist.readlen_F5[readlen_F5]; }
   void addfrag(const Fragment &frag) {
     ++dist.readlen[frag.readlen_F3];
@@ -442,6 +447,10 @@ class Mapfile {
 
     return;
   }
+    
+  /*  friend void setlenmpbl(SeqStats &x, string str, int l) {
+    if(x.name == str) x.len_mpbl = l;
+    }*/
 };
 
 #endif /* _PW_GV_H_ */

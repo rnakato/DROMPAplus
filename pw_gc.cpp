@@ -44,7 +44,7 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
 void make_GCdist(const variables_map &values, Mapfile &p)
 {
   cout << "chromosome for GC distribution: chr" << p.lchr->name << endl;
-  int chrlen(p.lchr->len);
+  int chrlen(p.lchr->getlen());
   int flen(p.getflen(values));
   int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
   BPRINT("GC distribution from %1% bp to %2% bp of fragments.\n") % FRAG_IGNORE % (flen4gc+FRAG_IGNORE);
@@ -52,7 +52,7 @@ void make_GCdist(const variables_map &values, Mapfile &p)
   // mappability
   vector<char> array; 
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chrlen);
-  else array = readMpbl_binary(p.lchr->len);
+  else array = readMpbl_binary(p.lchr->getlen());
   if(values.count("bed")) arraySetBed(array, p.lchr->name, p.vbed);
 
   // make fastaGCarray
@@ -159,12 +159,12 @@ void weightReadchr(const variables_map &values, Mapfile &p, int s, int e, boost:
     int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
     cout << p.chr[i].name << ".." << flush;
     string fa = values["genome"].as<string>() + "/chr" + p.chr[i].name + ".fa";
-    auto FastaArray = makeFastaArray(fa, p.chr[i].len, flen4gc);
+    auto FastaArray = makeFastaArray(fa, p.chr[i].getlen(), flen4gc);
     
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto &x: p.chr[i].seq[strand].vRead) {
 	if(x.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = min(x.F3 + FRAG_IGNORE, (int)p.chr[i].len -1);
+	if(strand==STRAND_PLUS) posi = min(x.F3 + FRAG_IGNORE, (int)p.chr[i].getlen() -1);
 	else                    posi = max(x.F3 - flen + FRAG_IGNORE, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(p.GCweight[gc]);

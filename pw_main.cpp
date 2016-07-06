@@ -28,14 +28,12 @@ Mapfile::Mapfile(const variables_map &values):
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
 
   readGenomeTable(values);
-  if(values.count("mp")) getMpbl(values);
+  if(values.count("mp")) getMpbl(values["mp"].as<string>(), chr);
 
   for(auto &x:chr) {
-    genome.len += x.len;
-    genome.len_mpbl += x.len_mpbl;
-    genome.nbin += x.nbin = x.len/values["binsize"].as<int>() +1;
-    x.p_mpbl = x.len_mpbl/(double)x.len;
-    genome.p_mpbl = genome.len_mpbl/(double)genome.len;
+    x.nbin = x.getlen()/values["binsize"].as<int>() +1;
+    x.p_mpbl = x.getlenmpbl()/(double)x.getlen();
+    genome.addgenome(x);
   }
 
   // yeast
@@ -77,27 +75,9 @@ void Mapfile::readGenomeTable(const variables_map &values)
   
   long lenmax(0);
   for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
-    if(lenmax < itr->len) {
-      lenmax = itr->len;
+    if(lenmax < itr->getlen()) {
+      lenmax = itr->getlen();
       lchr = itr;
-    }
-  }
-  return;
-}
-
-void Mapfile::getMpbl(const variables_map &values)
-{
-  string lineStr;
-  vector<string> v;
-  string mpfile = values["mp"].as<string>() + "/map_fragL150_genome.txt";
-  ifstream in(mpfile);
-  if(!in) PRINTERR("Could nome open " << mpfile << ".");
-  while (!in.eof()) {
-    getline(in, lineStr);
-    if(lineStr.empty() || lineStr[0] == '#') continue;
-    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    for(auto &x:chr) {
-      if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
     }
   }
   return;
@@ -107,12 +87,12 @@ vector<sepchr> Mapfile::getVsepchr(const int numthreads)
 {
   vector<sepchr> vsepchr;
 
-  uint sepsize = genome.len/numthreads;
+  uint sepsize = genome.getlen()/numthreads;
   for(uint i=0; i<chr.size(); ++i) {
     uint s = i;
     long len(0);
     while(len < sepsize && i<chr.size()) {
-      len += chr[i].len;
+      len += chr[i].getlen();
       i++;
     }
     i--;
@@ -121,6 +101,25 @@ vector<sepchr> Mapfile::getVsepchr(const int numthreads)
     vsepchr.push_back(sep);
   }
   return vsepchr;
+}
+
+void getMpbl(const string mpdir, vector<SeqStats> &chr)
+{
+  string lineStr;
+  vector<string> v;
+  string mpfile = mpdir + "/map_fragL150_genome.txt";
+  ifstream in(mpfile);
+  if(!in) PRINTERR("Could nome open " << mpfile << ".");
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty() || lineStr[0] == '#') continue;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    for(auto &x: chr) {
+      //     setlenmpbl(x, rmchr(v[0]), stoi(v[1]));
+      if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
+    }
+  }
+  return;
 }
 
 void printVersion()
@@ -378,7 +377,7 @@ void init_dump(const variables_map &values){
 void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &p, const Mapfile &mapfile)
 {
   /* genome data */
-  out << p.name << "\t" << p.len  << "\t" << p.len_mpbl << "\t" << p.p_mpbl << "\t";
+  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.p_mpbl << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.bothnread() % p.seq[STRAND_PLUS].nread % p.seq[STRAND_MINUS].nread
@@ -462,8 +461,8 @@ void output_stats(const variables_map &values, const Mapfile &p)
 vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &p, double r4cmp)
 {
   vector<char> array;
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chr.len);
-  else array = readMpbl_binary(chr.len);
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chr.getlen());
+  else array = readMpbl_binary(chr.getlen());
   if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
 
   int val(0);
@@ -520,7 +519,7 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
 
 void calcFRiP(SeqStats &chr, const vector<bed> vbed)
 {
-  vector<char> array(chr.len, MAPPABLE);
+  vector<char> array(chr.getlen(), MAPPABLE);
   arraySetBed(array, chr.name, vbed);
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto &x: chr.seq[strand].vRead) {

@@ -268,6 +268,12 @@ class Peak : public bed {
   }
 };
 
+class sepchr {
+ public:
+  uint s;
+  uint e;
+ sepchr(uint start, uint end): s(start), e(end) {}
+};
 
 template <class T>
 class var {

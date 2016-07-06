@@ -101,7 +101,7 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x:chr.seq[strand].vRead) {
       if(x.duplicate) continue;
-      addReadToWigArray(values, wigarray, x, chr.len);
+      addReadToWigArray(values, wigarray, x, chr.getlen());
     }
   }
 
@@ -159,7 +159,7 @@ void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int
       on=1;
     }
   } else if(ntype == "CR") {
-    double nm = values["nrpm"].as<int>() * (chr.len_mpbl/(double)p.genome.len_mpbl);
+    double nm = values["nrpm"].as<int>() * (chr.getlenmpbl()/(double)p.genome.getlenmpbl());
     double dn = chr.bothnread_nonred();
     w = setw(nm, dn);
     BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % (long)dn % nm % w;
@@ -202,7 +202,7 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
   int binsize = values["binsize"].as<int>();
   
   ofstream out(filename);
-  out << boost::format("browser position %1%:%2%-%3%\n") % p.chr[1].name % 0 % (p.chr[1].len/100);
+  out << boost::format("browser position %1%:%2%-%3%\n") % p.chr[1].name % 0 % (p.chr[1].getlen()/100);
   out << "browser hide all" << endl;
   out << "browser pack refGene encodeRegions" << endl;
   out << "browser full altGraph" << endl;
@@ -216,7 +216,7 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
     cout << chr.name << ".." << flush;
     vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) {
-      if(i==chr.nbin -1) e = chr.len -1; else e = (i+1)*binsize;
+      if(i==chr.nbin -1) e = chr.getlen() -1; else e = (i+1)*binsize;
       if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << endl;
     }
   }
