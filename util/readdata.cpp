@@ -78,7 +78,7 @@ unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
 
     string tname(v[1]);
-    string chr = addchr(v[2]);
+    string chr = rmchr(v[2]);
     
     tmp[chr][tname].tname   = tname;
     tmp[chr][tname].gname   = v[0];
@@ -121,7 +121,7 @@ unordered_map<string, unordered_map<string, genedata>> parseGtf(const string& fi
     if(feat == "gene" || feat == "transcript") continue;
     if(feat == "three_prime_utr" || feat == "five_prime_utr") continue;
     
-    string chr  = addchr(v[0]);
+    string chr  = rmchr(v[0]);
     int start   = stoi(v[3]);
     int end     = stoi(v[4]);
     string strand = v[6];
@@ -241,7 +241,7 @@ map<string, int> read_genometable(const string& fileName)
     if(lineStr.empty() || lineStr[0] == '#') continue;
     vector<string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    string chr = addchr(v[0]);
+    string chr = rmchr(v[0]);
     gt[chr] = stoi(v[1]);
   }
   return gt;
@@ -324,4 +324,12 @@ string IntToString(int n)
   ostringstream stream;
   stream << n;
   return stream.str();
+}
+
+std::string rmchr(const std::string &chr)
+{
+  std::string s;
+  if(!chr.find("chr")) s = chr.substr(3);
+  else s = chr;
+  return s;
 }

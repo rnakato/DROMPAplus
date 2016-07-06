@@ -13,7 +13,6 @@
 using namespace boost::program_options;
 using namespace std;
 
-string rmchr(const string &chr);
 void addmp(map<int, double> &mpto, const map<int, double> &mpfrom, double w=1);
 
 template <class T>

@@ -32,6 +32,7 @@ vector<char> readMpbl_binary(string, string, int);
 vector<char> arraySetBed(vector<char> &, string, vector<bed>);
 void isFile(string);
 string IntToString(int n);
+string rmchr(const string &chr);
 
 
 template <class T>
