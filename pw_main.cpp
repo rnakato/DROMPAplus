@@ -14,7 +14,6 @@
 #include "pw_makefile.h"
 #include "pw_gv.h"
 #include "pw_gc.h"
-#include "statistics.h"
 
 variables_map getOpts(int argc, char* argv[]);
 void setOpts(options_description &);

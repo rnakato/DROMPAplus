@@ -14,7 +14,6 @@
 #include "pw_readmapfile.h"
 #include "pw_shiftprofile.h"
 #include "util.h"
-#include "common.h"
 #include "macro.h"
 #include "readdata.h"
 

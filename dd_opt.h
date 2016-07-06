@@ -5,7 +5,6 @@
 #define _DD_OPT_H_
 
 #include "util.h"
-#include "common.h"
 #include "macro.h"
 #include "dd_readfile.h"
 

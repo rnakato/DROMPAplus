@@ -9,7 +9,6 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/thread.hpp>
 #include "seq.h"
-#include "common.h"
 #include "util.h"
 #include "macro.h"
 #include "readdata.h"

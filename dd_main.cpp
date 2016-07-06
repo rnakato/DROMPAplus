@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include "common.h"
 #include "readdata.h"
 #include "macro.h"
 #include "dd_gv.h"
