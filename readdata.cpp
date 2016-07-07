@@ -66,6 +66,10 @@ vector<string> readGeneList(const string& fileName)
 
 unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string& fileName)
 {
+  if(fileName.find(".gtf") != string::npos) {
+    cerr << "Warning: gene file seems to be gtf format but is parsed as refFlat." << endl;
+  }
+
   ifstream in(fileName);
   if(!in) PRINTERR("refFlat file does not exist.");
 
@@ -106,6 +110,10 @@ unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string
 
 unordered_map<string, unordered_map<string, genedata>> parseGtf(const string& fileName, const int nameflag)
 {
+  if(fileName.find(".gtf") == string::npos) {
+    cerr << "Warning: gene file may not be gtf format but is parsed as gtf." << endl;
+  }
+
   ifstream in(fileName);
   if(!in) PRINTERR("gtf file does not exist.");
 

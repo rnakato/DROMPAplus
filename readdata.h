@@ -48,11 +48,13 @@ vector<T> parseBed(const string& fileName)
   vector<string> v;
   while (!in.eof()) {
     getline(in, lineStr);
+
     if(lineStr.empty() || lineStr[0] == '#' || !lineStr.find("chromosome")) continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     T bed(v);
     vbed.push_back(bed);
   }
+
   return vbed;
 }
 
