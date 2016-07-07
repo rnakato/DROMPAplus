@@ -118,7 +118,6 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   chr.ws.getWigStats(wigarray);
   p.genome.ws.addWigDist(chr.ws);
 
-  chr.ws.estimateParam();
   peakcall(p, chr, wigarray);
   
   /* Total read normalization */

@@ -26,11 +26,13 @@ class moment {
  moment(const std::vector<T> v, int from, int to=0): mean(0), var(0), sd(0) {
     if(!to) to = v.size();
     int size(to - from);
-    for(int i=from; i<to; ++i) mean += v[i];
-    mean /= (double)size;
-    for(int i=from; i<to; ++i) var += (v[i] - mean)*(v[i] - mean);
-    var /= (double)(size -1);
-    sd = sqrt(var);
+    if(size) {
+      for(int i=from; i<to; ++i) mean += v[i];
+      mean /= (double)size;
+      for(int i=from; i<to; ++i) var += (v[i] - mean)*(v[i] - mean);
+      var /= (double)(size -1);
+      sd = sqrt(var);
+    }
     std::cout << mean << "\t" << var << "\t" << sd << std::endl;
   }
   double getmean() const { return mean; }
@@ -48,6 +50,8 @@ T getPercentile(std::vector<T> array, double per, int binnum=0)
   for(int i=0; i<binnum; ++i) {
     if(array[i]) sortarray.push_back(array[i]);
   }
+  if(!sortarray.size()) return 0;
+  
   std::sort(sortarray.begin(), sortarray.end());
 
   return sortarray[(int)(sortarray.size()*per)];

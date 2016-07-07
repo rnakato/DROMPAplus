@@ -146,7 +146,7 @@ class Wigstats {
       ++thre;
       num=0;
       for(int i=0; i<thre; ++i) num += wigDist[i];
-    } while(num < sum*0.8);
+    } while(num < sum*0.8 && thre <n_wigDist-1);
 #ifdef DEBUG
     BPRINT("\nthre %1%  (%2% / %3%)\n") % thre % num % sum;
 #endif
@@ -184,7 +184,7 @@ class Wigstats {
     if(nb_p<=0) nb_p = 0.1; 
     nb_n = ave * nb_p /(1 - nb_p);
 
-    estimateParam();
+    if(!ave) estimateParam();
   }
   void printwigDist(ofstream &out, const int i) const {
     out << boost::format("%1%\t%2%\t") % wigDist[i] % pwigDist[i];
