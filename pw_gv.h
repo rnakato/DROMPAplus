@@ -128,7 +128,8 @@ class Wigstats {
     mpDist(n_mpDist,0), wigDist(n_wigDist,0), pwigDist(n_wigDist,0) {}
 
   double getPoisson(const int i) const {
-    return _getPoisson(i, ave);
+    if(ave) return _getPoisson(i, ave);
+    else return 0;
   }
   double getNegativeBinomial(const int i) const {
     return _getNegativeBinomial(i, nb_p, nb_n);
@@ -137,7 +138,8 @@ class Wigstats {
     return _getZIP(i, ave, pois_p0);
     }*/
   double getZINB(const int i) const {
-    return _getZINB(i, nb_p, nb_n, nb_p0);
+    if(ave) return _getZINB(i, nb_p, nb_n, nb_p0);
+    else return 0;
   }
   int getwigDistthre() const {
     int thre(9);
@@ -179,12 +181,13 @@ class Wigstats {
     moment<int> mm(ar, 0);
     ave = mm.getmean();
     var = mm.getvar();
-    nb_p = ave/var;
+    nb_p = var ? ave/var : 0;
     if(nb_p>=1) nb_p = 0.9;
     if(nb_p<=0) nb_p = 0.1; 
     nb_n = ave * nb_p /(1 - nb_p);
 
-    if(!ave) estimateParam();
+    //    cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n<< endl;
+    if(ave) estimateParam();
   }
   void printwigDist(ofstream &out, const int i) const {
     out << boost::format("%1%\t%2%\t") % wigDist[i] % pwigDist[i];

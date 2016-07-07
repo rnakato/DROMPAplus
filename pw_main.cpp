@@ -543,7 +543,7 @@ void output_wigstats(const variables_map &values, Mapfile &p)
 {
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".binarray_dist.csv";
   ofstream out(filename);
- 
+
   out << "\tGenome\t\t\t";
   for (auto x:p.chr) out << x.name << "\t\t\t\t";
   out << endl;

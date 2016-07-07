@@ -141,7 +141,7 @@ template <class T>
 void makeProfile(Mapfile &p, string typestr, int numthreads)
 {
   T dist(p, numthreads);
-  cout << "Making " << dist.name << " profile..." << endl;
+  cout << "Making " << dist.name << " profile..." << flush;
 
   boost::thread_group agroup;
   boost::mutex mtx;

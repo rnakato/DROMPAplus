@@ -66,7 +66,7 @@ void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const
 
 void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray)
 {
-  cout << "call peak..." << flush;
+  //  cout << "call peak..." << flush;
  
   int size = wigarray.size();
   int ext(0);
@@ -90,7 +90,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
       }
     }
   }
-  cout << "done." << endl;
+  //  cout << "done." << endl;
   return;
 }
 
@@ -119,7 +119,6 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   p.genome.ws.addWigDist(chr.ws);
 
   peakcall(p, chr, wigarray);
-  
   /* Total read normalization */
   if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);
 

@@ -33,7 +33,7 @@ class moment {
       var /= (double)(size -1);
       sd = sqrt(var);
     }
-    std::cout << mean << "\t" << var << "\t" << sd << std::endl;
+    //    std::cout << mean << "\t" << var << "\t" << sd << std::endl;
   }
   double getmean() const { return mean; }
   double getvar()  const { return var; }
