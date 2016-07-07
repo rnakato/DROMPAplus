@@ -2,41 +2,67 @@
 #include <iostream>
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/program_options.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
-#include "cmdline.h"
 
-cmdline::parser argv_init(int argc, char* argv[])
+using namespace boost::program_options;
+
+variables_map argv_init(int argc, char* argv[])
 {
-  cmdline::parser p;
-  p.add<string>("genefile", 'g', "gene file", true, "");
-  p.add<string>("gt",  0, "genome table", false, "");
-  p.add<int>("updist", 'u', "allowed upstream distance from TSS", false, 5000);
-  p.add<int>("downdist", 'd', "allowed downstream distance from TSS", false, 5000);
-  p.add("name",  'n', "output name instead of id");
-  p.add("refFlat", 'r', "refFlat format as input (default: gtf)");
-  p.add("length",  'l', "output summed length (default: number of peaks)");
-  p.add("gene",    0, "gene-level comparison (default: transcript-level)");
-  p.add("macsxls", 0, "macs xls file as input");
-  p.add("bed12",   0, "bed12 format as input");
-  p.add("help",  'h', "print this message");
-
-  if (argc==1 || !p.parse(argc, argv) || p.exist("help")) {
-    if (argc==1 || p.exist("help")) cout << "compare bed file with gene annotation file" << endl;
-    cout << p.error_full() << p.usage();
-    exit(1);
+  options_description allopts("Options");
+  allopts.add_options()
+    ("genefile,g", value<string>(), "Gene file")
+    ("bed,b",      value<vector<string>>(), "Bed file")
+    ("gt",         value<string>(), "Genome table (tab-delimited file describing the name and length of each chromosome)")
+    ("updist,u",   value<int>()->default_value(5000), "Allowed upstream distance from TSS")
+    ("downdist,d", value<int>()->default_value(5000), "Allowed downstream distance from TSS")
+    ("name,n", "Output name instead of id")
+    ("refFlat,r", "refFlat format as input (default: gtf)")
+    ("length,l",  "output summed length (default: number of peaks)")
+    ("gene",      "Gene-level comparison (default: transcript-level)")
+    ("macsxls",   "macs xls file as input")
+    ("bed12", "bed12 format as input")
+    ("help,h", "print this message")
+    ;
+  
+  variables_map values;
+  
+  if (argc==1) {
+    cout << "\n" << allopts << endl;
+    exit(0);
   }
-  return p;
+  try {
+    parsed_options parsed = parse_command_line(argc, argv, allopts);
+    store(parsed, values);
+    
+    if (values.count("help")) {
+      cout << "\n" << allopts << endl;
+      exit(0);
+    }
+    vector<string> opts = {};
+    for (auto x: {"genefile", "bed"}) {
+      if (!values.count(x)) {
+	cerr << "specify --" << x << " option." << endl;
+	exit(0);
+      }
+    }
+    notify(values);
+
+  } catch (exception &e) {
+    cout << e.what() << endl;
+    exit(0);
+  }
+  return values;
 }
 
 template <class T>
-void merge_tss2bed(const cmdline::parser p,
+void merge_tss2bed(const variables_map &values,
 		    const unordered_map<string, unordered_map<string, genedata>> &mp,
 		   vector<vector<T>> &vbedlist)
 {
-  int updist = -p.get<int>("updist");
-  int downdist = p.get<int>("downdist");
-  int plen = p.exist("length");
+  int updist = -values["updist"].as<int>();
+  int downdist = values["downdist"].as<int>();
   
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     string chr = itr->first;
@@ -51,7 +77,7 @@ void merge_tss2bed(const cmdline::parser p,
 	  if(strand == "+") d = x.summit - s;
 	  else              d = e - x.summit;
 	  if(d > updist && d < downdist){
-	    if(plen) nbed[i] += x.length();
+	    if(values.count("length")) nbed[i] += x.length();
 	    else nbed[i]++;
 	  }   
 	}
@@ -68,13 +94,10 @@ void merge_tss2bed(const cmdline::parser p,
 }
 
 template <class T>
-void compare_bed(cmdline::parser p)
+void compare_bed(const variables_map &values)
 {
-  vector<string> filename;
-  for(size_t i=0; i<p.rest().size(); i++) filename.push_back(p.rest()[i]);
-
   vector<vector <T>> vbedlist;
-  for(auto x: filename) {
+  for(auto x: values["bed"].as<vector<string>>()) {
     //    cout << x << endl;
     auto vbed = parseBed<T>(x);
     //    printBed(vbed);
@@ -84,26 +107,26 @@ void compare_bed(cmdline::parser p)
   auto merge_bed(vbedlist);
   
   unordered_map<string, unordered_map<string, genedata>> tmp; // hash for transcripts
-  if(p.exist("refFlat")) tmp = parseRefFlat(p.get<string>("genefile"));
-  else                   tmp = parseGtf(p.get<string>("genefile"),  p.exist("name"));
+  if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
+  else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
 
   //printMap(tmp);
 
-  if(p.exist("gene")) {
+  if(values.count("gene")) {
     auto gmp = construct_gmp(tmp);              // hash for genes
-    merge_tss2bed(p, gmp, vbedlist);
-  } else merge_tss2bed(p, tmp, vbedlist);
+    merge_tss2bed(values, gmp, vbedlist);
+  } else merge_tss2bed(values, tmp, vbedlist);
   
   return;
 }
 
 int main(int argc, char* argv[])
 {
-  cmdline::parser p = argv_init(argc, argv);
+  variables_map values = argv_init(argc, argv);
 
-  if(p.exist("bed12"))        compare_bed<bed12>(p);
-  else if(p.exist("macsxls")) compare_bed<macsxls>(p);
-  else                        compare_bed<bed>(p);
+  if(values.count("bed12"))        compare_bed<bed12>(values);
+  else if(values.count("macsxls")) compare_bed<macsxls>(values);
+  else                             compare_bed<bed>(values);
 
   return 0;
 }

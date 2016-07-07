@@ -2,7 +2,6 @@
 #define GENE_BED_H
 
 #include "readdata.h"
-#include "cmdline.h"
 #include <boost/format.hpp>
 
 class tssdist {

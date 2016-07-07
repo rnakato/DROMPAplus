@@ -1,31 +1,57 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
-#include "cmdline.h"
+#include <boost/program_options.hpp>
 #include "readdata.h"
 
 using namespace std;
+using namespace boost::program_options;
 
-cmdline::parser argv_init(int argc, char* argv[])
+variables_map argv_init(int argc, char* argv[])
 {
-  cmdline::parser p;
-  p.add<string>("gtf", 'g', "gtf file", true, "");
-  p.add("name", 'n', "output name instead of id");
-  p.add("help", 'h', "print this message");
-
-  if (argc==1 || !p.parse(argc, argv) || p.exist("help")) {
-    if (argc==1 || p.exist("help")) cout << "Parser for gtf file." << endl;
-    cout << p.error_full() << p.usage();
-    exit(1);
+  options_description allopts("Options");
+  allopts.add_options()
+    ("gtf,g", value<string>(), "Gene file")
+    ("name,n", "Output name instead of id")
+    ("help,h", "print this message")
+    ;
+  
+  variables_map values;
+  
+  if (argc==1) {
+    cout << "\n" << allopts << endl;
+    exit(0);
   }
-  return p;
+  try {
+    parsed_options parsed = parse_command_line(argc, argv, allopts);
+    store(parsed, values);
+    
+    if (values.count("help")) {
+      cout << "\n" << allopts << endl;
+      exit(0);
+    }
+    vector<string> opts = {};
+    for (auto x: {"gtf"}) {
+      if (!values.count(x)) {
+	cerr << "specify --" << x << " option." << endl;
+	exit(0);
+      }
+    }
+
+    notify(values);
+
+  } catch (exception &e) {
+    cout << e.what() << endl;
+    exit(0);
+  }
+  return values;
 }
 
 int main(int argc, char* argv[])
 {
-  cmdline::parser p = argv_init(argc, argv);
+  variables_map values = argv_init(argc, argv);
 
-  auto tmp = parseGtf(p.get<string>("gtf"), p.exist("name"));  // hash for transcripts
+  auto tmp = parseGtf(values["gtf"].as<string>(), values.count("name"));  // hash for transcripts
   auto gmp = construct_gmp(tmp);                 // hash for genes
 
   //printMap(tmp);

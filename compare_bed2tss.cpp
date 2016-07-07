@@ -51,7 +51,6 @@ variables_map argv_init(int argc, char* argv[])
 	exit(0);
       }
     }
-
     notify(values);
 
   } catch (exception &e) {

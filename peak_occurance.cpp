@@ -3,50 +3,75 @@
 #include <algorithm>
 #include <random>
 #include <boost/format.hpp>
+#include <boost/program_options.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
-#include "cmdline.h"
 #include "alglib.h"
 
 using namespace boost::accumulators;
-cmdline::parser argv_init(int argc, char* argv[])
+using namespace boost::program_options;
+
+variables_map argv_init(int argc, char* argv[])
 {
-  cmdline::parser p;
-
-  p.add<string>("genefile", 'g', "gene file", true, "");
-  p.add<string>("bed", 'b', "bed file", true, "");
-  p.add<string>("genelist", 0, "gene list to be compared", true, "");
-  p.add<int>("mode", 'm', "0: with TSS; 1: with whole gene", false, 0);
-  p.add<int>("updist", 'u', "allowed upstream distance from TSS", false, 5000);
-  p.add<int>("downdist", 'd', "allowed downstream distance from TSS", false, 5000);
-  p.add<int>("limconv",  'l', "limit distance between genes for convergent sites", false, 10000);
-  p.add<int>("permutation", 'p', "random permutation time", false, 1000);
-  p.add("refFlat", 'r', "refFlat format as input (default: gtf)");
-  p.add("macsxls", 0, "macs xls file as input");
-  p.add("bed12",   0, "bed12 format as input");
-  p.add("help",  'h', "print this message");
-  p.add("name",  'n', "output name instead of id");
-  p.add("conv",   0, "consider convergent sites");
-  p.add("gene",    0, "gene-level comparison (default: transcript-level)");
-
-  if (argc==1 || !p.parse(argc, argv) || p.exist("help")) {
-    if (argc==1 || p.exist("help")) cout << "compare bed file with gene annotation file" << endl;
-    cout << p.error_full() << p.usage();
-    exit(1);
+  options_description allopts("Options");
+  allopts.add_options()
+    ("genefile,g", value<string>(), "Gene file")
+    ("bed,b",      value<string>(), "Bed file")
+    ("genelist",   value<string>(), "Gene list to be compared")
+    ("mode,m",     value<int>()->default_value(0),    "0: with TSS; 1: with whole gene")
+    ("updist,u",   value<int>()->default_value(5000), "Allowed upstream distance from TSS")
+    ("downdist,d", value<int>()->default_value(5000), "Allowed downstream distance from TSS")
+    ("limconv,l",  value<int>()->default_value(10000), "Maxmum distance between genes for convergent sites")
+    ("permutation,p", value<int>()->default_value(1000), "random permutation time")
+    ("refFlat,r", "refFlat format as input (default: gtf)")
+    ("macsxls",   "macs xls file as input")
+    ("bed12", "bed12 format as input")
+    ("name,n", "Output name instead of id")
+    ("conv,c", "Consider convergent sites")
+    ("gene",      "Gene-level comparison (default: transcript-level)")
+    ("help,h", "print this message")
+    ;
+  
+  variables_map values;
+  
+  if (argc==1) {
+    cout << "\n" << allopts << endl;
+    exit(0);
   }
-  return p;
+  try {
+    parsed_options parsed = parse_command_line(argc, argv, allopts);
+    store(parsed, values);
+    
+    if (values.count("help")) {
+      cout << "\n" << allopts << endl;
+      exit(0);
+    }
+    vector<string> opts = {};
+    for (auto x: {"genefile", "bed", "genelist"}) {
+      if (!values.count(x)) {
+	cerr << "specify --" << x << " option." << endl;
+	exit(0);
+      }
+    }
+    notify(values);
+
+  } catch (exception &e) {
+    cout << e.what() << endl;
+    exit(0);
+  }
+  return values;
 }
 
 template <class T>
-tssdist func(cmdline::parser p, unordered_map<string, unordered_map<string, genedata>> mp, vector<T> vbed){
+tssdist func(const variables_map &values, unordered_map<string, unordered_map<string, genedata>> mp, vector<T> vbed){
   for (T &x: vbed) {
-    int updist = -p.get<int>("updist");
-    int downdist = p.get<int>("downdist");
-
+    int updist = -values["updist"].as<int>();
+    int downdist = values["downdist"].as<int>();
+    
     int d, dmin(-1);
     if(mp.find(x.bed.chr) != mp.end()) {
       for(auto itr = mp.at(x.bed.chr).begin(); itr != mp.at(x.bed.chr).end(); ++itr) {
@@ -71,7 +96,7 @@ tssdist func(cmdline::parser p, unordered_map<string, unordered_map<string, gene
 
 template <class T>
 unordered_map<string, unordered_map<string, genedata>>
-					    generate_rand(cmdline::parser p,
+					    generate_rand(const variables_map &values,
 							  unordered_map<string, unordered_map<string, genedata>> mp,
 							  vector<string> vgname, vector<T> &vbed, int size_emp)
 {
@@ -106,24 +131,24 @@ unordered_map<string, unordered_map<string, genedata>>
 }
 
 template <class T>
-void compare_tss(cmdline::parser p,
+void compare_tss(const variables_map &values,
 		 unordered_map<string, unordered_map<string, genedata>> mp,
 		 vector<T> &vbed, vector<string> glist)
 {
   // genelist
   auto emp = extract_mp(mp, glist);
   int n_emp = countmp(emp);
-  tssdist d_list = func(p, emp, vbed);
+  tssdist d_list = func(values, emp, vbed);
 
   // random
   accumulator_set<double, stats<tag::mean, tag::variance>> vn1, vn5, vn10, vn100, vnover100;
   vector<string> vgname = scanGeneName(mp);
-  int max = p.get<int>("permutation");
+  int max = values["permutation"].as<int>();
   cout << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
     cout << i << ".." << flush;
-    auto rmp = generate_rand(p, mp, vgname, vbed, n_emp);
-    tssdist d_rand = func(p, rmp, vbed);
+    auto rmp = generate_rand(values, mp, vgname, vbed, n_emp);
+    tssdist d_rand = func(values, rmp, vbed);
     vn1(d_rand.n1);
     vn5(d_rand.n5);
     vn10(d_rand.n10);
@@ -148,20 +173,19 @@ void compare_tss(cmdline::parser p,
 }
 
 template <class T>
-gdist func_gene(cmdline::parser p, unordered_map<string, unordered_map<string, genedata>> mp, vector<T> vbed)
+gdist func_gene(const variables_map &values, unordered_map<string, unordered_map<string, genedata>> mp, vector<T> vbed)
 {
-  int updist = p.get<int>("updist");
-  int downdist = p.get<int>("downdist");
+  int updist = values["updist"].as<int>();
+  int downdist = values["downdist"].as<int>();
   
   vector<convsite> vconv;
-  if(p.exist("conv")) vconv = gen_convergent(p.get<int>("limconv"), mp);
-  int convflag = p.exist("conv");
+  if(values.count("conv")) vconv = gen_convergent(values["limconv"].as<int>(), mp);
   
   for (T &x: vbed) {
     if(mp.find(x.bed.chr) == mp.end()) continue;
     
     int on=0;
-    if(convflag) on = scanBedConv(x, vconv);
+    if(values.count("conv")) on = scanBedConv(x, vconv);
     if(on) continue;
     
     scanBedGene(x, mp, updist, downdist);
@@ -174,24 +198,24 @@ gdist func_gene(cmdline::parser p, unordered_map<string, unordered_map<string, g
 }
 
 template <class T>
-void merge_gene2bed(const cmdline::parser p,
+void merge_gene2bed(const variables_map &values,
 		    const unordered_map<string, unordered_map<string, genedata>> &mp,
 		    vector<T> &vbed, vector<string> glist)
 {
   // genelist
   auto emp = extract_mp(mp, glist);
   int n_emp = countmp(emp);
-  gdist d_list = func_gene(p, emp, vbed);
+  gdist d_list = func_gene(values, emp, vbed);
 
   // random
   accumulator_set<double, stats<tag::mean, tag::variance>> vup, vdown, vgenic, vinter, vconv, vdiv, vpar;
   vector<string> vgname = scanGeneName(mp);
-  int max = p.get<int>("permutation");
+  int max = values["permutation"].as<int>();
   cout << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
     cout << i << ".." << flush;
-    auto rmp = generate_rand(p, mp, vgname, vbed, n_emp);
-    gdist d_rand = func_gene(p, rmp, vbed);
+    auto rmp = generate_rand(values, mp, vgname, vbed, n_emp);
+    gdist d_rand = func_gene(values, rmp, vbed);
     vup(d_rand.up);
     vdown(d_rand.down);
     vgenic(d_rand.genic);
@@ -201,23 +225,23 @@ void merge_gene2bed(const cmdline::parser p,
   
   cout << "gene num: " << n_emp << ", peak num: " << d_list.genome << endl;
   cout << "\tupstream\tdownstream\tgenic\tintergenic";
-  if(p.exist("conv")) cout << "\tconvergent\tdivergent\tparallel";
+  if(values.count("conv")) cout << "\tconvergent\tdivergent\tparallel";
   cout << endl;
   cout << "list\t" << d_list.up << "\t" << d_list.down << "\t" << d_list.genic << "\t" << d_list.inter;
-  if(p.exist("conv")) cout << "\t" << d_list.conv << "\t" << d_list.div << "\t" << d_list.par;
+  if(values.count("conv")) cout << "\t" << d_list.conv << "\t" << d_list.div << "\t" << d_list.par;
   cout << endl;
   cout << "mean\t" << mean(vup) << "\t" << mean(vdown) << "\t" << mean(vgenic) << "\t" << mean(vinter);
-  if(p.exist("conv")) cout << "\t" << mean(vconv) << "\t" << mean(vdiv) << "\t" << mean(vpar);
+  if(values.count("conv")) cout << "\t" << mean(vconv) << "\t" << mean(vdiv) << "\t" << mean(vpar);
   cout << endl;
   cout << "SD\t" << sqrt(variance(vup)) << "\t" << sqrt(variance(vdown)) << "\t" << sqrt(variance(vgenic)) << "\t" << sqrt(variance(vinter));
-  if(p.exist("conv")) cout << "\t" << sqrt(variance(vconv)) << "\t" << sqrt(variance(vdiv)) << "\t" << sqrt(variance(vpar));
+  if(values.count("conv")) cout << "\t" << sqrt(variance(vconv)) << "\t" << sqrt(variance(vdiv)) << "\t" << sqrt(variance(vpar));
   cout << endl;
   cout << "pvalue\t"
        << stdNormdist(d_list.up,       mean(vup),      sqrt(variance(vup))) << "\t"
        << stdNormdist(d_list.down,     mean(vdown),    sqrt(variance(vdown))) << "\t"
        << stdNormdist(d_list.genic,    mean(vgenic),   sqrt(variance(vgenic))) << "\t"
        << stdNormdist(d_list.inter,    mean(vinter),   sqrt(variance(vinter)));
-  if(p.exist("conv")) {
+  if(values.count("conv")) {
     cout << "\t" << stdNormdist(d_list.conv,   mean(vconv),    sqrt(variance(vconv)))
 	 << "\t" << stdNormdist(d_list.div,    mean(vdiv),     sqrt(variance(vdiv)))
 	 << "\t" << stdNormdist(d_list.par,    mean(vpar),     sqrt(variance(vpar)));
@@ -228,26 +252,27 @@ void merge_gene2bed(const cmdline::parser p,
 }
 
 template <class T>
-void compare_bed(cmdline::parser p, string filename)
+void compare_bed(const variables_map &values, string filename)
 {
   auto vbed = parseBed<bed_gene<T>>(filename);
   //  printBed(vbed);
 
   unordered_map<string, unordered_map<string, genedata>> tmp;
-  if(p.exist("refFlat")) tmp = parseRefFlat(p.get<string>("genefile"));
-  else                   tmp = parseGtf(p.get<string>("genefile"),  p.exist("name"));
+  if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
+  else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
   
   //printMap(tmp);
   
-  auto glist = readGeneList(p.get<string>("genelist"));
+  auto glist = readGeneList(values["genelist"].as<string>());
 
-  if(p.exist("gene")) {
+  int mode = values["mode"].as<int>();
+  if(values.count("gene")) {
     auto gmp = construct_gmp(tmp);
-    if(!p.get<int>("mode")) compare_tss(p, gmp, vbed, glist);
-    else if (p.get<int>("mode")==1) merge_gene2bed(p, gmp, vbed, glist);
+    if(!mode) compare_tss(values, gmp, vbed, glist);
+    else if(mode==1) merge_gene2bed(values, gmp, vbed, glist);
   } else {
-    if(!p.get<int>("mode")) compare_tss(p, tmp, vbed, glist);
-    else if (p.get<int>("mode")==1) merge_gene2bed(p, tmp, vbed, glist);
+    if(!mode) compare_tss(values, tmp, vbed, glist);
+    else if(mode==1) merge_gene2bed(values, tmp, vbed, glist);
   }
   
   return;
@@ -255,12 +280,12 @@ void compare_bed(cmdline::parser p, string filename)
 
 int main(int argc, char* argv[])
 {
-  cmdline::parser p = argv_init(argc, argv);
+  variables_map values = argv_init(argc, argv);
 
-  string filename = p.get<string>("bed");
-  if(p.exist("bed12"))        compare_bed<bed12>(p, filename);
-  else if(p.exist("macsxls")) compare_bed<macsxls>(p, filename);
-  else                        compare_bed<bed>(p, filename);
+  string filename(values["bed"].as<string>());
+  if(values.count("bed12"))        compare_bed<bed12>(values, filename);
+  else if(values.count("macsxls")) compare_bed<macsxls>(values, filename);
+  else                             compare_bed<bed>(values, filename);
 
   return 0;
 }

@@ -75,7 +75,6 @@ void opt::add(vector<optstatus> st)
     ;
   opts.add(o);
 
-
   for(auto x: st) {
     switch(x) {
     case OPTCHIP:
@@ -120,8 +119,9 @@ void opt::add(vector<optstatus> st)
 	o.add_options()
 	  ("gene,g", value<string>(),	  "Gene annotation file")
 	  ("gftype", value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
-	  ("ars",    value<string>(),	  "ARS list (for yeast)")  
-	  ("ter",    value<string>(),	  "TER list (for S.cerevisiae)")
+	  ("ars",    value<string>(),	  "ARS list (for yeast)")
+	  ("ter",    value<string>(),	  "TER list (for S.cerevisiae)")  
+	  ("bed",    value<vector<string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
 	  ("repeat", value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
 	  ;
 	opts.add(o);
@@ -432,7 +432,6 @@ void Command::InitDump()
 	if(d->repeat.argv) BPRINT("   Repeat file: %1%\n")       % values["repeat"].as<string>();
 	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<string>();
 	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<string>();*/
-	printVOpt<string>(values, "inter", "   Interaction file");
 	printOpt<string>(values, "region", "   Region file");
 	printVOpt<string>(values, "bed", "   Bed file");
 	//	if(name != "PROFILE" || name != "HEATMAP") BPRINT("   name: %1%\n") % d->bed[i]->name;
@@ -443,9 +442,6 @@ void Command::InitDump()
 	BPRINT("\nAnnotations:\n");
 	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
 			     % values["gene"].as<string>() % str_gftype[values["gftype"].as<int>()];
-	printOpt<string>(values, "ars",    "   ARS file");
-	printOpt<string>(values, "ter",    "   TER file");
-	printOpt<string>(values, "repeat", "   Repeat file");
 	printOpt<string>(values, "gc", "   GCcontents file");
 	printOpt<string>(values, "gd", "   Gene density file");
 	/*	if(d->arsfile)     BPRINT("   ARS file: %1%\n")          % values["ars"].as<string>();
@@ -454,8 +450,6 @@ void Command::InitDump()
 	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<string>();
 	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<string>();*/
 	printVOpt<string>(values, "inter", "   Interaction file");
-	printOpt<string>(values, "region", "   Region file");
-	printVOpt<string>(values, "bed", "   Bed file");
 	//	if(name != "PROFILE" || name != "HEATMAP") BPRINT("   name: %1%\n") % d->bed[i]->name;
 	break;
       }
