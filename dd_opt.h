@@ -29,15 +29,17 @@ class Command {
 
   unordered_map<string, SampleFile> sample;
   vector<SamplePair> samplepair;
+
+  function<void(variables_map &)> func;
   
- Command(string n, string d, string r, vector<optstatus> v): opts("Options"), name(n), desc(d), requiredstr(r), vopts(v) {
+ Command(string n, string d, string r, function<void(variables_map &)> _func, vector<optstatus> v): opts("Options"), name(n), desc(d), requiredstr(r), vopts(v), func(_func) {
     opts.add(v);
   };
-  void print() {
+  void print() const {
     cout << setw(8) << " " << left << setw(12) << name
 	 << left << setw(40) << desc << endl;
   }
-  void printhelp() {
+  void printhelp() const {
     BPRINT("%1%:  %2%\n") % name % desc;
     BPRINT("Usage: drompa %1% [options] -o <output> -gt <genometable> %2%\n\n") % name % requiredstr;
     cout << opts.opts << endl;
@@ -60,6 +62,7 @@ class Command {
       notify(values);
       checkParam();
       InitDump();
+      func(values);
     } catch (exception &e) {
       cout << e.what() << endl;
     }

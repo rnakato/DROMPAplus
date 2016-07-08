@@ -21,7 +21,6 @@ using namespace boost::program_options;
 #define NUM_GCOV 5000000
 
 class SeqStats;
-class Mapfile;
 
 void calcFRiP(SeqStats &, const vector<bed>);
 

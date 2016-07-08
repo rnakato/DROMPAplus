@@ -39,38 +39,50 @@ void printVersion()
   exit(0);
 }
 
+void drompa(variables_map &);
+
 vector<Command> generateCommands()
 {
   vector<Command> cmds;
   cmds.push_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOVERLAY, OPTOTHER}));
   cmds.push_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("GV", "global-view visualization",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("PD", "peak density",
 			 "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
+			 drompa,
 			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("CI", "compare peak-intensity between two samples",
 			 "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
+			 drompa,
 			 {OPTCHIP, OPTNORM, OPTOTHER}));
   cmds.push_back(Command("PROFILE", "make R script of averaged read density",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}));
   cmds.push_back(Command("HEATMAP", "make heatmap of multiple samples",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}));
   cmds.push_back(Command("CG", "output ChIP-reads in each gene body",
 			 "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTCG, OPTOTHER}));
   cmds.push_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
 			 "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
+			 drompa,
 			 {OPTCHIP, OPTPROF, OPTOTHER}));
   cmds.push_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			 "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
+			 drompa,
 			 {OPTOTHER}));
   return cmds;
 }
@@ -128,4 +140,8 @@ int main(int argc, char* argv[])
   }
   
   return 0;
+}
+
+void drompa(variables_map &values){
+  return;
 }
