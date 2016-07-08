@@ -68,7 +68,7 @@ class _shiftDist {
     double sum(getmpsum());
     double rRPKM = (NUM_10M/(double)nread) / (NUM_100M/(double)len);
     double be(bk * rRPKM);
-    double const_bu(0.024);
+    double const_bu(0.023);
     
     ofstream out(filename);
     out << "NSC\t"<< nsc*weight << endl;

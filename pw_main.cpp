@@ -197,8 +197,8 @@ int main(int argc, char* argv[])
   outputPeak(values, p);
   
   // output stats
-  output_stats(values, p);
   output_wigstats(values, p);
+  output_stats(values, p);
 
   return 0;
 }
@@ -544,6 +544,8 @@ void output_wigstats(const variables_map &values, Mapfile &p)
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".binarray_dist.csv";
   ofstream out(filename);
 
+  cout << "generate " << filename << ".." << flush;
+
   out << "\tGenome\t\t\t";
   for (auto x:p.chr) out << x.name << "\t\t\t\t";
   out << endl;
@@ -563,6 +565,7 @@ void output_wigstats(const variables_map &values, Mapfile &p)
     }
     out << endl;
   }
-  
+
+  cout << "done." << endl;
   return;
 }

@@ -26,7 +26,8 @@ void outputDist(const variables_map &values, Mapfile &p);
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr);
 void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
 
-void read_mapfile(const variables_map &values, Mapfile &p){
+void read_mapfile(const variables_map &values, Mapfile &p)
+{
   vector<string> v;
   boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
   for(auto inputfile: v) {
@@ -40,6 +41,10 @@ void read_mapfile(const variables_map &values, Mapfile &p){
   }
   p.setnread();
 
+  if(!p.genome.bothnread()) {
+    PRINTERR("no read in input file.");
+  }
+  
   /* output distributions of read length and fragment length */
   outputDist(values, p);
 
@@ -243,8 +248,8 @@ void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p)
 }
 
 void printDist(ofstream &out, const vector<int> v, const string str, const long nread) {
-  out << "\n" << str << " read length distribution" << endl;
-  out << "length\tread number\tproportion" << endl;
+  out << "\n" << str << " length distribution" << endl;
+  out << "length\tnumber\tproportion" << endl;
   for(size_t i=0; i<v.size(); ++i) if(v[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % v[i] % (v[i]/(double)nread);
   return;
 }
