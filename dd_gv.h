@@ -22,14 +22,17 @@ class SampleFile {
 };
 
 class yScale {
+  enum {TAG_DEFAULT=30, RATIO_DEFAULT=3, P_DEFAULT=5};
  public:
   double tag;
   double ratio;
   double pvalue;
- yScale(): tag(0), ratio(0), pvalue(0) {}
+ yScale(): tag(TAG_DEFAULT), ratio(RATIO_DEFAULT), pvalue(P_DEFAULT) {}
 };
 
 class SamplePair {
+  enum {BINSIZE_DEFAULT=100};
+  
   int overlay;
   string argvChIP, argvInput;
   //  double fc; //comp
@@ -46,7 +49,7 @@ class SamplePair {
   string name;
   yScale scale;
 
- SamplePair(vector<string> v): argvInput(""), binsize(0), peak_argv(""), name("") {
+ SamplePair(vector<string> v): argvInput(""), binsize(BINSIZE_DEFAULT), peak_argv(""), name("") {
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") name      = v[2];
@@ -57,9 +60,20 @@ class SamplePair {
     if(v.size() >=8 && v[7] != "") scale.pvalue = stof(v[7]);
   }
   void print() {
+    BPRINT("ChIP: %1% label: %2% binsize: %3% peaklist: %4%\n") % argvChIP % name % binsize % peak_argv;
+    BPRINT("   Input: %1%\n") % argvInput;
+  }
+  void printall() {
     BPRINT("ChIP:%1% Input:%2% name:%3% peak:%4% binsize:%5% scale_tag %6% scale_ratio %7% scale_pvalue %8%\n")
       % argvChIP % argvInput % name % peak_argv % binsize % scale.tag % scale.ratio % scale.pvalue;
   }
+};
+
+class pdSample {
+ public:
+  string argv;
+  string name;
+  pdSample(){}
 };
 
 

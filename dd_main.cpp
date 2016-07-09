@@ -40,6 +40,8 @@ void printVersion()
 }
 
 void drompa(variables_map &);
+void dd_pd(variables_map &);
+void dd_overlook(variables_map &);
 
 vector<Command> generateCommands()
 {
@@ -58,7 +60,7 @@ vector<Command> generateCommands()
 			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("PD", "peak density",
 			 "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
-			 drompa,
+			 dd_pd,
 			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("CI", "compare peak-intensity between two samples",
 			 "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
@@ -82,7 +84,7 @@ vector<Command> generateCommands()
 			 {OPTCHIP, OPTPROF, OPTOTHER}));
   cmds.push_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			 "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
-			 drompa,
+			 dd_overlook,
 			 {OPTOTHER}));
   return cmds;
 }
@@ -124,7 +126,7 @@ int main(int argc, char* argv[])
     string cmd = values["command"].as<string>();
     for(size_t i=0; i<cmds.size(); ++i) {
       if(cmd == cmds[i].name) {
-	cmds[i].getOpts(argc-1, argv+1);
+	cmds[i].execute(argc-1, argv+1);
 	on++;
       }
     }
@@ -142,6 +144,20 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-void drompa(variables_map &values){
+void drompa(variables_map &values)
+{
+  printf("drompa\n");
+  return;
+}
+
+void dd_pd(variables_map &values)
+{
+  printf("dd_pd\n");
+  return;
+}
+
+void dd_overlook(variables_map &values)
+{
+  printf("dd_overlook\n");
   return;
 }

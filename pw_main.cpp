@@ -32,8 +32,7 @@ Mapfile::Mapfile(const variables_map &values):
 
   for(auto &x:chr) {
     x.nbin = x.getlen()/values["binsize"].as<int>() +1;
-    x.p_mpbl = x.getlenmpbl()/(double)x.getlen();
-    genome.addgenome(x);
+    genome.addlen(x);
   }
 
   // yeast
@@ -377,7 +376,7 @@ void init_dump(const variables_map &values){
 void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &p, const Mapfile &mapfile)
 {
   /* genome data */
-  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.p_mpbl << "\t";
+  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.bothnread() % p.seq[STRAND_PLUS].nread % p.seq[STRAND_MINUS].nread

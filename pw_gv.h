@@ -249,10 +249,9 @@ class SeqStats {
  public:
   string name;
   int nbin;
-  double p_mpbl;  /* mappability */
 
-  GenomeCoverage gcov;
   Wigstats ws;
+  GenomeCoverage gcov;
   
   strandData seq[STRANDNUM];
   double depth;
@@ -261,14 +260,13 @@ class SeqStats {
   long nread_inbed;
   double FRiP;
   
- SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nbin(0), p_mpbl(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
+ SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nbin(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
     name = rmchr(s);
   }
-  void addgenome(const SeqStats &x) {
+  void addlen(const SeqStats &x) {
     len += x.len;
     len_mpbl += x.len_mpbl;
     nbin += x.nbin;
-    p_mpbl = len_mpbl/(double)len;
   }
   void addfrag(const Fragment &frag) {
     Read r(frag);
@@ -292,6 +290,7 @@ class SeqStats {
 
   long getlen()     const { return len; }
   long getlenmpbl() const { return len_mpbl; }
+  double getpmpbl() const { return len/(double)len_mpbl; }
   void print() const {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }

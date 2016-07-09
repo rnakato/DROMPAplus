@@ -7,5 +7,6 @@
 #include "dd_gv.h"
 
 void scan_samplestr(string str, unordered_map<string, SampleFile> &sample, vector<SamplePair> &samplepair);
+pdSample scan_pdstr(string str);
   
 #endif /* _DD_READFILE_H_ */
