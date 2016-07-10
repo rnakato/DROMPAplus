@@ -267,14 +267,14 @@ void compare_bed(const variables_map &values, string filename)
   auto vbed = parseBed<bed_gene<T>>(filename);
   //  printBed(vbed);
 
-  unordered_map<string, unordered_map<string, genedata>> tmp; // hash for transcripts
+  unordered_map<string, unordered_map<string, genedata>> tmp;
   if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
   else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
   
   //printMap(tmp);
 
   if(values.count("gene")) {
-    auto gmp = construct_gmp(tmp);              // hash for genes
+    auto gmp = construct_gmp(tmp);
     func(values, gmp, vbed);
   } else func(values, tmp, vbed);
 
