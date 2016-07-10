@@ -39,9 +39,9 @@ void printVersion()
   exit(0);
 }
 
-void drompa(variables_map &);
-void dd_pd(variables_map &);
-void dd_overlook(variables_map &);
+void drompa(variables_map &, Param &);
+void dd_pd(variables_map &, Param &);
+void dd_overlook(variables_map &, Param &);
 
 vector<Command> generateCommands()
 {
@@ -57,11 +57,13 @@ vector<Command> generateCommands()
   cmds.push_back(Command("GV", "global-view visualization",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
+			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER},
+			 100000));
   cmds.push_back(Command("PD", "peak density",
 			 "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			 dd_pd,
-			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
+			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER},
+			 100000));
   cmds.push_back(Command("CI", "compare peak-intensity between two samples",
 			 "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			 drompa,
@@ -92,7 +94,7 @@ vector<Command> generateCommands()
 int main(int argc, char* argv[])
 {
   auto cmds = generateCommands();
-  
+
   if (argc ==1) {
     help_global(cmds);
     exit(0);
@@ -108,17 +110,17 @@ int main(int argc, char* argv[])
 
   positional_options_description pd;
   pd.add("command", 1);
-  
+
   options_description allopts("Options");
   allopts.add(command).add(genopts);
 
   variables_map values;
-  
+
   try {
     // parse first argument only
     parsed_options parsed = command_line_parser(2, argv).options(allopts).positional(pd).run();
     store(parsed, values);
-    
+
     if (values.count("version")) printVersion();
 
     // check command and param
@@ -130,7 +132,7 @@ int main(int argc, char* argv[])
 	on++;
       }
     }
-    
+
     if (!on) {
       cerr << "  Invalid command: " << values["command"].as<string>() << endl;
       help_global(cmds);
@@ -140,23 +142,23 @@ int main(int argc, char* argv[])
   } catch (exception &e) {
     cout << e.what() << endl;
   }
-  
+
   return 0;
 }
 
-void drompa(variables_map &values)
+void drompa(variables_map &values, Param &p)
 {
   printf("drompa\n");
   return;
 }
 
-void dd_pd(variables_map &values)
+void dd_pd(variables_map &values, Param &p)
 {
   printf("dd_pd\n");
   return;
 }
 
-void dd_overlook(variables_map &values)
+void dd_overlook(variables_map &values, Param &p)
 {
   printf("dd_overlook\n");
   return;

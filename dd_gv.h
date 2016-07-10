@@ -76,5 +76,13 @@ class pdSample {
   pdSample(){}
 };
 
+class Param {
+ public:
+  map<string, int> gt;
+  unordered_map<string, SampleFile> sample;
+  vector<SamplePair> samplepair;
+  vector<pdSample> pd;
+  Param(){}
+};
 
 #endif /* _DD_GV_H_ */

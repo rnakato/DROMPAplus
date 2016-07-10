@@ -5,8 +5,7 @@
 #define _DD_OPT_H_
 
 #include "util.h"
-#include "macro.h"
-#include "readdata.h"
+#include "dd_gv.h"
 #include "dd_readfile.h"
 
 using namespace boost::program_options;
@@ -15,28 +14,24 @@ enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTR
 class opt {
 public:
   options_description opts;
-  opt(const string str): opts(str){}
-  void add(vector<optstatus> st);
+  opt(const string str): opts(str) {}
+  void add(vector<optstatus> st, int binsize);
 };
 
 class Command {
   opt opts;
-  public:
-  string name;
   string desc;
   string requiredstr;
   vector<optstatus> vopts;
   variables_map values;
-
-  map<string, int> gt;
-  unordered_map<string, SampleFile> sample;
-  vector<SamplePair> samplepair;
-  vector<pdSample> pd;
-
-  function<void(variables_map &)> func;
+  Param p;
+  function<void(variables_map &, Param &)> func;
   
- Command(string n, string d, string r, function<void(variables_map &)> _func, vector<optstatus> v): opts("Options"), name(n), desc(d), requiredstr(r), vopts(v), func(_func) {
-    opts.add(v);
+  public:
+  string name;
+
+ Command(string n, string d, string r, function<void(variables_map &, Param &)> _func, vector<optstatus> v, int binsize=100): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
+    opts.add(v, binsize);
   };
   void print() const {
     cout << setw(8) << " " << left << setw(12) << name
@@ -64,18 +59,19 @@ class Command {
       
       notify(values);
       checkParam();
-
-      gt = read_genometable(values["gt"].as<string>());
-      
       InitDump();
-      func(values);
+
+      p.gt = read_genometable(values["gt"].as<string>());
+
+      func(values, p);
+
     } catch (exception &e) {
       cout << e.what() << endl;
     }
   }
 };
 
-void opt::add(vector<optstatus> st)
+void opt::add(vector<optstatus> st, int binsize)
 {
   options_description o("Required",100);
   o.add_options()
@@ -92,7 +88,7 @@ void opt::add(vector<optstatus> st)
 	o.add_options()
 	  ("input,i",   value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
 	  ("if",        value<int>()->default_value(0),   "Input file format\n     0: Binary (.bin)\n     1: Compressed wig (.wig.gz)\n     2: Uncompressed wig (.wig)\n     3: bedGraph (.bedGraph)\n")
-	  ("binsize,b", value<int>()->default_value(100), "Bin size")
+	  ("binsize,b", value<int>()->default_value(binsize), "Bin size")
 	  ;
 	opts.add(o);
 	break;
@@ -203,7 +199,7 @@ void opt::add(vector<optstatus> st)
 	options_description o("For overlay",100);
 	o.add_options()
 	  ("ioverlay",  value<vector<string>>(),	  "Input file")
-	  ("binsize2",  value<int>()->default_value(100), "Bin size")
+	  ("binsize2",  value<int>()->default_value(binsize), "Bin size")
 	  ("scale_tag2",   value<double>(), "Scale for read line")
 	  ("scale_ratio2", value<double>(), "Scale for fold enrichment")
 	  ("scale_pvalue2",value<double>(), "Scale for -log10(p)")
@@ -287,7 +283,7 @@ void Command::checkParam() {
 	chkminus<int>(values, "binsize", 0);
 
 	vector<string> v(values["input"].as<vector<string>>());
-	for(auto x:v) scan_samplestr(x, sample, samplepair);
+	for(auto x:v) scan_samplestr(x, p.sample, p.samplepair);
 	break;
       }
     case OPTNORM:
@@ -351,7 +347,7 @@ void Command::checkParam() {
 	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 	
 	vector<string> v(values["pd"].as<vector<string>>());
-	for(auto x:v) pd.push_back(scan_pdstr(x));
+	for(auto x:v) p.pd.push_back(scan_pdstr(x));
 	break;
       }
     case OPTPROF:
@@ -393,9 +389,9 @@ void Command::InitDump()
     case OPTCHIP:
       {
 	BPRINT("\nSamples\n");
-	for(uint i=0; i<samplepair.size(); ++i) {
+	for(uint i=0; i<p.samplepair.size(); ++i) {
 	  cout << (i+1) << ": ";
-	  samplepair[i].print();
+	  p.samplepair[i].print();
 	}
 	BPRINT("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
 	break;
@@ -476,9 +472,9 @@ void Command::InitDump()
       {
 	if(values.count("ioverlay")) { 
 	  BPRINT("\nOverlayed samples\n");
-	  for(uint i=0; i<samplepair.size(); ++i) {
+	  for(uint i=0; i<p.samplepair.size(); ++i) {
 	    cout << (i+1) << ": ";
-	    samplepair[i].print();
+	    p.samplepair[i].print();
 	  }
 	}
 	break;
@@ -496,8 +492,8 @@ void Command::InitDump()
     case OPTPD:
       {
 	BPRINT("\nSamples\n");
-	for(uint i=0; i<pd.size(); ++i) {
-	  BPRINT("   IP%1%: %2%\tname: %3%\n") % (i+1) % pd[i].argv % pd[i].name;
+	for(uint i=0; i<p.pd.size(); ++i) {
+	  BPRINT("   IP%1%: %2%\tname: %3%\n") % (i+1) % p.pd[i].argv % p.pd[i].name;
 	}
 	break;
       }
