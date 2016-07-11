@@ -37,7 +37,7 @@ class bed {
  }
  void print()      const { cout << chr << "\t" << start << "\t" << end; }
  void printHead () const { cout << "chromosome\tstart\tend"; }
- int length() { return abs(end - start); }
+ int length() const { return abs(end - start); }
 };
 
 class bed12 : public bed {
@@ -51,7 +51,7 @@ class bed12 : public bed {
   int blockCount;
   int blockSizes;
   int blockStarts;
- bed12(){}
+ bed12(): bed() {}
  bed12(vector<string> s): bed(s) {
    int num = s.size();
    if(num > 3)  name        = s[3];
@@ -85,7 +85,7 @@ class macsxls : public bed {
   double q;
   string name;
 
- macsxls(){}
+ macsxls(): bed() {}
  macsxls(vector<string> s): bed(s) {
    len    = stoi(s[3]);
    summit = stoi(s[4]);

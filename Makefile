@@ -48,7 +48,7 @@ drompa+: $(OBJS_DD) $(OBJS_UTIL)
 	$(CC) -c $< $(CFLAGS)
 
 clean:
-	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(TARGET) *~
+	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET) *~
 
 dd_main.o: dd_opt.h
 pw_shiftprofile.o: pw_shiftprofile_p.h
