@@ -191,6 +191,7 @@ int main(int argc, char* argv[])
 
   // make and output wigdata
   makewig(values, p);
+  
   p.estimateZINB();  // for genome
   
   outputPeak(values, p);
