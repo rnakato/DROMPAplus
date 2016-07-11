@@ -57,7 +57,7 @@ void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<ch
     agroup.create_thread(bind(genThreadCcp, boost::ref(chr), boost::cref(fwd), boost::cref(rev), x.getmean(), y.getmean(), seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
-  
+
   for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
     double xy(0);
     for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - x.getmean()) * (rev[j+step] - y.getmean());
