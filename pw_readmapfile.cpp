@@ -44,6 +44,12 @@ void read_mapfile(const variables_map &values, Mapfile &p)
   if(!p.genome.bothnread()) {
     PRINTERR("no read in input file.");
   }
+
+  p.dist.setlenF3();
+  if(values.count("pair")) {
+    p.dist.setlenF5();
+    p.dist.setFraglen();
+  }
   
   /* output distributions of read length and fragment length */
   outputDist(values, p);
@@ -256,9 +262,6 @@ void printDist(ofstream &out, const vector<int> v, const string str, const long 
   
 void outputDist(const variables_map &values, Mapfile &p)
 {
-  p.dist.setlenF3();
-  if(values.count("pair")) p.dist.setlenF5();
-  
   string outputfile = p.oprefix + ".readlength_dist.csv";
   ofstream out(outputfile);
   printDist(out, p.dist.readlen, "F3", p.genome.bothnread());
