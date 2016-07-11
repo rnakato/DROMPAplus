@@ -21,7 +21,7 @@ void makewig(const variables_map &values, Mapfile &p)
   int oftype = values["of"].as<int>();
   string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>());
 
-  if(oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG){
+  if (oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG) {
     filename += ".wig";
     outputWig(values, p, filename);
     if(oftype==TYPE_COMPRESSWIG) {

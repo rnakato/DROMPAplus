@@ -238,12 +238,12 @@ void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &
   return;
 }
 
-map<string, int> read_genometable(const string& fileName)
+vector<chrsize> read_genometable(const string& fileName, int binsize=0)
 {
   ifstream in(fileName);
   if(!in) PRINTERR("genometable file does not exist.");
 
-  map<string, int> gt;
+  vector<chrsize> gt;
   string lineStr;
   
   while (!in.eof()) {
@@ -251,8 +251,11 @@ map<string, int> read_genometable(const string& fileName)
     if(lineStr.empty() || lineStr[0] == '#') continue;
     vector<string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    string chr = rmchr(v[0]);
-    gt[chr] = stoi(v[1]);
+    chrsize temp;
+    temp.name = rmchr(v[0]);
+    temp.len = stoi(v[1]);
+    if(binsize) temp.nbin = temp.len/binsize +1;
+    gt.push_back(temp);
   }
   return gt;
 }

@@ -17,7 +17,7 @@ class SampleFile {
   string argv;
     // *genome, *chr;
   vector<int> data;
- SampleFile(){}
+ SampleFile() {}
  SampleFile(string str): argv(str) {}
 };
 
@@ -78,7 +78,7 @@ class pdSample {
 
 class Param {
  public:
-  map<string, int> gt;
+  vector<chrsize> gt;
   unordered_map<string, SampleFile> sample;
   vector<SamplePair> samplepair;
   vector<pdSample> pd;

@@ -17,6 +17,10 @@ using namespace std;
 //             FRIP        accumulate read counts in bed regions specified
 //             3DMAP       accumulate read counts in bed regions specified
 
+void drompa(variables_map &, Param &);
+void dd_pd(variables_map &, Param &);
+void dd_overlook(variables_map &, Param &);
+
 void help_global(vector<Command> &cmds) {
     auto helpmsg = R"(
     ===============
@@ -38,10 +42,6 @@ void printVersion()
   cerr << "drompa version " << VERSION << endl;
   exit(0);
 }
-
-void drompa(variables_map &, Param &);
-void dd_pd(variables_map &, Param &);
-void dd_overlook(variables_map &, Param &);
 
 vector<Command> generateCommands()
 {
@@ -146,9 +146,56 @@ int main(int argc, char* argv[])
   return 0;
 }
 
+void readBinary(vector<int> &array, string filename, int nbin)
+{
+  ifstream in(filename, ios::in | ios::binary);
+  if (!in) PRINTERR("cannot open " << filename);
+  
+  for(int i=0; i<nbin; ++i) {
+    in.read((char *)&array[i], sizeof(int));
+    cout << i*50<< "\t" << WIGARRAY2VALUE(array[i]) << endl;
+  }
+
+  exit (0);
+  return;
+}
+
+
+vector<int> read_wigdata(variables_map &values, unordered_map<string, SampleFile>::iterator itr, chrsize &chr)
+{
+  vector<int> array(chr.nbin, 0);
+  int iftype = values["if"].as<int>();
+  string filename = itr->first + "." + IntToString(values["binsize"].as<int>());
+
+  if (iftype==TYPE_UNCOMPRESSWIG ) { 
+    filename += ".wig";
+    //    outputWig(values, p, filename);
+  } else if (iftype==TYPE_COMPRESSWIG) {
+    string command = "gzip -f " + filename;
+    //    if(system(command.c_str())) PRINTERR("gzip .wig failed.");
+  } else if (iftype==TYPE_BEDGRAPH) {
+    filename += ".bedGraph";
+    //    outputBedGraph(values, p, filename);
+  } else if (iftype==TYPE_BINARY) {
+    filename += ".bin";
+    readBinary(array, filename, chr.nbin);
+  }
+
+  //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
+
+  return array;
+}
+
 void drompa(variables_map &values, Param &p)
 {
   printf("drompa\n");
+
+  for(auto chr:p.gt) {
+    for(auto itr = p.sample.begin(); itr != p.sample.end(); ++itr) {
+      read_wigdata(values, itr, chr);
+    }
+  }
+
   return;
 }
 

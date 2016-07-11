@@ -23,10 +23,10 @@ vector<string> v;
   } else {
     if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0]);
   }
-  if(v[1] != "") {
+  if(v.size() >=2 && v[1] != "") {
     if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1]);
   }
-
+    
   SamplePair p(v);
 #ifdef DEBUG
   p.print();

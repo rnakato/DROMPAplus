@@ -220,19 +220,15 @@ void count_genome(const variables_map &values, const unordered_map<string, unord
   vector<convsite> vconv;
   if(values.count("conv")) vconv = gen_convergent(values["limconv"].as<int>(), mp);
 
-  auto gt = read_genometable(values["gt"].as<string>());
-  for(auto itr = gt.begin(); itr != gt.end(); ++itr){
-    string chr(itr->first);
-
-    //    cout << itr->first << "\t" << itr->second << endl;
-    
-    auto array = makeGenomeArray(values, chr, itr->second, mp, vconv);
+  auto gt = read_genometable(values["gt"].as<string>(), 0);
+  for(auto chr:gt) {
+    auto array = makeGenomeArray(values, chr.name, chr.len, mp, vconv);
     
     for (T &x: vbed) {
-      if(x.bed.chr == chr) s.inc(array[x.bed.summit]);
+      if(x.bed.chr == chr.name) s.inc(array[x.bed.summit]);
     }
     
-    for(int i=0; i<itr->second; i++) n.inc(array[i]);
+    for(int i=0; i<chr.len; i++) n.inc(array[i]);
   }
   
   if(values.count("intron")) cout << "\tGenome\tupstream\tdownstream\texon\tintron\tintergenic";

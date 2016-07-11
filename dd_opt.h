@@ -30,7 +30,7 @@ class Command {
   public:
   string name;
 
- Command(string n, string d, string r, function<void(variables_map &, Param &)> _func, vector<optstatus> v, int binsize=100): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
+ Command(string n, string d, string r, function<void(variables_map &, Param &)> _func, vector<optstatus> v, int binsize=50): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
     opts.add(v, binsize);
   };
   void print() const {
@@ -60,8 +60,7 @@ class Command {
       notify(values);
       checkParam();
       InitDump();
-
-      p.gt = read_genometable(values["gt"].as<string>());
+      p.gt = read_genometable(values["gt"].as<string>(), values["binsize"].as<int>());
 
       func(values, p);
 
@@ -284,6 +283,7 @@ void Command::checkParam() {
 
 	vector<string> v(values["input"].as<vector<string>>());
 	for(auto x:v) scan_samplestr(x, p.sample, p.samplepair);
+	
 	break;
       }
     case OPTNORM:

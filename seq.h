@@ -8,13 +8,16 @@
 
 using namespace std;
 
-inline string addchr(string chr) {
-  if(chr.find("chr") == string::npos) chr = "chr" + chr;
-  return chr;
-}
-
 enum Strand {STRAND_PLUS, STRAND_MINUS, STRANDNUM};
 enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
+
+class chrsize {
+ public:
+  string name;
+  int len;
+  int nbin;
+ chrsize(): name(""), len(0), nbin(0){}
+};
 
 class range {
  public:
