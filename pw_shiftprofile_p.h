@@ -83,7 +83,6 @@ class _shiftDist {
 	  << (itr->second/sum)     << "\t"
 	  << (itr->second * rRPKM) << "\t"
 	  << (itr->second * r)     << endl;
-    
   }
 };
 

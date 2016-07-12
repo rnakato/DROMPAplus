@@ -96,6 +96,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
 
 vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
+  cout << chr.name << ".." << flush;
   vector<int> wigarray(chr.nbin, 0);
 
   for(int strand=0; strand<STRANDNUM; ++strand) {
@@ -112,7 +113,7 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     auto mparray = readMpbl(values["mp"].as<string>(), ("chr" + chr.name), values["binsize"].as<int>(), chr.nbin);
     for(int i=0; i<chr.nbin; ++i) {
       chr.ws.addmpDist(mparray[i]/(double)binsize);
-      if(mparray[i] > mpthre) wigarray[i] = wigarray[i]*binsize/(double)mparray[i];
+      if(mparray[i] > mpthre) wigarray[i] *= binsize/(double)mparray[i];
     }
   }
   chr.ws.getWigStats(wigarray);
@@ -211,7 +212,6 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
   string tempfile = filename + ".temp";
   ofstream temp(tempfile);
   for(auto &chr: p.chr) {
-    cout << chr.name << ".." << flush;
     vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) {
       if(i==chr.nbin -1) e = chr.getlen() -1; else e = (i+1)*binsize;

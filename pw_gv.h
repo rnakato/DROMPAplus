@@ -169,7 +169,8 @@ class Wigstats {
     int size = wigDist.size();
     vector<int> ar;
     for(auto x: wigarray) {
-      ++sum;
+    if( x<0) cout << sum << "xxx" << x << endl;
+    ++sum;
       int v = WIGARRAY2VALUE(x);
       if(v < size) ++wigDist[v];
       if(x >= num95) continue;
@@ -185,7 +186,7 @@ class Wigstats {
     if(nb_p<=0) nb_p = 0.1; 
     nb_n = ave * nb_p /(1 - nb_p);
 
-    //    cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n<< endl;
+  cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n<< endl;
     if(ave) estimateParam();
   }
   void printwigDist(ofstream &out, const int i) const {
