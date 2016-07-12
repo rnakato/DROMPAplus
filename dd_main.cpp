@@ -146,29 +146,62 @@ int main(int argc, char* argv[])
   return 0;
 }
 
+void readWig(vector<int> &array, string filename, string chrname, int binsize)
+{
+  ifstream in(filename);
+  if (!in) PRINTERR("cannot open " << filename);
+
+  string head("chrom="+ chrname +"\tspan=");
+  int on(0);
+
+  string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty() || !lineStr.find("track")) continue;
+    if(on && lineStr.find("chrom=")!= string::npos) break;
+    if(lineStr.find(head)!= string::npos) {
+      on=1;
+      continue;
+    }
+    if(!on) continue;
+    vector<string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    int i = (stoi(v[0])-1)/binsize;
+    array[i] = VALUE2WIGARRAY(stol(v[1]));
+    if(array[i]) cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
+  }
+  exit (0);
+  return;
+}
+
 void readBinary(vector<int> &array, string filename, int nbin)
 {
+  static int nbinsum(0);
   ifstream in(filename, ios::in | ios::binary);
   if (!in) PRINTERR("cannot open " << filename);
-  
+
+  in.seekg(nbinsum*sizeof(int));  
   for(int i=0; i<nbin; ++i) {
     in.read((char *)&array[i], sizeof(int));
-    cout << i*50<< "\t" << WIGARRAY2VALUE(array[i]) << endl;
+    //    if(array[i]) cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
   }
 
-  exit (0);
+  nbinsum += nbin;
   return;
 }
 
 
 vector<int> read_wigdata(variables_map &values, unordered_map<string, SampleFile>::iterator itr, chrsize &chr)
 {
+  cout << chr.name << endl;
   vector<int> array(chr.nbin, 0);
+  int binsize(values["binsize"].as<int>());
   int iftype = values["if"].as<int>();
-  string filename = itr->first + "." + IntToString(values["binsize"].as<int>());
+  string filename = itr->first + "." + IntToString(binsize);
 
-  if (iftype==TYPE_UNCOMPRESSWIG ) { 
+  if (iftype==TYPE_UNCOMPRESSWIG) { 
     filename += ".wig";
+    readWig(array, filename, chr.name, binsize);
     //    outputWig(values, p, filename);
   } else if (iftype==TYPE_COMPRESSWIG) {
     string command = "gzip -f " + filename;
