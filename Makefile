@@ -2,7 +2,7 @@ CC = g++
 CFLAGS += -std=c++11 -Wall -O2
 LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams
 LIBS_DP += -lz -lgsl -lgslcblas -lboost_system -lboost_thread
-TARGET = parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene alglib.o
+TARGET = alglib.o parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene
 ALGLBDIR = alglib-3.10.0/src
 
 ifdef DEBUG
@@ -10,7 +10,7 @@ CFLAGS += -DDEBUG
 endif
 
 OBJS_UTIL = readdata.o util.o
-OBJS_ALGLIB = alglib.o specialfunctions.o ap.o alglibinternal.o #$(ALGLBDIR)/specialfunctions.cpp $(ALGLBDIR)/ap.cpp $(ALGLBDIR)/alglibinternal.cpp
+OBJS_ALGLIB = alglib.o specialfunctions.o ap.o alglibinternal.o
 OBJS_GTF = gtf2refFlat.o
 OBJS_COM = compare_bed2tss.o gene_bed.o
 OBJS_PO = peak_occurance.o gene_bed.o
@@ -49,7 +49,7 @@ alglib.o: alglib.cpp
 	$(CC) -c $< $(CFLAGS)
 
 clean:
-	rm gtf2refFlat.o $(OBJS_COM) $(OBJS_ALGLIB) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET) *~
+	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET) *~
 
 alglib.o: Makefile alglib.h
 dd_main.o: Makefile dd_opt.h

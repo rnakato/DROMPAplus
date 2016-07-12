@@ -33,6 +33,7 @@ class bed {
   int end;
   int summit;
  bed(): start(0), end(0), summit(0) {}
+  virtual ~bed(){}
  bed(int s, int e, string c): chr(c), start(s), end(e) {}
  bed(vector<string> s): start(stoi(s[1])), end(stoi(s[2])), summit((start + end)/2) {
    if(!s[0].find("chr")) chr = s[0].substr(3);
@@ -152,8 +153,8 @@ class bed_gene {
   const genedata *gene;
  bed_gene(): st(INTERGENIC), d(0), gene(nullptr) {}
  bed_gene(vector<string> s): st(INTERGENIC), d(0), bed(s), gene(nullptr) {}
-  void print() { bed.print();}
-  void printWithGene() {
+  void print() const { bed.print();}
+  void printWithGene() const {
     print();
     if(st == UPSTREAM)        cout << "\tupstream\t";
     else if(st == DOWNSTREAM) cout << "\tdownstream\t";
@@ -165,7 +166,7 @@ class bed_gene {
     gene->print();
     cout << endl;
   }
-  void printWithTss() {
+  void printWithTss() const {
     print();
     if(st == TSS) {
       cout << "\t" << d << "\t"; 	
