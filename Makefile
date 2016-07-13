@@ -49,7 +49,7 @@ alglib.o: alglib.cpp
 	$(CC) -c $< $(CFLAGS)
 
 clean:
-	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET) *~
+	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET)
 
 alglib.o: Makefile alglib.h
 dd_main.o: Makefile dd_opt.h
