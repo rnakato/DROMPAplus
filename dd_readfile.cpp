@@ -25,6 +25,7 @@ vector<string> v;
   }
   if(v.size() >=2 && v[1] != "") {
     if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1]);
+    if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
     
   SamplePair p(v);

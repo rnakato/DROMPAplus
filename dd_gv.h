@@ -5,6 +5,7 @@
 #define _DD_GV_H_
 
 #include <unordered_map>
+#include <boost/algorithm/string.hpp>
 #include "readdata.h"
 #include "macro.h"
 
@@ -13,12 +14,32 @@ using namespace std;
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;
+  int iftype;
+  int binsize;
  public:
-  string argv;
     // *genome, *chr;
   vector<int> data;
  SampleFile() {}
- SampleFile(string str): argv(str) {}
+ SampleFile(string &str) {
+   vector<string> v;
+   boost::split(v, str, boost::algorithm::is_any_of("."));
+   int last(v.size()-1);
+   if(v[last] == "wig") iftype = TYPE_UNCOMPRESSWIG;    
+   else if(v[last] == "gz" && v[last-1] == "wig") {
+     iftype = TYPE_COMPRESSWIG;
+     --last;
+   } else if(v[last] == "bedGraph") iftype = TYPE_BEDGRAPH;
+   else if(v[last] == "bin")      iftype = TYPE_BINARY;
+   else PRINTERR("invalid postfix: " << str);
+   try {
+     binsize = stoi(v[last-1]);
+   }catch (...) {
+     binsize = 0;
+   }
+   if(binsize <= 0) PRINTERR("invalid binsize: " << str);
+   cout << iftype << "\t" << binsize << endl;
+ }
+ int getbinsize() const {return binsize;}
 };
 
 class yScale {

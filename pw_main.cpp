@@ -29,12 +29,16 @@ Mapfile::Mapfile(const variables_map &values):
 
   readGenomeTable(values);
   if(values.count("mp")) getMpbl(values["mp"].as<string>(), chr);
+  for(auto &x:chr) genome.addlen(x);
 
-  for(auto &x:chr) {
-    x.nbin = x.getlen()/values["binsize"].as<int>() +1;
-    genome.addlen(x);
+  long lenmax(0);
+  for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
+    if(lenmax < itr->getlenmpbl()) {
+      lenmax = itr->getlenmpbl();
+      lchr = itr;
+    }
   }
-
+  
   // yeast
   for(auto x:chr) if(x.name == "I" || x.name == "II" || x.name == "III") yeast = true;
   for(auto &x:chr) if(yeast) x.yeaston();
@@ -68,17 +72,11 @@ void Mapfile::readGenomeTable(const variables_map &values)
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0] == '#') continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    SeqStats s(v[0], stoi(v[1]));    
+    SeqStats s(v[0], stoi(v[1]));
+    s.nbin = s.getlen()/values["binsize"].as<int>() +1;
     chr.push_back(s);
   }
-  
-  long lenmax(0);
-  for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
-    if(lenmax < itr->getlen()) {
-      lenmax = itr->getlen();
-      lchr = itr;
-    }
-  }
+
   return;
 }
 

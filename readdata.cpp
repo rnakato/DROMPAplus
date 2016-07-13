@@ -209,6 +209,7 @@ void printMap(const unordered_map<string, unordered_map<string, genedata>> &mp)
       cout << endl;
     }
   }
+  return;
 }
 
 void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &mp)
@@ -238,7 +239,7 @@ void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &
   return;
 }
 
-vector<chrsize> read_genometable(const string& fileName, int binsize=0)
+vector<chrsize> read_genometable(const string& fileName, int binsize)
 {
   ifstream in(fileName);
   if(!in) PRINTERR("genometable file does not exist.");

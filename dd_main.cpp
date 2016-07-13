@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <unordered_map>
+#include <ext/stdio_filebuf.h>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include "readdata.h"
@@ -146,11 +147,9 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-void readWig(vector<int> &array, string filename, string chrname, int binsize)
+template <class T>
+void readWig(T &in, vector<int> &array, string filename, string chrname, int binsize)
 {
-  ifstream in(filename);
-  if (!in) PRINTERR("cannot open " << filename);
-
   string head("chrom="+ chrname +"\tspan=");
   int on(0);
 
@@ -170,7 +169,6 @@ void readWig(vector<int> &array, string filename, string chrname, int binsize)
     array[i] = VALUE2WIGARRAY(stol(v[1]));
     if(array[i]) cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
   }
-  exit (0);
   return;
 }
 
@@ -197,20 +195,21 @@ vector<int> read_wigdata(variables_map &values, unordered_map<string, SampleFile
   vector<int> array(chr.nbin, 0);
   int binsize(values["binsize"].as<int>());
   int iftype = values["if"].as<int>();
-  string filename = itr->first + "." + IntToString(binsize);
+  string filename = itr->first; //+ "." + IntToString(binsize);
 
-  if (iftype==TYPE_UNCOMPRESSWIG) { 
-    filename += ".wig";
-    readWig(array, filename, chr.name, binsize);
-    //    outputWig(values, p, filename);
+  if (iftype==TYPE_UNCOMPRESSWIG) {
+    ifstream in(filename);
+    if (!in) PRINTERR("cannot open " << filename);
+    readWig(in, array, filename, chr.name, binsize);
   } else if (iftype==TYPE_COMPRESSWIG) {
-    string command = "gzip -f " + filename;
-    //    if(system(command.c_str())) PRINTERR("gzip .wig failed.");
+    string command = "zcat " + filename;
+    FILE *fp = popen(command.c_str(), "r");
+    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, ios_base::in);
+    istream in(static_cast<streambuf *>(p_fb));
+    readWig(in, array, filename, chr.name, binsize);
   } else if (iftype==TYPE_BEDGRAPH) {
-    filename += ".bedGraph";
     //    outputBedGraph(values, p, filename);
   } else if (iftype==TYPE_BINARY) {
-    filename += ".bin";
     readBinary(array, filename, chr.nbin);
   }
 

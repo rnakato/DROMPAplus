@@ -204,7 +204,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 }
 
 template <class T>
-void funcTagAlign(const variables_map &values, Mapfile &p, T & in)
+void funcTagAlign(const variables_map &values, Mapfile &p, T &in)
 {
   string lineStr;
   while (!in.eof()) {
