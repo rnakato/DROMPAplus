@@ -39,7 +39,7 @@ class bed {
    if(!s[0].find("chr")) chr = s[0].substr(3);
    else chr = s[0];
  }
- void print()      const { cout << chr << "\t" << start << "\t" << end; }
+ void print()      const { cout << "chr" << chr << "\t" << start << "\t" << end; }
  void printHead () const { cout << "chromosome\tstart\tend"; }
  int length() const { return abs(end - start); }
 };
