@@ -138,6 +138,25 @@ class shiftJacVec : public shiftDist {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
+    vector<int> fragarray(p.chr[i].getlen(),0);
+    vector<int> reparray(p.chr[i].getlen(),0);
+
+    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      if(fwd[j] && rev[j+150])          for(int k=0; k<150; ++k)          ++fragarray[j+k];
+      if(fwd[j] && rev[j+p.dist.lenF3]) for(int k=0; k<p.dist.lenF3; ++k) ++reparray[j+k];
+    }
+    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      if(reparray[j]>1 || fragarray[j] >1) {
+	cout << j << "\t" << fragarray[j] << "\t" << reparray[j] << endl;
+	/*	double f = fragarray[j]/(double)150;
+	double r = reparray[j]/(double)p.dist.lenF3;
+	double rel = f? r/f: 0;
+	cout << j << "\t" << f << "\t" << r << "\t" << rel << endl;*/
+      }
+    }
+    
+    exit(0);
+    
     setDist(chr[i], fwd, rev);
   }
 };

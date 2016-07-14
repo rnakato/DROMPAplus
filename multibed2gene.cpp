@@ -58,7 +58,7 @@ variables_map argv_init(int argc, char* argv[])
 
 template <class T>
 void merge_tss2bed(const variables_map &values,
-		    const unordered_map<string, unordered_map<string, genedata>> &mp,
+		   const unordered_map<string, unordered_map<string, genedata>> &mp,
 		   vector<vector<T>> &vbedlist)
 {
   int updist = -values["updist"].as<int>();
@@ -105,7 +105,7 @@ void compare_bed(const variables_map &values)
   }
 
   auto merge_bed(vbedlist);
-  
+
   unordered_map<string, unordered_map<string, genedata>> tmp; // hash for transcripts
   if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
   else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
