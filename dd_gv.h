@@ -29,7 +29,7 @@ class SampleFile {
      iftype = TYPE_COMPRESSWIG;
      --last;
    } else if(v[last] == "bedGraph") iftype = TYPE_BEDGRAPH;
-   else if(v[last] == "bin")      iftype = TYPE_BINARY;
+   else if(v[last] == "bin")        iftype = TYPE_BINARY;
    else PRINTERR("invalid postfix: " << str);
    try {
      binsize = stoi(v[last-1]);
@@ -37,9 +37,10 @@ class SampleFile {
      binsize = 0;
    }
    if(binsize <= 0) PRINTERR("invalid binsize: " << str);
-   cout << iftype << "\t" << binsize << endl;
+   //   cout << iftype << "\t" << binsize << endl;
  }
- int getbinsize() const {return binsize;}
+ int getbinsize() const { return binsize; }
+ int getiftype()  const { return iftype; }
 };
 
 class yScale {
@@ -52,12 +53,9 @@ class yScale {
 };
 
 class SamplePair {
-  enum {BINSIZE_DEFAULT=100};
-  
   int overlay;
   string argvChIP, argvInput;
   //  double fc; //comp
-  int binsize;
 
   string peak_argv;
   /*  Peak *peak;
@@ -70,23 +68,23 @@ class SamplePair {
   string name;
   yScale scale;
 
- SamplePair(vector<string> v): argvInput(""), binsize(BINSIZE_DEFAULT), peak_argv(""), name("") {
+ SamplePair(vector<string> v): argvInput(""), peak_argv(""), name("") {
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") name      = v[2];
     if(v.size() >=4 && v[3] != "") peak_argv = v[3];
-    if(v.size() >=5 && v[4] != "") binsize   = stoi(v[4]);
+    //    if(v.size() >=5 && v[4] != "") binsize   = stoi(v[4]);
     if(v.size() >=6 && v[5] != "") scale.tag = stof(v[5]);
     if(v.size() >=7 && v[6] != "") scale.ratio  = stof(v[6]);
     if(v.size() >=8 && v[7] != "") scale.pvalue = stof(v[7]);
   }
   void print() {
-    BPRINT("ChIP: %1% label: %2% binsize: %3% peaklist: %4%\n") % argvChIP % name % binsize % peak_argv;
+    BPRINT("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % name % peak_argv;
     BPRINT("   Input: %1%\n") % argvInput;
   }
   void printall() {
-    BPRINT("ChIP:%1% Input:%2% name:%3% peak:%4% binsize:%5% scale_tag %6% scale_ratio %7% scale_pvalue %8%\n")
-      % argvChIP % argvInput % name % peak_argv % binsize % scale.tag % scale.ratio % scale.pvalue;
+    BPRINT("ChIP:%1% Input:%2% name:%3% peak:%4% scale_tag %5% scale_ratio %6% scale_pvalue %7%\n")
+      % argvChIP % argvInput % name % peak_argv % scale.tag % scale.ratio % scale.pvalue;
   }
 };
 

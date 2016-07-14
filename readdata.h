@@ -27,7 +27,7 @@ unordered_map<string, unordered_map<string, genedata>> parseGtf(const string&, c
 unordered_map<string, unordered_map<string, genedata>> construct_gmp(const unordered_map<string, unordered_map<string, genedata>> &);
 void printMap(const unordered_map<string, unordered_map<string, genedata>> &);
 void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &);
-vector<chrsize> read_genometable(const string&, int binsize);
+vector<chrsize> read_genometable(const string&);
 
 vector<int>  readMpbl(string, string, int, int);
 vector<char> readMpbl_binary(int);

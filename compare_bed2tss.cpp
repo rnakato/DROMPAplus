@@ -220,7 +220,7 @@ void count_genome(const variables_map &values, const unordered_map<string, unord
   vector<convsite> vconv;
   if(values.count("conv")) vconv = gen_convergent(values["limconv"].as<int>(), mp);
 
-  auto gt = read_genometable(values["gt"].as<string>(), 0);
+  auto gt = read_genometable(values["gt"].as<string>());
   for(auto chr:gt) {
     auto array = makeGenomeArray(values, chr.name, chr.len, mp, vconv);
     

@@ -15,7 +15,7 @@ class opt {
 public:
   options_description opts;
   opt(const string str): opts(str) {}
-  void add(vector<optstatus> st, int binsize);
+  void add(vector<optstatus> st);
 };
 
 class Command {
@@ -30,8 +30,8 @@ class Command {
   public:
   string name;
 
- Command(string n, string d, string r, function<void(variables_map &, Param &)> _func, vector<optstatus> v, int binsize=50): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
-    opts.add(v, binsize);
+ Command(string n, string d, string r, function<void(variables_map &, Param &)> _func, vector<optstatus> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
+    opts.add(v);
   };
   void print() const {
     cout << setw(8) << " " << left << setw(12) << name
@@ -60,7 +60,7 @@ class Command {
       notify(values);
       checkParam();
       InitDump();
-      p.gt = read_genometable(values["gt"].as<string>(), values["binsize"].as<int>());
+      p.gt = read_genometable(values["gt"].as<string>());
 
       func(values, p);
 
@@ -70,7 +70,7 @@ class Command {
   }
 };
 
-void opt::add(vector<optstatus> st, int binsize)
+void opt::add(vector<optstatus> st)
 {
   options_description o("Required",100);
   o.add_options()
@@ -86,8 +86,7 @@ void opt::add(vector<optstatus> st, int binsize)
 	options_description o("Input",100);
 	o.add_options()
 	  ("input,i",   value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
-	  ("if",        value<int>()->default_value(0),   "Input file format\n     0: Binary (.bin)\n     1: Compressed wig (.wig.gz)\n     2: Uncompressed wig (.wig)\n     3: bedGraph (.bedGraph)\n")
-	  ("binsize,b", value<int>()->default_value(binsize), "Bin size")
+	  //	  ("binsize,b", value<int>()->default_value(binsize), "Bin size")
 	  ;
 	opts.add(o);
 	break;
@@ -198,7 +197,7 @@ void opt::add(vector<optstatus> st, int binsize)
 	options_description o("For overlay",100);
 	o.add_options()
 	  ("ioverlay",  value<vector<string>>(),	  "Input file")
-	  ("binsize2",  value<int>()->default_value(binsize), "Bin size")
+	  //	  ("binsize2",  value<int>()->default_value(binsize), "Bin size")
 	  ("scale_tag2",   value<double>(), "Scale for read line")
 	  ("scale_ratio2", value<double>(), "Scale for fold enrichment")
 	  ("scale_pvalue2",value<double>(), "Scale for -log10(p)")
@@ -277,9 +276,8 @@ void Command::checkParam() {
     case OPTCHIP:
       {
 	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
-	
-	chkrange<int>(values, "if", 0, 3);
-	chkminus<int>(values, "binsize", 0);
+
+	//	chkminus<int>(values, "binsize", 0);
 
 	vector<string> v(values["input"].as<vector<string>>());
 	for(auto x:v) scan_samplestr(x, p.sample, p.samplepair);
@@ -328,7 +326,7 @@ void Command::checkParam() {
       }
     case OPTOVERLAY:
       {
-	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2","binsize2"}) chkminus<int>(values, x, 0);
+	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2"}) chkminus<int>(values, x, 0);
 	break;
       }
     case OPTCG: 
@@ -373,7 +371,7 @@ void Command::InitDump()
 {
   vector<string> str_bool = {"ON", "OFF"};
   vector<string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
-  vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+  //  vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
   vector<string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
   vector<string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
   vector<string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
@@ -393,7 +391,7 @@ void Command::InitDump()
 	  cout << (i+1) << ": ";
 	  p.samplepair[i].print();
 	}
-	BPRINT("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
+	//	BPRINT("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
 	break;
       }
     case OPTNORM:

@@ -151,12 +151,13 @@ class shiftJacVec : public shiftDist {
       if(fwd[j] && rev[j+p.dist.lenF3]) for(int k=0; k<p.dist.lenF3; ++k) ++reparray[j+k];
     }
     for(int j=chr[i].start; j<chr[i].end; ++j) {
+      //if( reparray[j]>2 || fragarray[j]>2) cout << j << "\t" << fragarray[j] << "\t" << reparray[j] << endl;
       if(reparray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
     }
 
     for(auto x:vrep) {
-      //  cout << x.start<< "-" << x.end << endl;
-      //      for(int j=x.start; j<x.end; ++j) cout << j<<"\t"<< (int)fwd[j] << "\t" << (int)rev[j] << endl;  //fwd[j] = rev[j] = 0;
+      cout << x.start<< "-" << x.end << endl;
+      for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0; //cout << j<<"\t"<< (int)fwd[j] << "\t" << (int)rev[j] << endl;  //
       }*/
 
     setDist(chr[i], fwd, rev);

@@ -11,12 +11,33 @@ using namespace std;
 enum Strand {STRAND_PLUS, STRAND_MINUS, STRANDNUM};
 enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
 
+template <class T>
+class var {
+  std::string name;
+  T val;
+  T limlow;
+  T limup;
+  bool isupper;
+ public:
+ var(): name(""), val(0), limlow(0), limup(0){}
+  var(std::string str, T low):       name(str), val(0), limlow(low), limup(0), isupper(false) {}
+  var(std::string str, T low, T up): name(str), val(0), limlow(low), limup(up), isupper(true) {}
+  void set(T n) {
+    if(isupper && (n<limlow || n>limup)) {
+      cout << "Error : variable " << name << " should be " << limlow << "<= and <=" << limup << "." << endl;
+    }else if(!isupper && n<limlow ) {
+      cout << "Error : variable " << name << " should be >=" << limlow << "." << endl;
+    }
+    else val=n;
+  }
+  operator T() const { return val; }
+};
+
 class chrsize {
  public:
   string name;
   int len;
-  int nbin;
- chrsize(): name(""), len(0), nbin(0){}
+ chrsize(): name(""), len(0) {}
 };
 
 class range {
@@ -131,9 +152,7 @@ class genedata {
 
   genedata(): txStart(0), txEnd(0), cdsStart(0), cdsEnd(0), exonCount(0) {}
 
-  int length() const {
-    return (txEnd - txStart);
-  }
+  int length() const { return (txEnd - txStart); }
   void printall() const {
     if(this){
       cout << tname << "\t" << gname << "\t" << chr << "\t" << strand << "\t" << txStart << "\t" << txEnd << "\t" << cdsStart << "\t" << cdsEnd << "\t" << exonCount << "\tgene source: " << gsrc << "\ttranscript source: "<< tsrc << "\tgene biotype: "<< gtype << "\ttranscript biotype: "<< ttype << "\t";
@@ -220,32 +239,6 @@ class fasta {
   }
 };
 
-class RefGenome {
- public:
-  fasta genome;
-  vector<fasta> chr;
-  int chrnum;
-  int *GCdist;
-  long sum_GCdist;
-  RefGenome (): genome("Genome"), chrnum(0), sum_GCdist(0) {}
-  RefGenome (map<string, int> gt): genome("Genome"), chrnum(0), sum_GCdist(0) {
-    for(auto itr = gt.begin(); itr != gt.end(); ++itr){
-      fasta v(itr->first, itr->second);
-      chr.push_back(v);
-      genome.len += itr->second;
-    }
-    chrnum = chr.size();
-  }
-  RefGenome (map<string, int> gt, int binsize): RefGenome(gt) {
-    for(auto &x: chr) genome.nbin += x.nbin = x.len/binsize +1;
-  }
-  void print () const {
-    genome.print();
-    for(auto x: chr) x.print();
-    cout << "chrnum: " << chrnum << endl;
-  }
-};
-
 class Peak : public bed {
  public:
   int summit;
@@ -281,28 +274,13 @@ class sepchr {
 };
 
 template <class T>
-class var {
-  std::string name;
- public:
-  T val;
- var(std::string str, T v=0): name(str), val(v) {}
-  friend std::ostream &operator<<(std::ostream &stream, var v) {
-    return stream << v.name << "\t" << v.val;
-  }
-  var operator++() {
-    val++;
-    return *this;
-  }
-};
-
-template <class T>
-class temp {
+class printClass {
   int on;
-  std::string str;
- temp(): on(0){}
+  string str;
+ printClass(): on(0) {}
   void print() {
     if(!on) {
-      std::cout << str << std::endl;
+      cout << str << endl;
       on++;
     }
   }

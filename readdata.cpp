@@ -239,7 +239,7 @@ void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &
   return;
 }
 
-vector<chrsize> read_genometable(const string& fileName, int binsize)
+vector<chrsize> read_genometable(const string& fileName)
 {
   ifstream in(fileName);
   if(!in) PRINTERR("genometable file does not exist.");
@@ -255,7 +255,6 @@ vector<chrsize> read_genometable(const string& fileName, int binsize)
     chrsize temp;
     temp.name = rmchr(v[0]);
     temp.len = stoi(v[1]);
-    if(binsize) temp.nbin = temp.len/binsize +1;
     gt.push_back(temp);
   }
   return gt;

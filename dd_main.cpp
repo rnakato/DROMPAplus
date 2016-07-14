@@ -58,13 +58,11 @@ vector<Command> generateCommands()
   cmds.push_back(Command("GV", "global-view visualization",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER},
-			 100000));
+			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("PD", "peak density",
 			 "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			 dd_pd,
-			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER},
-			 100000));
+			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
   cmds.push_back(Command("CI", "compare peak-intensity between two samples",
 			 "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			 drompa,
@@ -188,14 +186,14 @@ void readBinary(vector<int> &array, string filename, int nbin)
   return;
 }
 
-
 vector<int> read_wigdata(variables_map &values, unordered_map<string, SampleFile>::iterator itr, chrsize &chr)
 {
   cout << chr.name << endl;
-  vector<int> array(chr.nbin, 0);
-  int binsize(values["binsize"].as<int>());
-  int iftype = values["if"].as<int>();
-  string filename = itr->first; //+ "." + IntToString(binsize);
+  int binsize(itr->second.getbinsize());
+  int nbin(chr.len/binsize +1);
+  vector<int> array(nbin, 0);
+  int iftype(itr->second.getiftype());
+  string filename = itr->first;
 
   if (iftype==TYPE_UNCOMPRESSWIG) {
     ifstream in(filename);
@@ -210,7 +208,7 @@ vector<int> read_wigdata(variables_map &values, unordered_map<string, SampleFile
   } else if (iftype==TYPE_BEDGRAPH) {
     //    outputBedGraph(values, p, filename);
   } else if (iftype==TYPE_BINARY) {
-    readBinary(array, filename, chr.nbin);
+    readBinary(array, filename, nbin);
   }
 
   //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
