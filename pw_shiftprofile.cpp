@@ -6,6 +6,18 @@
 #include <boost/thread.hpp>
 #include <time.h>
 
+int getRepeatRegion(vector<range> &vrep, int j, vector<int> array, int start, int end)
+{
+  int lower_thre=2;
+  int s, e;
+  for(s=j; s>=start; --s) if(array[s]<lower_thre) break;
+  for(e=j; e<end; ++e)    if(array[e]<lower_thre) break;
+
+  vrep.push_back(range(s,e));
+  
+  return e;
+}
+
 double getJaccard(int step, int end4mp, int xysum, const vector<char> &fwd, const vector<char> &rev)
 {
   int xy(0);
@@ -156,6 +168,7 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
     agroup.join_all();
   } else {
     genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
+    //genThread(dist, p, 150000000, 200000000, typestr, mtx);
   }
 #endif
   

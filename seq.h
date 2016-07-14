@@ -23,6 +23,7 @@ class range {
  public:
   int start;
   int end;
+ range(): start(0), end(0) {}
  range(int s, int e): start(s), end(e) {}
 };
 
