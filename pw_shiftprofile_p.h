@@ -53,7 +53,7 @@ class _shiftDist {
     r = 1/bk;
   }
   void setflen(double w) {
-    int shift_min(lenF3*1.2);
+    int shift_min(lenF3*1.3);
     nsc = mp[shift_min+1]*w;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
       if(itr->first > shift_min && nsc < itr->second*r*w) {
@@ -71,7 +71,8 @@ class _shiftDist {
     double const_bu(1/39.0);  // N/(4*L-N), N=10M, L=100M
     
     ofstream out(filename);
-    out << "NSC\t"<< nsc*weight << endl;
+    out << "NSC\t" << nsc*weight << endl;
+    out << "RLSC\t"<< (mp[lenF3]*r*weight) << endl;
     out << "Estimated fragment length\t" << nsci << endl;
     out << "Background enrichment\t" << be << endl;
     out << "Background uniformity\t" << const_bu / be << endl;
@@ -104,6 +105,7 @@ class shiftDist {
     }
     for(auto x:p.chr) {
       _shiftDist v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
+      //_shiftDist v(p, 180000000, 200000000, x.bothnread_nonred(), x.getlenmpbl());
       v.rchr = v.nread/(double)genome.nread;
       chr.push_back(v);
     }

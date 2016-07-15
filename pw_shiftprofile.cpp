@@ -158,9 +158,6 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   boost::thread_group agroup;
   boost::mutex mtx;
 
-#ifdef CHR1ONLY
-  genThread(dist, p, 0, 0, typestr, mtx);
-#else 
   if(typestr == "hdp" || typestr == "jaccard") {
     for(uint i=0; i<p.vsepchr.size(); i++) {
       agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
@@ -168,8 +165,8 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
     agroup.join_all();
   } else {
     genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
+    //genThread(dist, p, 0, 0, typestr, mtx);
   }
-#endif
   
   //  GaussianSmoothing(p.dist.hd);
 

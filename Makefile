@@ -26,9 +26,6 @@ HEADS_DD = dd_gv.h dd_readfile.h $(HEADS_UTIL)
 
 all: $(TARGET)
 
-echo:
-	@echo "CFLAGS = $(CFLAGS)"
-
 gtf2refFlat: $(OBJS_GTF) $(OBJS_UTIL)
 	$(CC) -o $@ $^ $(LIBS)
 compare_bed2tss: $(OBJS_COM) $(OBJS_UTIL)
