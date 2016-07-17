@@ -7,8 +7,8 @@
 
 #include "pw_gv.h"
 
-#define MP_FROM 200
-#define MP_TO   600
+#define MP_FROM 500
+#define MP_TO   1500
 #define NG_FROM 4000
 #define NG_TO   5000
 #define NG_STEP 100
@@ -142,6 +142,15 @@ class shiftJacVec : public shiftDist {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
+    /*    int segmentsize(1000);
+    int nseg = (chr[i].end - chr[i].start)/segmentsize + 1;
+
+    for(int j=0; j<nseg-1; j+=2) {
+      for(int k=0; k<segmentsize; ++k) {
+	int posi(chr[i].start + j*segmentsize+k);
+	fwd[posi] = rev[posi] = 0;
+      }
+      }*/
     /*    vector<int> fragarray(p.chr[i].getlen(),0);
     vector<int> reparray(p.chr[i].getlen(),0);
 
