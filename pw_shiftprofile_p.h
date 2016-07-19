@@ -32,7 +32,7 @@ class _shiftDist {
   int nsci;
   double rchr;
 
- _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, long l=0, double w=1): lenF3(p.dist.lenF3), start(s), end(e), end4mp(e-s-NG_TO), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
+ _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, long l=0, double w=1): lenF3(p.getlenF3()), start(s), end(e), end4mp(e-s-NG_TO), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
 
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);

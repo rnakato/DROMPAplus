@@ -23,10 +23,11 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p);
 void output_wigstats(const variables_map &values, Mapfile &p);
 
 Mapfile::Mapfile(const variables_map &values):
-  yeast(false), genome("Genome"), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(0), gv(0), r4cmp(0), maxGC(0)
+  yeast(false), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(false), gv(false), r4cmp(0), genome("Genome"), maxGC(0)
 {
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
-
+  obinprefix = oprefix + "." + IntToString(values["binsize"].as<int>());
+  
   readGenomeTable(values);
   if(values.count("mp")) getMpbl(values["mp"].as<string>(), chr);
   for(auto &x:chr) genome.addlen(x);
@@ -136,19 +137,6 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   return;
 }
 
-void outputPeak(const variables_map &values, Mapfile &p)
-{
-  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".peak.xls";
-  int binsize = values["binsize"].as<int>();
-  ofstream out(filename);
-
-  p.vPeak[0].printHead(out);
-  for(uint i=0; i<p.vPeak.size(); ++i) {
-    p.vPeak[i].print(out, i, binsize);
-  }
-  return;
-}
-
 int main(int argc, char* argv[])
 {
   variables_map values = getOpts(argc, argv);
@@ -167,10 +155,7 @@ int main(int argc, char* argv[])
 
   // BED file
   if (values.count("bed")) {
-    string bedfile = values["bed"].as<string>();
-    isFile(bedfile);
-    p.vbed = parseBed<bed>(bedfile);
-    //    printBed(p.vbed);
+    p.setbed(values["bed"].as<string>());
     p.setFRiP();
   }
 
@@ -192,7 +177,7 @@ int main(int argc, char* argv[])
   
   p.estimateZINB();  // for genome
   
-  outputPeak(values, p);
+  p.printPeak(values);
   
   // output stats
   output_wigstats(values, p);
@@ -399,7 +384,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
   if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
 
-  p.gcov.print(out, mapfile.gv);
+  p.gcov.print(out, mapfile.isgv());
   
   p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
@@ -412,18 +397,15 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
 
 void output_stats(const variables_map &values, const Mapfile &p)
 {
-  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".csv";
+  string filename = p.getbinprefix() + ".csv";
   ofstream out(filename);
 
   out << "parse2wig version " << VERSION << endl;
   out << "Input file: \"" << values["input"].as<string>() << "\"" << endl;
-  out << "Redundancy threshold: >" << p.thre4filtering << endl;
+  out << "Redundancy threshold: >" << p.getthre4filtering() << endl;
 
-  if(p.tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % p.complexity() % p.nt_nonred % p.nt_all;
-  else     out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % p.complexity() % p.nt_nonred % p.nt_all;
- 
-  if(!values.count("nomodel")) out << "Estimated fragment length: " << p.dist.eflen << endl;
-  else out << "Predefined fragment length: " << p.flen_def << endl;
+  p.printComplexity(out);
+  p.printFlen(values, out);
   if(values.count("genome")) out << "GC summit: " << p.maxGC << endl;
 
   // Global stats
@@ -461,7 +443,7 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
   vector<char> array;
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chr.getlen());
   else array = readMpbl_binary(chr.getlen());
-  if(values.count("bed")) arraySetBed(array, chr.name, p.vbed);
+  if(values.count("bed")) arraySetBed(array, chr.name, p.getvbed());
 
   int val(0);
   int size = array.size();
@@ -500,7 +482,7 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   double r = NUM_GCOV/(double)(p.genome.bothnread_nonred() - p.genome.nread_inbed);
   if(r>1){
     cerr << "Warning: number of reads is < "<< (int)(NUM_GCOV/NUM_1M) << " million.\n";
-    p.gv = 1;
+    p.gvon();
   }
   double r4cmp = r*RAND_MAX;
 
@@ -539,7 +521,7 @@ void calcFRiP(SeqStats &chr, const vector<bed> vbed)
 
 void output_wigstats(const variables_map &values, Mapfile &p)
 {
-  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>()) + ".binarray_dist.csv";
+  string filename = p.getbinprefix() + ".binarray_dist.csv";
   ofstream out(filename);
 
   cout << "generate " << filename << ".." << flush;

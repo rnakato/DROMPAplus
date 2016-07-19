@@ -23,25 +23,34 @@ using namespace boost::program_options;
 class SeqStats;
 
 void calcFRiP(SeqStats &, const vector<bed>);
+void printDist(ofstream &out, const vector<int> v, const string str, const long nread);
 
 class Dist {
-  enum {ReadMax=200, 
-	FragMax=1000};
- public:
+  enum {ReadMax=200, FragMax=1000};
   int lenF3;
   int lenF5;
   int eflen;
-  vector<int> readlen;
-  vector<int> readlen_F5;
-  vector<int> fraglen;
-
+  vector<int> vlenF3;
+  vector<int> vlenF5;
+  vector<int> vflen;
+  
+ public:
  Dist(): lenF3(0), lenF5(0), eflen(0),
-    readlen(ReadMax,0),
-    readlen_F5(ReadMax,0),
-    fraglen(FragMax,0) {}
-  void setlenF3() { lenF3 = getmaxi(readlen); }
-  void setlenF5() { lenF5 = getmaxi(readlen_F5); }
-  void setFraglen() { eflen = getmaxi(fraglen); }
+    vlenF3(ReadMax,0),
+    vlenF5(ReadMax,0),
+    vflen(FragMax,0) {}
+  void getmaxlenF3() { lenF3 = getmaxi(vlenF3); }
+  void getmaxlenF5() { lenF5 = getmaxi(vlenF5); }
+  void getmaxeflen() { eflen = getmaxi(vflen); }
+  void seteflen(const int len) { eflen = len; }
+  int geteflen() const { return eflen; }
+  int getlenF3() const { return lenF3; }
+  vector<int> getvlenF3() const { return vlenF3; }
+  vector<int> getvlenF5() const { return vlenF5; }
+  vector<int> getvflen()  const { return vflen; }
+  void addF3(const int len)   { ++vlenF3[len]; }
+  void addF5(const int len)   { ++vlenF5[len]; }
+  void addflen(const int len) { ++vflen[len]; }
 };
 
 class Fragment {
@@ -237,7 +246,7 @@ class GenomeCoverage {
     gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
     //    cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << endl;
   }
-  void print(ofstream &out, const int gv) const {
+  void print(ofstream &out, const bool gv) const {
       if(gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % gcovRaw % gcovNorm;
       else   out << boost::format("%1$.3f\t%2$.3f\t")   % gcovRaw % gcovNorm;
   //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
@@ -352,23 +361,24 @@ class SeqStats {
 
 class Mapfile {
   bool yeast;
- public:
-  string oprefix;
   Dist dist;
+  string oprefix;
+  string obinprefix;
+  int flen_def;
+  
+  // PCR bias
+  int thre4filtering;
+  int nt_all, nt_nonred, nt_red;
+  bool tv, gv;
+  double r4cmp;
+  vector<bed> vbed;
+  vector<Peak> vPeak;
+
+ public:
   SeqStats genome;
   vector<SeqStats> chr;
   vector<SeqStats>::iterator lchr; // longest chromosome
   vector<sepchr> vsepchr;
-
-  int flen_def;
-
-  // PCR bias
-  int thre4filtering;
-  int nt_all, nt_nonred, nt_red;
-  int tv, gv;
-  double r4cmp;
-  vector<bed> vbed;
-  vector<Peak> vPeak;
 
   // GC bias
   vector<double> GCweight;
@@ -383,10 +393,47 @@ class Mapfile {
   //  void getMpbl(const variables_map &values);
   vector<sepchr> getVsepchr(const int);
 
-  void addF5(const int readlen_F5) { ++dist.readlen_F5[readlen_F5]; }
+  void tvon() { tv = true; }
+  void gvon() { gv = true; }
+  int isgv() const { return gv; };
+  void setthre4filtering(const variables_map &values) {
+    if(values["thre_pb"].as<int>()) thre4filtering = values["thre_pb"].as<int>();
+    else thre4filtering = max(1, (int)(genome.bothnread() *10/(double)genome.getlenmpbl()));
+    cout << "Checking redundant reads: redundancy threshold " << thre4filtering << endl;
+  }
+  int getthre4filtering() const { return thre4filtering; };
+  void setr4cmp(const double r) { r4cmp = r; }
+  double getr4cmp() const { return r4cmp; }
+  void incNtAll() { ++nt_all; }
+  void incNtNonred() { ++nt_nonred; }
+  void incNtRed() { ++nt_red; }
+  void printPeak(const variables_map &values) const {
+    string filename = getbinprefix() + ".peak.xls";
+    ofstream out(filename);
+
+    vPeak[0].printHead(out);
+    for(uint i=0; i<vPeak.size(); ++i) {
+      vPeak[i].print(out, i, values["binsize"].as<int>());
+    }
+  }
+  string getprefix() const { return oprefix; }
+  string getbinprefix() const { return obinprefix; }
+  void setFraglen(const variables_map &values) {
+    dist.getmaxlenF3();
+    if(values.count("pair")) {
+      dist.getmaxlenF5();
+      dist.getmaxeflen();
+    }
+  }
+  vector<bed> getvbed() const { return vbed; }
+  void printFlen(const variables_map &values, ofstream &out) const {
+    if(!values.count("nomodel")) out << "Estimated fragment length: " << dist.geteflen() << endl;
+    else out << "Predefined fragment length: " << flen_def << endl;
+  }
+  void addF5(const int readlen_F5) { dist.addF5(readlen_F5); }
   void addfrag(const Fragment &frag) {
-    ++dist.readlen[frag.readlen_F3];
-    ++dist.fraglen[frag.fraglen];
+    dist.addF3(frag.readlen_F3);
+    dist.addflen(frag.fraglen);
     int on(0);
     for(auto &x:chr) {
       if(x.name == frag.chr) {
@@ -396,6 +443,27 @@ class Mapfile {
     }
     if(!on) cerr << "Warning: " << frag.chr << " is not in genometable." << endl;
   }
+
+  void setbed(const string bedfilename) {
+    isFile(bedfilename);
+    vbed = parseBed<bed>(bedfilename);
+    //    printBed(vbed);
+  }
+  void outputDistFile(const variables_map &values)
+  {
+    string outputfile = oprefix + ".readlength_dist.csv";
+    ofstream out(outputfile);
+    printDist(out, dist.getvlenF3(), "F3", genome.bothnread());
+    if(values.count("pair")) printDist(out, dist.getvlenF5(), "F5", genome.bothnread());
+    out.close();
+    
+    if(values.count("pair")) {
+      outputfile = oprefix + ".fraglen_dist.xls";
+      ofstream out(outputfile);
+      printDist(out, dist.getvflen(), "Fragmemt", genome.bothnread());
+    }
+  }
+
   void calcdepth(const variables_map &values) {
     int flen(getflen(values));
     for (auto &x:chr) x.calcdepth(flen);
@@ -414,6 +482,10 @@ class Mapfile {
   void setnread_red() {
     for (auto &x:chr) genome.addnread_red(x);
   }
+  void printComplexity(ofstream &out) const {
+    if(tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
+    else   out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % complexity() % nt_nonred % nt_all;
+  }
   double complexity() const { return nt_nonred/(double)nt_all; }
   void printstats() const {
     cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << endl;
@@ -431,11 +503,21 @@ class Mapfile {
     cout << "done." << endl;
     return;
   }
+  void seteflen(const int len) {
+    dist.seteflen(len);
+  }
+  int getlenF3() const { return dist.getlenF3(); }
   int getflen(const variables_map &values) const {
     int flen;
-    if(!values.count("nomodel") || values.count("pair")) flen = dist.eflen;
+    if(!values.count("nomodel") || values.count("pair")) flen = dist.geteflen();
     else flen = flen_def;
     return flen;
+  }
+  void addPeak(const Peak &peak) {
+    vPeak.push_back(peak);
+  }
+  void renewPeak(const int i, const double val, const double p) {
+    vPeak[vPeak.size()-1].renew(i, val, p);
   }
 
   void estimateZINB() {
@@ -449,10 +531,6 @@ class Mapfile {
 
     return;
   }
-    
-  /*  friend void setlenmpbl(SeqStats &x, string str, int l) {
-    if(x.name == str) x.len_mpbl = l;
-    }*/
 };
 
 #endif /* _PW_GV_H_ */

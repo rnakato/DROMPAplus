@@ -19,7 +19,7 @@ void makewig(const variables_map &values, Mapfile &p)
 {
   printf("Convert read data to array: \n");
   int oftype = values["of"].as<int>();
-  string filename = p.oprefix + "." + IntToString(values["binsize"].as<int>());
+  string filename(p.getbinprefix());
 
   if (oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG) {
     filename += ".wig";
@@ -33,7 +33,7 @@ void makewig(const variables_map &values, Mapfile &p)
     outputBedGraph(values, p, filename);
     if(oftype==TYPE_BIGWIG) {
       printf("Convert to bigWig...\n");
-      string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<string>() + " " + p.oprefix + ".bw";
+      string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<string>() + " " + p.getprefix() + ".bw";
       if(system(command.c_str())) PRINTERR("conversion failed.");
       remove(filename.c_str()); 
     }
@@ -78,13 +78,12 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
 
     if(!ext) {
       if(p > pthre) {
-	Peak peak(i, i, chr.name, val, p);
-	mapfile.vPeak.push_back(peak);
+	mapfile.addPeak(Peak(i, i, chr.name, val, p));
 	ext=1;
       }
     } else {
       if(p > pthre) {
-	mapfile.vPeak[mapfile.vPeak.size()-1].renew(i, val, p);
+	mapfile.renewPeak(i, val, p);
       } else {
 	ext=0;
       }

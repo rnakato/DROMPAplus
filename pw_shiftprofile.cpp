@@ -144,7 +144,7 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr
 
     if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
-    string filename = p.oprefix + "." + typestr + "." + p.chr[i].name + ".csv";
+    string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
     dist.chr[i].outputmp(filename, dist.name, dist.w);
   }
 }
@@ -170,11 +170,11 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   
   //  GaussianSmoothing(p.dist.hd);
 
-  string filename = p.oprefix + "." + typestr + ".csv";
+  string filename = p.getprefix() + "." + typestr + ".csv";
   dist.genome.outputmp(filename, dist.name, dist.w);
 
   // set fragment length;
-  p.dist.eflen = dist.genome.nsci;
+  p.seteflen(dist.genome.nsci);
   
   return;
 }
@@ -183,7 +183,7 @@ void strShiftProfile(Mapfile &p, string typestr, int numthreads)
 {
   if(typestr=="exjaccard") makeProfile<shiftJacVec>(p, typestr, numthreads);
   if(typestr=="jaccard")   makeProfile<shiftJacBit>(p, typestr, numthreads);
-  else if(typestr=="ccp")  makeProfile<shiftCcp>(p,    typestr, numthreads);
+  else if(typestr=="ccp")  makeProfile<shiftCcp>(p, typestr, numthreads);
   else if(typestr=="hdp")  makeProfile<shiftHamming>(p, typestr, numthreads);
   
   return;

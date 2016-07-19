@@ -19,7 +19,7 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
   int GsumGC = accumulate(gDist.begin(), gDist.end(), 0);
   int RsumGC = accumulate(rDist.begin(), rDist.end(), 0);
 
-  string filename = p.oprefix + ".GCdist.xls";
+  string filename = p.getprefix() + ".GCdist.xls";
   ofstream out(filename);
   out << "GC\tgenome prop\treads prop\tdepth\tweight" << endl;
   
@@ -53,7 +53,7 @@ void make_GCdist(const variables_map &values, Mapfile &p)
   vector<char> array; 
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chrlen);
   else array = readMpbl_binary(p.lchr->getlen());
-  if(values.count("bed")) arraySetBed(array, p.lchr->name, p.vbed);
+  if(values.count("bed")) arraySetBed(array, p.lchr->name, p.getvbed());
 
   // make fastaGCarray
   string fa= values["genome"].as<string>() + "/chr" + p.lchr->name + ".fa";
