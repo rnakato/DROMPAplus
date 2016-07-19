@@ -52,16 +52,22 @@ class _shiftDist {
     bk /= n;
     r = 1/bk;
   }
+
   void setflen(double w) {
-    int shift_min(lenF3*1.3);
-    nsc = mp[shift_min+1]*w;
-    for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
-      if(itr->first > shift_min && nsc < itr->second*r*w) {
-	nsc = itr->second*r*w;
-	nsci = itr->first;
+    int threwidth(5);
+    nsc = mp[MP_TO-1]*w;
+    for(int i=MP_TO-1-threwidth; i > lenF3*1.3; --i) {
+      int on(1);
+      for(int j=1; j<=threwidth; ++j) {
+	if (mp[i] < mp[i+j] || mp[i] < mp[i-j]) on=0;
+      }
+      if(on && nsc < mp[i]*r*w) {
+	nsc  = mp[i]*r*w;
+	nsci = i;
       }
     }
   }
+
   void outputmp(const string filename, string name, double weight) {
     setControlRatio();
     setflen(weight);
@@ -69,7 +75,7 @@ class _shiftDist {
     double rRPKM = (NUM_10M/(double)nread) / (NUM_100M/(double)len);
     double be(bk * rRPKM);
     double const_bu(1/39.0);  // N/(4*L-N), N=10M, L=100M
-    
+
     ofstream out(filename);
     out << "NSC\t" << nsc*weight << endl;
     out << "RLSC\t"<< (mp[lenF3]*r*weight) << endl;
