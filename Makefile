@@ -1,5 +1,6 @@
 CC = g++
-CFLAGS += -std=c++11 -Wall -O2
+CFLAGS += -std=c++11 -O2
+#WFLAGS += -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Werror -Wno-unused # Warninig
 LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams
 LIBS_DP += -lz -lgsl -lgslcblas -lboost_system -lboost_thread
 TARGET = alglib.o parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene
@@ -43,7 +44,7 @@ drompa+: $(OBJS_DD) $(OBJS_UTIL)
 alglib.o: alglib.cpp
 	$(CC) -c $< $(ALGLBDIR)/specialfunctions.cpp $(ALGLBDIR)/ap.cpp $(ALGLBDIR)/alglibinternal.cpp $(CFLAGS)
 .cpp.o:
-	$(CC) -c $< $(CFLAGS)
+	$(CC) -c $< $(CFLAGS) $(WFLAGS)
 
 clean:
 	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET)

@@ -228,7 +228,7 @@ void count_genome(const variables_map &values, const unordered_map<string, unord
       if(x.bed.chr == chr.name) s.inc(array[x.bed.summit]);
     }
     
-    for(int i=0; i<chr.len; i++) n.inc(array[i]);
+    for(size_t i=0; i<array.size(); i++) n.inc(array[i]);
   }
   
   if(values.count("intron")) cout << "\tGenome\tupstream\tdownstream\texon\tintron\tintergenic";
