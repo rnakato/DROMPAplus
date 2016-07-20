@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <map>
 #include <string>
 #include <fstream>
 #include <vector>
@@ -14,38 +13,39 @@
 #include "seq.h"
 #include "macro.h"
 
-using namespace std;
-
 enum bpstatus {UNMAPPABLE, INBED, MAPPABLE, COVREAD_ALL, COVREAD_NORM};
 
-int countmp(unordered_map<string, unordered_map<string, genedata>> &);
-vector<string> scanGeneName(const unordered_map<string, unordered_map<string, genedata>> &);
-unordered_map<string, unordered_map<string, genedata>> extract_mp(const unordered_map<string, unordered_map<string, genedata>> &, const vector<string>);
-vector<string> readGeneList(const string&);
-unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string&);
-unordered_map<string, unordered_map<string, genedata>> parseGtf(const string&, const int);
-unordered_map<string, unordered_map<string, genedata>> construct_gmp(const unordered_map<string, unordered_map<string, genedata>> &);
-void printMap(const unordered_map<string, unordered_map<string, genedata>> &);
-void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &);
-vector<chrsize> read_genometable(const string&);
+using GeneDataMap = std::unordered_map<std::string, genedata>;
+using HashOfGeneDataMap = std::unordered_map<std::string, GeneDataMap>;
 
-vector<int>  readMpbl(string, string, int, int);
-vector<char> readMpbl_binary(int);
-vector<char> readMpbl_binary(string, string, int);
-vector<char> arraySetBed(vector<char> &, string, vector<bed>);
-void isFile(string);
-string IntToString(int n);
-string rmchr(const string &chr);
+int countmp(HashOfGeneDataMap &);
+std::vector<std::string> scanGeneName(const HashOfGeneDataMap &);
+HashOfGeneDataMap extract_mp(const HashOfGeneDataMap &, const std::vector<std::string>);
+std::vector<std::string> readGeneList(const std::string&);
+HashOfGeneDataMap parseRefFlat(const std::string&);
+HashOfGeneDataMap parseGtf(const std::string&, const int);
+HashOfGeneDataMap construct_gmp(const HashOfGeneDataMap &);
+void printMap(const HashOfGeneDataMap &);
+void printRefFlat(const HashOfGeneDataMap &);
+std::vector<chrsize> read_genometable(const std::string&);
+
+std::vector<int>  readMpbl(std::string, std::string, int, int);
+std::vector<char> readMpbl_binary(int);
+std::vector<char> readMpbl_binary(std::string, std::string, int);
+std::vector<char> arraySetBed(std::vector<char> &, std::string, std::vector<bed>);
+void isFile(std::string);
+std::string IntToString(int n);
+std::string rmchr(const std::string &chr);
 
 template <class T>
-vector<T> parseBed(const string& fileName)
+std::vector<T> parseBed(const std::string &fileName)
 {
-  vector<T> vbed;
-  ifstream in(fileName);
+  std::vector<T> vbed;
+  std::ifstream in(fileName);
   if(!in) PRINTERR("BED file does not exist.");
 
-  string lineStr;
-  vector<string> v;
+  std::string lineStr;
+  std::vector<std::string> v;
   while (!in.eof()) {
     getline(in, lineStr);
 
@@ -59,13 +59,13 @@ vector<T> parseBed(const string& fileName)
 }
 
 template <class T>
-void printBed(const vector<T> &vbed)
+void printBed(const std::vector<T> &vbed)
 {
   for (auto x: vbed) {
     x.print();
-    cout << endl;
+    std::cout << std::endl;
   }
-  cout << "bed num: " << vbed.size() << endl;
+  std::cout << "bed num: " << vbed.size() << std::endl;
   return;
 }
 

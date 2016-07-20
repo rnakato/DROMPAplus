@@ -6,6 +6,50 @@
 #include <boost/thread.hpp>
 #include <time.h>
 
+namespace {
+  const int mp_from(500);
+  const int mp_to(1500);
+  const int ng_from(4000);
+  const int ng_to(5000);
+  const int ng_step(100);
+}
+
+void ReadShiftProfileAll::defSepRange(int numthreads)
+{
+  int length(mp_to+mp_from);
+  int sepsize = length/numthreads +1;
+  for(int i=0; i<numthreads; i++) {
+    int s = i*sepsize;
+    int e = (i+1)*sepsize;
+    if(i==numthreads-1) e = length;
+    range sep(s - mp_from, e - mp_from);
+    seprange.push_back(sep);
+  }
+}
+  
+void ReadShiftProfile::setflen(double w)
+{
+  int threwidth(5);
+  nsc = mp[mp_to-1]*w;
+  for(int i=mp_to-1-threwidth; i > lenF3*1.3; --i) {
+    int on(1);
+    for(int j=1; j<=threwidth; ++j) {
+      if (mp[i] < mp[i+j] || mp[i] < mp[i-j]) on=0;
+    }
+    if(on && nsc < mp[i]*r*w) {
+      nsc  = mp[i]*r*w;
+      nsci = i;
+    }
+  }
+}
+
+void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w)
+{
+  for(auto itr = mpfrom.begin(); itr != mpfrom.end(); ++itr) {
+    mpto[itr->first] += itr->second * w;
+  }
+}
+
 int getRepeatRegion(vector<range> &vrep, int j, vector<int> array, int start, int end)
 {
   int lower_thre=2;
@@ -18,21 +62,21 @@ int getRepeatRegion(vector<range> &vrep, int j, vector<int> array, int start, in
   return e;
 }
 
-double getJaccard(int step, int end4mp, int xysum, const vector<char> &fwd, const vector<char> &rev)
+double getJaccard(int step, int width, int xysum, const vector<char> &fwd, const vector<char> &rev)
 {
   int xy(0);
-  for(int j=MP_FROM; j<end4mp; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
+  for(int j=mp_from; j<width-ng_to; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
   return (xy/static_cast<double>(xysum-xy));
 }
 
-void genThreadJacVec(_shiftDist &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
+void genThreadJacVec(ReadShiftProfile &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
-    chr.setmp(step, getJaccard(step, chr.end4mp, xysum, fwd, rev), mtx);
+    chr.setmp(step, getJaccard(step, chr.width, xysum, fwd, rev), mtx);
   }
 }
 
-void shiftJacVec::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev)
+void shiftJacVec::setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev)
 {
   int xx = accumulate(fwd.begin(), fwd.end(), 0);
   int yy = accumulate(rev.begin(), rev.end(), 0);
@@ -44,24 +88,24 @@ void shiftJacVec::setDist(_shiftDist &chr, const vector<char> &fwd, const vector
   }
   agroup.join_all();
 
-  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
-    chr.nc[step] = getJaccard(step, chr.end4mp, xx+yy, fwd, rev);
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
+    chr.nc[step] = getJaccard(step, chr.width-ng_to, xx+yy, fwd, rev);
   }
 }
 
-void genThreadCcp(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, const int s, const int e, boost::mutex &mtx)
+void genThreadCcp(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, const int s, const int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
     double xy(0);
-    for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
+    for(int j=mp_from; j<chr.width-ng_to; ++j) xy += (fwd[j] - mx) * (rev[j+step] - my);
     chr.setmp(step, xy, mtx);
   }
 }
 
-void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev)
+void shiftCcp::setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev)
 {
-  moment<char> x(fwd, MP_FROM, chr.end4mp);
-  moment<char> y(rev, MP_FROM, chr.end4mp);
+  moment<char> x(fwd, mp_from, chr.width-ng_to);
+  moment<char> y(rev, mp_from, chr.width-ng_to);
 
   boost::thread_group agroup;
   boost::mutex mtx;
@@ -70,47 +114,47 @@ void shiftCcp::setDist(_shiftDist &chr, const vector<char> &fwd, const vector<ch
   }
   agroup.join_all();
 
-  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
     double xy(0);
-    for(int j=MP_FROM; j<chr.end4mp; ++j) xy += (fwd[j] - x.getmean()) * (rev[j+step] - y.getmean());
+    for(int j=mp_from; j<chr.width-ng_to; ++j) xy += (fwd[j] - x.getmean()) * (rev[j+step] - y.getmean());
     chr.nc[step] = xy;
   }
 
-  double val = 1/(x.getsd() * y.getsd() * (chr.end4mp - MP_FROM - 1));
+  double val = 1/(x.getsd() * y.getsd() * (chr.width-ng_to - mp_from - 1));
   for(auto itr = chr.mp.begin(); itr != chr.mp.end(); ++itr) itr->second *= val;
   for(auto itr = chr.nc.begin(); itr != chr.nc.end(); ++itr) itr->second *= val;
 }
 
-void shiftJacBit::setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev)
+void shiftJacBit::setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev)
 {
   int xysum(fwd.count() + rev.count());
 
-  rev <<= MP_FROM;
-  for(int step=-MP_FROM; step<MP_TO; ++step) {
+  rev <<= mp_from;
+  for(int step=-mp_from; step<mp_to; ++step) {
     rev >>= 1;
     int xy((fwd & rev).count());
     chr.mp[step] = xy/static_cast<double>(xysum-xy);
   }
-  rev >>= (NG_FROM - MP_TO);
+  rev >>= (ng_from - mp_to);
   
-  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
-    rev >>= NG_STEP;
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
+    rev >>= ng_step;
     int xy((fwd & rev).count());
     chr.nc[step] = xy/static_cast<double>(xysum-xy);
   }
 }
 
-void shiftHamming::setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev)
+void shiftHamming::setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev)
 {
-  rev <<= MP_FROM;
-  for(int step=-MP_FROM; step<MP_TO; ++step) {
+  rev <<= mp_from;
+  for(int step=-mp_from; step<mp_to; ++step) {
     rev >>= 1;
     chr.mp[step] = (fwd ^ rev).count();
   }
-  rev >>= (NG_FROM - MP_TO);
+  rev >>= (ng_from - mp_to);
   
-  for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
-    rev >>= NG_STEP;
+  for(int step=ng_from; step<ng_to; step+=ng_step) {
+    rev >>= ng_step;
     chr.nc[step] = (fwd ^ rev).count();
   }
 }

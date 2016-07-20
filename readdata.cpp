@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int countmp(unordered_map<string, unordered_map<string, genedata>> &mp)
+int countmp(HashOfGeneDataMap &mp)
 {
   int n(0);
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
@@ -18,7 +18,7 @@ int countmp(unordered_map<string, unordered_map<string, genedata>> &mp)
   return n;
 }
 
-vector<string> scanGeneName(const unordered_map<string, unordered_map<string, genedata>> &mp)
+vector<string> scanGeneName(const HashOfGeneDataMap &mp)
 {
   vector<string> vgname;
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
@@ -29,11 +29,11 @@ vector<string> scanGeneName(const unordered_map<string, unordered_map<string, ge
   return vgname;
 }
 
-unordered_map<string, unordered_map<string, genedata>>
-  extract_mp(const unordered_map<string, unordered_map<string, genedata>> &tmp,
+HashOfGeneDataMap
+  extract_mp(const HashOfGeneDataMap &tmp,
 	     const vector<string> glist)
 {
-  unordered_map<string, unordered_map<string, genedata>> mp;
+  HashOfGeneDataMap mp;
 
   for(auto x: glist) {
     for(auto itr = tmp.begin(); itr != tmp.end(); ++itr) {
@@ -64,7 +64,7 @@ vector<string> readGeneList(const string& fileName)
   return glist;
 }
 
-unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string& fileName)
+HashOfGeneDataMap parseRefFlat(const string& fileName)
 {
   if(fileName.find(".gtf") != string::npos) {
     cerr << "Warning: gene file seems to be gtf format but is parsed as refFlat." << endl;
@@ -73,7 +73,7 @@ unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string
   ifstream in(fileName);
   if(!in) PRINTERR("refFlat file does not exist.");
 
-  unordered_map<string, unordered_map<string, genedata>> tmp;
+  HashOfGeneDataMap tmp;
   string lineStr;
   
   while (!in.eof()) {
@@ -108,7 +108,7 @@ unordered_map<string, unordered_map<string, genedata>> parseRefFlat(const string
   return tmp;
 }
 
-unordered_map<string, unordered_map<string, genedata>> parseGtf(const string& fileName, const int nameflag)
+HashOfGeneDataMap parseGtf(const string& fileName, const int nameflag)
 {
   if(fileName.find(".gtf") == string::npos) {
     cerr << "Warning: gene file may not be gtf format but is parsed as gtf." << endl;
@@ -117,7 +117,7 @@ unordered_map<string, unordered_map<string, genedata>> parseGtf(const string& fi
   ifstream in(fileName);
   if(!in) PRINTERR("gtf file does not exist.");
 
-  unordered_map<string, unordered_map<string, genedata>> tmp;
+  HashOfGeneDataMap tmp;
   string lineStr;
   
   while (!in.eof()) {
@@ -184,9 +184,9 @@ unordered_map<string, unordered_map<string, genedata>> parseGtf(const string& fi
   return tmp;
 }
 
-unordered_map<string, unordered_map<string, genedata>> construct_gmp(const unordered_map<string, unordered_map<string, genedata>> &tmp)
+HashOfGeneDataMap construct_gmp(const HashOfGeneDataMap &tmp)
 {
-  unordered_map<string, unordered_map<string, genedata>> gmp;
+  HashOfGeneDataMap gmp;
 
   for(auto itr = tmp.begin(); itr != tmp.end(); ++itr) {
     string chr = itr->first;
@@ -201,7 +201,7 @@ unordered_map<string, unordered_map<string, genedata>> construct_gmp(const unord
   return gmp;
 }
 
-void printMap(const unordered_map<string, unordered_map<string, genedata>> &mp)
+void printMap(const HashOfGeneDataMap &mp)
 {
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
@@ -212,7 +212,7 @@ void printMap(const unordered_map<string, unordered_map<string, genedata>> &mp)
   return;
 }
 
-void printRefFlat(const unordered_map<string, unordered_map<string, genedata>> &mp)
+void printRefFlat(const HashOfGeneDataMap &mp)
 {
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {

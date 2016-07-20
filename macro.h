@@ -4,12 +4,10 @@
 #ifndef _MACRO_H_
 #define _MACRO_H_
 
-#include <boost/format.hpp>
-//#include <iostream>
-//#include <string>
-//#include "seq.h"
-
 #define VERSION "3.3.0+"
+
+//template<class T>
+//using dict = std::map<std::string, T>;
 
 enum {NUM_1K=1000,
       NUM_1M=1000000,
@@ -32,6 +30,6 @@ enum PWfile_Type {
 #define RANGE(i, min, max) (((i) >=(min)) && ((i) <=(max)) ? 1: 0)
 #define overlap(s1,e1,s2,e2) ((e1 >= s2) && (e2 >= s1))
 #define JOIN(a,b) (a ## b)
-#define PRINTERR(...) do{ cerr << "Error: " << __VA_ARGS__ << endl; exit(1); }while(0)
+#define PRINTERR(...) do{ std::cerr << "Error: " << __VA_ARGS__ << std::endl; std::exit(1); }while(0)
 
 #endif /* _MACRO_H_ */

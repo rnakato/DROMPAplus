@@ -8,8 +8,6 @@
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_sf.h>
 
-using namespace std;
-
 double _getPoisson(int i, double m)
 {
   return gsl_ran_poisson_pdf(i, m);

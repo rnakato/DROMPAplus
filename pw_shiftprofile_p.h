@@ -1,4 +1,3 @@
-
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
@@ -7,23 +6,19 @@
 
 #include "pw_gv.h"
 
-#define MP_FROM 500
-#define MP_TO   1500
-#define NG_FROM 4000
-#define NG_TO   5000
-#define NG_STEP 100
-
 vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
+void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
-class _shiftDist {
+
+class ReadShiftProfile {
   int lenF3;
  public:
   map<int, double> mp;
   map<int, double> nc;
   int start;
   int end;
-  int end4mp;
+  int width;
   long nread;
   long len;
   double r;
@@ -32,8 +27,7 @@ class _shiftDist {
   int nsci;
   double rchr;
 
- _shiftDist(const Mapfile &p, int s=0, int e=0, long n=0, long l=0, double w=1): lenF3(p.getlenF3()), start(s), end(e), end4mp(e-s-NG_TO), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
-
+ ReadShiftProfile(const Mapfile &p, int s=0, int e=0, long n=0, long l=0, double w=1): lenF3(p.getlenF3()), start(s), end(e), width(e-s), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
@@ -52,21 +46,7 @@ class _shiftDist {
     bk /= n;
     r = 1/bk;
   }
-
-  void setflen(double w) {
-    int threwidth(5);
-    nsc = mp[MP_TO-1]*w;
-    for(int i=MP_TO-1-threwidth; i > lenF3*1.3; --i) {
-      int on(1);
-      for(int j=1; j<=threwidth; ++j) {
-	if (mp[i] < mp[i+j] || mp[i] < mp[i-j]) on=0;
-      }
-      if(on && nsc < mp[i]*r*w) {
-	nsc  = mp[i]*r*w;
-	nsci = i;
-      }
-    }
-  }
+  void setflen(double w);
 
   void outputmp(const string filename, string name, double weight) {
     setControlRatio();
@@ -93,16 +73,17 @@ class _shiftDist {
   }
 };
 
-class shiftDist {
+class ReadShiftProfileAll {
  protected:
   vector<range> seprange;
   
  public:
   string name;
-  _shiftDist genome;
-  vector<_shiftDist> chr;
+  ReadShiftProfile genome;
+  vector<ReadShiftProfile> chr;
   
- shiftDist(string n, const Mapfile &p, int numthreads): name(n), genome(p) {
+  void defSepRange(int numthreads);
+ ReadShiftProfileAll(string n, const Mapfile &p, int numthreads): name(n), genome(p) {
     for(auto x:p.chr) {
       if(x.isautosome()) {
 	genome.nread += x.bothnread_nonred();
@@ -110,23 +91,15 @@ class shiftDist {
       }
     }
     for(auto x:p.chr) {
-      _shiftDist v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
-      //_shiftDist v(p, 180000000, 200000000, x.bothnread_nonred(), x.getlenmpbl());
+      ReadShiftProfile v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
+      //ReadShiftProfile v(p, 180000000, 200000000, x.bothnread_nonred(), x.getlenmpbl());
       v.rchr = v.nread/static_cast<double>(genome.nread);
       chr.push_back(v);
     }
     // seprange
-    int length(MP_TO+MP_FROM);
-    int sepsize = length/numthreads +1;
-    for(int i=0; i<numthreads; i++) {
-      int s = i*sepsize;
-      int e = (i+1)*sepsize;
-      if(i==numthreads-1) e = length;
-      range sep(s - MP_FROM, e - MP_FROM);
-      seprange.push_back(sep);
-    }
+    defSepRange(numthreads);
   }
-  void add2genome(const _shiftDist &x, boost::mutex &mtx) {
+  void add2genome(const ReadShiftProfile &x, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
 #ifdef DEBUG
     cout << "add2genome.." << flush;
@@ -138,12 +111,12 @@ class shiftDist {
 
 int getRepeatRegion(vector<range> &vrep, int j, vector<int>, int, int);
 
-class shiftJacVec : public shiftDist {
+class shiftJacVec : public ReadShiftProfileAll {
  public:
   double w;
- shiftJacVec(const Mapfile &p, int numthreads): shiftDist("Jaccard index", p, numthreads), w(1) {}
+ shiftJacVec(const Mapfile &p, int numthreads): ReadShiftProfileAll("Jaccard index", p, numthreads), w(1) {}
 
-  void setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev);
+  void setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
@@ -181,12 +154,12 @@ class shiftJacVec : public shiftDist {
   }
 };
 
-class shiftJacBit : public shiftDist {
+class shiftJacBit : public ReadShiftProfileAll {
  public:
   double w;
- shiftJacBit(const Mapfile &p, int numthreads): shiftDist("Jaccard index", p, numthreads), w(1) {}
+ shiftJacBit(const Mapfile &p, int numthreads): ReadShiftProfileAll("Jaccard index", p, numthreads), w(1) {}
 
-  void setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
+  void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
@@ -195,12 +168,12 @@ class shiftJacBit : public shiftDist {
   }
 };
 
-class shiftCcp : public shiftDist {
+class shiftCcp : public ReadShiftProfileAll {
  public:
   double w;
- shiftCcp(const Mapfile &p, int numthreads): shiftDist("Cross correlation", p, numthreads), w(1) {}
+ shiftCcp(const Mapfile &p, int numthreads): ReadShiftProfileAll("Cross correlation", p, numthreads), w(1) {}
   
-  void setDist(_shiftDist &chr, const vector<char> &fwd, const vector<char> &rev);
+  void setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
@@ -209,12 +182,12 @@ class shiftCcp : public shiftDist {
   }
 };
 
-class shiftHamming : public shiftDist {
+class shiftHamming : public ReadShiftProfileAll {
  public:
   double w;
- shiftHamming(const Mapfile &p, int numthreads): shiftDist("Hamming distance", p, numthreads), w(-1) {}
+ shiftHamming(const Mapfile &p, int numthreads): ReadShiftProfileAll("Hamming distance", p, numthreads), w(-1) {}
 
-  void setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
+  void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);

@@ -5,42 +5,36 @@
 #define _UTIL_H_
 #include <iostream>
 #include <string>
-#include <map>
 #include <vector>
-#include <boost/program_options.hpp>
 #include <boost/format.hpp>
-
-using namespace boost::program_options;
-using namespace std;
-
-void addmp(map<int, double> &mpto, const map<int, double> &mpfrom, double w=1);
+#include <boost/program_options.hpp>
 
 template <class T>
-void printOpt(variables_map &values, string opt, string str)
+void printOpt(boost::program_options::variables_map &values, std::string opt, std::string str)
 {
-  if (values.count(opt)) cout << str << ": " << values[opt].as<T>() << endl;
+  if (values.count(opt)) std::cout << str << ": " << values[opt].as<T>() << std::endl;
   return;
 }
 
 template <class T>
-void printVOpt(variables_map &values, string opt, string str)
+void printVOpt(boost::program_options::variables_map &values, std::string opt, std::string str)
 {
   if (values.count(opt)) {
-    auto v = values[opt].as<vector<T>>();
+    auto v = values[opt].as<std::vector<T>>();
     for(uint i=0; i<v.size(); ++i) {
-      cout << boost::format("%1% %2%: %3%\n") % str % (i+1) % v[i];
+	boost::format("%1% %2%: %3%\n") % str % (i+1) % v[i];
     }
   }
   return;
 }
 
 template <class T>
-void chkminus(const boost::program_options::variables_map &values, string x, int lim)
+void chkminus(const boost::program_options::variables_map &values, std::string x, int lim)
 {
   if (values.count(x)) {
     T val = values[x].as<T>();
     if(val <= lim) {
-      cerr << "Error: invalid " << x << ": " << val << endl;
+      std::cerr << "Error: invalid " << x << ": " << val << std::endl;
       exit(1);
     }
   }
@@ -48,12 +42,12 @@ void chkminus(const boost::program_options::variables_map &values, string x, int
 }
 
 template <class T>
-void chkrange(const boost::program_options::variables_map &values, string x, T s, T e)
+void chkrange(const boost::program_options::variables_map &values, std::string x, T s, T e)
 {
   if (values.count(x)) {
     T val = values[x].as<T>();
     if(!RANGE(val, s, e)) {
-      cerr << "Error: invalid " << x << ": " << val << endl;
+      std::cerr << "Error: invalid " << x << ": " << val << std::endl;
       exit(1);
     }
   }
@@ -61,14 +55,14 @@ void chkrange(const boost::program_options::variables_map &values, string x, T s
 }
 
 template <class T, class S>
-  void printr(ofstream &out, T a, S b)
+  void printr(std::ofstream &out, T a, S b)
 {
   double r = b ? a*100/static_cast<double>(b): 0;
   out << boost::format("%1% (%2$.1f%%)\t") % a % r;
 };
 
 template <class T>
-int getmaxi(vector<T> v)
+int getmaxi(std::vector<T> v)
 {
   T max(0);
   int maxi(0);
@@ -83,11 +77,11 @@ int getmaxi(vector<T> v)
 };
 
 template <class T>
-void GaussianSmoothing(vector<T> &v)
+void GaussianSmoothing(std::vector<T> &v)
 {
   int size = v.size();
 
-  vector<double> w(4,0);
+  std::vector<double> w(4,0);
   double var=1;
   for(int j=0; j<4; ++j) w[j] = exp(static_cast<double>(-j*j)/2*var*var);
   double r = 1/(w[0] + (w[1]+w[2]+w[3]) *2);
@@ -107,7 +101,7 @@ void GaussianSmoothing(vector<T> &v)
 }
 
 template <class T>
-int findIndex(vector<T> array, T value)
+int findIndex(std::vector<T> array, T value)
 {
     auto iter = std::find(array.begin(), array.end(), value);
     size_t index = std::distance(array.begin(), iter);
@@ -115,6 +109,5 @@ int findIndex(vector<T> array, T value)
     
     return index;
 }
-
 
 #endif /* _UTIL_H_ */

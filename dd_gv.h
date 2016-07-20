@@ -5,6 +5,7 @@
 #define _DD_GV_H_
 
 #include <unordered_map>
+#include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 #include "readdata.h"
 #include "macro.h"
