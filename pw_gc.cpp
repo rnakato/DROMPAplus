@@ -24,9 +24,9 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
   out << "GC\tgenome prop\treads prop\tdepth\tweight" << endl;
   
   for(int i=0; i<=flen4gc; ++i) {
-    double r_genome = gDist[i] / (double)GsumGC;
-    double r_read   = rDist[i] / (double)RsumGC;
-    double r_depth  = gDist[i] ? rDist[i]/(double)gDist[i]: 0;
+    double r_genome = gDist[i] / static_cast<double>(GsumGC);
+    double r_read   = rDist[i] / static_cast<double>(RsumGC);
+    double r_depth  = gDist[i] ? rDist[i]/static_cast<double>(gDist[i]): 0;
     
     out << boost::format("%1%\t%2%\t%3%\t%4%\t") % i % r_genome % r_read % r_depth;
     if(!r_read || r_genome < GCDIST_THRE) p.GCweight[i] = 0;

@@ -63,7 +63,7 @@ void chkrange(const boost::program_options::variables_map &values, string x, T s
 template <class T, class S>
   void printr(ofstream &out, T a, S b)
 {
-  double r = b ? a*100/(double)b: 0;
+  double r = b ? a*100/static_cast<double>(b): 0;
   out << boost::format("%1% (%2$.1f%%)\t") % a % r;
 };
 
@@ -89,7 +89,7 @@ void GaussianSmoothing(vector<T> &v)
 
   vector<double> w(4,0);
   double var=1;
-  for(int j=0; j<4; ++j) w[j] = exp((double)(-j*j)/2*var*var);
+  for(int j=0; j<4; ++j) w[j] = exp(static_cast<double>(-j*j)/2*var*var);
   double r = 1/(w[0] + (w[1]+w[2]+w[3]) *2);
 
   double m0;

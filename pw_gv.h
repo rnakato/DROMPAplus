@@ -93,7 +93,7 @@ class Read {
     else F5 = frag.F3 - frag.fraglen;
   }
   double getWeight() const {
-    return weight/(double)WeightNum;
+    return weight/static_cast<double>(WeightNum);
   }
   void multiplyWeight(const double w) {
     weight *= w;
@@ -170,7 +170,7 @@ class Wigstats {
     iterateZINB(&par, nb_p, nb_n, nb_p, nb_n, nb_p0);
   }
   void setpWigDist() {
-    for(size_t i=0; i<wigDist.size(); ++i) pwigDist[i] = wigDist[i]/(double)sum;
+    for(size_t i=0; i<wigDist.size(); ++i) pwigDist[i] = wigDist[i]/static_cast<double>(sum);
   }
   void getWigStats(const vector<int> &wigarray) {
     int num95 = getPercentile(wigarray, 0.95);
@@ -213,7 +213,7 @@ class Wigstats {
   void printmpDist() const {
     long num = accumulate(mpDist.begin(), mpDist.end(), 0);
     for(size_t i=0; i<mpDist.size(); ++i)
-      BPRINT("~%1%%%\t%2%\t%3%\n") % ((i+1)*100/mpDist.size()) % mpDist[i] % (mpDist[i]/(double)num); 
+      BPRINT("~%1%%%\t%2%\t%3%\n") % ((i+1)*100/mpDist.size()) % mpDist[i] % (mpDist[i]/static_cast<double>(num)); 
   }
   void printPoispar(ofstream &out) const {
     out << boost::format("%1$.3f\t%2$.3f\t") % ave % var;
@@ -233,8 +233,8 @@ class GenomeCoverage {
     nbp      += x.nbp;
     ncov     += x.ncov;
     ncovnorm += x.ncovnorm;
-    gcovRaw  = nbp ? ncov / (double)nbp: 0;
-    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+    gcovRaw  = nbp ? ncov / static_cast<double>(nbp): 0;
+    gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
   }
   void calcGcov(const vector<char> &array) {
     for(size_t i=0; i<array.size(); ++i) {
@@ -242,8 +242,8 @@ class GenomeCoverage {
       if(array[i] >= COVREAD_ALL)  ++ncov;     // COVREAD_ALL || COVREAD_NORM
       if(array[i] == COVREAD_NORM) ++ncovnorm;
     }
-    gcovRaw  = nbp ? ncov     / (double)nbp: 0;
-    gcovNorm = nbp ? ncovnorm / (double)nbp: 0;
+    gcovRaw  = nbp ? ncov     / static_cast<double>(nbp): 0;
+    gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
     //    cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << endl;
   }
   void print(ofstream &out, const bool gv) const {
@@ -300,12 +300,12 @@ class SeqStats {
 
   long getlen()     const { return len; }
   long getlenmpbl() const { return len_mpbl; }
-  double getpmpbl() const { return len/(double)len_mpbl; }
+  double getpmpbl() const { return len/static_cast<double>(len_mpbl); }
   void print() const {
     cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
   }
   void calcdepth(const int flen) {
-    depth = len_mpbl ? bothnread_nonred() * flen / (double)len_mpbl: 0;
+    depth = len_mpbl ? bothnread_nonred() * flen / static_cast<double>(len_mpbl): 0;
   }
   void setF5(int flen) {
     int d;
@@ -315,7 +315,7 @@ class SeqStats {
     }
   }
   void setFRiP() {
-    FRiP = nread_inbed/(double)bothnread_nonred();
+    FRiP = nread_inbed/static_cast<double>(bothnread_nonred());
   }
   void setWeight(double weight) {
     w = weight;
@@ -398,7 +398,7 @@ class Mapfile {
   int isgv() const { return gv; };
   void setthre4filtering(const variables_map &values) {
     if(values["thre_pb"].as<int>()) thre4filtering = values["thre_pb"].as<int>();
-    else thre4filtering = max(1, (int)(genome.bothnread() *10/(double)genome.getlenmpbl()));
+    else thre4filtering = max(1, (int)(genome.bothnread() *10/static_cast<double>(genome.getlenmpbl())));
     cout << "Checking redundant reads: redundancy threshold " << thre4filtering << endl;
   }
   int getthre4filtering() const { return thre4filtering; };
@@ -486,7 +486,7 @@ class Mapfile {
     if(tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
     else   out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % complexity() % nt_nonred % nt_all;
   }
-  double complexity() const { return nt_nonred/(double)nt_all; }
+  double complexity() const { return nt_nonred/static_cast<double>(nt_all); }
   void printstats() const {
     cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << endl;
     genome.print();
@@ -498,7 +498,7 @@ class Mapfile {
       calcFRiP(c, vbed);
       genome.nread_inbed += c.nread_inbed;
     }
-    genome.FRiP = genome.nread_inbed/(double)genome.bothnread_nonred();
+    genome.FRiP = genome.nread_inbed/static_cast<double>(genome.bothnread_nonred());
     
     cout << "done." << endl;
     return;

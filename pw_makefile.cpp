@@ -111,8 +111,8 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     int mpthre = values["mpthre"].as<double>()*binsize;
     auto mparray = readMpbl(values["mp"].as<string>(), ("chr" + chr.name), values["binsize"].as<int>(), chr.nbin);
     for(int i=0; i<chr.nbin; ++i) {
-      chr.ws.addmpDist(mparray[i]/(double)binsize);
-      if(mparray[i] > mpthre) wigarray[i] *= binsize/(double)mparray[i];
+      chr.ws.addmpDist(mparray[i]/static_cast<double>(binsize));
+      if(mparray[i] > mpthre) wigarray[i] *= binsize/static_cast<double>(mparray[i]);
     }
   }
   chr.ws.getWigStats(wigarray);
@@ -132,7 +132,7 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
 template <class T, class S>
 double setw(T nm, S dn)
 {
-  return (dn ? nm/(double)dn: 0);
+  return (dn ? nm/static_cast<double>(dn): 0);
 }
 
 void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray)
@@ -157,10 +157,10 @@ void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int
       on=1;
     }
   } else if(ntype == "CR") {
-    double nm = values["nrpm"].as<int>() * (chr.getlenmpbl()/(double)p.genome.getlenmpbl());
+    double nm = values["nrpm"].as<int>() * (chr.getlenmpbl()/static_cast<double>(p.genome.getlenmpbl()));
     double dn = chr.bothnread_nonred();
     w = setw(nm, dn);
-    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % (long)dn % nm % w;
+    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<long>(dn) % nm % w;
     if(w>2) PRINTWARNING_W(w);
   } else if(ntype == "CD") {
     w = setw(values["ndepth"].as<double>(), chr.depth);

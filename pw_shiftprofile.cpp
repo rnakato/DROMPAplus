@@ -22,7 +22,7 @@ double getJaccard(int step, int end4mp, int xysum, const vector<char> &fwd, cons
 {
   int xy(0);
   for(int j=MP_FROM; j<end4mp; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
-  return (xy/(double)(xysum-xy));
+  return (xy/static_cast<double>(xysum-xy));
 }
 
 void genThreadJacVec(_shiftDist &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
@@ -89,14 +89,14 @@ void shiftJacBit::setDist(_shiftDist &chr, const boost::dynamic_bitset<> &fwd, b
   for(int step=-MP_FROM; step<MP_TO; ++step) {
     rev >>= 1;
     int xy((fwd & rev).count());
-    chr.mp[step] = xy/(double)(xysum-xy);
+    chr.mp[step] = xy/static_cast<double>(xysum-xy);
   }
   rev >>= (NG_FROM - MP_TO);
   
   for(int step=NG_FROM; step<NG_TO; step+=NG_STEP) {
     rev >>= NG_STEP;
     int xy((fwd & rev).count());
-    chr.nc[step] = xy/(double)(xysum-xy);
+    chr.nc[step] = xy/static_cast<double>(xysum-xy);
   }
 }
 

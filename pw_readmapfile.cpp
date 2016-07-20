@@ -252,7 +252,7 @@ void printDist(ofstream &out, const vector<int> v, const string str, const long 
 {
   out << "\n" << str << " length distribution" << endl;
   out << "length\tnumber\tproportion" << endl;
-  for(size_t i=0; i<v.size(); ++i) if(v[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % v[i] % (v[i]/(double)nread);
+  for(size_t i=0; i<v.size(); ++i) if(v[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % v[i] % (v[i]/static_cast<double>(nread));
   return;
 }
 
@@ -347,7 +347,7 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
   p.setthre4filtering(values);
   
   // Library complexity
-  double r = values["ncmp"].as<int>()/(double)p.genome.bothnread();
+  double r = values["ncmp"].as<int>()/static_cast<double>(p.genome.bothnread());
   if(r>1){
     cerr << "Warning: number of reads is < "<< (int)(values["ncmp"].as<int>()/NUM_1M) <<" million.\n";
     p.tvon();
@@ -400,7 +400,7 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     clock_t t1 = clock();
     //    strShiftProfile(p, "exjaccard", values["threads"].as<int>());
     clock_t t2 = clock();
-    cout << "Jaccard Vec: " << (double)(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
+    cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
     // NSCでは見えないbackground enrichmentの利点を示すサンプルを探す
     
@@ -408,15 +408,15 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     // background uniformityが1を超える可能性がある
     strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
-    cout << "Jaccard Bit: " << (double)(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
+    cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
     
     //    strShiftProfile(p, "hdp", values["threads"].as<int>());
     clock_t t4 = clock();
-    cout << "Hamming: " << (double)(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
+    cout << "Hamming: " << static_cast<double>(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
     
     //    strShiftProfile(p, "ccp", values["threads"].as<int>());
     clock_t t5 = clock();
-    cout << "ccp: " << (double)(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
+    cout << "ccp: " << static_cast<double>(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
   }
 
   p.calcdepth(values);

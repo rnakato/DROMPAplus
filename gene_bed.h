@@ -69,7 +69,7 @@ class gdist {
     case INTERGENIC: n=inter;  break;
     default: break;
     }
-    return (double)n*100/genome;
+    return static_cast<double>(n*100/genome);
   }
 };
 

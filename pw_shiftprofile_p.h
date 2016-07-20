@@ -72,7 +72,7 @@ class _shiftDist {
     setControlRatio();
     setflen(weight);
     double sum(getmpsum());
-    double rRPKM = (NUM_10M/(double)nread) / (NUM_100M/(double)len);
+    double rRPKM = (NUM_10M/static_cast<double>(nread)) / (NUM_100M/static_cast<double>(len));
     double be(bk * rRPKM);
     double const_bu(1/39.0);  // N/(4*L-N), N=10M, L=100M
 
@@ -112,7 +112,7 @@ class shiftDist {
     for(auto x:p.chr) {
       _shiftDist v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
       //_shiftDist v(p, 180000000, 200000000, x.bothnread_nonred(), x.getlenmpbl());
-      v.rchr = v.nread/(double)genome.nread;
+      v.rchr = v.nread/static_cast<double>(genome.nread);
       chr.push_back(v);
     }
     // seprange

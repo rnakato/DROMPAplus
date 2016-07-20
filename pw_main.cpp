@@ -338,7 +338,7 @@ void init_dump(const variables_map &values){
   string ntype = values["ntype"].as<string>();
   BPRINT("\nTotal read normalization: %1%\n") % ntype;
   if(ntype == "GR" || ntype == "CR"){
-    BPRINT("\tnormed read: %1% M for genome\n") % (values["nrpm"].as<int>() /(double)NUM_1M);
+    BPRINT("\tnormed read: %1% M for genome\n") % (values["nrpm"].as<int>() /static_cast<double>(NUM_1M));
   }
   else if(ntype == "GD" || ntype == "CD"){
     BPRINT("\tnormed depth: %1%\n") % values["ndepth"].as<double>();
@@ -364,7 +364,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.bothnread() % p.seq[STRAND_PLUS].nread % p.seq[STRAND_MINUS].nread
-    % (p.bothnread()*100/(double)mapfile.genome.bothnread());
+    % (p.bothnread()*100/static_cast<double>(mapfile.genome.bothnread()));
 
   /* nonredundant reads */
   printr(out, p.bothnread_nonred(), p.bothnread());
@@ -479,9 +479,9 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   cout << "calculate genome coverage.." << flush;
 
   // ignore peak region
-  double r = NUM_GCOV/(double)(p.genome.bothnread_nonred() - p.genome.nread_inbed);
+  double r = NUM_GCOV/static_cast<double>(p.genome.bothnread_nonred() - p.genome.nread_inbed);
   if(r>1){
-    cerr << "Warning: number of reads is < "<< (int)(NUM_GCOV/NUM_1M) << " million.\n";
+    cerr << "Warning: number of reads is < "<< static_cast<int>(NUM_GCOV/NUM_1M) << " million.\n";
     p.gvon();
   }
   double r4cmp = r*RAND_MAX;

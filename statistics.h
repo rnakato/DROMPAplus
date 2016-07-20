@@ -28,9 +28,9 @@ class moment {
     int size(to - from);
     if(size) {
       for(int i=from; i<to; ++i) mean += v[i];
-      mean /= (double)size;
+      mean /= static_cast<double>(size);
       for(int i=from; i<to; ++i) var += (v[i] - mean)*(v[i] - mean);
-      var /= (double)(size -1);
+      var /= static_cast<double>(size -1);
       sd = sqrt(var);
     }
     //    std::cout << mean << "\t" << var << "\t" << sd << std::endl;
