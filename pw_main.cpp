@@ -387,7 +387,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   p.gcov.print(out, mapfile.isgv());
   
   p.ws.printPoispar(out);
-  if(values.count("bed")) out << boost::format("%1$.3f\t") % p.FRiP;
+  if(values.count("bed")) out << boost::format("%1$.3f\t") % p.getFRiP();
 
   p.ws.printZINBpar(out);
   
@@ -479,7 +479,7 @@ void calcGenomeCoverage(const variables_map &values, Mapfile &p)
   cout << "calculate genome coverage.." << flush;
 
   // ignore peak region
-  double r = NUM_GCOV/static_cast<double>(p.genome.bothnread_nonred() - p.genome.nread_inbed);
+  double r = NUM_GCOV/static_cast<double>(p.genome.bothnread_nonred() - p.genome.getNreadInbed());
   if(r>1){
     cerr << "Warning: number of reads is < "<< static_cast<int>(NUM_GCOV/NUM_1M) << " million.\n";
     p.gvon();
@@ -509,13 +509,12 @@ void calcFRiP(SeqStats &chr, const vector<bed> vbed)
       for(int i=s; i<=e; ++i) {
 	if(array[i]==INBED) {
 	  x.inpeak = 1;
-	  chr.nread_inbed++;
+	  chr.addNreadInBed(1);
 	  break;
 	}
       }
     }
   }
-  chr.setFRiP();
   return;
 }
 

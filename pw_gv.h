@@ -256,6 +256,8 @@ class GenomeCoverage {
 class SeqStats {
   bool yeast;
   long len, len_mpbl;
+  /* FRiP */
+  long nread_inbed;
  public:
   string name;
   int nbin;
@@ -266,17 +268,16 @@ class SeqStats {
   strandData seq[STRANDNUM];
   double depth;
   double w;
-  /* FRiP */
-  long nread_inbed;
-  double FRiP;
   
- SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nbin(0), depth(0), w(0), nread_inbed(0), FRiP(0) {
+ SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nread_inbed(0), nbin(0), depth(0), w(0) {
     name = rmchr(s);
   }
+  void addNreadInBed(const int i) { nread_inbed += i; }
+  long getNreadInbed() const { return nread_inbed; }
   void addlen(const SeqStats &x) {
-    len += x.len;
+    len      += x.len;
     len_mpbl += x.len_mpbl;
-    nbin += x.nbin;
+    nbin     += x.nbin;
   }
   void addfrag(const Fragment &frag) {
     Read r(frag);
@@ -314,8 +315,8 @@ class SeqStats {
       for(auto &x: seq[strand].vRead) x.F5 = x.F3 + d;
     }
   }
-  void setFRiP() {
-    FRiP = nread_inbed/static_cast<double>(bothnread_nonred());
+  double getFRiP() const {
+    return nread_inbed/static_cast<double>(bothnread_nonred());
   }
   void setWeight(double weight) {
     w = weight;
@@ -496,9 +497,9 @@ class Mapfile {
     cout << "calculate FRiP score.." << flush;
     for(auto &c: chr) {
       calcFRiP(c, vbed);
-      genome.nread_inbed += c.nread_inbed;
+      genome.addNreadInBed(c.getNreadInbed());
     }
-    genome.FRiP = genome.nread_inbed/static_cast<double>(genome.bothnread_nonred());
+    //    genome.FRiP = genome.nread_inbed/static_cast<double>(genome.bothnread_nonred());
     
     cout << "done." << endl;
     return;

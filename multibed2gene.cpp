@@ -6,6 +6,7 @@
 #include "readdata.h"
 #include "gene_bed.h"
 
+using namespace std;
 using namespace boost::program_options;
 
 variables_map argv_init(int argc, char* argv[])

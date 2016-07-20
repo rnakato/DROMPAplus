@@ -1,15 +1,15 @@
 #include "gene_bed.h"
 #include "macro.h"
 
-void mergeArray(vector<strRange> &array)
+void mergeArray(std::vector<strRange> &array)
 {
   auto itr = array.begin();
   while (itr != array.end()) {
     auto next = itr+1;
     if(next != array.end() && next->strand == itr->strand &&
        overlap(itr->start, itr->end, next->start, next->end)) {
-      next->start = min(itr->start, next->start);
-      next->end   = max(itr->end, next->end);
+      next->start = std::min(itr->start, next->start);
+      next->end   = std::max(itr->end, next->end);
       itr = array.erase(itr);
     } else {
       itr++;
@@ -19,7 +19,7 @@ void mergeArray(vector<strRange> &array)
   return;
 }
 
-void scanConvergent(vector<convsite> &vconv, const vector<strRange> array, int limit)
+void scanConvergent(std::vector<convsite> &vconv, const std::vector<strRange> array, int limit)
 {
   for(auto itr = array.begin(); itr != array.end(); ++itr) {
     for(auto itr2= itr+1; itr2 != array.end(); ++itr2) {
@@ -36,16 +36,15 @@ void scanConvergent(vector<convsite> &vconv, const vector<strRange> array, int l
   return;
 }
 
-vector<convsite> gen_convergent(const int limconv, const unordered_map<string, unordered_map<string, genedata>> &mp)
+std::vector<convsite> gen_convergent(const int limconv, const HashOfGeneDataMap &mp)
 {
-  vector<convsite> vconv;
+  std::vector<convsite> vconv;
   for(auto itr = mp.begin(); itr != mp.end(); ++itr){
-    string chr(itr->first);
+    std::string chr(itr->first);
     if(mp.find(chr) == mp.end()) continue;
 
-    vector<strRange> array;
+    std::vector<strRange> array;
     for(auto pg = mp.at(chr).begin(); pg != mp.at(chr).end(); ++pg) {
-      //      if(pg->second.txStart==59206450 || pg->second.txStart==59210641 || pg->second.txStart==59206450 || pg->second.txStart==59213948) cout << pg->second.txStart << "." <<  pg->second.txEnd << ","<< chr << "." << pg->second.strand << endl;
       strRange r(pg->second.txStart, pg->second.txEnd, chr, pg->second.strand, pg->second);
       array.push_back(r);
     }

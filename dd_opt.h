@@ -8,12 +8,11 @@
 #include "dd_gv.h"
 #include "dd_readfile.h"
 
-using namespace boost::program_options;
 enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTCG, OPTPD, OPTTR, OPTPROF, OPTOVERLAY, OPTOTHER};
 
 class opt {
 public:
-  options_description opts;
+  boost::program_options::options_description opts;
   opt(const string str): opts(str) {}
   void add(vector<optstatus> st);
 };
@@ -23,14 +22,14 @@ class Command {
   string desc;
   string requiredstr;
   vector<optstatus> vopts;
-  variables_map values;
+  boost::program_options::variables_map values;
   Param p;
-  function<void(variables_map &, Param &)> func;
+  function<void(boost::program_options::variables_map &, Param &)> func;
   
   public:
   string name;
 
- Command(string n, string d, string r, function<void(variables_map &, Param &)> _func, vector<optstatus> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
+ Command(string n, string d, string r, function<void(boost::program_options::variables_map &, Param &)> _func, vector<optstatus> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
     opts.add(v);
   };
   void print() const {
@@ -72,10 +71,10 @@ class Command {
 
 void opt::add(vector<optstatus> st)
 {
-  options_description o("Required",100);
+  boost::program_options::options_description o("Required",100);
   o.add_options()
-    ("output,o",  value<string>(),	 "Output prefix")
-    ("gt",        value<string>(),	 "Genome table")
+    ("output,o",  boost::program_options::value<string>(),	 "Output prefix")
+    ("gt",        boost::program_options::value<string>(),	 "Genome table")
     ;
   opts.add(o);
 
@@ -83,97 +82,97 @@ void opt::add(vector<optstatus> st)
     switch(x) {
     case OPTCHIP:
       {
-	options_description o("Input",100);
+	boost::program_options::options_description o("Input",100);
 	o.add_options()
-	  ("input,i",   value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
-	  //	  ("binsize,b", value<int>()->default_value(binsize), "Bin size")
+	  ("input,i",   boost::program_options::value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
+	  //	  ("binsize,b", boost::program_options::value<int>()->default_value(binsize), "Bin size")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTNORM:
       {
-	options_description o("",100);
+	boost::program_options::options_description o("",100);
 	o.add_options()
-	  ("norm",      value<int>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
-	  ("sm",        value<int>()->default_value(0),      "Smoothing width") // gausian ??
+	  ("norm",      boost::program_options::value<int>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
+	  ("sm",        boost::program_options::value<int>()->default_value(0),      "Smoothing width") // gausian ??
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTTHRE: 
       {
-	options_description o("Threshold",100);
+	boost::program_options::options_description o("Threshold",100);
 	o.add_options()
-	  ("pthre_internal", value<double>()->default_value(1e-4), "p-value for ChIP internal")
-	  ("pthre_enrich",   value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
-	  ("qthre",          value<double>()->default_value(1),    "FDR")
-	  ("ethre,e",        value<double>()->default_value(2),    "IP/Input fold enrichment")
-	  ("ipm",            value<double>()->default_value(0),    "Read intensity of peak summit")
+	  ("pthre_internal", boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP internal")
+	  ("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
+	  ("qthre",          boost::program_options::value<double>()->default_value(1),    "FDR")
+	  ("ethre,e",        boost::program_options::value<double>()->default_value(2),    "IP/Input fold enrichment")
+	  ("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")
 	  ("nosig", "Omit highlighting peak regions")
-	  ("width4lmd", value<int>()->default_value(100000), "Width for calculating local lambda")
+	  ("width4lmd", boost::program_options::value<int>()->default_value(100000), "Width for calculating local lambda")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTANNO_PC:
       {
-	options_description o("Annotation",100);
+	boost::program_options::options_description o("Annotation",100);
 	o.add_options()
-	  ("gene,g", value<string>(),	  "Gene annotation file")
-	  ("gftype", value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
-	  ("ars",    value<string>(),	  "ARS list (for yeast)")
-	  ("ter",    value<string>(),	  "TER list (for S.cerevisiae)")  
-	  ("bed",    value<vector<string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
-	  ("repeat", value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
+	  ("gene,g", boost::program_options::value<string>(),	  "Gene annotation file")
+	  ("gftype", boost::program_options::value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
+	  ("ars",    boost::program_options::value<string>(),	  "ARS list (for yeast)")
+	  ("ter",    boost::program_options::value<string>(),	  "TER list (for S.cerevisiae)")  
+	  ("bed",    boost::program_options::value<vector<string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
+	  ("repeat", boost::program_options::value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTANNO_GV:
       {
-	options_description o("Optional data",100);
+	boost::program_options::options_description o("Optional data",100);
 	o.add_options()
-	  ("mp",     value<string>(),  	  "Mappability file")
-	  ("mpthre", value<double>()->default_value(0.3), "Low mappability threshold")
-	  ("gap",    value<string>(),	  "Specify gapped regions to be shaded")
-	  ("inter",  value<vector<string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
-	  ("gc",     value<string>(), 	  "Visualize GC contents graph")
-	  ("gcsize", value<int>()->default_value(100000), "Window size for GC contents")
-	  ("gd",     value<string>(), 	  "Visualize gene density (number of genes for each window)")
-	  ("gdsize", value<int>()->default_value(100000), "Window size for gene density")
+	  ("mp",     boost::program_options::value<string>(),  	  "Mappability file")
+	  ("mpthre", boost::program_options::value<double>()->default_value(0.3), "Low mappability threshold")
+	  ("gap",    boost::program_options::value<string>(),	  "Specify gapped regions to be shaded")
+	  ("inter",  boost::program_options::value<vector<string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
+	  ("gc",     boost::program_options::value<string>(), 	  "Visualize GC contents graph")
+	  ("gcsize", boost::program_options::value<int>()->default_value(100000), "Window size for GC contents")
+	  ("gd",     boost::program_options::value<string>(), 	  "Visualize gene density (number of genes for each window)")
+	  ("gdsize", boost::program_options::value<int>()->default_value(100000), "Window size for gene density")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTDRAW:
       {
-	options_description o("Drawing",100);
+	boost::program_options::options_description o("Drawing",100);
 	o.add_options()
-	  ("showctag",     value<int>(),    "Display ChIP read lines")
-	  ("showitag",     value<int>(),    "Display Input read lines (0:off 1:all 2:first one)")
-	  ("showratio",    value<int>(),    "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
-	  ("showpinter",   value<int>(),    "Display -log10(p) lines for ChIP internal")
-	  ("showpenrich",  value<int>(),    "Display -log10(p) lines for ChIP/Input enrichment")
-	  ("showars",     value<int>(),     "Display ARS only (do not display genes)")
-	  ("ls",          value<int>()->default_value(1000), "Width for each line (kb)")
-	  ("lpp",         value<int>()->default_value(1),    "Line number per page")
-	  ("offbg",       value<int>(),     "Omit background color of read lines")
-	  ("offymem",     value<int>(),     "Omit Y memory")
-	  ("offylab",     value<int>(),     "Omit Y label")
-	  ("viz",         value<int>()->default_value(0), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
+	  ("showctag",     boost::program_options::value<int>(),    "Display ChIP read lines")
+	  ("showitag",     boost::program_options::value<int>(),    "Display Input read lines (0:off 1:all 2:first one)")
+	  ("showratio",    boost::program_options::value<int>(),    "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
+	  ("showpinter",   boost::program_options::value<int>(),    "Display -log10(p) lines for ChIP internal")
+	  ("showpenrich",  boost::program_options::value<int>(),    "Display -log10(p) lines for ChIP/Input enrichment")
+	  ("showars",     boost::program_options::value<int>(),     "Display ARS only (do not display genes)")
+	  ("ls",          boost::program_options::value<int>()->default_value(1000), "Width for each line (kb)")
+	  ("lpp",         boost::program_options::value<int>()->default_value(1),    "Line number per page")
+	  ("offbg",       boost::program_options::value<int>(),     "Omit background color of read lines")
+	  ("offymem",     boost::program_options::value<int>(),     "Omit Y memory")
+	  ("offylab",     boost::program_options::value<int>(),     "Omit Y label")
+	  ("viz",         boost::program_options::value<int>()->default_value(0), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTREGION:
       {
-	options_description o("Region to draw",100);
+	boost::program_options::options_description o("Region to draw",100);
 	o.add_options()
-	  ("chr",         value<int>(),     "Output the specified chromosome only")
-	  ("region,r",    value<string>(),  "Specify genomic regions for drawing")
-	  ("genefile",    value<string>(),  "Specify gene loci to visualize")  
-	  ("len_genefile",value<int>()->default_value(50000), "extended length for each gene locus")
+	  ("chr",         boost::program_options::value<int>(),     "Output the specified chromosome only")
+	  ("region,r",    boost::program_options::value<string>(),  "Specify genomic regions for drawing")
+	  ("genefile",    boost::program_options::value<string>(),  "Specify gene loci to visualize")  
+	  ("len_genefile",boost::program_options::value<int>()->default_value(50000), "extended length for each gene locus")
 	  ;
 	opts.add(o);
 	break;
@@ -181,70 +180,70 @@ void opt::add(vector<optstatus> st)
     
     case OPTSCALE:
       {
-	options_description o("Scale for Y axis",100);
+	boost::program_options::options_description o("Scale for Y axis",100);
 	o.add_options()
-	  ("scale_tag",    value<double>(), "Scale for read line")
-	  ("scale_ratio",  value<double>(), "Scale for fold enrichment")
-	  ("scale_pvalue", value<double>(), "Scale for -log10(p)")
-	  ("bn",           value<int>()->default_value(2),     "Number of memories of y-axis")
-	  ("ystep",        value<double>()->default_value(20), "Height of read line")
+	  ("scale_tag",    boost::program_options::value<double>(), "Scale for read line")
+	  ("scale_ratio",  boost::program_options::value<double>(), "Scale for fold enrichment")
+	  ("scale_pvalue", boost::program_options::value<double>(), "Scale for -log10(p)")
+	  ("bn",           boost::program_options::value<int>()->default_value(2),     "Number of memories of y-axis")
+	  ("ystep",        boost::program_options::value<double>()->default_value(20), "Height of read line")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTOVERLAY:
       {
-	options_description o("For overlay",100);
+	boost::program_options::options_description o("For overlay",100);
 	o.add_options()
-	  ("ioverlay",  value<vector<string>>(),	  "Input file")
-	  //	  ("binsize2",  value<int>()->default_value(binsize), "Bin size")
-	  ("scale_tag2",   value<double>(), "Scale for read line")
-	  ("scale_ratio2", value<double>(), "Scale for fold enrichment")
-	  ("scale_pvalue2",value<double>(), "Scale for -log10(p)")
+	  ("ioverlay",  boost::program_options::value<vector<string>>(),	  "Input file")
+	  //	  ("binsize2",  boost::program_options::value<int>()->default_value(binsize), "Bin size")
+	  ("scale_tag2",   boost::program_options::value<double>(), "Scale for read line")
+	  ("scale_ratio2", boost::program_options::value<double>(), "Scale for fold enrichment")
+	  ("scale_pvalue2",boost::program_options::value<double>(), "Scale for -log10(p)")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTCG: 
       {
-	options_description o("CG",100);
+	boost::program_options::options_description o("CG",100);
 	o.add_options()
-	  ("cgthre",    value<double>(), "Minimum threshold per kbp")
+	  ("cgthre",    boost::program_options::value<double>(), "Minimum threshold per kbp")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTTR: 
       {
-	options_description o("TR",100);
+	boost::program_options::options_description o("TR",100);
 	o.add_options()
-	  ("tssthre",    value<double>(), "")
+	  ("tssthre",    boost::program_options::value<double>(), "")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTPD:
       {
-	options_description o("PD",100);
+	boost::program_options::options_description o("PD",100);
 	o.add_options()
-	  ("pd",   value<vector<string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
-	  ("prop",   value<double>(),  "scale_tag")
-	  ("pdsize", value<int>()->default_value(100000), "windowsize for peak density")
+	  ("pd",   boost::program_options::value<vector<string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
+	  ("prop",   boost::program_options::value<double>(),  "scale_tag")
+	  ("pdsize", boost::program_options::value<int>()->default_value(100000), "windowsize for peak density")
 	  ;
 	opts.add(o);
 	break;
       }
     case OPTPROF:
       {
-	options_description o("PROFILE AND HEATMAP",100);
+	boost::program_options::options_description o("PROFILE AND HEATMAP",100);
 	o.add_options()
-	  ("ptype",   value<int>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
-	  ("stype",   value<int>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
-	  ("ntype",   value<int>(),  "Normalization type: 0; total read 1; target regions only")
-	  ("cw",      value<double>()->default_value(2500), "width from the center")
-	  ("maxval",   value<double>(),  "Upper limit for heatmap")
+	  ("ptype",   boost::program_options::value<int>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
+	  ("stype",   boost::program_options::value<int>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
+	  ("ntype",   boost::program_options::value<int>(),  "Normalization type: 0; total read 1; target regions only")
+	  ("cw",      boost::program_options::value<double>()->default_value(2500), "width from the center")
+	  ("maxval",   boost::program_options::value<double>(),  "Upper limit for heatmap")
 	  ("offse",  "Omit the standard error in profile")
-	  ("hmsort",   value<int>()->default_value(1),  "Column number for sorting sites")
+	  ("hmsort",   boost::program_options::value<int>()->default_value(1),  "Column number for sorting sites")
 	  ("sortgbody",  "Sort sites by read number of gene body (default: TSS)")
 	  ("pdetail",  "")
 	  ;
@@ -254,11 +253,11 @@ void opt::add(vector<optstatus> st)
       
     case OPTOTHER:
       {
-	options_description o("Others",100);
+	boost::program_options::options_description o("Others",100);
 	o.add_options()
 	  ("rmchr",   "Remove chromosome-separated pdf files")
 	  ("png",     "Output with png format (Note: output each page separately)")
-	  ("threads,p", value<int>()->default_value(1), "number of threads to launch")
+	  ("threads,p", boost::program_options::value<int>()->default_value(1), "number of threads to launch")
 	  ("help,h", "show help message")
 	  ;
 	opts.add(o);

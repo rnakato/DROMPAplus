@@ -7,8 +7,6 @@
 #include <boost/filesystem.hpp>
 #include <sstream>
 
-using namespace std;
-
 int countmp(HashOfGeneDataMap &mp)
 {
   int n(0);
@@ -18,9 +16,9 @@ int countmp(HashOfGeneDataMap &mp)
   return n;
 }
 
-vector<string> scanGeneName(const HashOfGeneDataMap &mp)
+std::vector<std::string> scanGeneName(const HashOfGeneDataMap &mp)
 {
-  vector<string> vgname;
+  std::vector<std::string> vgname;
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     for(auto itr2 = mp.at(itr->first).begin(); itr2 != mp.at(itr->first).end(); ++itr2) {
       vgname.push_back(itr2->first);
@@ -29,15 +27,13 @@ vector<string> scanGeneName(const HashOfGeneDataMap &mp)
   return vgname;
 }
 
-HashOfGeneDataMap
-  extract_mp(const HashOfGeneDataMap &tmp,
-	     const vector<string> glist)
+HashOfGeneDataMap extract_mp(const HashOfGeneDataMap &tmp, const std::vector<std::string> glist)
 {
   HashOfGeneDataMap mp;
 
   for(auto x: glist) {
     for(auto itr = tmp.begin(); itr != tmp.end(); ++itr) {
-      string chr = itr->first;
+      std::string chr = itr->first;
       if(tmp.at(chr).find(x) != tmp.at(chr).end()){
 	mp[chr][x] = tmp.at(chr).at(x);
 	break;
@@ -48,13 +44,13 @@ HashOfGeneDataMap
   return mp;
 }
 
-vector<string> readGeneList(const string& fileName)
+std::vector<std::string> readGeneList(const std::string& fileName)
 {
-  ifstream in(fileName);
+  std::ifstream in(fileName);
   if(!in) PRINTERR("genelist file does not exist.");
 
-  vector<string> glist;
-  string lineStr;
+  std::vector<std::string> glist;
+  std::string lineStr;
   
   while (!in.eof()) {
     getline(in, lineStr);
@@ -64,27 +60,27 @@ vector<string> readGeneList(const string& fileName)
   return glist;
 }
 
-HashOfGeneDataMap parseRefFlat(const string& fileName)
+HashOfGeneDataMap parseRefFlat(const std::string& fileName)
 {
-  if(fileName.find(".gtf") != string::npos) {
-    cerr << "Warning: gene file seems to be gtf format but is parsed as refFlat." << endl;
+  if(fileName.find(".gtf") != std::string::npos) {
+    std::cerr << "Warning: gene file seems to be gtf format but is parsed as refFlat." << std::endl;
   }
 
-  ifstream in(fileName);
+  std::ifstream in(fileName);
   if(!in) PRINTERR("refFlat file does not exist.");
 
   HashOfGeneDataMap tmp;
-  string lineStr;
+  std::string lineStr;
   
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty()) continue;
 
-    vector<string> v, exonStarts, exonEnds;
+    std::vector<std::string> v, exonStarts, exonEnds;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
 
-    string tname(v[1]);
-    string chr = rmchr(v[2]);
+    std::string tname(v[1]);
+    std::string chr = rmchr(v[2]);
     
     tmp[chr][tname].tname   = tname;
     tmp[chr][tname].gname   = v[0];
@@ -108,51 +104,51 @@ HashOfGeneDataMap parseRefFlat(const string& fileName)
   return tmp;
 }
 
-HashOfGeneDataMap parseGtf(const string& fileName, const int nameflag)
+HashOfGeneDataMap parseGtf(const std::string& fileName, const int nameflag)
 {
-  if(fileName.find(".gtf") == string::npos) {
-    cerr << "Warning: gene file may not be gtf format but is parsed as gtf." << endl;
+  if(fileName.find(".gtf") == std::string::npos) {
+    std::cerr << "Warning: gene file may not be gtf format but is parsed as gtf." << std::endl;
   }
 
-  ifstream in(fileName);
+  std::ifstream in(fileName);
   if(!in) PRINTERR("gtf file does not exist.");
 
   HashOfGeneDataMap tmp;
-  string lineStr;
+  std::string lineStr;
   
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0] == '#') continue;
-    string gname, tname;
-    vector<string> v;
+    std::string gname, tname;
+    std::vector<std::string> v;
     
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    string feat = v[2];
+    std::string feat = v[2];
     if(feat == "gene" || feat == "transcript") continue;
     if(feat == "three_prime_utr" || feat == "five_prime_utr") continue;
     
-    string chr  = rmchr(v[0]);
+    std::string chr  = rmchr(v[0]);
     int start   = stoi(v[3]);
     int end     = stoi(v[4]);
-    string strand = v[6];
-    string id   = v[8];
-    string gsrc, gtype, tsrc, ttype;
+    std::string strand = v[6];
+    std::string id   = v[8];
+    std::string gsrc, gtype, tsrc, ttype;
 
-    vector<string> idtab, vc;
+    std::vector<std::string> idtab, vc;
     boost::split(idtab, id, boost::algorithm::is_any_of(";"));
     for (auto term: idtab) {
       boost::split(vc, term, boost::algorithm::is_any_of("\""));
-      if(term.find("gene_source") != string::npos)             gsrc  = vc[1];
-      else if(term.find("gene_biotype") != string::npos)       gtype = vc[1];
-      else if(term.find("transcript_source") != string::npos)  tsrc  = vc[1];
-      else if(term.find("transcript_biotype") != string::npos) ttype = vc[1];
+      if(term.find("gene_source") != std::string::npos)             gsrc  = vc[1];
+      else if(term.find("gene_biotype") != std::string::npos)       gtype = vc[1];
+      else if(term.find("transcript_source") != std::string::npos)  tsrc  = vc[1];
+      else if(term.find("transcript_biotype") != std::string::npos) ttype = vc[1];
       else{
 	if(nameflag) {
-	  if(term.find("transcript_name") != string::npos) tname = vc[1];
-	  else if(term.find("gene_name")  != string::npos) gname = vc[1];
+	  if(term.find("transcript_name") != std::string::npos) tname = vc[1];
+	  else if(term.find("gene_name")  != std::string::npos) gname = vc[1];
 	} else {
-	  if(term.find("transcript_id") != string::npos) tname = vc[1];
-	  else if(term.find("gene_id")  != string::npos) gname = vc[1];
+	  if(term.find("transcript_id") != std::string::npos) tname = vc[1];
+	  else if(term.find("gene_id")  != std::string::npos) gname = vc[1];
 	}
       }
     }
@@ -189,9 +185,9 @@ HashOfGeneDataMap construct_gmp(const HashOfGeneDataMap &tmp)
   HashOfGeneDataMap gmp;
 
   for(auto itr = tmp.begin(); itr != tmp.end(); ++itr) {
-    string chr = itr->first;
+    std::string chr = itr->first;
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
-      string gname = itr2->second.gname;
+      std::string gname = itr2->second.gname;
       if(gmp.find(chr) == gmp.end() || gmp[chr].find(gname) == gmp[chr].end()) gmp[chr][gname] = itr2->second;
       else if((itr2->second.tsrc.empty() || itr2->second.tsrc == "ensembl_havana") && (gmp[chr][gname].length() < itr2->second.length())) {
 	 gmp[chr][gname] = itr2->second;
@@ -206,7 +202,7 @@ void printMap(const HashOfGeneDataMap &mp)
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
       itr2->second.printall();
-      cout << endl;
+      std::cout << std::endl;
     }
   }
   return;
@@ -216,41 +212,41 @@ void printRefFlat(const HashOfGeneDataMap &mp)
 {
   for(auto itr = mp.begin(); itr != mp.end(); ++itr) {
     for(auto itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
-      cout << itr2->second.gname << "\t"
+      std::cout << itr2->second.gname << "\t"
 	   << itr2->first << "\t"
 	   << itr->first << "\t"
 	   << itr2->second.strand << "\t"
 	   << itr2->second.txStart << "\t"
 	   << itr2->second.txEnd << "\t";
       if(itr2->second.cdsStart) {
-	cout << itr2->second.cdsStart << "\t"
+	std::cout << itr2->second.cdsStart << "\t"
 	     << itr2->second.cdsEnd   << "\t";
       } else {
-	cout << itr2->second.txEnd << "\t"
+	std::cout << itr2->second.txEnd << "\t"
 	     << itr2->second.txEnd << "\t";
       }
-      cout << itr2->second.exonCount << "\t";
-      for (auto x: itr2->second.exon) cout << x.start << ",";
-      cout << "\t";
-      for (auto x: itr2->second.exon) cout << x.end   << ",";
-      cout << endl;
+      std::cout << itr2->second.exonCount << "\t";
+      for (auto x: itr2->second.exon) std::cout << x.start << ",";
+      std::cout << "\t";
+      for (auto x: itr2->second.exon) std::cout << x.end   << ",";
+      std::cout << std::endl;
     }
   }
   return;
 }
 
-vector<chrsize> read_genometable(const string& fileName)
+std::vector<chrsize> read_genometable(const std::string& fileName)
 {
-  ifstream in(fileName);
+  std::ifstream in(fileName);
   if(!in) PRINTERR("genometable file does not exist.");
 
-  vector<chrsize> gt;
-  string lineStr;
+  std::vector<chrsize> gt;
+  std::string lineStr;
   
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0] == '#') continue;
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     chrsize temp;
     temp.name = rmchr(v[0]);
@@ -260,19 +256,19 @@ vector<chrsize> read_genometable(const string& fileName)
   return gt;
 }
 
-vector<int> readMpbl(string mpfile, string chrname, int binsize, int nbin)
+std::vector<int> readMpbl(std::string mpfile, std::string chrname, int binsize, int nbin)
 {
-  string filename = mpfile + "/map_fragL150_" + chrname + "_bin" + IntToString(binsize) +".txt";
-  vector<int> mparray(nbin, 0);
+  std::string filename = mpfile + "/map_fragL150_" + chrname + "_bin" + IntToString(binsize) +".txt";
+  std::vector<int> mparray(nbin, 0);
 
   isFile(filename);
-  ifstream in(filename);
+  std::ifstream in(filename);
 
-  string lineStr;
+  std::string lineStr;
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty()) continue;
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
 
     int n(stoi(v[0])/binsize);
@@ -283,15 +279,15 @@ vector<int> readMpbl(string mpfile, string chrname, int binsize, int nbin)
   return mparray;
 }
 
-vector<char> readMpbl_binary(string mpfile, string chrname, int chrlen)
+std::vector<char> readMpbl_binary(std::string mpfile, std::string chrname, int chrlen)
 {
-  string filename = mpfile + "/map_" + chrname + "_binary.txt";
-  vector<char> mparray(chrlen, UNMAPPABLE);
+  std::string filename = mpfile + "/map_" + chrname + "_binary.txt";
+  std::vector<char> mparray(chrlen, UNMAPPABLE);
 
   isFile(filename);
   int n(0);
   char c;
-  ifstream in(filename);
+  std::ifstream in(filename);
   while (!in.eof()) {
     c = in.get();
     if(c==' ') continue;
@@ -303,20 +299,20 @@ vector<char> readMpbl_binary(string mpfile, string chrname, int chrlen)
   return mparray;
 }
 
-vector<char> readMpbl_binary(int chrlen)
+std::vector<char> readMpbl_binary(int chrlen)
 {
-  vector<char> mparray(chrlen, MAPPABLE);
+  std::vector<char> mparray(chrlen, MAPPABLE);
   return mparray;
 }
 
-vector<char> arraySetBed(vector<char> &array, string chrname, vector<bed> vbed)
+std::vector<char> arraySetBed(std::vector<char> &array, std::string chrname, std::vector<bed> vbed)
 {
   for(auto bed: vbed) {
     if(bed.chr == chrname) {
       int s(bed.start);
       int e(bed.end);
       if(e>=(int)array.size()) {
-	cerr << "Warning: bedfile" << bed.start <<"-"<<bed.end << " > array size " << array.size()<< endl;
+	std::cerr << "Warning: bedfile" << bed.start <<"-"<<bed.end << " > array size " << array.size() << std::endl;
 	e = array.size()-1;
       }
       for(int i=s; i<=e; ++i) array[i] = INBED;
@@ -326,15 +322,15 @@ vector<char> arraySetBed(vector<char> &array, string chrname, vector<bed> vbed)
   return array;
 }
 
-void isFile(string str)
+void isFile(std::string str)
 {
   boost::filesystem::path const file(str);
   if(!boost::filesystem::exists(file)) PRINTERR(str << " does not exist.");
 }
 
-string IntToString(int n)
+std::string IntToString(int n)
 {
-  ostringstream stream;
+  std::ostringstream stream;
   stream << n;
   return stream.str();
 }

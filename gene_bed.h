@@ -4,8 +4,6 @@
 #include "readdata.h"
 #include <boost/format.hpp>
 
-using namespace std;
-
 class tssdist {
  public:
   int all;
@@ -25,7 +23,7 @@ class tssdist {
     else nover100++;
   }
   void print(){
-    cout << boost::format("# Input sites total: %1%, <1kbp: %2%, 1kbp~5kbp: %3%, 5kbp~10kbp: %4%, 10kbp~100kbp: %5%, 100kbp~: %6%\n") % all % n1 % n5 % n10 % n100 % nover100;
+    BPRINT("# Input sites total: %1%, <1kbp: %2%, 1kbp~5kbp: %3%, 5kbp~10kbp: %4%, 10kbp~100kbp: %5%, 100kbp~: %6%\n") % all % n1 % n5 % n10 % n100 % nover100;
   }
 };
 
@@ -76,12 +74,12 @@ class gdist {
 };
 
 template <class T>
-void scanBedGene(T &x, const unordered_map<string, unordered_map<string, genedata>> &mp, int updist, int downdist)
+void scanBedGene(T &x, const HashOfGeneDataMap &mp, int updist, int downdist)
 {
   int summit = x.bed.summit;
 
   for(auto itr = mp.at(x.bed.chr).begin(); itr != mp.at(x.bed.chr).end(); ++itr) {
-    string strand = itr->second.strand;
+    std::string strand = itr->second.strand;
     int s = itr->second.txStart;
     int e = itr->second.txEnd;
     
@@ -100,7 +98,7 @@ void scanBedGene(T &x, const unordered_map<string, unordered_map<string, genedat
 }
 
 template <class T>
-int scanBedConv(T &x, const vector<convsite> &vconv)
+int scanBedConv(T &x, const std::vector<convsite> &vconv)
 {
   int on=0;
   int summit = x.bed.summit;
@@ -113,6 +111,6 @@ int scanBedConv(T &x, const vector<convsite> &vconv)
   return on;
 }
 
-vector<convsite> gen_convergent(const int, const unordered_map<string, unordered_map<string, genedata>> &);
+std::vector<convsite> gen_convergent(const int, const HashOfGeneDataMap &);
 
 #endif  // GENE_BED_H

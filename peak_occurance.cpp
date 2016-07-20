@@ -12,6 +12,7 @@
 #include "gene_bed.h"
 #include "alglib.h"
 
+using namespace std;
 using namespace boost::accumulators;
 using namespace boost::program_options;
 

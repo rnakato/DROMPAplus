@@ -13,6 +13,7 @@
 #include "dd_opt.h"
 
 using namespace std;
+using namespace boost::program_options;
 
 //             PC_BROAD    peak-calling (for broad mode)
 //             FRIP        accumulate read counts in bed regions specified
