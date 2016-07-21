@@ -10,7 +10,6 @@ vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
-
 class ReadShiftProfile {
   int lenF3;
  public:
@@ -92,7 +91,7 @@ class ReadShiftProfileAll {
     }
     for(auto x:p.chr) {
       ReadShiftProfile v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
-      //ReadShiftProfile v(p, 180000000, 200000000, x.bothnread_nonred(), x.getlenmpbl());
+      //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
       v.rchr = v.nread/static_cast<double>(genome.nread);
       chr.push_back(v);
     }
@@ -120,35 +119,39 @@ class shiftJacVec : public ReadShiftProfileAll {
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
-
-    /*    int segmentsize(1000);
-    int nseg = (chr[i].end - chr[i].start)/segmentsize + 1;
-
-    for(int j=0; j<nseg-1; j+=2) {
-      for(int k=0; k<segmentsize; ++k) {
-	int posi(chr[i].start + j*segmentsize+k);
-	fwd[posi] = rev[posi] = 0;
-      }
+  
+    /*    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      if(fwd[j] && rev[j+170]) cout << j << "\t" << fwd[j] << "\t" << rev[j+170] << endl;
       }*/
-    /*    vector<int> fragarray(p.chr[i].getlen(),0);
+
+    vector<int> fragarray(p.chr[i].getlen(),0);
     vector<int> reparray(p.chr[i].getlen(),0);
 
     vector<range> vrep;
-    int thre=10;
+    int thre=3;
     
     for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(fwd[j] && rev[j+150])          for(int k=0; k<150; ++k)          ++fragarray[j+k];
-      if(fwd[j] && rev[j+p.dist.lenF3]) for(int k=0; k<p.dist.lenF3; ++k) ++reparray[j+k];
+      if(fwd[j] && rev[j+170]) for(int k=0; k<170; ++k) ++fragarray[j+k];
+      if(fwd[j] && rev[j+50])  for(int k=0; k<50; ++k)  ++reparray[j+k];
+    }
+
+    vector<int> dfrag(170,0);
+    vector<int> drep(170,0);
+    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      ++dfrag[fragarray[j]];
+      ++drep[reparray[j]];
     }
     for(int j=chr[i].start; j<chr[i].end; ++j) {
-      //if( reparray[j]>2 || fragarray[j]>2) cout << j << "\t" << fragarray[j] << "\t" << reparray[j] << endl;
-      if(reparray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
+      if( fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
+    }
+    for(int j=0; j<170; ++j) {
+       cout << j << "\t" << dfrag[j] << "\t" << drep[j] << endl;
     }
 
     for(auto x:vrep) {
       cout << x.start<< "-" << x.end << endl;
-      for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0; //cout << j<<"\t"<< (int)fwd[j] << "\t" << (int)rev[j] << endl;  //
-      }*/
+      for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0;
+    }
 
     setDist(chr[i], fwd, rev);
   }

@@ -208,8 +208,8 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
     }
     agroup.join_all();
   } else {
-    genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
-    //genThread(dist, p, 0, 0, typestr, mtx);
+    //genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
+    genThread(dist, p, 0, 0, typestr, mtx);
   }
   
   //  GaussianSmoothing(p.dist.hd);
