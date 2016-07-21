@@ -57,6 +57,7 @@ variables_map argv_init(int argc, char* argv[])
 	cerr << "specify --" << x << " option." << endl;
 	exit(0);
       }
+      isFile(values[x].as<string>());
     }
     notify(values);
 
@@ -145,9 +146,9 @@ void compare_tss(const variables_map &values,
   accumulator_set<double, stats<tag::mean, tag::variance>> vn1, vn5, vn10, vn100, vnover100;
   vector<string> vgname = scanGeneName(mp);
   int max = values["permutation"].as<int>();
-  cout << "random permutation: " << endl;
+  cerr << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
-    cout << i << ".." << flush;
+    cerr << i << ".." << flush;
     auto rmp = generate_rand(values, mp, vgname, vbed, n_emp);
     tssdist d_rand = func(values, rmp, vbed);
     vn1(d_rand.n1);
@@ -157,6 +158,7 @@ void compare_tss(const variables_map &values,
     vnover100(d_rand.nover100);
     //    d_rand.print();
   }
+  cerr << "done." << endl;
   //  d_list.print();
   cout << "gene num: " << n_emp << endl;  
   cout << "\t<1k\t1k~5k\t5k~10k\t10k~100k\t100k~"  << endl;
@@ -212,9 +214,9 @@ void merge_gene2bed(const variables_map &values,
   accumulator_set<double, stats<tag::mean, tag::variance>> vup, vdown, vgenic, vinter, vconv, vdiv, vpar;
   vector<string> vgname = scanGeneName(mp);
   int max = values["permutation"].as<int>();
-  cout << "random permutation: " << endl;
+  cerr << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
-    cout << i << ".." << flush;
+    cerr << i << ".." << flush;
     auto rmp = generate_rand(values, mp, vgname, vbed, n_emp);
     gdist d_rand = func_gene(values, rmp, vbed);
     vup(d_rand.up);
@@ -222,7 +224,7 @@ void merge_gene2bed(const variables_map &values,
     vgenic(d_rand.genic);
     vinter(d_rand.inter);
   }
-  cout << "done." << endl;
+  cerr << "done." << endl;
   
   cout << "gene num: " << n_emp << ", peak num: " << d_list.genome << endl;
   cout << "\tupstream\tdownstream\tgenic\tintergenic";
