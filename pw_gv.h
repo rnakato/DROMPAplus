@@ -66,12 +66,13 @@ public:
    chr = rmchr(v[2]);
    readlen_F3 = v[9].length();
    if(pair) fraglen = abs(stoi(v[8]));
+   else fraglen = readlen_F3;
    if(sv&16) {
      strand = STRAND_MINUS;
-     F3 = stoi(v[3]) + readlen_F3 -1; //SAM
+     F3 = stoi(v[3]) + readlen_F3 -1;
    } else {
      strand = STRAND_PLUS;
-     F3 = stoi(v[3]) -1;  //SAM
+     F3 = stoi(v[3]) -1;
    }
  }
  void print() const {

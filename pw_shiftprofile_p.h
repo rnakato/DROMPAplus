@@ -130,7 +130,7 @@ class shiftJacVec : public ReadShiftProfileAll {
     vector<range> vrep;
     int thre=3;
     
-    for(int j=chr[i].start; j<chr[i].end; ++j) {
+    for(int j=chr[i].start; j<chr[i].end-170; ++j) {
       if(fwd[j] && rev[j+170]) for(int k=0; k<170; ++k) ++fragarray[j+k];
       if(fwd[j] && rev[j+50])  for(int k=0; k<50; ++k)  ++reparray[j+k];
     }
@@ -142,7 +142,7 @@ class shiftJacVec : public ReadShiftProfileAll {
       ++drep[reparray[j]];
     }
     for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if( fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
+      if(fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
     }
     for(int j=0; j<170; ++j) {
        cout << j << "\t" << dfrag[j] << "\t" << drep[j] << endl;

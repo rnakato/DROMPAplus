@@ -303,6 +303,7 @@ void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int th
     int Fmin = min(x.F3, x.F5);
     int Fmax = max(x.F3, x.F5);
     string str = IntToString(Fmin) + "-" + IntToString(Fmax);
+    //    cout << str << endl;
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
 	++mp[str];
@@ -354,7 +355,6 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
   }
   p.setr4cmp(r*RAND_MAX);
 
-  //#pragma omp parallel for num_threads(values["threads"].as<int>())
   for(uint i=0; i<p.chr.size(); ++i) {
      if (values.count("pair")) filtering_eachchr_pair(values, p, p.chr[i]);
      else                      filtering_eachchr_single(values, p, p.chr[i]);
@@ -364,6 +364,20 @@ void check_redundant_reads(const variables_map &values, Mapfile &p)
   return;
 }
 
+void filtering_eachchr_single_readlen(const variables_map &values, Mapfile &p, SeqStats &chr)
+{
+  unordered_map<string, int> mp;
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    hashFilterAll(mp, chr.seq[strand], p.getthre4filtering());
+  }
+  
+  unordered_map<string, int> mp2;
+  for(int strand=0; strand<STRANDNUM; strand++){
+    hashFilterCmp(mp2, p, chr.seq[strand], p.getthre4filtering());
+  }
+
+  return;
+}
 
 void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr)
 {
@@ -406,7 +420,7 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     
     // thresholdが2以上の時にbitを使うと、total readがおかしくなるので
     // background uniformityが1を超える可能性がある
-    //    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
+    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
     cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
     
