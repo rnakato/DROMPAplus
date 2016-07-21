@@ -6,16 +6,29 @@
 #include "readdata.h"
 #include "statistics.h"
 
-#define PRINTWARNING_W(w) cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
+using namespace std;
 
-void addReadToWigArray(const variables_map &, vector<int> &, const Read, long);
-vector<int> makeWigarray(const variables_map &, Mapfile &, SeqStats &);
-void norm2rpm(const variables_map &, Mapfile &, SeqStats &, vector<int> &);
-void outputWig(const variables_map &, Mapfile &, string);
-void outputBedGraph(const variables_map &, Mapfile &, string);
-void outputBinary(const variables_map &, Mapfile &, string);
+namespace {
+  void printwarning(double w)
+  {
+    cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
+  }
+  
+  template <class T, class S>
+  double setw(T nm, S dn)
+  {
+    return (dn ? nm/static_cast<double>(dn): 0);
+  }
+}
+  
+void addReadToWigArray(const MyOpt::Variables &, vector<int> &, const Read, long);
+vector<int> makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
+void norm2rpm(const MyOpt::Variables &, Mapfile &, SeqStats &, vector<int> &);
+void outputWig(const MyOpt::Variables &, Mapfile &, string);
+void outputBedGraph(const MyOpt::Variables &, Mapfile &, string);
+void outputBinary(const MyOpt::Variables &, Mapfile &, string);
 
-void makewig(const variables_map &values, Mapfile &p)
+void makewig(const MyOpt::Variables &values, Mapfile &p)
 {
   printf("Convert read data to array: \n");
   int oftype = values["of"].as<int>();
@@ -46,7 +59,7 @@ void makewig(const variables_map &values, Mapfile &p)
   return;
 }
 
-void addReadToWigArray(const variables_map &values, vector<int> &wigarray, const Read x, long chrlen)
+void addReadToWigArray(const MyOpt::Variables &values, vector<int> &wigarray, const Read x, long chrlen)
 {
   int s, e;
   s = min(x.F3, x.F5);
@@ -93,7 +106,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
   return;
 }
 
-vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
+vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
   cout << chr.name << ".." << flush;
   vector<int> wigarray(chr.nbin, 0);
@@ -105,7 +118,6 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
     }
   }
 
-  // Mappability normalization
   if (values.count("mp")) {
     int binsize = values["binsize"].as<int>();
     int mpthre = values["mpthre"].as<double>()*binsize;
@@ -129,13 +141,7 @@ vector<int> makeWigarray(const variables_map &values, Mapfile &p, SeqStats &chr)
   return wigarray;
 }
 
-template <class T, class S>
-double setw(T nm, S dn)
-{
-  return (dn ? nm/static_cast<double>(dn): 0);
-}
-
-void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray)
+void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray)
 {
   static int on(0);
   double w(0);
@@ -146,14 +152,14 @@ void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int
     w = setw(values["nrpm"].as<int>(), dn);
     if(!on) {
       BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (long)dn % values["nrpm"].as<int>() % w;
-      if(w>2) PRINTWARNING_W(w);
+      if(w>2) printwarning(w);
       on=1;
     }
   } else if(ntype == "GD") {
     w = setw(values["ndepth"].as<double>(), p.genome.depth);
     if(!on) {
       BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.depth % values["ndepth"].as<double>() % w;
-      if(w>2) PRINTWARNING_W(w);
+      if(w>2) printwarning(w);
       on=1;
     }
   } else if(ntype == "CR") {
@@ -161,11 +167,11 @@ void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int
     double dn = chr.bothnread_nonred();
     w = setw(nm, dn);
     BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<long>(dn) % nm % w;
-    if(w>2) PRINTWARNING_W(w);
+    if(w>2) printwarning(w);
   } else if(ntype == "CD") {
     w = setw(values["ndepth"].as<double>(), chr.depth);
     BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.depth % values["ndepth"].as<double>() % w;
-    if(w>2) PRINTWARNING_W(w);
+    if(w>2) printwarning(w);
   }
 
   for(int i=0; i<chr.nbin; ++i) { if(wigarray[i]) wigarray[i] *= w;}
@@ -176,7 +182,7 @@ void norm2rpm(const variables_map &values, Mapfile &p, SeqStats &chr, vector<int
   return;
 }
 
-void outputWig(const variables_map &values, Mapfile &p, string filename)
+void outputWig(const MyOpt::Variables &values, Mapfile &p, string filename)
 {
   int binsize = values["binsize"].as<int>();
   ofstream out(filename);
@@ -194,7 +200,7 @@ void outputWig(const variables_map &values, Mapfile &p, string filename)
   return;
 }
 
-void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
+void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, string filename)
 {
   int e;
   int binsize = values["binsize"].as<int>();
@@ -227,7 +233,7 @@ void outputBedGraph(const variables_map &values, Mapfile &p, string filename)
   return;
 }
 
-void outputBinary(const variables_map &values, Mapfile &p, string filename)
+void outputBinary(const MyOpt::Variables &values, Mapfile &p, string filename)
 {
   ofstream out(filename, ios::binary);
   for(auto &chr: p.chr) {

@@ -14,25 +14,24 @@
 #include "readdata.h"
 #include "statistics.h"
 
-using namespace std;
-using namespace boost::program_options;
-
-/* default parameter */
-#define NUM_GCOV 5000000
+namespace MyOpt {
+    using Variables = boost::program_options::variables_map;
+    using Opts      = boost::program_options::options_description;
+}
 
 class SeqStats;
 
-void calcFRiP(SeqStats &, const vector<bed>);
-void printDist(ofstream &out, const vector<int> v, const string str, const long nread);
+void calcFRiP(SeqStats &, const std::vector<bed>);
+void printDist(std::ofstream &out, const std::vector<int> v, const std::string str, const long nread);
 
 class Dist {
   enum {ReadMax=200, FragMax=1000};
   int lenF3;
   int lenF5;
   int eflen;
-  vector<int> vlenF3;
-  vector<int> vlenF5;
-  vector<int> vflen;
+  std::vector<int> vlenF3;
+  std::vector<int> vlenF5;
+  std::vector<int> vflen;
   
  public:
  Dist(): lenF3(0), lenF5(0), eflen(0),
@@ -45,9 +44,9 @@ class Dist {
   void seteflen(const int len) { eflen = len; }
   int geteflen() const { return eflen; }
   int getlenF3() const { return lenF3; }
-  vector<int> getvlenF3() const { return vlenF3; }
-  vector<int> getvlenF5() const { return vlenF5; }
-  vector<int> getvflen()  const { return vflen; }
+  std::vector<int> getvlenF3() const { return vlenF3; }
+  std::vector<int> getvlenF5() const { return vlenF5; }
+  std::vector<int> getvflen()  const { return vflen; }
   void addF3(const int len)   { ++vlenF3[len]; }
   void addF5(const int len)   { ++vlenF5[len]; }
   void addflen(const int len) { ++vflen[len]; }
@@ -55,14 +54,14 @@ class Dist {
 
 class Fragment {
 public:
-  string chr;
+  std::string chr;
   int F3;
   Strand strand;
   int fraglen;
   int readlen_F3;
 
  Fragment(): fraglen(0), readlen_F3(0) {}
- void addSAM(const vector<string> &v, const bool pair, const int sv) {
+ void addSAM(const std::vector<std::string> &v, const bool pair, const int sv) {
    chr = rmchr(v[2]);
    readlen_F3 = v[9].length();
    if(pair) fraglen = abs(stoi(v[8]));
@@ -103,7 +102,7 @@ class Read {
 
 class strandData {
  public:
-  vector<Read> vRead;
+  std::vector<Read> vRead;
   long nread;
   long nread_nonred;
   long nread_red;
@@ -113,11 +112,11 @@ class strandData {
  strandData(): nread(0), nread_nonred(0), nread_red(0), nread_rpm(0), nread_afterGC(0) {}
   void setnread() { nread = vRead.size(); }
   void print() const {
-    cout << nread << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << endl;
+    std::cout << nread << "\t" << nread_nonred << "\t" << nread_red << "\t" << nread_rpm << "\t" << nread_afterGC << std::endl;
   }
-  void printnonred(ofstream &out)  const { printr(out, nread_nonred,  nread); }
-  void printred(ofstream &out)     const { printr(out, nread_red,     nread); }
-  void printafterGC(ofstream &out) const { printr(out, nread_afterGC, nread); }
+  void printnonred(std::ofstream &out)  const { printr(out, nread_nonred,  nread); }
+  void printred(std::ofstream &out)     const { printr(out, nread_red,     nread); }
+  void printafterGC(std::ofstream &out) const { printr(out, nread_afterGC, nread); }
   void addReadAfterGC(const double w, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     nread_afterGC += w;
@@ -129,9 +128,9 @@ class Wigstats {
   long sum;
  public:
   double ave, var, nb_p, nb_n, nb_p0; // pois_p0
-  vector<long> mpDist;
-  vector<long> wigDist;
-  vector<double> pwigDist;
+  std::vector<long> mpDist;
+  std::vector<long> wigDist;
+  std::vector<double> pwigDist;
 
  Wigstats(): sum(0),ave(0), var(0), nb_p(0), nb_n(0), nb_p0(0),
     mpDist(n_mpDist,0), wigDist(n_wigDist,0), pwigDist(n_wigDist,0) {}
@@ -173,13 +172,13 @@ class Wigstats {
   void setpWigDist() {
     for(size_t i=0; i<wigDist.size(); ++i) pwigDist[i] = wigDist[i]/static_cast<double>(sum);
   }
-  void getWigStats(const vector<int> &wigarray) {
+  void getWigStats(const std::vector<int> &wigarray) {
     int num95 = getPercentile(wigarray, 0.95);
     
     int size = wigDist.size();
-    vector<int> ar;
+    std::vector<int> ar;
     for(auto x: wigarray) {
-    if( x<0) cout << sum << "xxx" << x << endl;
+    if( x<0) std::cout << sum << "xxx" << x << std::endl;
     ++sum;
       int v = WIGARRAY2VALUE(x);
       if(v < size) ++wigDist[v];
@@ -196,14 +195,14 @@ class Wigstats {
     if(nb_p<=0) nb_p = 0.1; 
     nb_n = ave * nb_p /(1 - nb_p);
 
-    //    cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n<< endl;
+    //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n<< std::endl;
     if(ave) estimateParam();
   }
-  void printwigDist(ofstream &out, const int i) const {
+  void printwigDist(std::ofstream &out, const int i) const {
     out << boost::format("%1%\t%2%\t") % wigDist[i] % pwigDist[i];
   }
   void addmpDist(const double p) {
-    if(!RANGE(p,0,1)) cout << "Warning: mappability " << p << " should be [0,1]" << endl;
+    if(!RANGE(p,0,1)) std::cout << "Warning: mappability " << p << " should be [0,1]" << std::endl;
     else ++mpDist[(int)(p*n_mpDist)];
   }
   void addWigDist(const Wigstats &x) {
@@ -216,10 +215,10 @@ class Wigstats {
     for(size_t i=0; i<mpDist.size(); ++i)
       BPRINT("~%1%%%\t%2%\t%3%\n") % ((i+1)*100/mpDist.size()) % mpDist[i] % (mpDist[i]/static_cast<double>(num)); 
   }
-  void printPoispar(ofstream &out) const {
+  void printPoispar(std::ofstream &out) const {
     out << boost::format("%1$.3f\t%2$.3f\t") % ave % var;
   }
-  void printZINBpar(ofstream &out) const {
+  void printZINBpar(std::ofstream &out) const {
     out << boost::format("%1%\t%2%\t%3%") % nb_p % nb_n % nb_p0;
   }
 };
@@ -237,7 +236,7 @@ class GenomeCoverage {
     gcovRaw  = nbp ? ncov / static_cast<double>(nbp): 0;
     gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
   }
-  void calcGcov(const vector<char> &array) {
+  void calcGcov(const std::vector<char> &array) {
     for(size_t i=0; i<array.size(); ++i) {
       if(array[i] >= MAPPABLE)     ++nbp;      // MAPPABLE || COVREAD_ALL || COVREAD_NORM
       if(array[i] >= COVREAD_ALL)  ++ncov;     // COVREAD_ALL || COVREAD_NORM
@@ -245,9 +244,9 @@ class GenomeCoverage {
     }
     gcovRaw  = nbp ? ncov     / static_cast<double>(nbp): 0;
     gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
-    //    cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << endl;
+    //    std::cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << std::endl;
   }
-  void print(ofstream &out, const bool gv) const {
+  void print(std::ofstream &out, const bool gv) const {
       if(gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % gcovRaw % gcovNorm;
       else   out << boost::format("%1$.3f\t%2$.3f\t")   % gcovRaw % gcovNorm;
   //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
@@ -260,7 +259,7 @@ class SeqStats {
   /* FRiP */
   long nread_inbed;
  public:
-  string name;
+  std::string name;
   int nbin;
 
   Wigstats ws;
@@ -270,7 +269,7 @@ class SeqStats {
   double depth;
   double w;
   
- SeqStats(string s, int l=0): yeast(false), len(l), len_mpbl(l), nread_inbed(0), nbin(0), depth(0), w(0) {
+ SeqStats(std::string s, int l=0): yeast(false), len(l), len_mpbl(l), nread_inbed(0), nbin(0), depth(0), w(0) {
     name = rmchr(s);
   }
   void addNreadInBed(const int i) { nread_inbed += i; }
@@ -304,7 +303,7 @@ class SeqStats {
   long getlenmpbl() const { return len_mpbl; }
   double getpmpbl() const { return len/static_cast<double>(len_mpbl); }
   void print() const {
-    cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << endl;
+    std::cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << std::endl;
   }
   void calcdepth(const int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / static_cast<double>(len_mpbl): 0;
@@ -357,15 +356,15 @@ class SeqStats {
     if(chrnum) return true;
     else       return false;
   }
-  friend void getMpbl(const string, vector<SeqStats> &chr);
-  //  friend void setlenmpbl(SeqStats &x, string str, int l);
+  friend void getMpbl(const std::string, std::vector<SeqStats> &chr);
+  //  friend void setlenmpbl(SeqStats &x, std::string str, int l);
 };
 
 class Mapfile {
   bool yeast;
   Dist dist;
-  string oprefix;
-  string obinprefix;
+  std::string oprefix;
+  std::string obinprefix;
   int flen_def;
   
   // PCR bias
@@ -373,35 +372,35 @@ class Mapfile {
   int nt_all, nt_nonred, nt_red;
   bool tv, gv;
   double r4cmp;
-  vector<bed> vbed;
-  vector<Peak> vPeak;
+  std::vector<bed> vbed;
+  std::vector<Peak> vPeak;
 
  public:
   SeqStats genome;
-  vector<SeqStats> chr;
-  vector<SeqStats>::iterator lchr; // longest chromosome
-  vector<sepchr> vsepchr;
+  std::vector<SeqStats> chr;
+  std::vector<SeqStats>::iterator lchr; // longest chromosome
+  std::vector<sepchr> vsepchr;
 
   // GC bias
-  vector<double> GCweight;
+  std::vector<double> GCweight;
   int maxGC;
 
   // Wigdist
   int nwigdist;
-  vector<int> wigDist;
+  std::vector<int> wigDist;
 
-  Mapfile(const variables_map &values);
-  void readGenomeTable(const variables_map &values);
-  //  void getMpbl(const variables_map &values);
-  vector<sepchr> getVsepchr(const int);
+  Mapfile(const MyOpt::Variables &values);
+  void readGenomeTable(const MyOpt::Variables &values);
+  //  void getMpbl(const MyOpt::Variables &values);
+  std::vector<sepchr> getVsepchr(const int);
 
   void tvon() { tv = true; }
   void gvon() { gv = true; }
   int isgv() const { return gv; };
-  void setthre4filtering(const variables_map &values) {
+  void setthre4filtering(const MyOpt::Variables &values) {
     if(values["thre_pb"].as<int>()) thre4filtering = values["thre_pb"].as<int>();
-    else thre4filtering = max(1, (int)(genome.bothnread() *10/static_cast<double>(genome.getlenmpbl())));
-    cout << "Checking redundant reads: redundancy threshold " << thre4filtering << endl;
+    else thre4filtering = std::max(1, (int)(genome.bothnread() *10/static_cast<double>(genome.getlenmpbl())));
+    std::cout << "Checking redundant reads: redundancy threshold " << thre4filtering << std::endl;
   }
   int getthre4filtering() const { return thre4filtering; };
   void setr4cmp(const double r) { r4cmp = r; }
@@ -409,28 +408,28 @@ class Mapfile {
   void incNtAll() { ++nt_all; }
   void incNtNonred() { ++nt_nonred; }
   void incNtRed() { ++nt_red; }
-  void printPeak(const variables_map &values) const {
-    string filename = getbinprefix() + ".peak.xls";
-    ofstream out(filename);
+  void printPeak(const MyOpt::Variables &values) const {
+    std::string filename = getbinprefix() + ".peak.xls";
+    std::ofstream out(filename);
 
     vPeak[0].printHead(out);
     for(uint i=0; i<vPeak.size(); ++i) {
       vPeak[i].print(out, i, values["binsize"].as<int>());
     }
   }
-  string getprefix() const { return oprefix; }
-  string getbinprefix() const { return obinprefix; }
-  void setFraglen(const variables_map &values) {
+  std::string getprefix() const { return oprefix; }
+  std::string getbinprefix() const { return obinprefix; }
+  void setFraglen(const MyOpt::Variables &values) {
     dist.getmaxlenF3();
     if(values.count("pair")) {
       dist.getmaxlenF5();
       dist.getmaxeflen();
     }
   }
-  vector<bed> getvbed() const { return vbed; }
-  void printFlen(const variables_map &values, ofstream &out) const {
-    if(!values.count("nomodel")) out << "Estimated fragment length: " << dist.geteflen() << endl;
-    else out << "Predefined fragment length: " << flen_def << endl;
+  std::vector<bed> getvbed() const { return vbed; }
+  void printFlen(const MyOpt::Variables &values, std::ofstream &out) const {
+    if(!values.count("nomodel")) out << "Estimated fragment length: " << dist.geteflen() << std::endl;
+    else out << "Predefined fragment length: " << flen_def << std::endl;
   }
   void addF5(const int readlen_F5) { dist.addF5(readlen_F5); }
   void addfrag(const Fragment &frag) {
@@ -443,35 +442,35 @@ class Mapfile {
 	on++;
       }
     }
-    if(!on) cerr << "Warning: " << frag.chr << " is not in genometable." << endl;
+    if(!on) std::cerr << "Warning: " << frag.chr << " is not in genometable." << std::endl;
   }
 
-  void setbed(const string bedfilename) {
+  void setbed(const std::string bedfilename) {
     isFile(bedfilename);
     vbed = parseBed<bed>(bedfilename);
     //    printBed(vbed);
   }
-  void outputDistFile(const variables_map &values)
+  void outputDistFile(const MyOpt::Variables &values)
   {
-    string outputfile = oprefix + ".readlength_dist.csv";
-    ofstream out(outputfile);
+    std::string outputfile = oprefix + ".readlength_dist.csv";
+    std::ofstream out(outputfile);
     printDist(out, dist.getvlenF3(), "F3", genome.bothnread());
     if(values.count("pair")) printDist(out, dist.getvlenF5(), "F5", genome.bothnread());
     out.close();
     
     if(values.count("pair")) {
       outputfile = oprefix + ".fraglen_dist.xls";
-      ofstream out(outputfile);
+      std::ofstream out(outputfile);
       printDist(out, dist.getvflen(), "Fragmemt", genome.bothnread());
     }
   }
 
-  void calcdepth(const variables_map &values) {
+  void calcdepth(const MyOpt::Variables &values) {
     int flen(getflen(values));
     for (auto &x:chr) x.calcdepth(flen);
     genome.calcdepth(flen);
   }
-  void setF5(const variables_map &values) {
+  void setF5(const MyOpt::Variables &values) {
     int flen(getflen(values));
     for (auto &x:chr) x.setF5(flen);
   }
@@ -484,32 +483,32 @@ class Mapfile {
   void setnread_red() {
     for (auto &x:chr) genome.addnread_red(x);
   }
-  void printComplexity(ofstream &out) const {
+  void printComplexity(std::ofstream &out) const {
     if(tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
     else   out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % complexity() % nt_nonred % nt_all;
   }
   double complexity() const { return nt_nonred/static_cast<double>(nt_all); }
   void printstats() const {
-    cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << endl;
+    std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
     genome.print();
     for (auto x:chr) x.print();
   }
   void setFRiP() {
-    cout << "calculate FRiP score.." << flush;
+    std::cout << "calculate FRiP score.." << std::flush;
     for(auto &c: chr) {
       calcFRiP(c, vbed);
       genome.addNreadInBed(c.getNreadInbed());
     }
     //    genome.FRiP = genome.nread_inbed/static_cast<double>(genome.bothnread_nonred());
     
-    cout << "done." << endl;
+    std::cout << "done." << std::endl;
     return;
   }
   void seteflen(const int len) {
     dist.seteflen(len);
   }
   int getlenF3() const { return dist.getlenF3(); }
-  int getflen(const variables_map &values) const {
+  int getflen(const MyOpt::Variables &values) const {
     int flen;
     if(!values.count("nomodel") || values.count("pair")) flen = dist.geteflen();
     else flen = flen_def;

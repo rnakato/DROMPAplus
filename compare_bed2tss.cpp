@@ -5,20 +5,21 @@
 #include <boost/program_options.hpp>
 #include "readdata.h"
 #include "gene_bed.h"
+#include "macro.h"
 
-using namespace boost::program_options;
+using Variables = boost::program_options::variables_map;
 
-variables_map argv_init(int argc, char* argv[])
+Variables argv_init(int argc, char* argv[])
 {
-  options_description allopts("Options");
+  boost::program_options::options_description allopts("Options");
   allopts.add_options()
-    ("genefile,g", value<std::string>(), "Gene file")
-    ("bed,b",      value<std::string>(), "Bed file")
-    ("gt",         value<std::string>(), "Genome table (tab-delimited file describing the name and length of each chromosome)")
-    ("mode,m",     value<int>()->default_value(0),    "0: with TSS; 1: with whole gene; 2:genome coverage")
-    ("updist,u",   value<int>()->default_value(5000), "Allowed upstream distance from TSS")
-    ("downdist,d", value<int>()->default_value(5000), "Allowed downstream distance from TSS")
-    ("limconv,l",  value<int>()->default_value(10000), "Maxmum distance between genes for convergent sites")
+    ("genefile,g", boost::program_options::value<std::string>(), "Gene file")
+    ("bed,b",      boost::program_options::value<std::string>(), "Bed file")
+    ("gt",         boost::program_options::value<std::string>(), "Genome table (tab-delimited file describing the name and length of each chromosome)")
+    ("mode,m",     boost::program_options::value<int>()->default_value(0),    "0: with TSS; 1: with whole gene; 2:genome coverage")
+    ("updist,u",   boost::program_options::value<int>()->default_value(5000), "Allowed upstream distance from TSS")
+    ("downdist,d", boost::program_options::value<int>()->default_value(5000), "Allowed downstream distance from TSS")
+    ("limconv,l",  boost::program_options::value<int>()->default_value(10000), "Maxmum distance between genes for convergent sites")
     ("all,a", "Output also non-neighboring sites")
     ("name,n", "Output name instead of id")
     ("conv,c", "Consider convergent sites")
@@ -30,14 +31,14 @@ variables_map argv_init(int argc, char* argv[])
     ("help,h", "print this message")
     ;
   
-  variables_map values;
+  Variables values;
   
   if (argc==1) {
     std::cout << "\n" << allopts << std::endl;
     exit(0);
   }
   try {
-    parsed_options parsed = parse_command_line(argc, argv, allopts);
+    boost::program_options::parsed_options parsed = parse_command_line(argc, argv, allopts);
     store(parsed, values);
     
     if (values.count("help")) {
@@ -61,7 +62,7 @@ variables_map argv_init(int argc, char* argv[])
 }
 
 template <class T>
-void merge_tss2bed(const variables_map &values, const HashOfGeneDataMap &mp, std::vector<T> &vbed)
+void merge_tss2bed(const Variables &values, const HashOfGeneDataMap &mp, std::vector<T> &vbed)
 {
   int updist = -values["updist"].as<int>();
   int downdist = values["downdist"].as<int>();
@@ -86,7 +87,7 @@ void merge_tss2bed(const variables_map &values, const HashOfGeneDataMap &mp, std
   for (auto x: vbed) d.inc(x.d, x.st);
   d.print();
 
-  std::cout << boost::format("# Sites from upstream %1% bp to downstream %2% bp around TSS\n") % updist % downdist;
+  BPRINT("# Sites from upstream %1% bp to downstream %2% bp around TSS\n") % updist % downdist;
 
   vbed[0].printHead();
   std::cout << "\tfrom TSS\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
@@ -98,7 +99,7 @@ void merge_tss2bed(const variables_map &values, const HashOfGeneDataMap &mp, std
 }
 
 template <class T>
-void merge_gene2bed(const variables_map &values, const HashOfGeneDataMap &mp, std::vector<T> &vbed)
+void merge_gene2bed(const Variables &values, const HashOfGeneDataMap &mp, std::vector<T> &vbed)
 {
   int updist = values["updist"].as<int>();
   int downdist = values["downdist"].as<int>();
@@ -118,8 +119,8 @@ void merge_gene2bed(const variables_map &values, const HashOfGeneDataMap &mp, st
 
   gdist d;
   for (auto x: vbed) d.inc(x.st);
-  std::cout << boost::format("# Input sites total: %1%, upstream: %2%, downstream: %3%, genic: %4%, intergenic: %5%") % d.genome % d.up % d.down % d.genic % d.inter;  
-  if(values.count("conv")) std::cout << boost::format(", convergent: %1%, divergent: %2%, parallel: %3%\n") % d.conv % d.div % d.par;
+  BPRINT("# Input sites total: %1%, upstream: %2%, downstream: %3%, genic: %4%, intergenic: %5%") % d.genome % d.up % d.down % d.genic % d.inter;  
+  if(values.count("conv")) BPRINT(", convergent: %1%, divergent: %2%, parallel: %3%\n") % d.conv % d.div % d.par;
   else std::cout << std::endl;
   
   vbed[0].printHead();
@@ -135,7 +136,7 @@ void stUpdate(int &r, status st)
   return;
 }
 
-std::vector<int> makeGenomeArray(const variables_map &values, std::string chr, int size,
+std::vector<int> makeGenomeArray(const Variables &values, std::string chr, int size,
 			    const HashOfGeneDataMap &mp, std::vector<convsite> &vconv)
 {
   int i,j;
@@ -192,12 +193,12 @@ std::vector<int> makeGenomeArray(const variables_map &values, std::string chr, i
   return array;
 }
 
-void print_gdist(const variables_map &values, gdist n, std::string str)
+void print_gdist(const Variables &values, gdist n, std::string str)
 {
   std::cout << str << "\t";
-  if(values.count("intron")) std::cout << boost::format("%1%\t%2%\t%3%\t%4%\t%5%\t%6%") % n.genome % n.up % n.down % n.exon % n.intron % n.inter;
-  else std::cout << boost::format("%1%\t%2%\t%3%\t%4%\t%5%") % n.genome % n.up % n.genic % n.intron % n.inter;
-  if(values.count("conv")) std::cout << boost::format("\t%1%\t%2%\t%3%\n") % n.conv % n.div % n.par;
+  if(values.count("intron")) BPRINT("%1%\t%2%\t%3%\t%4%\t%5%\t%6%") % n.genome % n.up % n.down % n.exon % n.intron % n.inter;
+  else BPRINT("%1%\t%2%\t%3%\t%4%\t%5%") % n.genome % n.up % n.genic % n.intron % n.inter;
+  if(values.count("conv")) BPRINT("\t%1%\t%2%\t%3%\n") % n.conv % n.div % n.par;
   else std::cout << std::endl;
 
   std::cout << str << " (%)\t";
@@ -209,7 +210,7 @@ void print_gdist(const variables_map &values, gdist n, std::string str)
 }
 
 template <class T>
-void count_genome(const variables_map &values, const HashOfGeneDataMap &mp, std::vector<T> &vbed){
+void count_genome(const Variables &values, const HashOfGeneDataMap &mp, std::vector<T> &vbed){
 
   gdist n,s;
   std::vector<convsite> vconv;
@@ -243,7 +244,7 @@ void count_genome(const variables_map &values, const HashOfGeneDataMap &mp, std:
 }
 
 template <class T>
-void func(const variables_map &values, HashOfGeneDataMap &mp, std::vector<T> &vbed)
+void func(const Variables &values, HashOfGeneDataMap &mp, std::vector<T> &vbed)
 {
   int mode = values["mode"].as<int>();
   if(!mode) merge_tss2bed(values, mp, vbed);
@@ -253,7 +254,7 @@ void func(const variables_map &values, HashOfGeneDataMap &mp, std::vector<T> &vb
 }
 
 template <class T>
-void compare_bed(const variables_map &values, std::string filename)
+void compare_bed(const Variables &values, std::string filename)
 {
   auto vbed = parseBed<bed_gene<T>>(filename);
   //  printBed(vbed);
@@ -274,7 +275,7 @@ void compare_bed(const variables_map &values, std::string filename)
 
 int main(int argc, char* argv[])
 {
-  variables_map values = argv_init(argc, argv);
+  Variables values = argv_init(argc, argv);
 
   std::string filename(values["bed"].as<std::string>());
   if(values.count("bed12"))        compare_bed<bed12>(values, filename);

@@ -15,14 +15,20 @@
 #include "pw_gv.h"
 #include "pw_gc.h"
 
-variables_map getOpts(int argc, char* argv[]);
-void setOpts(options_description &);
-void init_dump(const variables_map &);
-void output_stats(const variables_map &values, const Mapfile &p);
-void calcGenomeCoverage(const variables_map &values, Mapfile &p);
-void output_wigstats(const variables_map &values, Mapfile &p);
+using namespace std;
 
-Mapfile::Mapfile(const variables_map &values):
+namespace {
+  const int numGcov(5000000);
+}
+
+MyOpt::Variables getOpts(int argc, char* argv[]);
+void setOpts(MyOpt::Opts &);
+void init_dump(const MyOpt::Variables &);
+void output_stats(const MyOpt::Variables &values, const Mapfile &p);
+void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p);
+void output_wigstats(const MyOpt::Variables &values, Mapfile &p);
+
+Mapfile::Mapfile(const MyOpt::Variables &values):
   yeast(false), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(false), gv(false), r4cmp(0), genome("Genome"), maxGC(0)
 {
   oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
@@ -62,7 +68,7 @@ Mapfile::Mapfile(const variables_map &values):
 #endif
 }
 
-void Mapfile::readGenomeTable(const variables_map &values)
+void Mapfile::readGenomeTable(const MyOpt::Variables &values)
 {
   vector<string> v;
   string lineStr;
@@ -139,7 +145,7 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
 
 int main(int argc, char* argv[])
 {
-  variables_map values = getOpts(argc, argv);
+  MyOpt::Variables values = getOpts(argc, argv);
   
   boost::filesystem::path dir(values["odir"].as<string>());
   boost::filesystem::create_directory(dir);
@@ -186,7 +192,7 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-void checkParam(const variables_map &values)
+void checkParam(const MyOpt::Variables &values)
 {
   vector<string> intopts = {"binsize", "flen", "maxins" , "nrpm", "flen4gc", "threads"};
   for (auto x: intopts) chkminus<int>(values, x, 0);
@@ -210,15 +216,15 @@ void checkParam(const variables_map &values)
   return;
 }
 
-variables_map getOpts(int argc, char* argv[])
+MyOpt::Variables getOpts(int argc, char* argv[])
 {
-  options_description allopts("Options");
+  MyOpt::Opts allopts("Options");
   setOpts(allopts);
   
-  variables_map values;
+  MyOpt::Variables values;
   
   try {
-    parsed_options parsed = parse_command_line(argc, argv, allopts);
+    boost::program_options::parsed_options parsed = parse_command_line(argc, argv, allopts);
     store(parsed, values);
     
     if (values.count("version")) printVersion();
@@ -249,14 +255,17 @@ variables_map getOpts(int argc, char* argv[])
   return values;
 }
 
-void setOpts(options_description &allopts){
-  options_description optreq("Required",100);
+void setOpts(MyOpt::Opts &allopts)
+{
+  using namespace boost::program_options;
+
+  MyOpt::Opts optreq("Required",100);
   optreq.add_options()
     ("input,i",   value<string>(), "Mapping file. Multiple files are allowed (separated by ',')")
     ("output,o",  value<string>(), "Prefix of output files")
     ("gt",        value<string>(), "Genome table (tab-delimited file describing the name and length of each chromosome)")
     ;
-  options_description optIO("Input/Output",100);
+  MyOpt::Opts optIO("Input/Output",100);
   optIO.add_options()
     ("binsize,b",   value<int>()->default_value(50),	  "bin size")
     ("ftype,f",     value<string>()->default_value("SAM"), "{SAM|BAM|BOWTIE|TAGALIGN}: format of input file (default:SAM)\nTAGALIGN could be gzip'ed (extension: tagAlign.gz)")
@@ -264,41 +273,41 @@ void setOpts(options_description &allopts){
     ("odir",        value<string>()->default_value("parse2wigdir"),	  "output directory name")
     ("rcenter", value<int>()->default_value(0), "consider length around the center of fragment ")
     ;
-  options_description optsingle("For single-end read",100);
+  MyOpt::Opts optsingle("For single-end read",100);
   optsingle.add_options()
     ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
     ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
     ;
-  options_description optpair("For paired-end read",100);
+  MyOpt::Opts optpair("For paired-end read",100);
   optpair.add_options()
     ("pair", 	  "add when the input file is paired-end")
     ("maxins",        value<int>()->default_value(500), "maximum fragment length")
     ;
-  options_description optpcr("PCR bias filtering",100);
+  MyOpt::Opts optpcr("PCR bias filtering",100);
   optpcr.add_options()
     ("nofilter", 	  "do not filter PCR bias")
     ("thre_pb",        value<int>()->default_value(0),	  "PCRbias threshold (default: more than max(1 read, 10 times greater than genome average)) ")
     ("ncmp",        value<int>()->default_value(10000000),	  "read number for calculating library complexity")
     ;
-  options_description optnorm("Total read normalization",100);
+  MyOpt::Opts optnorm("Total read normalization",100);
   optnorm.add_options()
     ("ntype,n",        value<string>()->default_value("NONE"),  "Total read normalization\n{NONE|GR|GD|CR|CD}\n   NONE: not normalize\n   GR: for whole genome, read number\n   GD: for whole genome, read depth\n   CR: for each chromosome, read number\n   CD: for each chromosome, read depth")
     ("nrpm",        value<int>()->default_value(20000000),	  "Total read number after normalization")
     ("ndepth",      value<double>()->default_value(1.0),	  "Averaged read depth after normalization")
     ("bed",        value<string>(),	  "specify the BED file of enriched regions (e.g., peak regions)")
     ;  
-  options_description optmp("Mappability normalization",100);
+  MyOpt::Opts optmp("Mappability normalization",100);
   optmp.add_options()
     ("mp",        value<string>(),	  "Mappability file")
     ("mpthre",    value<double>()->default_value(0.3),	  "Threshold of low mappability regions")
     ;
-  options_description optgc("GC bias normalization\n   (require large time and memory)",100);
+  MyOpt::Opts optgc("GC bias normalization\n   (require large time and memory)",100);
   optgc.add_options()
     ("genome",     value<string>(),	  "reference genome sequence for GC content estimation")
     ("flen4gc",    value<int>()->default_value(120),  "fragment length for calculation of GC distribution")
     ("gcdepthoff", "do not consider depth of GC contents")
     ;
-  options_description optother("Others",100);
+  MyOpt::Opts optother("Others",100);
   optother.add_options()
     ("threads,p",    value<int>()->default_value(1),  "number of threads to launch")
     ("version,v", "print version")
@@ -308,7 +317,7 @@ void setOpts(options_description &allopts){
   return;
 }
 
-void init_dump(const variables_map &values){
+void init_dump(const MyOpt::Variables &values){
   vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
  
   BPRINT("\n======================================\n");
@@ -357,7 +366,7 @@ void init_dump(const variables_map &values){
   return;
 }
 
-void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &p, const Mapfile &mapfile)
+void print_SeqStats(const MyOpt::Variables &values, ofstream &out, const SeqStats &p, const Mapfile &mapfile)
 {
   /* genome data */
   out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
@@ -395,7 +404,7 @@ void print_SeqStats(const variables_map &values, ofstream &out, const SeqStats &
   return;
 }
 
-void output_stats(const variables_map &values, const Mapfile &p)
+void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 {
   string filename = p.getbinprefix() + ".csv";
   ofstream out(filename);
@@ -438,7 +447,7 @@ void output_stats(const variables_map &values, const Mapfile &p)
   return;
 }
 
-vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &p, double r4cmp)
+vector<char> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfile &p, double r4cmp)
 {
   vector<char> array;
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chr.getlen());
@@ -464,7 +473,7 @@ vector<char> makeGcovArray(const variables_map &values, SeqStats &chr, Mapfile &
   return array;
 }
 
-void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
+void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
 {
   for(int i=s; i<=e; ++i) {
     cout << p.chr[i].name << ".." << flush;
@@ -474,14 +483,14 @@ void calcGcovchr(const variables_map &values, Mapfile &p, int s, int e, double r
   }
 }
 
-void calcGenomeCoverage(const variables_map &values, Mapfile &p)
+void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
 {
   cout << "calculate genome coverage.." << flush;
 
   // ignore peak region
-  double r = NUM_GCOV/static_cast<double>(p.genome.bothnread_nonred() - p.genome.getNreadInbed());
+  double r = numGcov/static_cast<double>(p.genome.bothnread_nonred() - p.genome.getNreadInbed());
   if(r>1){
-    cerr << "Warning: number of reads is < "<< static_cast<int>(NUM_GCOV/NUM_1M) << " million.\n";
+    cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
     p.gvon();
   }
   double r4cmp = r*RAND_MAX;
@@ -518,7 +527,7 @@ void calcFRiP(SeqStats &chr, const vector<bed> vbed)
   return;
 }
 
-void output_wigstats(const variables_map &values, Mapfile &p)
+void output_wigstats(const MyOpt::Variables &values, Mapfile &p)
 {
   string filename = p.getbinprefix() + ".binarray_dist.csv";
   ofstream out(filename);

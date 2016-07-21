@@ -1,20 +1,26 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
+
 #include "pw_gc.h"
+#include <boost/program_options.hpp>
 #include "pw_makefile.h"
 #include "readdata.h"
 #include "macro.h"
 
-#define FRAG_IGNORE 5
-#define GCDIST_THRE 1e-5
-#define GCDEPTH_THRE 1e-3
+using namespace std;
+
+namespace {
+  const int lenIgnoreOfFragment(5);
+  const double threGcDist(1e-5);
+  const double threGcDepth(1e-3);
+}
 
 vector<short> makeFastaArray(string filename, int length, int flen4gc);
 vector<int> makeDistRead(Mapfile &p, vector<short> &fastaGCarray, const vector<char> &ar, SeqStats &chr, int, int, int);
 vector<int> makeDistGenome(const vector<short> &FastaArray, const vector<char> &ar, int chrlen, int flen);
 
-void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &gDist, const vector<int> &rDist, int flen4gc)
+void output_GCdist(const MyOpt::Variables &values, Mapfile &p, const vector<int> &gDist, const vector<int> &rDist, int flen4gc)
 {
   int GsumGC = accumulate(gDist.begin(), gDist.end(), 0);
   int RsumGC = accumulate(rDist.begin(), rDist.end(), 0);
@@ -29,9 +35,9 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
     double r_depth  = gDist[i] ? rDist[i]/static_cast<double>(gDist[i]): 0;
     
     out << boost::format("%1%\t%2%\t%3%\t%4%\t") % i % r_genome % r_read % r_depth;
-    if(!r_read || r_genome < GCDIST_THRE) p.GCweight[i] = 0;
+    if(!r_read || r_genome < threGcDist) p.GCweight[i] = 0;
     else{
-      if(!values.count("gcdepthoff") && r_depth < GCDEPTH_THRE) p.GCweight[i] = 1;
+      if(!values.count("gcdepthoff") && r_depth < threGcDepth) p.GCweight[i] = 1;
       else p.GCweight[i] = r_genome/r_read;
     }
     out << p.GCweight[i] << endl;
@@ -41,13 +47,13 @@ void output_GCdist(const variables_map &values, Mapfile &p, const vector<int> &g
   return;
 }
 
-void make_GCdist(const variables_map &values, Mapfile &p)
+void make_GCdist(const MyOpt::Variables &values, Mapfile &p)
 {
   cout << "chromosome for GC distribution: chr" << p.lchr->name << endl;
   int chrlen(p.lchr->getlen());
   int flen(p.getflen(values));
-  int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
-  BPRINT("GC distribution from %1% bp to %2% bp of fragments.\n") % FRAG_IGNORE % (flen4gc+FRAG_IGNORE);
+  int flen4gc = min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
+  BPRINT("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc+lenIgnoreOfFragment);
 
   // mappability
   vector<char> array; 
@@ -78,8 +84,8 @@ vector<int> makeDistRead(Mapfile &p, vector<short> &fastaGCarray, const vector<c
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x:chr.seq[strand].vRead) {
       if(x.duplicate) continue;
-      if(strand==STRAND_PLUS) posi = min(x.F3 + FRAG_IGNORE, chrlen -1);
-      else                    posi = max(x.F3 - flen + FRAG_IGNORE, 0);
+      if(strand==STRAND_PLUS) posi = min(x.F3 + lenIgnoreOfFragment, chrlen -1);
+      else                    posi = max(x.F3 - flen + lenIgnoreOfFragment, 0);
       if(!ar[posi] || !ar[posi + flen4gc]) continue;
       gc = fastaGCarray[posi];
       if(gc != -1) array[gc]++;
@@ -93,8 +99,8 @@ vector<int> makeDistGenome(const vector<short> &FastaArray, const vector<char> &
 {
   vector<int> array(flen4gc+1, 0);
 
-  int max = chrlen - FRAG_IGNORE - flen4gc;
-  for(int i= FRAG_IGNORE + flen4gc; i<max; ++i) {
+  int max = chrlen - lenIgnoreOfFragment - flen4gc;
+  for(int i= lenIgnoreOfFragment + flen4gc; i<max; ++i) {
     if(ar[i]) {
       short gc(FastaArray[i]);
       if(gc != -1) array[gc]++;
@@ -151,12 +157,12 @@ vector<short> makeFastaArray(string filename, int length, int flen4gc)
   return array;
 }
 
-void weightReadchr(const variables_map &values, Mapfile &p, int s, int e, boost::mutex &mtx)
+void weightReadchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, boost::mutex &mtx)
 {
   for(int i=s; i<=e; ++i) {
     int posi;
     int flen(p.getflen(values));
-    int flen4gc = min(values["flen4gc"].as<int>(), flen - FRAG_IGNORE*2);
+    int flen4gc = min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
     cout << p.chr[i].name << ".." << flush;
     string fa = values["genome"].as<string>() + "/chr" + p.chr[i].name + ".fa";
     auto FastaArray = makeFastaArray(fa, p.chr[i].getlen(), flen4gc);
@@ -164,8 +170,8 @@ void weightReadchr(const variables_map &values, Mapfile &p, int s, int e, boost:
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto &x: p.chr[i].seq[strand].vRead) {
 	if(x.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = min(x.F3 + FRAG_IGNORE, (int)p.chr[i].getlen() -1);
-	else                    posi = max(x.F3 - flen + FRAG_IGNORE, 0);
+	if(strand==STRAND_PLUS) posi = min(x.F3 + lenIgnoreOfFragment, (int)p.chr[i].getlen() -1);
+	else                    posi = max(x.F3 - flen + lenIgnoreOfFragment, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(p.GCweight[gc]);
 	p.chr[i].seq[strand].addReadAfterGC(x.getWeight(), mtx);
@@ -175,7 +181,7 @@ void weightReadchr(const variables_map &values, Mapfile &p, int s, int e, boost:
   return;
 }
 
-void weightRead(const variables_map &values, Mapfile &p)
+void weightRead(const MyOpt::Variables &values, Mapfile &p)
 {
   cout << "add weight to reads..." << flush;
 

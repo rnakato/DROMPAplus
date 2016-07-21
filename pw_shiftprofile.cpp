@@ -6,6 +6,8 @@
 #include <boost/thread.hpp>
 #include <time.h>
 
+using namespace std;
+
 namespace {
   const int mp_from(500);
   const int mp_to(1500);

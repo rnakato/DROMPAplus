@@ -17,6 +17,7 @@
 #include "macro.h"
 #include "readdata.h"
 
+using namespace std;
 using namespace boost::program_options;
 
 void parseSam(const variables_map &values, string inputfile, Mapfile &p);

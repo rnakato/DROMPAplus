@@ -4,9 +4,9 @@
 #ifndef _PW_GC_H_
 #define _PW_GC_H_
 
-#include <boost/program_options.hpp>
 #include "pw_gv.h"
-void make_GCdist(const boost::program_options::variables_map &, Mapfile &);
-void weightRead(const variables_map &values, Mapfile &p);
+
+void make_GCdist(const MyOpt::Variables &, Mapfile &);
+void weightRead(const MyOpt::Variables &, Mapfile &);
 
 #endif /* _PW_GC_H_ */

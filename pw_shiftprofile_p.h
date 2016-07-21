@@ -6,15 +6,15 @@
 
 #include "pw_gv.h"
 
-vector<char> genVector(const strandData &seq, int start, int end);
+std::vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
 class ReadShiftProfile {
   int lenF3;
  public:
-  map<int, double> mp;
-  map<int, double> nc;
+  std::map<int, double> mp;
+  std::map<int, double> nc;
   int start;
   int end;
   int width;
@@ -47,7 +47,7 @@ class ReadShiftProfile {
   }
   void setflen(double w);
 
-  void outputmp(const string filename, string name, double weight) {
+  void outputmp(const std::string filename, std::string name, double weight) {
     setControlRatio();
     setflen(weight);
     double sum(getmpsum());
@@ -55,34 +55,34 @@ class ReadShiftProfile {
     double be(bk * rRPKM);
     double const_bu(1/39.0);  // N/(4*L-N), N=10M, L=100M
 
-    ofstream out(filename);
-    out << "NSC\t" << nsc*weight << endl;
-    out << "RLSC\t"<< (mp[lenF3]*r*weight) << endl;
-    out << "Estimated fragment length\t" << nsci << endl;
-    out << "Background enrichment\t" << be << endl;
-    out << "Background uniformity\t" << const_bu / be << endl;
+    std::ofstream out(filename);
+    out << "NSC\t" << nsc*weight << std::endl;
+    out << "RLSC\t"<< (mp[lenF3]*r*weight) << std::endl;
+    out << "Estimated fragment length\t" << nsci << std::endl;
+    out << "Background enrichment\t" << be << std::endl;
+    out << "Background uniformity\t" << const_bu / be << std::endl;
 
-    out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << endl;
+    out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
       out << itr->first            << "\t"
 	  << itr->second           << "\t"
 	  << (itr->second/sum)     << "\t"
 	  << (itr->second * rRPKM) << "\t"
-	  << (itr->second * r)     << endl;
+	  << (itr->second * r)     << std::endl;
   }
 };
 
 class ReadShiftProfileAll {
  protected:
-  vector<range> seprange;
+  std::vector<range> seprange;
   
  public:
-  string name;
+  std::string name;
   ReadShiftProfile genome;
-  vector<ReadShiftProfile> chr;
+  std::vector<ReadShiftProfile> chr;
   
   void defSepRange(int numthreads);
- ReadShiftProfileAll(string n, const Mapfile &p, int numthreads): name(n), genome(p) {
+ ReadShiftProfileAll(std::string n, const Mapfile &p, int numthreads): name(n), genome(p) {
     for(auto x:p.chr) {
       if(x.isautosome()) {
 	genome.nread += x.bothnread_nonred();
@@ -101,33 +101,33 @@ class ReadShiftProfileAll {
   void add2genome(const ReadShiftProfile &x, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
 #ifdef DEBUG
-    cout << "add2genome.." << flush;
+    std::cout << "add2genome.." << std::flush;
 #endif
     addmp(genome.mp, x.mp, x.rchr);
     addmp(genome.nc, x.nc, x.rchr);
   }
 };
 
-int getRepeatRegion(vector<range> &vrep, int j, vector<int>, int, int);
+int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<int>, int, int);
 
 class shiftJacVec : public ReadShiftProfileAll {
  public:
   double w;
  shiftJacVec(const Mapfile &p, int numthreads): ReadShiftProfileAll("Jaccard index", p, numthreads), w(1) {}
 
-  void setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev);
+  void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
   
     /*    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(fwd[j] && rev[j+170]) cout << j << "\t" << fwd[j] << "\t" << rev[j+170] << endl;
+      if(fwd[j] && rev[j+170]) std::cout << j << "\t" << fwd[j] << "\t" << rev[j+170] << std::endl;
       }*/
 
-    vector<int> fragarray(p.chr[i].getlen(),0);
-    vector<int> reparray(p.chr[i].getlen(),0);
+    std::vector<int> fragarray(p.chr[i].getlen(),0);
+    std::vector<int> reparray(p.chr[i].getlen(),0);
 
-    vector<range> vrep;
+    std::vector<range> vrep;
     int thre=3;
     
     for(int j=chr[i].start; j<chr[i].end-170; ++j) {
@@ -135,8 +135,8 @@ class shiftJacVec : public ReadShiftProfileAll {
       if(fwd[j] && rev[j+50])  for(int k=0; k<50; ++k)  ++reparray[j+k];
     }
 
-    vector<int> dfrag(170,0);
-    vector<int> drep(170,0);
+    std::vector<int> dfrag(170,0);
+    std::vector<int> drep(170,0);
     for(int j=chr[i].start; j<chr[i].end; ++j) {
       ++dfrag[fragarray[j]];
       ++drep[reparray[j]];
@@ -145,11 +145,11 @@ class shiftJacVec : public ReadShiftProfileAll {
       if(fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
     }
     for(int j=0; j<170; ++j) {
-       cout << j << "\t" << dfrag[j] << "\t" << drep[j] << endl;
+       std::cout << j << "\t" << dfrag[j] << "\t" << drep[j] << std::endl;
     }
 
     for(auto x:vrep) {
-      cout << x.start<< "-" << x.end << endl;
+      std::cout << x.start<< "-" << x.end << std::endl;
       for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0;
     }
 
@@ -176,7 +176,7 @@ class shiftCcp : public ReadShiftProfileAll {
   double w;
  shiftCcp(const Mapfile &p, int numthreads): ReadShiftProfileAll("Cross correlation", p, numthreads), w(1) {}
   
-  void setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev);
+  void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
