@@ -25,8 +25,8 @@ class ReadShiftProfile {
   double nsc;
   int nsci;
   double rchr;
-
- ReadShiftProfile(const Mapfile &p, int s=0, int e=0, long n=0, long l=0, double w=1): lenF3(p.getlenF3()), start(s), end(e), width(e-s), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
+  
+ ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), start(s), end(e), width(e-s), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
@@ -82,7 +82,7 @@ class ReadShiftProfileAll {
   std::vector<ReadShiftProfile> chr;
   
   void defSepRange(int numthreads);
- ReadShiftProfileAll(std::string n, const Mapfile &p, int numthreads): name(n), genome(p) {
+ ReadShiftProfileAll(std::string n, const Mapfile &p, int numthreads): name(n), genome(p.getlenF3()) {
     for(auto x:p.chr) {
       if(x.isautosome()) {
 	genome.nread += x.bothnread_nonred();
@@ -90,7 +90,7 @@ class ReadShiftProfileAll {
       }
     }
     for(auto x:p.chr) {
-      ReadShiftProfile v(p, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
+      ReadShiftProfile v(p.getlenF3(), 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
       //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
       v.rchr = v.nread/static_cast<double>(genome.nread);
       chr.push_back(v);
@@ -144,7 +144,7 @@ class shiftJacVec : public ReadShiftProfileAll {
     int ndfragon(0);
     int ndrepon(0);
     for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
+      //      if(fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
       if(fragarray[j]) ++ndfragon;
       if(reparray[j]) ++ndrepon;
     }
