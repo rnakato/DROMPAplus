@@ -52,7 +52,7 @@ void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, dou
   }
 }
 
-int getRepeatRegion(vector<range> &vrep, int j, vector<int> array, int start, int end)
+int getRepeatRegion(vector<range> &vrep, int j, vector<char> array, int start, int end)
 {
   int lower_thre=2;
   int s, e;
@@ -221,6 +221,9 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
 
   // set fragment length;
   p.seteflen(dist.genome.nsci);
+
+  
+
   
   return;
 }

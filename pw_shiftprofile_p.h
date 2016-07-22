@@ -108,7 +108,7 @@ class ReadShiftProfileAll {
   }
 };
 
-int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<int>, int, int);
+int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<char>, int, int);
 
 class shiftJacVec : public ReadShiftProfileAll {
  public:
@@ -124,10 +124,10 @@ class shiftJacVec : public ReadShiftProfileAll {
       if(fwd[j] && rev[j+170]) std::cout << j << "\t" << fwd[j] << "\t" << rev[j+170] << std::endl;
       }*/
 
-    std::vector<int> fragarray(p.chr[i].getlen(),0);
+    /*    std::vector<int> fragarray(p.chr[i].getlen(),0);
     std::vector<int> reparray(p.chr[i].getlen(),0);
 
-    std::vector<range> vrep;
+    //    std::vector<range> vrep;
     int thre=3;
     
     for(int j=chr[i].start; j<chr[i].end-170; ++j) {
@@ -148,12 +148,14 @@ class shiftJacVec : public ReadShiftProfileAll {
       if(fragarray[j]) ++ndfragon;
       if(reparray[j]) ++ndrepon;
     }
-    for(int j=0; j<170; ++j) {
-       std::cout << j << "\t" << dfrag[j] << "\t" << drep[j] << std::endl;
-    }
+    for(int j=0; j<170; ++j) std::cout << j << "\t" << dfrag[j] << "\t" << drep[j] << std::endl;
+    
 
     std::cout <<"covered num: " << ndfragon << "\t" << ndrepon << std::endl;
     
+    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      if(fragarray[j]<=1) fwd[j] = rev[j] = 0;
+      }*/
     /*    for(auto x:vrep) {
       std::cout << x.start<< "-" << x.end << std::endl;
       for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0;
@@ -173,6 +175,34 @@ class shiftJacBit : public ReadShiftProfileAll {
     auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
+    int flen(170);
+    int readlen(p.getlenF3());
+
+    std::vector<char> fragarray(chr[i].end - chr[i].start,0);
+    std::vector<char> reparray(chr[i].end - chr[i].start,0);
+    for(int j=chr[i].start; j<chr[i].end-flen; ++j) {
+      if(fwd[j] && rev[j+flen]) for(int k=0; k<flen; ++k) ++fragarray[j - chr[i].start +k];
+      if(fwd[j] && rev[j+readlen])  for(int k=0; k<readlen; ++k)  ++reparray[j - chr[i].start +k];
+    }
+
+    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      if(fragarray[j]<=1) {
+	fwd.reset(j);
+	rev.reset(j);
+      }
+    }
+
+    std::vector<range> vrep;
+    for(int j=chr[i].start; j<chr[i].end; ++j) {
+      if(reparray[j]>=10) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
+    }
+    for(auto x:vrep) {
+      for(int j=x.start; j<x.end; ++j) {
+	fwd.reset(j);
+	rev.reset(j);
+      }
+    }
+    
     setDist(chr[i], fwd, rev);
   }
 };

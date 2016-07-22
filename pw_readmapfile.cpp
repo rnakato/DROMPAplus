@@ -413,7 +413,7 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
 {
   if(!values.count("pair") && !values.count("nomodel")) {
     clock_t t1 = clock();
-    strShiftProfile(p, "exjaccard", values["threads"].as<int>());
+    //  strShiftProfile(p, "exjaccard", values["threads"].as<int>());
     clock_t t2 = clock();
     cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
@@ -424,6 +424,7 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
     cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
+    exit (0);
     
     //    strShiftProfile(p, "hdp", values["threads"].as<int>());
     clock_t t4 = clock();
