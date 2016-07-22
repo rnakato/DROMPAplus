@@ -141,17 +141,23 @@ class shiftJacVec : public ReadShiftProfileAll {
       ++dfrag[fragarray[j]];
       ++drep[reparray[j]];
     }
+    int ndfragon(0);
+    int ndrepon(0);
     for(int j=chr[i].start; j<chr[i].end; ++j) {
       if(fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
+      if(fragarray[j]) ++ndfragon;
+      if(reparray[j]) ++ndrepon;
     }
     for(int j=0; j<170; ++j) {
        std::cout << j << "\t" << dfrag[j] << "\t" << drep[j] << std::endl;
     }
 
-    for(auto x:vrep) {
+    std::cout <<"covered num: " << ndfragon << "\t" << ndrepon << std::endl;
+    
+    /*    for(auto x:vrep) {
       std::cout << x.start<< "-" << x.end << std::endl;
       for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0;
-    }
+      }*/
 
     setDist(chr[i], fwd, rev);
   }
