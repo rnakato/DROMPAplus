@@ -59,7 +59,7 @@ class bed {
     if(!s[0].find("chr")) chr = s[0].substr(3);
     else chr = s[0];
   }
-  void print()      const { std::cout << "chr" << chr << "\t" << start << "\t" << std::endl; }
+  void print()      const { std::cout << "chr" << chr << "\t" << start; }
   void printHead () const { std::cout << "chromosome\tstart\tend"; }
   int length() const { return abs(end - start); }
 };

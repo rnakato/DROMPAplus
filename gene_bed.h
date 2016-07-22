@@ -40,7 +40,7 @@ class gdist {
   long div;
   long par;
  gdist(): genome(0), up(0), down(0), genic(0), exon(0), intron(0), inter(0), conv(0), div(0), par(0) {}
-  void inc(const int val){
+  void inc(const int val) {
     genome++;
     switch(val) {
     case CONVERGENT: conv++;   break;
@@ -55,7 +55,7 @@ class gdist {
     default: break;
     }
   }
-  double ratio(const int val){
+  double ratio(const int val) {
     long n;
     switch(val) {
     case CONVERGENT: n=conv;   break;
@@ -69,7 +69,7 @@ class gdist {
     case INTERGENIC: n=inter;  break;
     default: break;
     }
-    return static_cast<double>(n*100/genome);
+    return static_cast<double>(n*100)/genome;
   }
 };
 
