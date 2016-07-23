@@ -12,6 +12,7 @@ void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
 class ReadShiftProfile {
   int lenF3;
+
  public:
   std::map<int, double> mp;
   std::map<int, double> nc;
@@ -19,6 +20,9 @@ class ReadShiftProfile {
   int end;
   int width;
   long nread;
+  long nread_back;
+  long nread_rep;
+  long nread_peak;
   long len;
   double r;
   double bk;
@@ -26,11 +30,12 @@ class ReadShiftProfile {
   int nsci;
   double rchr;
   
- ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), start(s), end(e), width(e-s), nread(n), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
+ ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), start(s), end(e), width(e-s), nread(n), nread_back(0), nread_rep(0), nread_peak(0), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
   }
+  int getnsci() const { return nsci; }
   double getmpsum() {
     double sum(0);
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
@@ -61,6 +66,9 @@ class ReadShiftProfile {
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
+    out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread << std::endl;
+    out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread << std::endl;
+    out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread  << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
@@ -105,6 +113,9 @@ class ReadShiftProfileAll {
 #endif
     addmp(genome.mp, x.mp, x.rchr);
     addmp(genome.nc, x.nc, x.rchr);
+    genome.nread_back += x.nread_back;
+    genome.nread_peak += x.nread_peak;
+    genome.nread_rep  += x.nread_rep;
   }
 };
 
@@ -119,11 +130,11 @@ class shiftJacVec : public ReadShiftProfileAll {
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
-  
+
     /*    for(int j=chr[i].start; j<chr[i].end; ++j) {
       if(fwd[j] && rev[j+170]) std::cout << j << "\t" << fwd[j] << "\t" << rev[j+170] << std::endl;
       }*/
-
+    
     /*    std::vector<int> fragarray(p.chr[i].getlen(),0);
     std::vector<int> reparray(p.chr[i].getlen(),0);
 
@@ -175,34 +186,6 @@ class shiftJacBit : public ReadShiftProfileAll {
     auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
-    int flen(170);
-    int readlen(p.getlenF3());
-
-    std::vector<char> fragarray(chr[i].end - chr[i].start,0);
-    std::vector<char> reparray(chr[i].end - chr[i].start,0);
-    for(int j=chr[i].start; j<chr[i].end-flen; ++j) {
-      if(fwd[j] && rev[j+flen]) for(int k=0; k<flen; ++k) ++fragarray[j - chr[i].start +k];
-      if(fwd[j] && rev[j+readlen])  for(int k=0; k<readlen; ++k)  ++reparray[j - chr[i].start +k];
-    }
-
-    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(fragarray[j]<=1) {
-	fwd.reset(j);
-	rev.reset(j);
-      }
-    }
-
-    std::vector<range> vrep;
-    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(reparray[j]>=10) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
-    }
-    for(auto x:vrep) {
-      for(int j=x.start; j<x.end; ++j) {
-	fwd.reset(j);
-	rev.reset(j);
-      }
-    }
-    
     setDist(chr[i], fwd, rev);
   }
 };

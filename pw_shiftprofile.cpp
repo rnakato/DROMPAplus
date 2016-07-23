@@ -14,6 +14,8 @@ namespace {
   const int ng_from(4000);
   const int ng_to(5000);
   const int ng_step(100);
+
+  enum {BP_BACKGROUD, BP_REPEAT, BP_PEAK};
 }
 
 void ReadShiftProfileAll::defSepRange(int numthreads)
@@ -50,18 +52,6 @@ void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, dou
   for(auto itr = mpfrom.begin(); itr != mpfrom.end(); ++itr) {
     mpto[itr->first] += itr->second * w;
   }
-}
-
-int getRepeatRegion(vector<range> &vrep, int j, vector<char> array, int start, int end)
-{
-  int lower_thre=2;
-  int s, e;
-  for(s=j; s>=start; --s) if(array[s]<lower_thre) break;
-  for(e=j; e<end; ++e)    if(array[e]<lower_thre) break;
-
-  vrep.push_back(range(s,e));
-  
-  return e;
 }
 
 double getJaccard(int step, int width, int xysum, const vector<char> &fwd, const vector<char> &rev)
@@ -188,6 +178,92 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr
    
     dist.execchr(p, i);
 
+    //    if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
+ 
+    //    string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
+    // dist.chr[i].outputmp(filename, dist.name, dist.w);
+  }
+}
+
+template <class T>
+int getRepeatRegion(vector<range> &vrep, int j, vector<T> array, int start, int end)
+{
+  int lower_thre=5;
+  int s, e;
+  for(s=j; s>=start; --s) if(array[s]<lower_thre) break;
+  for(e=j; e<end; ++e)    if(array[e]<lower_thre) break;
+
+  vrep.push_back(range(s,e));
+  
+  return e;
+}
+
+template <class T>
+void func(T &dist, const Mapfile &p, const int i) {
+
+  auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
+  auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
+
+  int flen(dist.genome.getnsci());
+  int readlen(p.getlenF3());
+
+  std::vector<short> fragarray(dist.chr[i].width, 0);
+  std::vector<short> reparray(dist.chr[i].width, 0);
+  for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
+    if(fwd[j] && rev[j+flen]) for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
+    if(fwd[j] && rev[j+readlen])  for(int k=0; k<readlen; ++k)  ++reparray[j - dist.chr[i].start +k];
+  }
+  std::vector<int> dfrag(10000,0);
+  std::vector<int> drep(10000,0);
+  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
+    ++dfrag[fragarray[j]];
+    ++drep[reparray[j]];
+  }
+  
+  double pdfrag(0), pdrep(0);
+  double dfragsum = accumulate(dfrag.begin(), dfrag.end(), 0);
+  double drepsum = accumulate(drep.begin(), drep.end(), 0);
+  int thre4fragarray(0);
+  for(int j=0; j<flen; ++j) {
+    double a(dfrag[j]/dfragsum);
+    pdfrag += a;
+    if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
+    double b(drep[j]/drepsum);
+    pdrep += b;
+    //    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
+  }
+  std::vector<range> vrep;
+  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
+    if(reparray[j]>=10) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
+  }
+
+  std::vector<char> anoarray(dist.chr[i].width, BP_BACKGROUD);
+  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
+    if(fragarray[j] > thre4fragarray) anoarray[j-dist.chr[i].start] = BP_PEAK;
+  }
+  for(auto x:vrep) {
+    for(int j=x.start; j<x.end; ++j) anoarray[j] = BP_REPEAT;
+  }
+
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto x: p.chr[i].seq[strand].vRead) {
+      if(x.duplicate || !RANGE(x.F3, dist.chr[i].start, dist.chr[i].end-1)) continue;
+      if(anoarray[x.F3 - dist.chr[i].start]==BP_BACKGROUD)   ++dist.chr[i].nread_back;
+      else if(anoarray[x.F3 - dist.chr[i].start]==BP_REPEAT) ++dist.chr[i].nread_rep;
+      else ++dist.chr[i].nread_peak;
+    }
+  }
+  
+  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
+
+  return;
+}
+
+template <class T>
+void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr, boost::mutex &mtx)
+{
+  for(uint i=chr_s; i<=chr_e; ++i) {
+    func(dist, p, i);
     if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
     string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
@@ -213,18 +289,22 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
     //genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
     genThread(dist, p, 0, 0, typestr, mtx);
   }
-  
-  //  GaussianSmoothing(p.dist.hd);
 
-  string filename = p.getprefix() + "." + typestr + ".csv";
-  dist.genome.outputmp(filename, dist.name, dist.w);
+  //  GaussianSmoothing(p.dist.hd);
 
   // set fragment length;
   p.seteflen(dist.genome.nsci);
 
+  if(typestr == "jaccard") {
+    for(uint i=0; i<p.vsepchr.size(); i++) {
+      agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
+    }
+    agroup.join_all();
+  }
   
+  string filename = p.getprefix() + "." + typestr + ".csv";
+  dist.genome.outputmp(filename, dist.name, dist.w);
 
-  
   return;
 }
 
