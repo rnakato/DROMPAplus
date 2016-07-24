@@ -6,12 +6,24 @@
 
 #include "pw_gv.h"
 
+namespace {
+  const int mp_from(500);
+  const int mp_to(1500);
+  const int ng_from(4000);
+  const int ng_to(5000);
+  const int ng_step(100);
+}
+
 std::vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
 class ReadShiftProfile {
   int lenF3;
+  double nsc;
+  int nsci;
+  double r;
+  double bk;
 
  public:
   std::map<int, double> mp;
@@ -24,13 +36,9 @@ class ReadShiftProfile {
   long nread_rep;
   long nread_peak;
   long len;
-  double r;
-  double bk;
-  double nsc;
-  int nsci;
   double rchr;
   
- ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), start(s), end(e), width(e-s), nread(n), nread_back(0), nread_rep(0), nread_peak(0), len(l), r(0), bk(0), nsc(0), nsci(0), rchr(1) {}
+ ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), start(s), end(e), width(e-s), nread(n), nread_back(0), nread_rep(0), nread_peak(0), len(l), rchr(1) {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
@@ -50,11 +58,23 @@ class ReadShiftProfile {
     bk /= n;
     r = 1/bk;
   }
-  void setflen(double w);
+  void setflen(double w) {
+    int threwidth(5);
+    setControlRatio();
+    nsc = mp[mp_to-1]*w;
+    for(int i=mp_to-1-threwidth; i > lenF3*1.3; --i) {
+      int on(1);
+      for(int j=1; j<=threwidth; ++j) {
+	if (mp[i] < mp[i+j] || mp[i] < mp[i-j]) on=0;
+      }
+      if(on && nsc < mp[i]*r*w) {
+	nsc  = mp[i]*r*w;
+	nsci = i;
+      }
+    }
+  }
 
   void outputmp(const std::string filename, std::string name, double weight) {
-    setControlRatio();
-    setflen(weight);
     double sum(getmpsum());
     double rRPKM = (NUM_10M/static_cast<double>(nread)) / (NUM_100M/static_cast<double>(len));
     double be(bk * rRPKM);
@@ -106,13 +126,11 @@ class ReadShiftProfileAll {
     // seprange
     defSepRange(numthreads);
   }
-  void add2genome(const ReadShiftProfile &x, boost::mutex &mtx) {
-    boost::mutex::scoped_lock lock(mtx);
-#ifdef DEBUG
-    std::cout << "add2genome.." << std::flush;
-#endif
+  void addmp2genome(const ReadShiftProfile &x) {
     addmp(genome.mp, x.mp, x.rchr);
     addmp(genome.nc, x.nc, x.rchr);
+  }
+  void addnread2genome(const ReadShiftProfile &x) {
     genome.nread_back += x.nread_back;
     genome.nread_peak += x.nread_peak;
     genome.nread_rep  += x.nread_rep;
@@ -172,7 +190,7 @@ class shiftJacVec : public ReadShiftProfileAll {
       for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0;
       }*/
 
-    setDist(chr[i], fwd, rev);
+    setDist(chr[i], fwd, rev);  
   }
 };
 

@@ -9,12 +9,6 @@
 using namespace std;
 
 namespace {
-  const int mp_from(500);
-  const int mp_to(1500);
-  const int ng_from(4000);
-  const int ng_to(5000);
-  const int ng_step(100);
-
   enum {BP_BACKGROUD, BP_REPEAT, BP_PEAK};
 }
 
@@ -28,22 +22,6 @@ void ReadShiftProfileAll::defSepRange(int numthreads)
     if(i==numthreads-1) e = length;
     range sep(s - mp_from, e - mp_from);
     seprange.push_back(sep);
-  }
-}
-  
-void ReadShiftProfile::setflen(double w)
-{
-  int threwidth(5);
-  nsc = mp[mp_to-1]*w;
-  for(int i=mp_to-1-threwidth; i > lenF3*1.3; --i) {
-    int on(1);
-    for(int j=1; j<=threwidth; ++j) {
-      if (mp[i] < mp[i+j] || mp[i] < mp[i-j]) on=0;
-    }
-    if(on && nsc < mp[i]*r*w) {
-      nsc  = mp[i]*r*w;
-      nsci = i;
-    }
   }
 }
 
@@ -172,11 +150,12 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 }
 
 template <class T>
-void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr, boost::mutex &mtx) {
+void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr) {
   for(uint i=chr_s; i<=chr_e; ++i) {
     cout << p.chr[i].name << ".." << flush;
    
     dist.execchr(p, i);
+    dist.chr[i].setflen(dist.w);
 
     //    if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
  
@@ -230,8 +209,11 @@ void func(T &dist, const Mapfile &p, const int i) {
     if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
     double b(drep[j]/drepsum);
     pdrep += b;
-    //    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
+    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
   }
+
+  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
+  
   std::vector<range> vrep;
   for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
     if(reparray[j]>=10) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
@@ -260,11 +242,11 @@ void func(T &dist, const Mapfile &p, const int i) {
 }
 
 template <class T>
-void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr, boost::mutex &mtx)
+void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr)
 {
   for(uint i=chr_s; i<=chr_e; ++i) {
     func(dist, p, i);
-    if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
+    if(p.chr[i].isautosome()) dist.addnread2genome(dist.chr[i]);
  
     string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
     dist.chr[i].outputmp(filename, dist.name, dist.w);
@@ -282,22 +264,27 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
 
   if(typestr == "hdp" || typestr == "jaccard") {
     for(uint i=0; i<p.vsepchr.size(); i++) {
-      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
+      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr));
     }
     agroup.join_all();
   } else {
-    //genThread(dist, p, 0, p.chr.size()-1, typestr, mtx);
-    genThread(dist, p, 0, 0, typestr, mtx);
+    //genThread(dist, p, 0, p.chr.size()-1, typestr);
+    genThread(dist, p, 0, 0, typestr);
   }
 
   //  GaussianSmoothing(p.dist.hd);
 
   // set fragment length;
-  p.seteflen(dist.genome.nsci);
+  for(uint i=0; i<p.chr.size(); ++i) {
+    if(p.chr[i].isautosome()) dist.addmp2genome(dist.chr[i]);
+  }
+
+  dist.genome.setflen(dist.w);
+  p.seteflen(dist.genome.getnsci());
 
   if(typestr == "jaccard") {
     for(uint i=0; i<p.vsepchr.size(); i++) {
-      agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
+      agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr));
     }
     agroup.join_all();
   }
