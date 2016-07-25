@@ -186,19 +186,37 @@ void func(T &dist, const Mapfile &p, const int i) {
   int flen(dist.genome.getnsci());
   int readlen(p.getlenF3());
 
+  long numOfFragmentWithFlen(0);
+  long numOfFragmentWithReplen(0);
   std::vector<short> fragarray(dist.chr[i].width, 0);
   std::vector<short> reparray(dist.chr[i].width, 0);
   for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
-    if(fwd[j] && rev[j+flen]) for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
-    if(fwd[j] && rev[j+readlen])  for(int k=0; k<readlen; ++k)  ++reparray[j - dist.chr[i].start +k];
+    if(fwd[j] && rev[j+flen]) {
+      numOfFragmentWithFlen += std::min(fwd[j], rev[j+flen]);
+      for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
+    }
+    if(fwd[j] && rev[j+readlen]) {
+      numOfFragmentWithReplen += std::min(fwd[j], rev[j+readlen]);
+      for(int k=0; k<readlen; ++k) ++reparray[j - dist.chr[i].start +k];
+    }
   }
+
+  long numOfCoveredBaseWithFlen(0);
+  long numOfCoveredBaseWithReplen(0);
+  for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
+    if(fragarray[j]) ++numOfCoveredBaseWithFlen;
+    if(reparray[j])  ++numOfCoveredBaseWithReplen;
+  }
+  dist.chr[i].averagebp4flen = numOfCoveredBaseWithFlen / (double)numOfFragmentWithFlen;
+  dist.chr[i].averagebp4replen = numOfCoveredBaseWithReplen / (double)numOfFragmentWithReplen;
+
   std::vector<int> dfrag(10000,0);
   std::vector<int> drep(10000,0);
   for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
     ++dfrag[fragarray[j]];
     ++drep[reparray[j]];
   }
-  
+
   double pdfrag(0), pdrep(0);
   double dfragsum = accumulate(dfrag.begin(), dfrag.end(), 0);
   double drepsum = accumulate(drep.begin(), drep.end(), 0);
@@ -209,14 +227,15 @@ void func(T &dist, const Mapfile &p, const int i) {
     if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
     double b(drep[j]/drepsum);
     pdrep += b;
-    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
+    //    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
   }
 
-  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
+  //  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
   
   std::vector<range> vrep;
+  int thre4reparray(readlen/10);
   for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
-    if(reparray[j]>=10) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
+    if(reparray[j]>=thre4reparray) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
   }
 
   std::vector<char> anoarray(dist.chr[i].width, BP_BACKGROUD);
@@ -235,8 +254,8 @@ void func(T &dist, const Mapfile &p, const int i) {
       else ++dist.chr[i].nread_peak;
     }
   }
-  
-  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
+
+  //  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
 
   return;
 }

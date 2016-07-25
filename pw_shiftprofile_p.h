@@ -35,10 +35,12 @@ class ReadShiftProfile {
   long nread_back;
   long nread_rep;
   long nread_peak;
+  double averagebp4flen;
+  double averagebp4replen;
   long len;
   double rchr;
   
- ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), start(s), end(e), width(e-s), nread(n), nread_back(0), nread_rep(0), nread_peak(0), len(l), rchr(1) {}
+ ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), start(s), end(e), width(e-s), nread(n), nread_back(0), nread_rep(0), nread_peak(0), averagebp4flen(0), averagebp4replen(0), len(l), rchr(1) {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
@@ -86,9 +88,11 @@ class ReadShiftProfile {
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
-    out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread << std::endl;
-    out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread << std::endl;
-    out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread  << std::endl;
+    out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread*100 << std::endl;
+    out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread*100 << std::endl;
+    out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread*100  << std::endl;
+    out << "averagebp4flen\t"  << averagebp4flen  << std::endl;
+    out << "averagebp4replen\t"  << averagebp4replen  << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
