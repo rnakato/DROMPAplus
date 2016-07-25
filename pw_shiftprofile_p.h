@@ -55,12 +55,6 @@ class ReadShiftProfile {
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
     return sum;
   }
-  double getAverageBp4Flen() const {
-    return numOfCoveredBaseWithFlen / (double)(numOfFragmentWithFlen*nsci);
-  }
-  double getAverageBp4Replen() const {
-    return numOfCoveredBaseWithReplen / (double)(numOfFragmentWithReplen*lenF3);
-  }
   void setControlRatio() {
     int n(0);
     for(auto itr = nc.begin(); itr != nc.end(); ++itr) {
@@ -101,8 +95,8 @@ class ReadShiftProfile {
     out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread*100 << std::endl;
     out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread*100 << std::endl;
     out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread*100  << std::endl;
-    out << "averagebp4flen\t"  << getAverageBp4Flen() << std::endl;
-    out << "averagebp4replen\t"  << getAverageBp4Replen() << std::endl;
+    out << "averagebp4flen\t"  << numOfCoveredBaseWithFlen / (double)(numOfFragmentWithFlen*nsci) << std::endl;
+    out << "averagebp4replen\t"  << numOfCoveredBaseWithReplen / (double)(numOfFragmentWithReplen*lenF3) << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 

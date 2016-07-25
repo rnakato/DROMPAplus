@@ -156,11 +156,6 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr
    
     dist.execchr(p, i);
     dist.chr[i].setflen(dist.w);
-
-    //    if(p.chr[i].isautosome()) dist.add2genome(dist.chr[i], mtx);
- 
-    //    string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
-    // dist.chr[i].outputmp(filename, dist.name, dist.w);
   }
 }
 
@@ -190,11 +185,13 @@ void func(T &dist, const Mapfile &p, const int i) {
   std::vector<short> reparray(dist.chr[i].width, 0);
   for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
     if(fwd[j] && rev[j+flen]) {
-      dist.chr[i].numOfFragmentWithFlen += std::min(fwd[j], rev[j+flen]);
+      //      dist.chr[i].numOfFragmentWithFlen += std::min(fwd[j], rev[j+flen]);
+      ++dist.chr[i].numOfFragmentWithFlen;
       for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
     }
     if(fwd[j] && rev[j+readlen]) {
-      dist.chr[i].numOfFragmentWithReplen += std::min(fwd[j], rev[j+readlen]);
+      //      dist.chr[i].numOfFragmentWithReplen += std::min(fwd[j], rev[j+readlen]);
+      ++dist.chr[i].numOfFragmentWithReplen;
       for(int k=0; k<readlen; ++k) ++reparray[j - dist.chr[i].start +k];
     }
   }
