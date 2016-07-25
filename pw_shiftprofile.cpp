@@ -224,7 +224,7 @@ void func(T &dist, const Mapfile &p, const int i) {
   //  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
   
   std::vector<range> vrep;
-  int thre4reparray(readlen/10);
+  int thre4reparray(10);
   for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
     if(reparray[j]>=thre4reparray) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
   }
@@ -255,6 +255,7 @@ template <class T>
 void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr)
 {
   for(uint i=chr_s; i<=chr_e; ++i) {
+    cout << p.chr[i].name << ".." << flush;
     func(dist, p, i);
     if(p.chr[i].isautosome()) dist.addnread2genome(dist.chr[i]);
  
@@ -293,6 +294,7 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   p.seteflen(dist.genome.getnsci());
 
   if(typestr == "jaccard") {
+    cout << "count reads in background.." << flush;
     for(uint i=0; i<p.vsepchr.size(); i++) {
       agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr));
     }
