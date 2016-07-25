@@ -186,29 +186,23 @@ void func(T &dist, const Mapfile &p, const int i) {
   int flen(dist.genome.getnsci());
   int readlen(p.getlenF3());
 
-  long numOfFragmentWithFlen(0);
-  long numOfFragmentWithReplen(0);
   std::vector<short> fragarray(dist.chr[i].width, 0);
   std::vector<short> reparray(dist.chr[i].width, 0);
   for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
     if(fwd[j] && rev[j+flen]) {
-      numOfFragmentWithFlen += std::min(fwd[j], rev[j+flen]);
+      dist.chr[i].numOfFragmentWithFlen += std::min(fwd[j], rev[j+flen]);
       for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
     }
     if(fwd[j] && rev[j+readlen]) {
-      numOfFragmentWithReplen += std::min(fwd[j], rev[j+readlen]);
+      dist.chr[i].numOfFragmentWithReplen += std::min(fwd[j], rev[j+readlen]);
       for(int k=0; k<readlen; ++k) ++reparray[j - dist.chr[i].start +k];
     }
   }
 
-  long numOfCoveredBaseWithFlen(0);
-  long numOfCoveredBaseWithReplen(0);
   for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
-    if(fragarray[j]) ++numOfCoveredBaseWithFlen;
-    if(reparray[j])  ++numOfCoveredBaseWithReplen;
+    if(fragarray[j]) ++dist.chr[i].numOfCoveredBaseWithFlen;
+    if(reparray[j])  ++dist.chr[i].numOfCoveredBaseWithReplen;
   }
-  dist.chr[i].averagebp4flen = numOfCoveredBaseWithFlen / (double)numOfFragmentWithFlen;
-  dist.chr[i].averagebp4replen = numOfCoveredBaseWithReplen / (double)numOfFragmentWithReplen;
 
   std::vector<int> dfrag(10000,0);
   std::vector<int> drep(10000,0);
