@@ -56,10 +56,10 @@ class ReadShiftProfile {
     return sum;
   }
   double getAverageBp4Flen() const {
-    return numOfCoveredBaseWithFlen / (double)numOfFragmentWithFlen;
+    return numOfCoveredBaseWithFlen / (double)(numOfFragmentWithFlen*nsci);
   }
   double getAverageBp4Replen() const {
-    return numOfCoveredBaseWithReplen / (double)numOfFragmentWithReplen;
+    return numOfCoveredBaseWithReplen / (double)(numOfFragmentWithReplen*lenF3);
   }
   void setControlRatio() {
     int n(0);
