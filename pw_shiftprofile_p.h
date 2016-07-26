@@ -19,19 +19,29 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
 class FragmentVariability {
+  int fraglen;
+  long numOfFragment;
+  long numOfCoveredBase;
+  long nread;
+  std::vector<int> FragOverlapDist;
+  static const int SizeOfFragOverlapDist=10000;
+  double SumOfFragOverlapDist;
+  
  public:
  FragmentVariability(): fraglen(0), numOfFragment(0), numOfCoveredBase(0), nread(0), FragOverlapDist(SizeOfFragOverlapDist,0), SumOfFragOverlapDist(0) {}
-  void setVariability(const int l, const int start, const int end ,const int width, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
+  void setVariability(const int l, const int start, const int end ,const int width,
+		      const boost::dynamic_bitset<> &fwd,
+		      const boost::dynamic_bitset<> &rev) {
     fraglen = l;
-    std::vector<short> seqarray(width, 0);
+    std::vector<short> array(width, 0);
     for(int i=start; i<end - fraglen; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
 	++numOfFragment;
-	for(int j=0; j<fraglen; ++j) ++seqarray[i - start +j];
+	for(int j=0; j<fraglen; ++j) ++array[i - start +j];
       }
     }
-    for(int i=start; i<end - fraglen; ++i) if(seqarray[i]) ++numOfCoveredBase;
-    for(int i=start; i<end; ++i) ++FragOverlapDist[seqarray[i]];
+    for(int i=start; i<end - fraglen; ++i) if(array[i]) ++numOfCoveredBase;
+    for(int i=start; i<end; ++i) ++FragOverlapDist[array[i]];
     SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
   }
   double getFragOverlapDist(const int i) const {
@@ -49,17 +59,9 @@ class FragmentVariability {
     numOfFragment    += x.numOfFragment;
     numOfCoveredBase += x.numOfCoveredBase;
     nread            += x.nread;
-    for(uint i; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
+    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
     SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
   }
- private:
-  int fraglen;
-  long numOfFragment;
-  long numOfCoveredBase;
-  long nread;
-  static const int SizeOfFragOverlapDist=10000;
-  std::vector<int> FragOverlapDist;
-  double SumOfFragOverlapDist;
 };
 
 class ReadShiftProfile {
@@ -79,7 +81,7 @@ class ReadShiftProfile {
 
   long len;
   double rchr;
-  
+
   FragmentVariability fvfrag;
   FragmentVariability fvrep;
   FragmentVariability fvback;
@@ -190,7 +192,8 @@ class ReadShiftProfileAll {
     addmp(genome.mp, x.mp, x.rchr);
     addmp(genome.nc, x.nc, x.rchr);
   }
-  void addnread2genome(const ReadShiftProfile &x) {
+  void addnread2genome(const ReadShiftProfile &x, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
     genome.fvfrag.add2genome(x.fvfrag);
     genome.fvrep.add2genome(x.fvrep);
     genome.fvback.add2genome(x.fvback);

@@ -6,11 +6,11 @@
 #include <boost/thread.hpp>
 #include <time.h>
 
-using namespace std;
+//using namespace std;
 
-namespace {
+/*namespace {
   enum {BP_BACKGROUD, BP_REPEAT, BP_PEAK};
-}
+  }*/
 
 void ReadShiftProfileAll::defSepRange(int numthreads)
 {
@@ -33,21 +33,21 @@ void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, dou
   }
 }
 
-double getJaccard(int step, int width, int xysum, const vector<char> &fwd, const vector<char> &rev)
+double getJaccard(int step, int width, int xysum, const std::vector<char> &fwd, const std::vector<char> &rev)
 {
   int xy(0);
-  for(int j=mp_from; j<width-ng_to; ++j) if(fwd[j] * rev[j+step]) xy += max(fwd[j], rev[j+step]);
+  for(int j=mp_from; j<width-ng_to; ++j) if(fwd[j] * rev[j+step]) xy += std::max(fwd[j], rev[j+step]);
   return (xy/static_cast<double>(xysum-xy));
 }
 
-void genThreadJacVec(ReadShiftProfile &chr, int xysum, const vector<char> &fwd, const vector<char> &rev, int s, int e, boost::mutex &mtx)
+void genThreadJacVec(ReadShiftProfile &chr, int xysum, const std::vector<char> &fwd, const std::vector<char> &rev, int s, int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
     chr.setmp(step, getJaccard(step, chr.width, xysum, fwd, rev), mtx);
   }
 }
 
-void shiftJacVec::setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev)
+void shiftJacVec::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev)
 {
   int xx = accumulate(fwd.begin(), fwd.end(), 0);
   int yy = accumulate(rev.begin(), rev.end(), 0);
@@ -64,7 +64,7 @@ void shiftJacVec::setDist(ReadShiftProfile &chr, const vector<char> &fwd, const 
   }
 }
 
-void genThreadCcp(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev, double mx, double my, const int s, const int e, boost::mutex &mtx)
+void genThreadCcp(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev, double mx, double my, const int s, const int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
     double xy(0);
@@ -73,7 +73,7 @@ void genThreadCcp(ReadShiftProfile &chr, const vector<char> &fwd, const vector<c
   }
 }
 
-void shiftCcp::setDist(ReadShiftProfile &chr, const vector<char> &fwd, const vector<char> &rev)
+void shiftCcp::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev)
 {
   moment<char> x(fwd, mp_from, chr.width-ng_to);
   moment<char> y(rev, mp_from, chr.width-ng_to);
@@ -130,9 +130,9 @@ void shiftHamming::setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> 
   }
 }
 
-vector<char> genVector(const strandData &seq, int start, int end)
+std::vector<char> genVector(const strandData &seq, int start, int end)
 {
-  vector<char> array(end-start, 0);
+  std::vector<char> array(end-start, 0);
   for (auto x: seq.vRead) {
     if(!x.duplicate && RANGE(x.F3, start, end-1))
       ++array[x.F3 - start];
@@ -151,9 +151,9 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 }
 
 template <class T>
-void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr) {
+void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr) {
   for(uint i=chr_s; i<=chr_e; ++i) {
-    cout << p.chr[i].name << ".." << flush;
+    std::cout << p.chr[i].name << ".." << std::flush;
    
     dist.execchr(p, i);
     dist.chr[i].setflen(dist.w);
@@ -161,7 +161,7 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr
 }
 
 template <class T>
-int getRepeatRegion(vector<range> &vrep, int j, vector<T> array, int start, int end)
+int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<T> array, int start, int end)
 {
   int lower_thre=5;
   int s, e;
@@ -251,7 +251,6 @@ void func(T &dist, const Mapfile &p, const int i) {
 }
 */
 
-
 template <class T>
 void func(T &dist, const Mapfile &p, const int i) {
   auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
@@ -264,7 +263,7 @@ void func(T &dist, const Mapfile &p, const int i) {
   dist.chr[i].setFragmentVariability4Rep(readlen, fwd, rev);
   dist.chr[i].setFragmentVariability4Back(ng_to, fwd, rev);
 
-  double pdfrag(0), pdrep(0), pdback(0);
+  /*  double pdfrag(0), pdrep(0), pdback(0);
   int thre4fragarray(0);
   for(int j=0; j<flen; ++j) {
     double a(dist.chr[i].fvfrag.getFragOverlapDist(j));
@@ -277,7 +276,7 @@ void func(T &dist, const Mapfile &p, const int i) {
     std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b << "\t" << pdrep << "\t" << c << "\t" << pdback << std::endl;
   }
 
-  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
+  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;*/
 
   /*  std::vector<range> vrep;
   int thre4reparray(10);
@@ -308,23 +307,23 @@ void func(T &dist, const Mapfile &p, const int i) {
 }
 
 template <class T>
-void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, string typestr)
+void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr, boost::mutex &mtx)
 {
   for(uint i=chr_s; i<=chr_e; ++i) {
-    cout << p.chr[i].name << ".." << flush;
+    std::cout << p.chr[i].name << ".." << std::flush;
     func(dist, p, i);
-    if(p.chr[i].isautosome()) dist.addnread2genome(dist.chr[i]);
+    if(p.chr[i].isautosome()) dist.addnread2genome(dist.chr[i], mtx);
  
-    string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
+    std::string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
     dist.chr[i].outputmp(filename, dist.name, dist.w);
   }
 }
 
 template <class T>
-void makeProfile(Mapfile &p, string typestr, int numthreads)
+void makeProfile(Mapfile &p, std::string typestr, int numthreads)
 {
   T dist(p, numthreads);
-  cout << "Making " << dist.name << " profile..." << flush;
+  std::cout << "Making " << dist.name << " profile..." << std::flush;
 
   boost::thread_group agroup;
   boost::mutex mtx;
@@ -349,21 +348,19 @@ void makeProfile(Mapfile &p, string typestr, int numthreads)
   dist.genome.setflen(dist.w);
   p.seteflen(dist.genome.getnsci());
 
-  if(typestr == "jaccard") {
-    cout << "count reads in background.." << flush;
-    for(uint i=0; i<p.vsepchr.size(); i++) {
-      agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr));
-    }
-    agroup.join_all();
+  std::cout << "count reads in background.." << std::flush;
+  for(uint i=0; i<p.vsepchr.size(); i++) {
+    agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
   }
+  agroup.join_all();
   
-  string filename = p.getprefix() + "." + typestr + ".csv";
+  std::string filename = p.getprefix() + "." + typestr + ".csv";
   dist.genome.outputmp(filename, dist.name, dist.w);
 
   return;
 }
 
-void strShiftProfile(Mapfile &p, string typestr, int numthreads)
+void strShiftProfile(Mapfile &p, std::string typestr, int numthreads)
 {
   if(typestr=="exjaccard") makeProfile<shiftJacVec>(p, typestr, numthreads);
   if(typestr=="jaccard")   makeProfile<shiftJacBit>(p, typestr, numthreads);
