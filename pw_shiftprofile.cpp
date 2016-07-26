@@ -23,6 +23,7 @@ void ReadShiftProfileAll::defSepRange(int numthreads)
     range sep(s - mp_from, e - mp_from);
     seprange.push_back(sep);
   }
+  
 }
 
 void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w)
@@ -172,7 +173,7 @@ int getRepeatRegion(vector<range> &vrep, int j, vector<T> array, int start, int 
   return e;
 }
 
-template <class T>
+/*template <class T>
 void func(T &dist, const Mapfile &p, const int i) {
 
   auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
@@ -180,17 +181,15 @@ void func(T &dist, const Mapfile &p, const int i) {
 
   int flen(dist.genome.getnsci());
   int readlen(p.getlenF3());
-
+  
   std::vector<short> fragarray(dist.chr[i].width, 0);
   std::vector<short> reparray(dist.chr[i].width, 0);
   for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
     if(fwd[j] && rev[j+flen]) {
-      //      dist.chr[i].numOfFragmentWithFlen += std::min(fwd[j], rev[j+flen]);
       ++dist.chr[i].numOfFragmentWithFlen;
       for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
     }
     if(fwd[j] && rev[j+readlen]) {
-      //      dist.chr[i].numOfFragmentWithReplen += std::min(fwd[j], rev[j+readlen]);
       ++dist.chr[i].numOfFragmentWithReplen;
       for(int k=0; k<readlen; ++k) ++reparray[j - dist.chr[i].start +k];
     }
@@ -218,10 +217,10 @@ void func(T &dist, const Mapfile &p, const int i) {
     if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
     double b(drep[j]/drepsum);
     pdrep += b;
-    //    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
+    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
   }
 
-  //  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
+  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
   
   std::vector<range> vrep;
   int thre4reparray(10);
@@ -245,6 +244,63 @@ void func(T &dist, const Mapfile &p, const int i) {
       else ++dist.chr[i].nread_peak;
     }
   }
+
+  //  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
+
+  return;
+}
+*/
+
+
+template <class T>
+void func(T &dist, const Mapfile &p, const int i) {
+  auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
+  auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
+
+  int flen(dist.genome.getnsci());
+  int readlen(p.getlenF3());
+
+  dist.chr[i].setFragmentVariability4Frag(flen, fwd, rev);
+  dist.chr[i].setFragmentVariability4Rep(readlen, fwd, rev);
+  dist.chr[i].setFragmentVariability4Back(ng_to, fwd, rev);
+
+  double pdfrag(0), pdrep(0), pdback(0);
+  int thre4fragarray(0);
+  for(int j=0; j<flen; ++j) {
+    double a(dist.chr[i].fvfrag.getFragOverlapDist(j));
+    pdfrag += a;
+    if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
+    double b(dist.chr[i].fvrep.getFragOverlapDist(j));
+    pdrep += b;
+    double c(dist.chr[i].fvback.getFragOverlapDist(j));
+    pdback += c;
+    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b << "\t" << pdrep << "\t" << c << "\t" << pdback << std::endl;
+  }
+
+  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
+
+  /*  std::vector<range> vrep;
+  int thre4reparray(10);
+  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
+    if(reparray[j]>=thre4reparray) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
+  }
+
+  std::vector<char> anoarray(dist.chr[i].width, BP_BACKGROUD);
+  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
+    if(fragarray[j] > thre4fragarray) anoarray[j-dist.chr[i].start] = BP_PEAK;
+  }
+  for(auto x:vrep) {
+    for(int j=x.start; j<x.end; ++j) anoarray[j] = BP_REPEAT;
+  }
+
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto x: p.chr[i].seq[strand].vRead) {
+      if(x.duplicate || !RANGE(x.F3, dist.chr[i].start, dist.chr[i].end-1)) continue;
+      if(anoarray[x.F3 - dist.chr[i].start]==BP_BACKGROUD)   ++dist.chr[i].nread_back;
+      else if(anoarray[x.F3 - dist.chr[i].start]==BP_REPEAT) ++dist.chr[i].nread_rep;
+      else ++dist.chr[i].nread_peak;
+    }
+    }*/
 
   //  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
 

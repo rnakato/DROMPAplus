@@ -18,13 +18,57 @@ std::vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
+class FragmentVariability {
+ public:
+ FragmentVariability(): fraglen(0), numOfFragment(0), numOfCoveredBase(0), nread(0), FragOverlapDist(SizeOfFragOverlapDist,0), SumOfFragOverlapDist(0) {}
+  void setVariability(const int l, const int start, const int end ,const int width, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
+    fraglen = l;
+    std::vector<short> seqarray(width, 0);
+    for(int i=start; i<end - fraglen; ++i) {
+      if(fwd[i] && rev[i+fraglen]) {
+	++numOfFragment;
+	for(int j=0; j<fraglen; ++j) ++seqarray[i - start +j];
+      }
+    }
+    for(int i=start; i<end - fraglen; ++i) if(seqarray[i]) ++numOfCoveredBase;
+    for(int i=start; i<end; ++i) ++FragOverlapDist[seqarray[i]];
+    SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
+  }
+  double getFragOverlapDist(const int i) const {
+    if(i<0 || i>= SizeOfFragOverlapDist) {
+      std::cerr << "error: invalid num " << i << "for getFragOverlapDist. max: " << SizeOfFragOverlapDist << std::endl;
+      return -1;
+    }
+    else return FragOverlapDist[i]/SumOfFragOverlapDist;
+  }
+  double getUniqueness() const {
+    return numOfCoveredBase / (double)(numOfFragment * fraglen);
+  }
+  void add2genome(const FragmentVariability &x) {
+    fraglen           = x.fraglen;
+    numOfFragment    += x.numOfFragment;
+    numOfCoveredBase += x.numOfCoveredBase;
+    nread            += x.nread;
+    for(uint i; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
+    SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
+  }
+ private:
+  int fraglen;
+  long numOfFragment;
+  long numOfCoveredBase;
+  long nread;
+  static const int SizeOfFragOverlapDist=10000;
+  std::vector<int> FragOverlapDist;
+  double SumOfFragOverlapDist;
+};
+
 class ReadShiftProfile {
   int lenF3;
   double nsc;
   int nsci;
   double r;
   double bk;
-
+  
  public:
   std::map<int, double> mp;
   std::map<int, double> nc;
@@ -32,23 +76,29 @@ class ReadShiftProfile {
   int end;
   int width;
   long nread;
-  long nread_back;
-  long nread_rep;
-  long nread_peak;
-  
-  long numOfFragmentWithFlen;
-  long numOfFragmentWithReplen;
-  long numOfCoveredBaseWithFlen;
-  long numOfCoveredBaseWithReplen;
-  
+
   long len;
   double rchr;
   
- ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), start(s), end(e), width(e-s), nread(n), nread_back(0), nread_rep(0), nread_peak(0), numOfFragmentWithFlen(0), numOfFragmentWithReplen(0), numOfCoveredBaseWithFlen(0), numOfCoveredBaseWithReplen(0), len(l), rchr(1) {}
+  FragmentVariability fvfrag;
+  FragmentVariability fvrep;
+  FragmentVariability fvback;
+
+ ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), start(s), end(e), width(e-s), nread(n), len(l), rchr(1) {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
   }
+  void setFragmentVariability4Frag(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
+    fvfrag.setVariability(l, start, end, width, fwd, rev);
+  }
+  void setFragmentVariability4Rep(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
+    fvrep.setVariability(l, start, end, width, fwd, rev);
+  }
+  void setFragmentVariability4Back(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
+    fvback.setVariability(l, start, end, width, fwd, rev);
+  }
+  
   int getnsci() const { return nsci; }
   double getmpsum() {
     double sum(0);
@@ -92,11 +142,13 @@ class ReadShiftProfile {
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
-    out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread*100 << std::endl;
-    out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread*100 << std::endl;
-    out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread*100  << std::endl;
-    out << "averagebp4flen\t"  << numOfCoveredBaseWithFlen / (double)(numOfFragmentWithFlen*nsci) << std::endl;
-    out << "averagebp4replen\t"  << numOfCoveredBaseWithReplen / (double)(numOfFragmentWithReplen*lenF3) << std::endl;
+    //    out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread*100 << std::endl;
+    // out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread*100 << std::endl;
+    // out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread*100  << std::endl;
+    out << "Fraglen uniqueness\t" << fvfrag.getUniqueness() << std::endl;
+    out << "Readlen uniqueness\t" << fvrep.getUniqueness() << std::endl;
+    out << "Background uniqueness\t" << fvback.getUniqueness() << std::endl;
+    out << "Normalized Fraglen uniqueness\t" << fvfrag.getUniqueness()/fvback.getUniqueness() << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
@@ -139,13 +191,9 @@ class ReadShiftProfileAll {
     addmp(genome.nc, x.nc, x.rchr);
   }
   void addnread2genome(const ReadShiftProfile &x) {
-    genome.nread_back += x.nread_back;
-    genome.nread_peak += x.nread_peak;
-    genome.nread_rep  += x.nread_rep;
-    genome.numOfFragmentWithFlen      += x.numOfFragmentWithFlen;
-    genome.numOfFragmentWithReplen    += x.numOfFragmentWithReplen;
-    genome.numOfCoveredBaseWithFlen   += x.numOfCoveredBaseWithFlen;
-    genome.numOfCoveredBaseWithReplen += x.numOfCoveredBaseWithReplen;
+    genome.fvfrag.add2genome(x.fvfrag);
+    genome.fvrep.add2genome(x.fvrep);
+    genome.fvback.add2genome(x.fvback);
   }
 };
 
