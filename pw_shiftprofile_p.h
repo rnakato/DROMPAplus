@@ -18,7 +18,7 @@ std::vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
-class FragmentVariability {
+/*class FragmentVariability {
   int fraglen;
   long numOfFragment;
   long numOfCoveredBase;
@@ -62,6 +62,92 @@ class FragmentVariability {
     for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
     SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
   }
+  };*/
+
+class FragmentVariability {
+  int fraglen;
+  long numOfFragment;
+  long numOfCoveredBase;
+  long nread;
+  std::vector<int> FragOverlapDist;
+  static const int SizeOfFragOverlapDist=10000;
+  double SumOfFragOverlapDist;
+  long sumDistanceOfFrag;
+  long numDistanceOfFrag;
+  std::vector<int> vDistanceOfFrag;
+  
+ public:
+ FragmentVariability(): fraglen(0), numOfFragment(0), numOfCoveredBase(0), nread(0), FragOverlapDist(SizeOfFragOverlapDist,0), SumOfFragOverlapDist(0), sumDistanceOfFrag(0), numDistanceOfFrag(0) {}
+  void setVariability(const int l, const int start, const int end ,const int width,
+		      const boost::dynamic_bitset<> &fwd,
+		      const boost::dynamic_bitset<> &rev) {
+    fraglen = l;
+    std::vector<short> array(width, 0);
+    int last(0);
+    for(int i=start; i<end - fraglen; ++i) {
+      if(fwd[i] && rev[i+fraglen]) {
+	++numOfFragment;
+	if(!last) {
+	  vDistanceOfFrag.push_back(i - last);
+	  //	  sumDistanceOfFrag += i - last;
+	  // ++numDistanceOfFrag;
+	}
+	last = i;
+	//	for(int j=0; j<fraglen; ++j) ++array[i - start +j];
+      }
+    }
+  
+    //    for(int i=start; i<end - fraglen; ++i) if(array[i]) ++numOfCoveredBase;
+    // for(int i=start; i<end; ++i) ++FragOverlapDist[array[i]];
+    //SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
+
+    //    setAveragedDistanceOfFragment(fwd, rev, width);
+  }
+  /*  void setAveragedDistanceOfFragment(const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, const int width) {
+    int last(0);
+    for(int i=0; i<width; ++i) {
+      if(array[i]) {
+	if(!last) {
+	  sumDistanceOfFrag += i - last;
+	  ++numDistanceOfFrag;
+	}
+	last = i;
+      }
+    }
+    }*/
+  double getAveragedDistanceOfFragment() const {
+    return sumDistanceOfFrag/(double)numDistanceOfFrag;
+  }
+  double getMomentOfDistanceOfFragment() const {
+    moment<int> x(vDistanceOfFrag, 0);
+
+    return x.getmean();
+  }
+  double getMedianOfDistanceOfFragment() {
+    std::sort(vDistanceOfFrag.begin(),vDistanceOfFrag.end());
+    return vDistanceOfFrag[vDistanceOfFrag.size()/2];
+  }
+  double getFragOverlapDist(const int i) const {
+    if(i<0 || i>= SizeOfFragOverlapDist) {
+      std::cerr << "error: invalid num " << i << "for getFragOverlapDist. max: " << SizeOfFragOverlapDist << std::endl;
+      return -1;
+    }
+    else return FragOverlapDist[i]/SumOfFragOverlapDist;
+  }
+  double getUniqueness() const {
+    return numOfCoveredBase / (double)(numOfFragment * fraglen);
+  }
+  void add2genome(const FragmentVariability &x) {
+    fraglen           = x.fraglen;
+    numOfFragment    += x.numOfFragment;
+    numOfCoveredBase += x.numOfCoveredBase;
+    nread            += x.nread;
+    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
+    SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
+    sumDistanceOfFrag += x.sumDistanceOfFrag;
+    numDistanceOfFrag += x.numDistanceOfFrag;
+    std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
+  } 
 };
 
 class ReadShiftProfile {
@@ -147,10 +233,14 @@ class ReadShiftProfile {
     //    out << "nread_peak\t" << nread_peak << "\t" << nread_peak/(double)nread*100 << std::endl;
     // out << "nread_back\t" << nread_back << "\t" << nread_back/(double)nread*100 << std::endl;
     // out << "nread_rep\t"  << nread_rep  << "\t" << nread_rep/(double)nread*100  << std::endl;
-    out << "Fraglen uniqueness\t" << fvfrag.getUniqueness() << std::endl;
+  /*    out << "Fraglen uniqueness\t" << fvfrag.getUniqueness() << std::endl;
     out << "Readlen uniqueness\t" << fvrep.getUniqueness() << std::endl;
     out << "Background uniqueness\t" << fvback.getUniqueness() << std::endl;
-    out << "Normalized Fraglen uniqueness\t" << fvfrag.getUniqueness()/fvback.getUniqueness() << std::endl;
+    out << "Normalized Fraglen uniqueness\t" << fvfrag.getUniqueness()/fvback.getUniqueness() << std::endl;*/
+    out << "Fraglen averaged distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Readlen averaged distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Background averaged distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Normalized Fraglen averaged distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
