@@ -26,7 +26,7 @@ void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, dou
 {
   for(auto itr = mpfrom.begin(); itr != mpfrom.end(); ++itr) {
     mpto[itr->first] += itr->second * w;
-    std::cout << mpto[itr->first] << std::endl;
+    //    std::cout << mpto[itr->first] << ", " << itr->first<< ", " << itr->second <<"," << w << std::endl;
   }
 }
 

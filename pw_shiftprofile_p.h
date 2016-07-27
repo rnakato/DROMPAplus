@@ -211,15 +211,16 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
   
  ReadShiftProfileGenome(std::string n, const Mapfile &p, const int numthreads, double wref): name(n), ReadShiftProfile(p.getlenF3(), wref) {
     for(auto x:p.chr) {
-      ReadShiftProfile v(p.getlenF3(), wref, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
-      //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
-      v.rchr = v.nread/static_cast<double>(nread);
-      chr.push_back(v);
-      
       if(x.isautosome()) {
 	nread += x.bothnread_nonred();
 	len   += x.getlenmpbl();
       }
+    }
+    for(auto x:p.chr) {
+      ReadShiftProfile v(p.getlenF3(), wref, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
+      //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
+      v.rchr = nread? v.nread/static_cast<double>(nread): 0;
+      chr.push_back(v);
     }
     // seprange
     defSepRange(numthreads);
