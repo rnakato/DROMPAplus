@@ -28,70 +28,30 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p);
 void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p);
 void output_wigstats(const MyOpt::Variables &values, Mapfile &p);
 
-Mapfile::Mapfile(const MyOpt::Variables &values):
-  yeast(false), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0), tv(false), gv(false), r4cmp(0), genome("Genome"), maxGC(0)
-{
-  oprefix = values["odir"].as<string>() + "/" + values["output"].as<string>();
-  obinprefix = oprefix + "." + IntToString(values["binsize"].as<int>());
-  
-  readGenomeTable(values);
-  if(values.count("mp")) getMpbl(values["mp"].as<string>(), chr);
-  for(auto &x:chr) genome.addlen(x);
-
-  long lenmax(0);
-  for(auto itr = chr.begin(); itr != chr.end(); ++itr) {
-    if(lenmax < itr->getlenmpbl()) {
-      lenmax = itr->getlenmpbl();
-      lchr = itr;
-    }
-  }
-  
-  // yeast
-  for(auto x:chr) if(x.name == "I" || x.name == "II" || x.name == "III") yeast = true;
-  for(auto &x:chr) if(yeast) x.yeaston();
-
-  vector<double> gcw(values["flen4gc"].as<int>(),0);
-  GCweight = gcw;
-
-  // sepchr
-  vsepchr = getVsepchr(values["threads"].as<int>());
-
-#ifdef DEBUG
-  cout << "chr\tautosome" << endl;
-  for(auto x:chr) {
-    cout << x.name << "\t" << x.isautosome() << endl;
-  }
-  for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
-
-  printstats();
-
-#endif
-}
-
-void Mapfile::readGenomeTable(const MyOpt::Variables &values)
+void SeqStatsGenome::readGenomeTable(const string &gt, const int binsize)
 {
   vector<string> v;
   string lineStr;
-  ifstream in(values["gt"].as<string>());
-  if(!in) PRINTERR("Could nome open " << values["gt"].as<string>() << ".");
+  ifstream in(gt);
+  if(!in) PRINTERR("Could nome open " << gt << ".");
 
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0] == '#') continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     SeqStats s(v[0], stoi(v[1]));
-    s.nbin = s.getlen()/values["binsize"].as<int>() +1;
+    s.nbin = s.getlen()/binsize +1;
     chr.push_back(s);
   }
 
   return;
 }
 
-vector<sepchr> Mapfile::getVsepchr(const int numthreads)
+vector<sepchr> SeqStatsGenome::getVsepchr(const int numthreads)
 {
   vector<sepchr> vsepchr;
 
-  uint sepsize = genome.getlen()/numthreads;
+  uint sepsize = len/numthreads;
   for(uint i=0; i<chr.size(); ++i) {
     uint s = i;
     long len(0);
@@ -119,7 +79,6 @@ void getMpbl(const string mpdir, vector<SeqStats> &chr)
     if(lineStr.empty() || lineStr[0] == '#') continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     for(auto &x: chr) {
-      //     setlenmpbl(x, rmchr(v[0]), stoi(v[1]));
       if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
     }
   }
@@ -155,14 +114,14 @@ int main(int argc, char* argv[])
 
   // PCR bias filtering
   check_redundant_reads(values, p);
-  p.setnread_red();
+  p.genome.setnread_red();
 
   estimateFragLength(values, p);
 
   // BED file
   if (values.count("bed")) {
-    p.setbed(values["bed"].as<string>());
-    p.setFRiP();
+    p.genome.setbed(values["bed"].as<string>());
+    p.genome.setFRiP();
   }
 
 #ifdef DEBUG
@@ -393,7 +352,7 @@ void print_SeqStats(const MyOpt::Variables &values, ofstream &out, const SeqStat
   if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
   if(values["ntype"].as<string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
 
-  p.gcov.print(out, mapfile.isgv());
+  p.gcov.print(out, mapfile.islackOfRead4GenomeCov());
   
   p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.getFRiP();
@@ -440,7 +399,7 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 
   // SeqStats
   print_SeqStats(values, out, p.genome, p);
-  for(auto x:p.chr) print_SeqStats(values, out, x, p);
+  for(auto x:p.genome.chr) print_SeqStats(values, out, x, p);
   
   cout << "stats is output in " << filename << "." << endl;
 
@@ -452,7 +411,7 @@ vector<char> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfil
   vector<char> array;
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chr.getlen());
   else array = readMpbl_binary(chr.getlen());
-  if(values.count("bed")) arraySetBed(array, chr.name, p.getvbed());
+  if(values.count("bed")) arraySetBed(array, chr.name, p.genome.getvbed());
 
   int val(0);
   int size = array.size();
@@ -476,10 +435,10 @@ vector<char> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfil
 void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
 {
   for(int i=s; i<=e; ++i) {
-    cout << p.chr[i].name << ".." << flush;
-    auto array = makeGcovArray(values, p.chr[i], p, r4cmp);
-    p.chr[i].gcov.calcGcov(array);
-    p.genome.gcov.addGcov(p.chr[i].gcov, mtx);
+    cout << p.genome.chr[i].name << ".." << flush;
+    auto array = makeGcovArray(values, p.genome.chr[i], p, r4cmp);
+    p.genome.chr[i].gcov.calcGcov(array);
+    p.genome.gcov.addGcov(p.genome.chr[i].gcov, mtx);
   }
 }
 
@@ -491,14 +450,14 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   double r = numGcov/static_cast<double>(p.genome.bothnread_nonred() - p.genome.getNreadInbed());
   if(r>1){
     cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
-    p.gvon();
+    p.lackOfRead4GenomeCov_on();
   }
   double r4cmp = r*RAND_MAX;
 
   boost::thread_group agroup;
   boost::mutex mtx;
-  for(uint i=0; i<p.vsepchr.size(); i++) {
-    agroup.create_thread(bind(calcGcovchr, boost::cref(values), boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, r4cmp, boost::ref(mtx)));
+  for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+    agroup.create_thread(bind(calcGcovchr, boost::cref(values), boost::ref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, r4cmp, boost::ref(mtx)));
   }
   agroup.join_all();
   
@@ -518,7 +477,7 @@ void calcFRiP(SeqStats &chr, const vector<bed> vbed)
       for(int i=s; i<=e; ++i) {
 	if(array[i]==INBED) {
 	  x.inpeak = 1;
-	  chr.addNreadInBed(1);
+	  ++chr.nread_inbed;
 	  break;
 	}
       }
@@ -535,10 +494,10 @@ void output_wigstats(const MyOpt::Variables &values, Mapfile &p)
   cout << "generate " << filename << ".." << flush;
 
   out << "\tGenome\t\t\t";
-  for (auto x:p.chr) out << x.name << "\t\t\t\t";
+  for (auto x:p.genome.chr) out << x.name << "\t\t\t\t";
   out << endl;
   out << "read number\tnum of bins genome\tprop\tZINB estimated\t";
-  for (auto x:p.chr) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
+  for (auto x:p.genome.chr) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
   out << endl;
 
   for(size_t i=0; i<p.genome.ws.wigDist.size(); ++i) {
@@ -546,7 +505,7 @@ void output_wigstats(const MyOpt::Variables &values, Mapfile &p)
     p.genome.ws.printwigDist(out, i);
     out << p.genome.ws.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
-    for (auto x:p.chr) {
+    for (auto x:p.genome.chr) {
       x.ws.printwigDist(out, i);
       out << x.ws.getPoisson(i) << "\t";
       out << x.ws.getZINB(i) << "\t";

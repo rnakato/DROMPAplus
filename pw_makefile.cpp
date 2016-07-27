@@ -189,7 +189,7 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, string filename)
   out << boost::format("track type=wiggle_0\tname=\"%1%\"\tdescription=\"Merged tag counts for every %2% bp\"\n")
     % values["output"].as<string>() % binsize;
   
-  for(auto &chr: p.chr) {
+  for(auto &chr: p.genome.chr) {
     vector<int> array = makeWigarray(values, p, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
     for(int i=0; i<chr.nbin; ++i) {
@@ -206,7 +206,7 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, string filename)
   int binsize = values["binsize"].as<int>();
   
   ofstream out(filename);
-  out << boost::format("browser position %1%:%2%-%3%\n") % p.chr[1].name % 0 % (p.chr[1].getlen()/100);
+  out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].name % 0 % (p.genome.chr[1].getlen()/100);
   out << "browser hide all" << endl;
   out << "browser pack refGene encodeRegions" << endl;
   out << "browser full altGraph" << endl;
@@ -216,7 +216,7 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, string filename)
 
   string tempfile = filename + ".temp";
   ofstream temp(tempfile);
-  for(auto &chr: p.chr) {
+  for(auto &chr: p.genome.chr) {
     vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) {
       if(i==chr.nbin -1) e = chr.getlen() -1; else e = (i+1)*binsize;
@@ -236,7 +236,7 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, string filename)
 void outputBinary(const MyOpt::Variables &values, Mapfile &p, string filename)
 {
   ofstream out(filename, ios::binary);
-  for(auto &chr: p.chr) {
+  for(auto &chr: p.genome.chr) {
     vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) out.write((char *)&array[i], sizeof(int));
   }

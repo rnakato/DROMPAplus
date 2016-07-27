@@ -9,24 +9,10 @@
   enum {BP_BACKGROUD, BP_REPEAT, BP_PEAK};
   }*/
 
-/*void ReadShiftProfileAll::defSepRange(int numthreads)
-{
-  int length(mp_to+mp_from);
-  int sepsize = length/numthreads +1;
-  for(int i=0; i<numthreads; i++) {
-    int s = i*sepsize;
-    int e = (i+1)*sepsize;
-    if(i==numthreads-1) e = length;
-    range sep(s - mp_from, e - mp_from);
-    seprange.push_back(sep);
-  }
-  }*/
-
 void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w)
 {
   for(auto itr = mpfrom.begin(); itr != mpfrom.end(); ++itr) {
     mpto[itr->first] += itr->second * w;
-    //    std::cout << mpto[itr->first] << ", " << itr->first<< ", " << itr->second <<"," << w << std::endl;
   }
 }
 
@@ -150,7 +136,7 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 template <class T>
 void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr) {
   for(uint i=chr_s; i<=chr_e; ++i) {
-    std::cout << p.chr[i].name << ".." << std::flush;
+    std::cout << p.genome.chr[i].name << ".." << std::flush;
    
     dist.execchr(p, i);
     dist.chr[i].setflen();
@@ -173,8 +159,8 @@ int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<T> array, int s
 /*template <class T>
 void func(T &dist, const Mapfile &p, const int i) {
 
-  auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
-  auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
+  auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
+  auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
 
   int flen(dist.getnsci());
   int readlen(p.getlenF3());
@@ -234,7 +220,7 @@ void func(T &dist, const Mapfile &p, const int i) {
   }
 
   for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: p.chr[i].seq[strand].vRead) {
+    for (auto x: p.genome.chr[i].seq[strand].vRead) {
       if(x.duplicate || !RANGE(x.F3, dist.chr[i].start, dist.chr[i].end-1)) continue;
       if(anoarray[x.F3 - dist.chr[i].start]==BP_BACKGROUD)   ++dist.chr[i].nread_back;
       else if(anoarray[x.F3 - dist.chr[i].start]==BP_REPEAT) ++dist.chr[i].nread_rep;
@@ -250,8 +236,8 @@ void func(T &dist, const Mapfile &p, const int i) {
 
 template <class T>
 void func(T &dist, const Mapfile &p, const int i) {
-  auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
-  auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
+  auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
+  auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
 
   int flen(dist.getnsci());
   int readlen(p.getlenF3());
@@ -267,11 +253,11 @@ template <class T>
 void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr, boost::mutex &mtx)
 {
   for(uint i=chr_s; i<=chr_e; ++i) {
-    std::cout << p.chr[i].name << ".." << std::flush;
+    std::cout << p.genome.chr[i].name << ".." << std::flush;
     func(dist, p, i);
-    if(p.chr[i].isautosome()) dist.addnread2genome(i, mtx);
+    if(p.genome.chr[i].isautosome()) dist.addnread2genome(i, mtx);
  
-    std::string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
+    std::string filename = p.getprefix() + "." + typestr + "." + p.genome.chr[i].name + ".csv";
     dist.outputmpChr(filename, i);
   }
 }
@@ -286,31 +272,31 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   boost::mutex mtx;
 
   if(typestr == "hdp" || typestr == "jaccard") {
-    for(uint i=0; i<p.vsepchr.size(); i++) {
-      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr));
+    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr));
     }
     agroup.join_all();
   } else {
-    //genThread(dist, p, 0, p.chr.size()-1, typestr);
+    //genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
     genThread(dist, p, 0, 0, typestr);
   }
 
   //  GaussianSmoothing(p.dist.hd);
 
   // set fragment length;
-  for(uint i=0; i<p.chr.size(); ++i) {
-    if(p.chr[i].isautosome()) dist.addmp2genome(i);
+  for(uint i=0; i<p.genome.chr.size(); ++i) {
+    if(p.genome.chr[i].isautosome()) dist.addmp2genome(i);
   }
 
   dist.setflen();
   p.seteflen(dist.getnsci());
 
   std::cout << "count reads in background.." << std::flush;
-  for(uint i=0; i<p.vsepchr.size(); i++) {
-    agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.vsepchr[i].s, p.vsepchr[i].e, typestr, boost::ref(mtx)));
+  for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+    agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr, boost::ref(mtx)));
   }
   agroup.join_all();
-  
+
   std::string filename = p.getprefix() + "." + typestr + ".csv";
   dist.outputmpGenome(filename);
 

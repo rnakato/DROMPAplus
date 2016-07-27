@@ -17,29 +17,28 @@
 #include "macro.h"
 #include "readdata.h"
 
-using namespace std;
-using namespace boost::program_options;
+//using namespace std;
 
-void parseSam(const variables_map &values, string inputfile, Mapfile &p);
-void parseBowtie(const variables_map &values, string inputfile, Mapfile &p);
-void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p);
-void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr);
-void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr);
+void parseSam(const MyOpt::Variables &values, std::string inputfile, Mapfile &p);
+void parseBowtie(const MyOpt::Variables &values, std::string inputfile, Mapfile &p);
+void parseTagAlign(const MyOpt::Variables &values, std::string inputfile, Mapfile &p);
+void filtering_eachchr_single(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr);
+void filtering_eachchr_pair(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr);
 
-void read_mapfile(const variables_map &values, Mapfile &p)
+void read_mapfile(const MyOpt::Variables &values, Mapfile &p)
 {
-  vector<string> v;
-  boost::split(v, values["input"].as<string>(), boost::algorithm::is_any_of(","));
+  std::vector<std::string> v;
+  boost::split(v, values["input"].as<std::string>(), boost::algorithm::is_any_of(","));
   for(auto inputfile: v) {
     isFile(inputfile);
     BPRINT("Parsing %1%...\n") % inputfile;
-    string ftype = values["ftype"].as<string>();
+    std::string ftype = values["ftype"].as<std::string>();
     if(ftype == "SAM" || ftype == "BAM") parseSam(values, inputfile, p);
     else if(ftype == "BOWTIE") parseBowtie(values, inputfile, p);
     else if(ftype == "TAGALIGN") parseTagAlign(values, inputfile, p);
     printf("done.\n");
   }
-  p.setnread();
+  p.genome.setnread();
 
   if(!p.genome.bothnread()) {
     PRINTERR("no read in input file.");
@@ -54,16 +53,16 @@ void read_mapfile(const variables_map &values, Mapfile &p)
 }
 
 template <class T>
-void do_bampe(const variables_map &values, Mapfile &p, T &in)
+void do_bampe(const MyOpt::Variables &values, Mapfile &p, T &in)
 {
   int maxins(values["maxins"].as<int>());
 
-  string lineStr;
+  std::string lineStr;
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0]=='@') continue;
 
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     int sv = stoi(v[1]); // bitwise FLAG
     if(sv&4 || sv&512 || sv&1024) continue;
@@ -83,21 +82,21 @@ void do_bampe(const variables_map &values, Mapfile &p, T &in)
 }
 
 template <class T>
-void do_bamse(const variables_map &values, Mapfile &p, T & in)
+void do_bamse(const MyOpt::Variables &values, Mapfile &p, T & in)
 {
-  string lineStr; 
+  std::string lineStr; 
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || lineStr[0]=='@') continue;
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     int sv = stoi(v[1]); // bitwise FLAG
     // unmapped reads, low quality reads
     if(sv&4 || sv&512 || sv&1024) continue;
-    if(sv&64 || sv&128) cerr << "Warning: parsing paired-end file as single-end." << endl;
+    if(sv&64 || sv&128) std::cerr << "Warning: parsing paired-end file as single-end." << std::endl;
     Fragment frag;
     frag.addSAM(v, values.count("pair"), sv);
-    //    cout << lineStr << endl;
+    //    std::cout << lineStr << std::endl;
     // frag.print();
     p.addfrag(frag);
   }
@@ -105,19 +104,19 @@ void do_bamse(const variables_map &values, Mapfile &p, T & in)
   return;
 }
 
-void parseSam(const variables_map &values, string inputfile, Mapfile &p)
+void parseSam(const MyOpt::Variables &values, std::string inputfile, Mapfile &p)
 {
-  if(values["ftype"].as<string>()=="SAM") {  // SAM
-    ifstream in(inputfile);
+  if(values["ftype"].as<std::string>()=="SAM") {  // SAM
+    std::ifstream in(inputfile);
     if(!in) PRINTERR("Could not open " << inputfile << ".");
     if (values.count("pair")) do_bampe(values, p, in);
     else do_bamse(values, p, in);
   }
-  else if(values["ftype"].as<string>()=="BAM") {  // BAM
-    string command = "samtools view -h " + inputfile;
+  else if(values["ftype"].as<std::string>()=="BAM") {  // BAM
+    std::string command = "samtools view -h " + inputfile;
     FILE *fp = popen(command.c_str(), "r");
-    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, ios_base::in);
-    istream in(static_cast<streambuf *>(p_fb));
+    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
+    std::istream in(static_cast<std::streambuf *>(p_fb));
     if (values.count("pair")) do_bampe(values, p, in);
     else do_bamse(values, p, in);
   }
@@ -125,26 +124,26 @@ void parseSam(const variables_map &values, string inputfile, Mapfile &p)
   return;
 }
 
-void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
+void parseBowtie(const MyOpt::Variables &values, std::string inputfile, Mapfile &p)
 {
   int maxins(values["maxins"].as<int>());
-  ifstream in(inputfile);
+  std::ifstream in(inputfile);
   if(!in) PRINTERR("Could not open " << inputfile << ".");
 
-  string chr_F3(""), chr_F5(""), nametemp("");
+  std::string chr_F3(""), chr_F5(""), nametemp("");
   int F5(0);
   Fragment fragpair;
   
-  string lineStr;
+  std::string lineStr;
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty()) continue;
 
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
 
     if (values.count("pair")) {
-      vector<string> read;
+      std::vector<std::string> read;
       boost::split(read, v[0], boost::algorithm::is_any_of("/"));
       if(nametemp != "" && nametemp != read[0]) PRINTERR("Error:  Invalid read pair." << nametemp <<"-" << read[0]);
       if(read[1] == "1") {  // F3 read
@@ -167,7 +166,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 	p.addF5(v[4].length());
       }
       if(chr_F3 != "" && chr_F5 != ""){
-	//	cout << chr_F3 <<"\t"<< chr_F5 << endl;
+	//	std::cout << chr_F3 <<"\t"<< chr_F5 << std::endl;
 	if(chr_F3 == chr_F5) {
 	  fragpair.chr = chr_F3;
 	  fragpair.fraglen = abs(F5 - fragpair.F3);
@@ -179,7 +178,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 	nametemp = "";
       }
     } else {
-      if(v[0].find("/2") != string::npos) PRINTERR("Warning: parsing paired-end file as single-end");
+      if(v[0].find("/2") != std::string::npos) PRINTERR("Warning: parsing paired-end file as single-end");
       Fragment frag;
       frag.chr = rmchr(v[2]);
       frag.readlen_F3 = v[4].length();
@@ -190,7 +189,7 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 	frag.strand = STRAND_MINUS;
 	frag.F3 = stoi(v[3]) + frag.readlen_F3;
       }
-      //      cout << lineStr << endl;
+      //      std::cout << lineStr << std::endl;
       //      frag.print();
       p.addfrag(frag);
     }
@@ -200,14 +199,14 @@ void parseBowtie(const variables_map &values, string inputfile, Mapfile &p)
 }
 
 template <class T>
-void funcTagAlign(const variables_map &values, Mapfile &p, T &in)
+void funcTagAlign(const MyOpt::Variables &values, Mapfile &p, T &in)
 {
-  string lineStr;
+  std::string lineStr;
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty()) continue;
 
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     if(v.size() < 6) PRINTERR("Use tagAlign (BED3+3) file");
     
@@ -225,7 +224,7 @@ void funcTagAlign(const variables_map &values, Mapfile &p, T &in)
 	frag.strand = STRAND_MINUS;
 	frag.F3 = start + frag.readlen_F3;
       }
-      //      cout << lineStr << endl;
+      //      std::cout << lineStr << std::endl;
       //frag.print();
       p.addfrag(frag);
     }
@@ -233,32 +232,32 @@ void funcTagAlign(const variables_map &values, Mapfile &p, T &in)
   return;
 }
 
-void parseTagAlign(const variables_map &values, string inputfile, Mapfile &p)
+void parseTagAlign(const MyOpt::Variables &values, std::string inputfile, Mapfile &p)
 {
-  if(inputfile.find(".gz") != string::npos) {
-    string command = "zcat " + inputfile;
+  if(inputfile.find(".gz") != std::string::npos) {
+    std::string command = "zcat " + inputfile;
     FILE *fp = popen(command.c_str(), "r");
-    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, ios_base::in);
-    istream in(static_cast<streambuf *>(p_fb));
+    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
+    std::istream in(static_cast<std::streambuf *>(p_fb));
     funcTagAlign(values, p, in);
   } else {
-    ifstream in(inputfile);
+    std::ifstream in(inputfile);
     if(!in) PRINTERR("Could not open " << inputfile << ".");
     funcTagAlign(values, p, in);
   }
   return;
 }
 
-void printDist(ofstream &out, const vector<int> v, const string str, const long nread)
+void printDist(std::ofstream &out, const std::vector<int> v, const std::string str, const long nread)
 {
-  out << "\n" << str << " length distribution" << endl;
-  out << "length\tnumber\tproportion" << endl;
+  out << "\n" << str << " length distribution" << std::endl;
+  out << "length\tnumber\tproportion" << std::endl;
   for(size_t i=0; i<v.size(); ++i) if(v[i]) out << boost::format("%1%\t%2%\t%3%\n") % i % v[i] % (v[i]/static_cast<double>(nread));
   return;
 }
 
 // for single-end
-void hashFilterAll(unordered_map<int, int> &mp, strandData &seq, const int thre)
+void hashFilterAll(std::unordered_map<int, int> &mp, strandData &seq, const int thre)
 {
   for(auto &x:seq.vRead) {
     if(mp.find(x.F3) != mp.end()) {
@@ -277,7 +276,7 @@ void hashFilterAll(unordered_map<int, int> &mp, strandData &seq, const int thre)
   return;
 }
 
-void hashFilterCmp(unordered_map<int, int> &mp, Mapfile &p, const strandData &seq, const int thre)
+void hashFilterCmp(std::unordered_map<int, int> &mp, Mapfile &p, const strandData &seq, const int thre)
 {
   for(auto x: seq.vRead){
     if(rand() >= p.getr4cmp()) continue;
@@ -298,13 +297,13 @@ void hashFilterCmp(unordered_map<int, int> &mp, Mapfile &p, const strandData &se
 }
 
 // for paired-end
-void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int thre)
+void hashFilterAll(std::unordered_map<std::string, int> &mp, strandData &seq, const int thre)
 {
   for(auto &x:seq.vRead) {
-    int Fmin = min(x.F3, x.F5);
-    int Fmax = max(x.F3, x.F5);
-    string str = IntToString(Fmin) + "-" + IntToString(Fmax);
-    //    cout << str << endl;
+    int Fmin = std::min(x.F3, x.F5);
+    int Fmax = std::max(x.F3, x.F5);
+    std::string str = IntToString(Fmin) + "-" + IntToString(Fmax);
+    //    std::cout << str << std::endl;
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
 	++mp[str];
@@ -321,13 +320,13 @@ void hashFilterAll(unordered_map<string, int> &mp, strandData &seq, const int th
   return;
 }
 
-void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData &seq, const int thre)
+void hashFilterCmp(std::unordered_map<std::string, int> &mp, Mapfile &p, const strandData &seq, const int thre)
 {
   for(auto x: seq.vRead){
     if(rand() >= p.getr4cmp()) continue;
-    int Fmin = min(x.F3, x.F5);
-    int Fmax = max(x.F3, x.F5);
-    string str = IntToString(Fmin) + "-" + IntToString(Fmax);
+    int Fmin = std::min(x.F3, x.F5);
+    int Fmax = std::max(x.F3, x.F5);
+    std::string str = IntToString(Fmin) + "-" + IntToString(Fmax);
     p.incNtAll();
     if(mp.find(str) != mp.end()) {
       if(mp[str] < thre) {
@@ -344,35 +343,35 @@ void hashFilterCmp(unordered_map<string, int> &mp, Mapfile &p, const strandData 
   return;
 }
 
-void check_redundant_reads(const variables_map &values, Mapfile &p)
+void check_redundant_reads(const MyOpt::Variables &values, Mapfile &p)
 {
   p.setthre4filtering(values);
   
   // Library complexity
   double r = values["ncmp"].as<int>()/static_cast<double>(p.genome.bothnread());
   if(r>1){
-    cerr << "Warning: number of reads is < "<< (int)(values["ncmp"].as<int>()/NUM_1M) <<" million.\n";
-    p.tvon();
+    std::cerr << "Warning: number of reads is < "<< (int)(values["ncmp"].as<int>()/NUM_1M) <<" million.\n";
+    p.lackOfRead4Complexity_on();
   }
   p.setr4cmp(r*RAND_MAX);
 
-  for(uint i=0; i<p.chr.size(); ++i) {
-     if (values.count("pair")) filtering_eachchr_pair(values, p, p.chr[i]);
-     else                      filtering_eachchr_single(values, p, p.chr[i]);
+  for(uint i=0; i<p.genome.chr.size(); ++i) {
+     if (values.count("pair")) filtering_eachchr_pair(values, p, p.genome.chr[i]);
+     else                      filtering_eachchr_single(values, p, p.genome.chr[i]);
   }
 
   printf("done.\n");
   return;
 }
 
-void filtering_eachchr_single_readlen(const variables_map &values, Mapfile &p, SeqStats &chr)
+void filtering_eachchr_single_readlen(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
-  unordered_map<string, int> mp;
+  std::unordered_map<std::string, int> mp;
   for(int strand=0; strand<STRANDNUM; ++strand) {
     hashFilterAll(mp, chr.seq[strand], p.getthre4filtering());
   }
   
-  unordered_map<string, int> mp2;
+  std::unordered_map<std::string, int> mp2;
   for(int strand=0; strand<STRANDNUM; strand++){
     hashFilterCmp(mp2, p, chr.seq[strand], p.getthre4filtering());
   }
@@ -380,28 +379,28 @@ void filtering_eachchr_single_readlen(const variables_map &values, Mapfile &p, S
   return;
 }
 
-void filtering_eachchr_single(const variables_map &values, Mapfile &p, SeqStats &chr)
+void filtering_eachchr_single(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
   for(int strand=0; strand<STRANDNUM; strand++) {
 
-    unordered_map<int, int> mp;
+    std::unordered_map<int, int> mp;
     hashFilterAll(mp, chr.seq[strand], p.getthre4filtering());
     
-    unordered_map<int, int> mp2;
+    std::unordered_map<int, int> mp2;
     hashFilterCmp(mp2, p, chr.seq[strand], p.getthre4filtering());
   }
   
   return;
 }
 
-void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &chr)
+void filtering_eachchr_pair(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
-  unordered_map<string, int> mp;
+  std::unordered_map<std::string, int> mp;
   for(int strand=0; strand<STRANDNUM; ++strand) {
     hashFilterAll(mp, chr.seq[strand], p.getthre4filtering());
   }
 
-  unordered_map<string, int> mp2;
+  std::unordered_map<std::string, int> mp2;
   for(int strand=0; strand<STRANDNUM; strand++){
     hashFilterCmp(mp2, p, chr.seq[strand], p.getthre4filtering());
   }
@@ -409,13 +408,13 @@ void filtering_eachchr_pair(const variables_map &values, Mapfile &p, SeqStats &c
   return;
 }
 
-void estimateFragLength(const variables_map &values, Mapfile &p)
+void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
 {
   if(!values.count("pair") && !values.count("nomodel")) {
     clock_t t1 = clock();
     //  strShiftProfile(p, "exjaccard", values["threads"].as<int>());
     clock_t t2 = clock();
-    cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
+    std::cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
     // NSCでは見えないbackground enrichmentの利点を示すサンプルを探す
     
@@ -423,20 +422,20 @@ void estimateFragLength(const variables_map &values, Mapfile &p)
     // background uniformityが1を超える可能性がある
     strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
-    cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
+    std::cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
     exit (0);
     
     //    strShiftProfile(p, "hdp", values["threads"].as<int>());
     clock_t t4 = clock();
-    cout << "Hamming: " << static_cast<double>(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
+    std::cout << "Hamming: " << static_cast<double>(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
     
     //    strShiftProfile(p, "ccp", values["threads"].as<int>());
     clock_t t5 = clock();
-    cout << "ccp: " << static_cast<double>(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
+    std::cout << "ccp: " << static_cast<double>(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
   }
 
-  p.calcdepth(values);
-  p.setF5(values);
+  p.genome.calcdepthAll(p.getflen(values));
+  p.genome.setF5All(p.getflen(values));
 }
 
 int check_sv(int sv)
@@ -492,42 +491,42 @@ int check_sv(int sv)
 //using namespace seqan;
 /*void printRecord(BamAlignmentRecord record)
 {
-  cout << "AllProper " << hasFlagAllProper(record) << endl;
-  cout << "Duplicate " << hasFlagDuplicate(record) << endl;
-  cout << "First " << hasFlagFirst(record)     << endl;
-  cout << "Last " << hasFlagLast(record)      << endl;
-  cout << "Multiple " << hasFlagMultiple(record)  << endl;
-  cout << "NextRC " << hasFlagNextRC(record)    << endl;
-  cout << "NextUnmapped " << hasFlagNextUnmapped(record) << endl;
-  cout << "QCNoPass " << hasFlagQCNoPass(record)  << endl;
-  cout << "RC " << hasFlagRC(record)        << endl;
-  cout << "Secondary " << hasFlagSecondary(record) << endl;
-  cout << "Unmapped " << hasFlagUnmapped(record)  << endl;
+  std::cout << "AllProper " << hasFlagAllProper(record) << std::endl;
+  std::cout << "Duplicate " << hasFlagDuplicate(record) << std::endl;
+  std::cout << "First " << hasFlagFirst(record)     << std::endl;
+  std::cout << "Last " << hasFlagLast(record)      << std::endl;
+  std::cout << "Multiple " << hasFlagMultiple(record)  << std::endl;
+  std::cout << "NextRC " << hasFlagNextRC(record)    << std::endl;
+  std::cout << "NextUnmapped " << hasFlagNextUnmapped(record) << std::endl;
+  std::cout << "QCNoPass " << hasFlagQCNoPass(record)  << std::endl;
+  std::cout << "RC " << hasFlagRC(record)        << std::endl;
+  std::cout << "Secondary " << hasFlagSecondary(record) << std::endl;
+  std::cout << "Unmapped " << hasFlagUnmapped(record)  << std::endl;
 }
 
 void useFragStore(BamFileIn bamFileIn){
   FragmentStore<> fragStore;
   readRecords(fragStore, bamFileIn);
   uint nreads = length(fragStore.alignedReadStore);
-  cout << "loaded " << nreads << " mapped reads\n" << endl;
+  std::cout << "loaded " << nreads << " mapped reads\n" << std::endl;
 
   for (uint i=0; i<nreads; ++i) {
-    cout << fragStore.alignedReadStore[i].beginPos<< endl;
-    cout << fragStore.alignedReadStore[i].contigId<< endl;
-    cout << fragStore.alignedReadStore[i].endPos<< endl;
-    cout << fragStore.alignedReadStore[i].id<< endl;
-    //      cout << fragStore.alignedReadStore[i].pairMatchId << endl;
-    //cout << fragStore.alignedReadStore[i].INVALID_ID << endl;
-    cout << fragStore.alignedReadStore[i].readId<< endl;
+    std::cout << fragStore.alignedReadStore[i].beginPos<< std::endl;
+    std::cout << fragStore.alignedReadStore[i].contigId<< std::endl;
+    std::cout << fragStore.alignedReadStore[i].endPos<< std::endl;
+    std::cout << fragStore.alignedReadStore[i].id<< std::endl;
+    //      std::cout << fragStore.alignedReadStore[i].pairMatchId << std::endl;
+    //std::cout << fragStore.alignedReadStore[i].INVALID_ID << std::endl;
+    std::cout << fragStore.alignedReadStore[i].readId<< std::endl;
     //      FragmentData flag(fragStore.alignedReadStore[i]);
   }
   return;
   }*/
 
 
-  //  CharString filename(inputfile);
+  //  Charstd::string filename(inputfile);
   //BamFileIn bamFileIn;
-  //if (!open(bamFileIn, toCString(filename))) PRINTERR("Could not open " << filename);
+  //if (!open(bamFileIn, toCstd::string(filename))) PRINTERR("Could not open " << filename);
 
   // useFragStore(bamFileIn);
   //    BamHeader header;

@@ -2,8 +2,7 @@
 
 if($#ARGV==-1) {
     print "\tNSC\tRLSC\tfragment length\tBackground enrichment\tBackground uniformity";
-    #    print "\t# of reads in peak\t%\t# of reads in background\t%\t# of reads in repeats\t%\n";
-    print "\tFraglen uniqueness\tReadlen uniqueness\tBackground uniqueness\tNormalized Fraglen uniqueness\n";
+    print "\tFraglen median distance\tReadlen median distance\tBackground median distance\tNormalized Fraglen median distance\n";
     exit;
 }
 

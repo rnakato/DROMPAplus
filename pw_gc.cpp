@@ -1,7 +1,6 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
-
 #include "pw_gc.h"
 #include <boost/program_options.hpp>
 #include "pw_makefile.h"
@@ -59,7 +58,7 @@ void make_GCdist(const MyOpt::Variables &values, Mapfile &p)
   vector<char> array; 
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chrlen);
   else array = readMpbl_binary(p.lchr->getlen());
-  if(values.count("bed")) arraySetBed(array, p.lchr->name, p.getvbed());
+  if(values.count("bed")) arraySetBed(array, p.lchr->name, p.genome.getvbed());
 
   // make fastaGCarray
   string fa= values["genome"].as<string>() + "/chr" + p.lchr->name + ".fa";
@@ -163,18 +162,18 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, boo
     int posi;
     int flen(p.getflen(values));
     int flen4gc = min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
-    cout << p.chr[i].name << ".." << flush;
-    string fa = values["genome"].as<string>() + "/chr" + p.chr[i].name + ".fa";
-    auto FastaArray = makeFastaArray(fa, p.chr[i].getlen(), flen4gc);
+    cout << p.genome.chr[i].name << ".." << flush;
+    string fa = values["genome"].as<string>() + "/chr" + p.genome.chr[i].name + ".fa";
+    auto FastaArray = makeFastaArray(fa, p.genome.chr[i].getlen(), flen4gc);
     
     for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &x: p.chr[i].seq[strand].vRead) {
+      for (auto &x: p.genome.chr[i].seq[strand].vRead) {
 	if(x.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = min(x.F3 + lenIgnoreOfFragment, (int)p.chr[i].getlen() -1);
+	if(strand==STRAND_PLUS) posi = min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
 	else                    posi = max(x.F3 - flen + lenIgnoreOfFragment, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(p.GCweight[gc]);
-	p.chr[i].seq[strand].addReadAfterGC(x.getWeight(), mtx);
+	p.genome.chr[i].seq[strand].addReadAfterGC(x.getWeight(), mtx);
       }
     }
   }
@@ -187,15 +186,15 @@ void weightRead(const MyOpt::Variables &values, Mapfile &p)
 
   boost::thread_group agroup;
   boost::mutex mtx;
-  for(uint i=0; i<p.vsepchr.size(); i++) {
-    agroup.create_thread(bind(weightReadchr, boost::cref(values), boost::ref(p), p.vsepchr[i].s, p.vsepchr[i].e, boost::ref(mtx)));
+  for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+    agroup.create_thread(bind(weightReadchr, boost::cref(values), boost::ref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, boost::ref(mtx)));
   }
   agroup.join_all();
 
   printf("done.\n");
 
   // Stats
-  for(auto &x:p.chr) {
+  for(auto &x:p.genome.chr) {
     for(int strand=0; strand<STRANDNUM; ++strand) {
       p.genome.seq[strand].nread_afterGC += x.seq[strand].nread_afterGC;
     }

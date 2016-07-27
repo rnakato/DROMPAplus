@@ -21,7 +21,6 @@ namespace MyOpt {
 
 class SeqStats;
 
-void calcFRiP(SeqStats &, const std::vector<bed>);
 void printDist(std::ofstream &out, const std::vector<int> v, const std::string str, const long nread);
 
 class Dist {
@@ -254,6 +253,7 @@ class GenomeCoverage {
 };
 
 class SeqStats {
+ protected:
   bool yeast;
   long len, len_mpbl;
   /* FRiP */
@@ -273,13 +273,7 @@ class SeqStats {
     name = rmchr(s);
   }
   virtual ~SeqStats(){}
-  void addNreadInBed(const int i) { nread_inbed += i; }
   long getNreadInbed() const { return nread_inbed; }
-  void addlen(const SeqStats &x) {
-    len      += x.len;
-    len_mpbl += x.len_mpbl;
-    nbin     += x.nbin;
-  }
   void addfrag(const Fragment &frag) {
     Read r(frag);
     seq[frag.strand].vRead.push_back(r);
@@ -290,7 +284,7 @@ class SeqStats {
   long bothnread_rpm ()     const { return seq[STRAND_PLUS].nread_rpm     + seq[STRAND_MINUS].nread_rpm; }
   long bothnread_afterGC () const { return seq[STRAND_PLUS].nread_afterGC + seq[STRAND_MINUS].nread_afterGC; }
 
-  void addnread(const SeqStats &x) { 
+  /*  void addnread(const SeqStats &x) { 
     for(int i=0; i<STRANDNUM; i++) seq[i].nread += x.seq[i].nread;
   }
   void addnread_red(const SeqStats &x) { 
@@ -298,11 +292,12 @@ class SeqStats {
       seq[i].nread_nonred += x.seq[i].nread_nonred;
       seq[i].nread_red    += x.seq[i].nread_red;
     }
-  }
+    }*/
 
   long getlen()     const { return len; }
   long getlenmpbl() const { return len_mpbl; }
-  double getpmpbl() const { return len/static_cast<double>(len_mpbl); }
+  double getpmpbl() const { return static_cast<double>(len_mpbl)/len; }
+  int getnbin() const { return nbin; }
   void print() const {
     std::cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << std::endl;
   }
@@ -358,16 +353,91 @@ class SeqStats {
     else       return false;
   }
   friend void getMpbl(const std::string, std::vector<SeqStats> &chr);
-  //  friend void setlenmpbl(SeqStats &x, std::string str, int l);
+  friend void calcFRiP(SeqStats &, const std::vector<bed>);
 };
 
-
 class SeqStatsGenome: public SeqStats {
-  std::vector<SeqStats> chr;
-  std::vector<SeqStats>::iterator lchr; // longest chromosome
-  std::vector<sepchr> vsepchr;
+  std::vector<bed> vbed;
+  void readGenomeTable(const std::string &, const int);
+  
  public:
- SeqStatsGenome(): SeqStats("Genome") {}
+  std::vector<SeqStats> chr;
+  std::vector<sepchr> vsepchr;
+  
+ SeqStatsGenome(const MyOpt::Variables &values): SeqStats("Genome") {
+    
+    readGenomeTable(values["gt"].as<std::string>(), values["binsize"].as<int>());
+    if(values.count("mp")) getMpbl(values["mp"].as<std::string>(), chr);
+    for(auto &x:chr) {
+      len      += x.getlen();
+      len_mpbl += x.getlenmpbl();
+      nbin     += x.getnbin();
+    }
+ 
+    // yeast
+    for(auto x:chr) if(x.name == "I" || x.name == "II" || x.name == "III") yeast = true;
+    for(auto &x:chr) if(yeast) x.yeaston();
+    
+    // sepchr
+    vsepchr = getVsepchr(values["threads"].as<int>());
+    
+#ifdef DEBUG
+  cout << "chr\tautosome" << endl;
+  for(auto x:chr) {
+    cout << x.name << "\t" << x.isautosome() << endl;
+  }
+  for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
+
+  printstats();
+
+#endif
+  }
+
+  std::vector<sepchr> getVsepchr(const int);
+  void setnread() {
+    for(auto &x:chr) {
+      for(int i=0; i<STRANDNUM; i++) {
+	x.seq[i].setnread();
+	seq[i].nread += x.seq[i].nread;
+      }
+    }
+  }
+  void setnread_red() {
+    for(auto &x:chr) {
+      for(int i=0; i<STRANDNUM; i++) {
+	seq[i].nread_nonred += x.seq[i].nread_nonred;
+	seq[i].nread_red    += x.seq[i].nread_red;
+      }
+    }
+  }
+  void printstats() const {
+    std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
+    print();
+    for(auto x:chr) x.print();
+  }
+  void setbed(const std::string bedfilename) {
+    isFile(bedfilename);
+    vbed = parseBed<bed>(bedfilename);
+    //    printBed(vbed);
+  }
+  void setFRiP() {
+    std::cout << "calculate FRiP score.." << std::flush;
+    for(auto &x: chr) {
+      calcFRiP(x, vbed);
+      nread_inbed += x.getNreadInbed();
+    }
+    std::cout << "done." << std::endl;
+    return;
+  }
+   void calcdepthAll(const int flen) {
+     for (auto &x:chr) x.calcdepth(flen);
+     calcdepth(flen);
+  }
+   void setF5All(const int flen) {
+    for (auto &x:chr) x.setF5(flen);
+    setF5(flen);
+  }
+  std::vector<bed> getvbed() const { return vbed; }
 };
 
 class Mapfile {
@@ -380,16 +450,14 @@ class Mapfile {
   // PCR bias
   int thre4filtering;
   int nt_all, nt_nonred, nt_red;
-  bool tv, gv;
+  bool lackOfRead4Complexity;
+  bool lackOfRead4GenomeCov;
   double r4cmp;
-  std::vector<bed> vbed;
   std::vector<Peak> vPeak;
 
  public:
-  SeqStats genome;
-  std::vector<SeqStats> chr;
+  SeqStatsGenome genome;
   std::vector<SeqStats>::iterator lchr; // longest chromosome
-  std::vector<sepchr> vsepchr;
 
   // GC bias
   std::vector<double> GCweight;
@@ -398,15 +466,33 @@ class Mapfile {
   // Wigdist
   int nwigdist;
   std::vector<int> wigDist;
+  
+ Mapfile(const MyOpt::Variables &values):
+  yeast(false), flen_def(values["flen"].as<int>()), thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0),
+    lackOfRead4Complexity(false), lackOfRead4GenomeCov(false), r4cmp(0), genome(values), maxGC(0)
+    {
+      long lenmax(0);
+      for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
+	if(lenmax < itr->getlenmpbl()) {
+	  lenmax = itr->getlenmpbl();
+	  lchr = itr;
+	}
+      }
 
-  Mapfile(const MyOpt::Variables &values);
+      oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
+      obinprefix = oprefix + "." + IntToString(values["binsize"].as<int>());
+      
+      std::vector<double> gcw(values["flen4gc"].as<int>(),0);
+      GCweight = gcw;
+    }
+  
   void readGenomeTable(const MyOpt::Variables &values);
   //  void getMpbl(const MyOpt::Variables &values);
-  std::vector<sepchr> getVsepchr(const int);
+  //  std::vector<sepchr> getVsepchr(const int);
 
-  void tvon() { tv = true; }
-  void gvon() { gv = true; }
-  int isgv() const { return gv; };
+  void lackOfRead4Complexity_on() { lackOfRead4Complexity = true; }
+  void lackOfRead4GenomeCov_on() { lackOfRead4GenomeCov = true; }
+  int islackOfRead4GenomeCov() const { return lackOfRead4GenomeCov; };
   void setthre4filtering(const MyOpt::Variables &values) {
     if(values["thre_pb"].as<int>()) thre4filtering = values["thre_pb"].as<int>();
     else thre4filtering = std::max(1, (int)(genome.bothnread() *10/static_cast<double>(genome.getlenmpbl())));
@@ -436,7 +522,6 @@ class Mapfile {
       dist.getmaxeflen();
     }
   }
-  std::vector<bed> getvbed() const { return vbed; }
   void printFlen(const MyOpt::Variables &values, std::ofstream &out) const {
     if(!values.count("nomodel")) out << "Estimated fragment length: " << dist.geteflen() << std::endl;
     else out << "Predefined fragment length: " << flen_def << std::endl;
@@ -446,7 +531,7 @@ class Mapfile {
     dist.addF3(frag.readlen_F3);
     dist.addflen(frag.fraglen);
     int on(0);
-    for(auto &x:chr) {
+    for(auto &x:genome.chr) {
       if(x.name == frag.chr) {
 	x.addfrag(frag);
 	on++;
@@ -455,11 +540,11 @@ class Mapfile {
     if(!on) std::cerr << "Warning: " << frag.chr << " is not in genometable." << std::endl;
   }
 
-  void setbed(const std::string bedfilename) {
+  /*  void setbed(const std::string bedfilename) {
     isFile(bedfilename);
     vbed = parseBed<bed>(bedfilename);
     //    printBed(vbed);
-  }
+    }*/
   void outputDistFile(const MyOpt::Variables &values)
   {
     std::string outputfile = oprefix + ".readlength_dist.csv";
@@ -475,16 +560,7 @@ class Mapfile {
     }
   }
 
-  void calcdepth(const MyOpt::Variables &values) {
-    int flen(getflen(values));
-    for (auto &x:chr) x.calcdepth(flen);
-    genome.calcdepth(flen);
-  }
-  void setF5(const MyOpt::Variables &values) {
-    int flen(getflen(values));
-    for (auto &x:chr) x.setF5(flen);
-  }
-  void setnread() {
+  /*   void setnread() {
     for (auto &x:chr) {
       for(int i=0; i<STRANDNUM; i++) x.seq[i].setnread();
       genome.addnread(x);
@@ -492,13 +568,13 @@ class Mapfile {
   }
   void setnread_red() {
     for (auto &x:chr) genome.addnread_red(x);
-  }
+    }*/
   void printComplexity(std::ofstream &out) const {
-    if(tv) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
-    else   out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n")   % complexity() % nt_nonred % nt_all;
+    if(lackOfRead4Complexity) out << boost::format("Library complexity: (%1$.3f) (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
+    else out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
   }
   double complexity() const { return nt_nonred/static_cast<double>(nt_all); }
-  void printstats() const {
+  /*  void printstats() const {
     std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
     genome.print();
     for (auto x:chr) x.print();
@@ -513,7 +589,7 @@ class Mapfile {
     
     std::cout << "done." << std::endl;
     return;
-  }
+    }*/
   void seteflen(const int len) {
     dist.seteflen(len);
   }

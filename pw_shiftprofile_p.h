@@ -68,6 +68,7 @@ class FragmentVariability {
     return x.getmean();
     }*/
   double getMedianOfDistanceOfFragment() const {
+    if (vDistanceOfFrag.empty()) return 0;
     std::vector<int> v;
     std::copy(vDistanceOfFrag.begin(), vDistanceOfFrag.end(), back_inserter(v));
     std::sort(v.begin(),v.end());
@@ -167,6 +168,9 @@ class ReadShiftProfile {
   }
 
   void print2file(const std::string filename, const std::string name) const {
+    if(!nread) {
+      std::cerr << filename << ": no read" << std::endl;
+    }
     double sum(getmpsum());
     double rRPKM = (NUM_10M/static_cast<double>(nread)) / (NUM_100M/static_cast<double>(len));
     double be(bk * rRPKM);
@@ -210,13 +214,13 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
   std::vector<ReadShiftProfile> chr;
   
  ReadShiftProfileGenome(std::string n, const Mapfile &p, const int numthreads, double wref): name(n), ReadShiftProfile(p.getlenF3(), wref) {
-    for(auto x:p.chr) {
+    for(auto x:p.genome.chr) {
       if(x.isautosome()) {
 	nread += x.bothnread_nonred();
 	len   += x.getlenmpbl();
       }
     }
-    for(auto x:p.chr) {
+    for(auto x:p.genome.chr) {
       ReadShiftProfile v(p.getlenF3(), wref, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
       //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
       v.rchr = nread? v.nread/static_cast<double>(nread): 0;
@@ -266,8 +270,8 @@ class shiftJacVec : public ReadShiftProfileGenome {
 
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
-    auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
-    auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+    auto fwd = genVector(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genVector(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
     setDist(chr[i], fwd, rev);  
   }
@@ -279,8 +283,8 @@ class shiftJacBit : public ReadShiftProfileGenome {
 
   void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
   void execchr(const Mapfile &p, int i) {
-    auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
-    auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+    auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
     setDist(chr[i], fwd, rev);
   }
@@ -292,8 +296,8 @@ class shiftCcp : public ReadShiftProfileGenome {
   
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
-    auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
-    auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+    auto fwd = genVector(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genVector(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
     setDist(chr[i], fwd, rev);
   }
@@ -305,8 +309,8 @@ class shiftHamming : public ReadShiftProfileGenome {
 
   void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
   void execchr(const Mapfile &p, int i) {
-    auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
-    auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+    auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
     
     setDist(chr[i], fwd, rev);
   }
