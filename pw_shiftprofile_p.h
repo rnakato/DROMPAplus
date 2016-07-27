@@ -18,52 +18,6 @@ std::vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
 
-/*class FragmentVariability {
-  int fraglen;
-  long numOfFragment;
-  long numOfCoveredBase;
-  long nread;
-  std::vector<int> FragOverlapDist;
-  static const int SizeOfFragOverlapDist=10000;
-  double SumOfFragOverlapDist;
-  
- public:
- FragmentVariability(): fraglen(0), numOfFragment(0), numOfCoveredBase(0), nread(0), FragOverlapDist(SizeOfFragOverlapDist,0), SumOfFragOverlapDist(0) {}
-  void setVariability(const int l, const int start, const int end ,const int width,
-		      const boost::dynamic_bitset<> &fwd,
-		      const boost::dynamic_bitset<> &rev) {
-    fraglen = l;
-    std::vector<short> array(width, 0);
-    for(int i=start; i<end - fraglen; ++i) {
-      if(fwd[i] && rev[i+fraglen]) {
-	++numOfFragment;
-	for(int j=0; j<fraglen; ++j) ++array[i - start +j];
-      }
-    }
-    for(int i=start; i<end - fraglen; ++i) if(array[i]) ++numOfCoveredBase;
-    for(int i=start; i<end; ++i) ++FragOverlapDist[array[i]];
-    SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
-  }
-  double getFragOverlapDist(const int i) const {
-    if(i<0 || i>= SizeOfFragOverlapDist) {
-      std::cerr << "error: invalid num " << i << "for getFragOverlapDist. max: " << SizeOfFragOverlapDist << std::endl;
-      return -1;
-    }
-    else return FragOverlapDist[i]/SumOfFragOverlapDist;
-  }
-  double getUniqueness() const {
-    return numOfCoveredBase / (double)(numOfFragment * fraglen);
-  }
-  void add2genome(const FragmentVariability &x) {
-    fraglen           = x.fraglen;
-    numOfFragment    += x.numOfFragment;
-    numOfCoveredBase += x.numOfCoveredBase;
-    nread            += x.nread;
-    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
-    SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
-  }
-  };*/
-
 class FragmentVariability {
   int fraglen;
   long numOfFragment;
@@ -83,15 +37,29 @@ class FragmentVariability {
 		      const boost::dynamic_bitset<> &rev) {
     fraglen = l;
     std::vector<short> array(width, 0);
+
+    //    std::map<int, int> mp;
+    
     int last(0);
     for(int i=start; i<end - fraglen; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
 	++numOfFragment;
-	if(!last) {
+	if(last) {
 	  vDistanceOfFrag.push_back(i - last);
+
+	  //	  std::cout << (i - last) << std::endl;
+	  //	  ++mp[i - last];
+	  /*
+	  if(mp.find(i - last) != mp.end() ) {
+	    ++mp[i - last];
+	  } else {
+	    mp[i - last] = 1;
+	    }*/
+
 	  //	  sumDistanceOfFrag += i - last;
 	  // ++numDistanceOfFrag;
 	}
+	//	std::cout << last << "\t"<<i << std::endl;
 	last = i;
 	//	for(int j=0; j<fraglen; ++j) ++array[i - start +j];
       }
@@ -101,33 +69,24 @@ class FragmentVariability {
     // for(int i=start; i<end; ++i) ++FragOverlapDist[array[i]];
     //SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
 
-    //    setAveragedDistanceOfFragment(fwd, rev, width);
+    //    for(auto itr = mp.begin(); itr != mp.end(); ++itr) std::cout << itr->first << "\t" << itr->second << std::endl;
+
   }
-  /*  void setAveragedDistanceOfFragment(const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev, const int width) {
-    int last(0);
-    for(int i=0; i<width; ++i) {
-      if(array[i]) {
-	if(!last) {
-	  sumDistanceOfFrag += i - last;
-	  ++numDistanceOfFrag;
-	}
-	last = i;
-      }
-    }
-    }*/
-  double getAveragedDistanceOfFragment() const {
+
+  /*  double getAveragedDistanceOfFragment() const {
     return sumDistanceOfFrag/(double)numDistanceOfFrag;
   }
   double getMomentOfDistanceOfFragment() const {
     moment<int> x(vDistanceOfFrag, 0);
-
     return x.getmean();
+    }*/
+  double getMedianOfDistanceOfFragment() const {
+    std::vector<int> v;
+    std::copy(vDistanceOfFrag.begin(), vDistanceOfFrag.end(), back_inserter(v));
+    std::sort(v.begin(),v.end());
+    return v[v.size()/2];
   }
-  double getMedianOfDistanceOfFragment() {
-    std::sort(vDistanceOfFrag.begin(),vDistanceOfFrag.end());
-    return vDistanceOfFrag[vDistanceOfFrag.size()/2];
-  }
-  double getFragOverlapDist(const int i) const {
+  /*  double getFragOverlapDist(const int i) const {
     if(i<0 || i>= SizeOfFragOverlapDist) {
       std::cerr << "error: invalid num " << i << "for getFragOverlapDist. max: " << SizeOfFragOverlapDist << std::endl;
       return -1;
@@ -136,7 +95,7 @@ class FragmentVariability {
   }
   double getUniqueness() const {
     return numOfCoveredBase / (double)(numOfFragment * fraglen);
-  }
+    }*/
   void add2genome(const FragmentVariability &x) {
     fraglen           = x.fraglen;
     numOfFragment    += x.numOfFragment;
@@ -147,7 +106,7 @@ class FragmentVariability {
     sumDistanceOfFrag += x.sumDistanceOfFrag;
     numDistanceOfFrag += x.numDistanceOfFrag;
     std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
-  } 
+  }
 };
 
 class ReadShiftProfile {
@@ -156,6 +115,7 @@ class ReadShiftProfile {
   int nsci;
   double r;
   double bk;
+  double w;
   
  public:
   std::map<int, double> mp;
@@ -172,7 +132,8 @@ class ReadShiftProfile {
   FragmentVariability fvrep;
   FragmentVariability fvback;
 
- ReadShiftProfile(const int len, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), start(s), end(e), width(e-s), nread(n), len(l), rchr(1) {}
+ ReadShiftProfile(const int len, const double wref, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), w(wref), start(s), end(e), width(e-s), nread(n), len(l), rchr(1) {}
+  virtual ~ReadShiftProfile() {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
@@ -188,7 +149,7 @@ class ReadShiftProfile {
   }
   
   int getnsci() const { return nsci; }
-  double getmpsum() {
+  double getmpsum() const {
     double sum(0);
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) sum += itr->second;
     return sum;
@@ -202,7 +163,7 @@ class ReadShiftProfile {
     bk /= n;
     r = 1/bk;
   }
-  void setflen(double w) {
+  void setflen() {
     int threwidth(5);
     setControlRatio();
     nsc = mp[mp_to-1]*w;
@@ -218,15 +179,15 @@ class ReadShiftProfile {
     }
   }
 
-  void outputmp(const std::string filename, std::string name, double weight) {
+  void print2file(const std::string filename, const std::string name) const {
     double sum(getmpsum());
     double rRPKM = (NUM_10M/static_cast<double>(nread)) / (NUM_100M/static_cast<double>(len));
     double be(bk * rRPKM);
     double const_bu(1/39.0);  // N/(4*L-N), N=10M, L=100M
 
     std::ofstream out(filename);
-    out << "NSC\t" << nsc*weight << std::endl;
-    out << "RLSC\t"<< (mp[lenF3]*r*weight) << std::endl;
+    out << "NSC\t" << nsc*w << std::endl;
+    out << "RLSC\t"<< (mp.at(lenF3)*r*w) << std::endl;
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
@@ -237,10 +198,10 @@ class ReadShiftProfile {
     out << "Readlen uniqueness\t" << fvrep.getUniqueness() << std::endl;
     out << "Background uniqueness\t" << fvback.getUniqueness() << std::endl;
     out << "Normalized Fraglen uniqueness\t" << fvfrag.getUniqueness()/fvback.getUniqueness() << std::endl;*/
-    out << "Fraglen averaged distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Readlen averaged distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Background averaged distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Normalized Fraglen averaged distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Background median distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
@@ -252,105 +213,80 @@ class ReadShiftProfile {
   }
 };
 
-class ReadShiftProfileAll {
+class ReadShiftProfileGenome: public ReadShiftProfile {
+  std::string name;
+
  protected:
   std::vector<range> seprange;
   
  public:
-  std::string name;
-  ReadShiftProfile genome;
   std::vector<ReadShiftProfile> chr;
   
-  void defSepRange(int numthreads);
- ReadShiftProfileAll(std::string n, const Mapfile &p, int numthreads): name(n), genome(p.getlenF3()) {
+ ReadShiftProfileGenome(std::string n, const Mapfile &p, const int numthreads, double wref): name(n), ReadShiftProfile(p.getlenF3(), wref) {
     for(auto x:p.chr) {
-      if(x.isautosome()) {
-	genome.nread += x.bothnread_nonred();
-	genome.len   += x.getlenmpbl();
-      }
-    }
-    for(auto x:p.chr) {
-      ReadShiftProfile v(p.getlenF3(), 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
+      ReadShiftProfile v(p.getlenF3(), wref, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
       //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
-      v.rchr = v.nread/static_cast<double>(genome.nread);
+      v.rchr = v.nread/static_cast<double>(nread);
       chr.push_back(v);
+      
+      if(x.isautosome()) {
+	nread += x.bothnread_nonred();
+	len   += x.getlenmpbl();
+      }
     }
     // seprange
     defSepRange(numthreads);
   }
-  void addmp2genome(const ReadShiftProfile &x) {
-    addmp(genome.mp, x.mp, x.rchr);
-    addmp(genome.nc, x.nc, x.rchr);
+  void defSepRange(const int numthreads) {
+    int length(mp_to+mp_from);
+    int sepsize = length/numthreads +1;
+    for(int i=0; i<numthreads; ++i) {
+      int s = i*sepsize;
+      int e = (i+1)*sepsize;
+      if(i==numthreads-1) e = length;
+      seprange.push_back(range(s - mp_from, e - mp_from));
+    }
   }
-  void addnread2genome(const ReadShiftProfile &x, boost::mutex &mtx) {
+  void addmp2genome(const int i) {
+    addmp(mp, chr[i].mp, chr[i].rchr);
+    addmp(nc, chr[i].nc, chr[i].rchr);
+  }
+  void addnread2genome(const int i, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
-    genome.fvfrag.add2genome(x.fvfrag);
-    genome.fvrep.add2genome(x.fvrep);
-    genome.fvback.add2genome(x.fvback);
+    fvfrag.add2genome(chr[i].fvfrag);
+    fvrep.add2genome(chr[i].fvrep);
+    fvback.add2genome(chr[i].fvback);
   }
+  void outputmpGenome(const std::string &filename) const {
+    print2file(filename, name);
+  }
+  void outputmpChr(const std::string &filename, const int i) const {
+    chr[i].print2file(filename, name);
+  }
+  void printStartMessage() const {
+    std::cout << "Making " << name << " profile..." << std::flush;
+  }
+  
 };
 
 int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<char>, int, int);
 
-class shiftJacVec : public ReadShiftProfileAll {
+class shiftJacVec : public ReadShiftProfileGenome {
  public:
-  double w;
- shiftJacVec(const Mapfile &p, int numthreads): ReadShiftProfileAll("Jaccard index", p, numthreads), w(1) {}
+ shiftJacVec(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Jaccard index", p, numthreads, 1) {}
 
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
-    /*    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(fwd[j] && rev[j+170]) std::cout << j << "\t" << fwd[j] << "\t" << rev[j+170] << std::endl;
-      }*/
-    
-    /*    std::vector<int> fragarray(p.chr[i].getlen(),0);
-    std::vector<int> reparray(p.chr[i].getlen(),0);
-
-    //    std::vector<range> vrep;
-    int thre=3;
-    
-    for(int j=chr[i].start; j<chr[i].end-170; ++j) {
-      if(fwd[j] && rev[j+170]) for(int k=0; k<170; ++k) ++fragarray[j+k];
-      if(fwd[j] && rev[j+50])  for(int k=0; k<50; ++k)  ++reparray[j+k];
-    }
-
-    std::vector<int> dfrag(170,0);
-    std::vector<int> drep(170,0);
-    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      ++dfrag[fragarray[j]];
-      ++drep[reparray[j]];
-    }
-    int ndfragon(0);
-    int ndrepon(0);
-    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      //      if(fragarray[j]>=thre) j = getRepeatRegion(vrep, j, reparray, chr[i].start, chr[i].end);
-      if(fragarray[j]) ++ndfragon;
-      if(reparray[j]) ++ndrepon;
-    }
-    for(int j=0; j<170; ++j) std::cout << j << "\t" << dfrag[j] << "\t" << drep[j] << std::endl;
-    
-
-    std::cout <<"covered num: " << ndfragon << "\t" << ndrepon << std::endl;
-    
-    for(int j=chr[i].start; j<chr[i].end; ++j) {
-      if(fragarray[j]<=1) fwd[j] = rev[j] = 0;
-      }*/
-    /*    for(auto x:vrep) {
-      std::cout << x.start<< "-" << x.end << std::endl;
-      for(int j=x.start; j<x.end; ++j) fwd[j] = rev[j] = 0;
-      }*/
-
     setDist(chr[i], fwd, rev);  
   }
 };
 
-class shiftJacBit : public ReadShiftProfileAll {
+class shiftJacBit : public ReadShiftProfileGenome {
  public:
-  double w;
- shiftJacBit(const Mapfile &p, int numthreads): ReadShiftProfileAll("Jaccard index", p, numthreads), w(1) {}
+ shiftJacBit(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Jaccard index", p, numthreads, 1) {}
 
   void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
   void execchr(const Mapfile &p, int i) {
@@ -361,10 +297,9 @@ class shiftJacBit : public ReadShiftProfileAll {
   }
 };
 
-class shiftCcp : public ReadShiftProfileAll {
+class shiftCcp : public ReadShiftProfileGenome {
  public:
-  double w;
- shiftCcp(const Mapfile &p, int numthreads): ReadShiftProfileAll("Cross correlation", p, numthreads), w(1) {}
+ shiftCcp(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Cross correlation", p, numthreads, 1) {}
   
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, int i) {
@@ -375,10 +310,9 @@ class shiftCcp : public ReadShiftProfileAll {
   }
 };
 
-class shiftHamming : public ReadShiftProfileAll {
+class shiftHamming : public ReadShiftProfileGenome {
  public:
-  double w;
- shiftHamming(const Mapfile &p, int numthreads): ReadShiftProfileAll("Hamming distance", p, numthreads), w(-1) {}
+ shiftHamming(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Hamming distance", p, numthreads, -1) {}
 
   void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
   void execchr(const Mapfile &p, int i) {

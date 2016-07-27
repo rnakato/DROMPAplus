@@ -272,6 +272,7 @@ class SeqStats {
  SeqStats(std::string s, int l=0): yeast(false), len(l), len_mpbl(l), nread_inbed(0), nbin(0), depth(0), w(0) {
     name = rmchr(s);
   }
+  virtual ~SeqStats(){}
   void addNreadInBed(const int i) { nread_inbed += i; }
   long getNreadInbed() const { return nread_inbed; }
   void addlen(const SeqStats &x) {
@@ -358,6 +359,15 @@ class SeqStats {
   }
   friend void getMpbl(const std::string, std::vector<SeqStats> &chr);
   //  friend void setlenmpbl(SeqStats &x, std::string str, int l);
+};
+
+
+class SeqStatsGenome: public SeqStats {
+  std::vector<SeqStats> chr;
+  std::vector<SeqStats>::iterator lchr; // longest chromosome
+  std::vector<sepchr> vsepchr;
+ public:
+ SeqStatsGenome(): SeqStats("Genome") {}
 };
 
 class Mapfile {

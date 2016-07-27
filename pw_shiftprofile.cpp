@@ -4,15 +4,12 @@
 #include <map>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/thread.hpp>
-#include <time.h>
-
-//using namespace std;
 
 /*namespace {
   enum {BP_BACKGROUD, BP_REPEAT, BP_PEAK};
   }*/
 
-void ReadShiftProfileAll::defSepRange(int numthreads)
+/*void ReadShiftProfileAll::defSepRange(int numthreads)
 {
   int length(mp_to+mp_from);
   int sepsize = length/numthreads +1;
@@ -23,8 +20,7 @@ void ReadShiftProfileAll::defSepRange(int numthreads)
     range sep(s - mp_from, e - mp_from);
     seprange.push_back(sep);
   }
-  
-}
+  }*/
 
 void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w)
 {
@@ -156,7 +152,7 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string ty
     std::cout << p.chr[i].name << ".." << std::flush;
    
     dist.execchr(p, i);
-    dist.chr[i].setflen(dist.w);
+    dist.chr[i].setflen();
   }
 }
 
@@ -179,7 +175,7 @@ void func(T &dist, const Mapfile &p, const int i) {
   auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
   auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
 
-  int flen(dist.genome.getnsci());
+  int flen(dist.getnsci());
   int readlen(p.getlenF3());
   
   std::vector<short> fragarray(dist.chr[i].width, 0);
@@ -256,52 +252,12 @@ void func(T &dist, const Mapfile &p, const int i) {
   auto fwd = genBitset(p.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
   auto rev = genBitset(p.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
 
-  int flen(dist.genome.getnsci());
+  int flen(dist.getnsci());
   int readlen(p.getlenF3());
 
   dist.chr[i].setFragmentVariability4Frag(flen, fwd, rev);
   dist.chr[i].setFragmentVariability4Rep(readlen, fwd, rev);
   dist.chr[i].setFragmentVariability4Back(ng_to, fwd, rev);
-
-  /*  double pdfrag(0), pdrep(0), pdback(0);
-  int thre4fragarray(0);
-  for(int j=0; j<flen; ++j) {
-    double a(dist.chr[i].fvfrag.getFragOverlapDist(j));
-    pdfrag += a;
-    if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
-    double b(dist.chr[i].fvrep.getFragOverlapDist(j));
-    pdrep += b;
-    double c(dist.chr[i].fvback.getFragOverlapDist(j));
-    pdback += c;
-    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b << "\t" << pdrep << "\t" << c << "\t" << pdback << std::endl;
-  }
-
-  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;*/
-
-  /*  std::vector<range> vrep;
-  int thre4reparray(10);
-  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
-    if(reparray[j]>=thre4reparray) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
-  }
-
-  std::vector<char> anoarray(dist.chr[i].width, BP_BACKGROUD);
-  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
-    if(fragarray[j] > thre4fragarray) anoarray[j-dist.chr[i].start] = BP_PEAK;
-  }
-  for(auto x:vrep) {
-    for(int j=x.start; j<x.end; ++j) anoarray[j] = BP_REPEAT;
-  }
-
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: p.chr[i].seq[strand].vRead) {
-      if(x.duplicate || !RANGE(x.F3, dist.chr[i].start, dist.chr[i].end-1)) continue;
-      if(anoarray[x.F3 - dist.chr[i].start]==BP_BACKGROUD)   ++dist.chr[i].nread_back;
-      else if(anoarray[x.F3 - dist.chr[i].start]==BP_REPEAT) ++dist.chr[i].nread_rep;
-      else ++dist.chr[i].nread_peak;
-    }
-    }*/
-
-  //  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
 
   return;
 }
@@ -312,18 +268,18 @@ void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, s
   for(uint i=chr_s; i<=chr_e; ++i) {
     std::cout << p.chr[i].name << ".." << std::flush;
     func(dist, p, i);
-    if(p.chr[i].isautosome()) dist.addnread2genome(dist.chr[i], mtx);
+    if(p.chr[i].isautosome()) dist.addnread2genome(i, mtx);
  
     std::string filename = p.getprefix() + "." + typestr + "." + p.chr[i].name + ".csv";
-    dist.chr[i].outputmp(filename, dist.name, dist.w);
+    dist.outputmpChr(filename, i);
   }
 }
 
 template <class T>
-void makeProfile(Mapfile &p, std::string typestr, int numthreads)
+void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
 {
   T dist(p, numthreads);
-  std::cout << "Making " << dist.name << " profile..." << std::flush;
+  dist.printStartMessage();
 
   boost::thread_group agroup;
   boost::mutex mtx;
@@ -342,11 +298,12 @@ void makeProfile(Mapfile &p, std::string typestr, int numthreads)
 
   // set fragment length;
   for(uint i=0; i<p.chr.size(); ++i) {
-    if(p.chr[i].isautosome()) dist.addmp2genome(dist.chr[i]);
+    if(p.chr[i].isautosome()) dist.addmp2genome(i);
   }
+  
 
-  dist.genome.setflen(dist.w);
-  p.seteflen(dist.genome.getnsci());
+  dist.setflen();
+  p.seteflen(dist.getnsci());
 
   std::cout << "count reads in background.." << std::flush;
   for(uint i=0; i<p.vsepchr.size(); i++) {
@@ -355,7 +312,7 @@ void makeProfile(Mapfile &p, std::string typestr, int numthreads)
   agroup.join_all();
   
   std::string filename = p.getprefix() + "." + typestr + ".csv";
-  dist.genome.outputmp(filename, dist.name, dist.w);
+  dist.outputmpGenome(filename);
 
   return;
 }
