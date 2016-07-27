@@ -16,7 +16,7 @@ namespace {
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
-void addmp(std::map<int, double> &, const std::map<int, double> &, double w=1);
+void addmp(std::map<int, double> &, const std::map<int, double> &, double w);
 
 class FragmentVariability {
   int fraglen;
@@ -38,23 +38,12 @@ class FragmentVariability {
     fraglen = l;
     std::vector<short> array(width, 0);
 
-    //    std::map<int, int> mp;
-    
     int last(0);
     for(int i=start; i<end - fraglen; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
 	++numOfFragment;
 	if(last) {
 	  vDistanceOfFrag.push_back(i - last);
-
-	  //	  std::cout << (i - last) << std::endl;
-	  //	  ++mp[i - last];
-	  /*
-	  if(mp.find(i - last) != mp.end() ) {
-	    ++mp[i - last];
-	  } else {
-	    mp[i - last] = 1;
-	    }*/
 
 	  //	  sumDistanceOfFrag += i - last;
 	  // ++numDistanceOfFrag;
@@ -68,8 +57,6 @@ class FragmentVariability {
     //    for(int i=start; i<end - fraglen; ++i) if(array[i]) ++numOfCoveredBase;
     // for(int i=start; i<end; ++i) ++FragOverlapDist[array[i]];
     //SumOfFragOverlapDist = accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0);
-
-    //    for(auto itr = mp.begin(); itr != mp.end(); ++itr) std::cout << itr->first << "\t" << itr->second << std::endl;
 
   }
 
@@ -237,6 +224,7 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
     // seprange
     defSepRange(numthreads);
   }
+  virtual ~ReadShiftProfileGenome(){}
   void defSepRange(const int numthreads) {
     int length(mp_to+mp_from);
     int sepsize = length/numthreads +1;

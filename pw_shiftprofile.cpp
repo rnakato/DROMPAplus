@@ -26,6 +26,7 @@ void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, dou
 {
   for(auto itr = mpfrom.begin(); itr != mpfrom.end(); ++itr) {
     mpto[itr->first] += itr->second * w;
+    std::cout << mpto[itr->first] << std::endl;
   }
 }
 
@@ -300,7 +301,6 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   for(uint i=0; i<p.chr.size(); ++i) {
     if(p.chr[i].isautosome()) dist.addmp2genome(i);
   }
-  
 
   dist.setflen();
   p.seteflen(dist.getnsci());
