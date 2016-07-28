@@ -10,6 +10,11 @@
 #include "readdata.h"
 #include "macro.h"
 
+/*namespace MyOpt {
+    using Variables = boost::program_options::variables_map;
+    using Opts      = boost::program_options::options_description;
+    }*/
+
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;

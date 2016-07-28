@@ -222,54 +222,26 @@ class Wigstats {
   }
 };
 
-class GenomeCoverage {
-  long nbp, ncov, ncovnorm;
-  double gcovRaw, gcovNorm;
- public:
- GenomeCoverage(): nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0) {}
-  void addGcov(const GenomeCoverage &x, boost::mutex &mtx) {
-    boost::mutex::scoped_lock lock(mtx);
-    nbp      += x.nbp;
-    ncov     += x.ncov;
-    ncovnorm += x.ncovnorm;
-    gcovRaw  = nbp ? ncov / static_cast<double>(nbp): 0;
-    gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
-  }
-  void calcGcov(const std::vector<char> &array) {
-    for(size_t i=0; i<array.size(); ++i) {
-      if(array[i] >= MAPPABLE)     ++nbp;      // MAPPABLE || COVREAD_ALL || COVREAD_NORM
-      if(array[i] >= COVREAD_ALL)  ++ncov;     // COVREAD_ALL || COVREAD_NORM
-      if(array[i] == COVREAD_NORM) ++ncovnorm;
-    }
-    gcovRaw  = nbp ? ncov     / static_cast<double>(nbp): 0;
-    gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
-    //    std::cout << nbp << ","<< ncov << ","<< ncovnorm << ","<< gcovRaw << ","<< gcovNorm << std::endl;
-  }
-  void print(std::ofstream &out, const bool gv) const {
-      if(gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % gcovRaw % gcovNorm;
-      else   out << boost::format("%1$.3f\t%2$.3f\t")   % gcovRaw % gcovNorm;
-  //  out << boost::format("(%1%/%2%)\t") % p.ncovnorm % p.nbp;
-  }
-};
-
 class SeqStats {
  protected:
   bool yeast;
   long len, len_mpbl;
   /* FRiP */
   long nread_inbed;
+  //  GenomeCoverage gcov;
+  long nbp, ncov, ncovnorm;
+  double gcovRaw, gcovNorm;
  public:
   std::string name;
   int nbin;
 
   Wigstats ws;
-  GenomeCoverage gcov;
   
   strandData seq[STRANDNUM];
   double depth;
   double w;
   
- SeqStats(std::string s, int l=0): yeast(false), len(l), len_mpbl(l), nread_inbed(0), nbin(0), depth(0), w(0) {
+ SeqStats(std::string s, int l=0): yeast(false), len(l), len_mpbl(l), nread_inbed(0), nbp(0), ncov(0), ncovnorm(0), gcovRaw(0), gcovNorm(0) , nbin(0), depth(0), w(0) {
     name = rmchr(s);
   }
   virtual ~SeqStats(){}
@@ -284,22 +256,19 @@ class SeqStats {
   long bothnread_rpm ()     const { return seq[STRAND_PLUS].nread_rpm     + seq[STRAND_MINUS].nread_rpm; }
   long bothnread_afterGC () const { return seq[STRAND_PLUS].nread_afterGC + seq[STRAND_MINUS].nread_afterGC; }
 
-  /*  void addnread(const SeqStats &x) { 
-    for(int i=0; i<STRANDNUM; i++) seq[i].nread += x.seq[i].nread;
-  }
-  void addnread_red(const SeqStats &x) { 
-    for(int i=0; i<STRANDNUM; i++) {
-      seq[i].nread_nonred += x.seq[i].nread_nonred;
-      seq[i].nread_red    += x.seq[i].nread_red;
-    }
-    }*/
-
   long getlen()     const { return len; }
   long getlenmpbl() const { return len_mpbl; }
+  long getnbp() const {return nbp; }
+  long getncov() const {return ncov; }
+  long getncovnorm() const {return ncovnorm; }
   double getpmpbl() const { return static_cast<double>(len_mpbl)/len; }
   int getnbin() const { return nbin; }
   void print() const {
     std::cout << name << "\t" << len << "\t" << len_mpbl << "\t" << bothnread() << "\t" << bothnread_nonred() << "\t" << bothnread_red() << "\t" << bothnread_rpm() << "\t" << bothnread_afterGC()<< "\t" << depth << std::endl;
+  }
+  void printGcov(std::ofstream &out, const bool gv) const {
+      if(gv) out << boost::format("%1$.3f\t(%2$.3f)\t") % gcovRaw % gcovNorm;
+      else   out << boost::format("%1$.3f\t%2$.3f\t")   % gcovRaw % gcovNorm;
   }
   void calcdepth(const int flen) {
     depth = len_mpbl ? bothnread_nonred() * flen / static_cast<double>(len_mpbl): 0;
@@ -317,6 +286,15 @@ class SeqStats {
   void setWeight(double weight) {
     w = weight;
     for(int i=0; i<STRANDNUM; i++) seq[i].nread_rpm = seq[i].nread_nonred * w;
+  }
+  void calcGcov(const std::vector<char> &array) {
+    for(size_t i=0; i<array.size(); ++i) {
+      if(array[i] >= MAPPABLE)     ++nbp;      // MAPPABLE || COVREAD_ALL || COVREAD_NORM
+      if(array[i] >= COVREAD_ALL)  ++ncov;     // COVREAD_ALL || COVREAD_NORM
+      if(array[i] == COVREAD_NORM) ++ncovnorm;
+    }
+    gcovRaw  = nbp ? ncov     / static_cast<double>(nbp): 0;
+    gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
   }
   
   void yeaston() { yeast = true; }
@@ -352,6 +330,7 @@ class SeqStats {
     if(chrnum) return true;
     else       return false;
   }
+
   friend void getMpbl(const std::string, std::vector<SeqStats> &chr);
   friend void calcFRiP(SeqStats &, const std::vector<bed>);
 };
@@ -438,6 +417,14 @@ class SeqStatsGenome: public SeqStats {
     setF5(flen);
   }
   std::vector<bed> getvbed() const { return vbed; }
+  void addGcov(const int i, boost::mutex &mtx) {
+    boost::mutex::scoped_lock lock(mtx);
+    nbp      += chr[i].getnbp();
+    ncov     += chr[i].getncov();
+    ncovnorm += chr[i].getncovnorm();
+    gcovRaw  = nbp ? ncov / static_cast<double>(nbp): 0;
+    gcovNorm = nbp ? ncovnorm / static_cast<double>(nbp): 0;
+  }
 };
 
 class Mapfile {

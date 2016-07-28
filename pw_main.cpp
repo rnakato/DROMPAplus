@@ -349,7 +349,7 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const Se
   if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
   if(values["ntype"].as<std::string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
 
-  p.gcov.print(out, mapfile.islackOfRead4GenomeCov());
+  p.printGcov(out, mapfile.islackOfRead4GenomeCov());
   
   p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.getFRiP();
@@ -434,8 +434,8 @@ void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, doubl
   for(int i=s; i<=e; ++i) {
     std::cout << p.genome.chr[i].name << ".." << std::flush;
     auto array = makeGcovArray(values, p.genome.chr[i], p, r4cmp);
-    p.genome.chr[i].gcov.calcGcov(array);
-    p.genome.gcov.addGcov(p.genome.chr[i].gcov, mtx);
+    p.genome.chr[i].calcGcov(array);
+    p.genome.addGcov(i, mtx);
   }
 }
 
