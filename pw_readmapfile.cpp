@@ -13,11 +13,6 @@
 #include "pw_gv.h"
 #include "pw_readmapfile.h"
 #include "pw_shiftprofile.h"
-#include "util.h"
-#include "macro.h"
-#include "readdata.h"
-
-//using namespace std;
 
 void parseSam(const MyOpt::Variables &values, std::string inputfile, Mapfile &p);
 void parseBowtie(const MyOpt::Variables &values, std::string inputfile, Mapfile &p);
@@ -423,7 +418,6 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
     strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
     std::cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
-    exit (0);
     
     //    strShiftProfile(p, "hdp", values["threads"].as<int>());
     clock_t t4 = clock();

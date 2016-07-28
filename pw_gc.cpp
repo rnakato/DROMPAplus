@@ -2,12 +2,6 @@
  * This file is a part of DROMPA sources.
  */
 #include "pw_gc.h"
-#include <boost/program_options.hpp>
-#include "pw_makefile.h"
-#include "readdata.h"
-#include "macro.h"
-
-using namespace std;
 
 namespace {
   const int lenIgnoreOfFragment(5);
@@ -15,18 +9,18 @@ namespace {
   const double threGcDepth(1e-3);
 }
 
-vector<short> makeFastaArray(string filename, int length, int flen4gc);
-vector<int> makeDistRead(Mapfile &p, vector<short> &fastaGCarray, const vector<char> &ar, SeqStats &chr, int, int, int);
-vector<int> makeDistGenome(const vector<short> &FastaArray, const vector<char> &ar, int chrlen, int flen);
+std::vector<short> makeFastaArray(std::string filename, int length, int flen4gc);
+std::vector<int> makeDistRead(Mapfile &p, std::vector<short> &fastaGCarray, const std::vector<char> &ar, SeqStats &chr, int, int, int);
+std::vector<int> makeDistGenome(const std::vector<short> &FastaArray, const std::vector<char> &ar, int chrlen, int flen);
 
-void output_GCdist(const MyOpt::Variables &values, Mapfile &p, const vector<int> &gDist, const vector<int> &rDist, int flen4gc)
+void output_GCdist(const MyOpt::Variables &values, Mapfile &p, const std::vector<int> &gDist, const std::vector<int> &rDist, int flen4gc)
 {
   int GsumGC = accumulate(gDist.begin(), gDist.end(), 0);
   int RsumGC = accumulate(rDist.begin(), rDist.end(), 0);
 
-  string filename = p.getprefix() + ".GCdist.xls";
-  ofstream out(filename);
-  out << "GC\tgenome prop\treads prop\tdepth\tweight" << endl;
+  std::string filename = p.getprefix() + ".GCdist.xls";
+  std::ofstream out(filename);
+  out << "GC\tgenome prop\treads prop\tdepth\tweight" << std::endl;
   
   for(int i=0; i<=flen4gc; ++i) {
     double r_genome = gDist[i] / static_cast<double>(GsumGC);
@@ -39,29 +33,29 @@ void output_GCdist(const MyOpt::Variables &values, Mapfile &p, const vector<int>
       if(!values.count("gcdepthoff") && r_depth < threGcDepth) p.GCweight[i] = 1;
       else p.GCweight[i] = r_genome/r_read;
     }
-    out << p.GCweight[i] << endl;
+    out << p.GCweight[i] << std::endl;
   }
-  cout << "fragment distribution is output to "<< filename << "." << endl;
+  std::cout << "fragment distribution is output to "<< filename << "." << std::endl;
   
   return;
 }
 
 void make_GCdist(const MyOpt::Variables &values, Mapfile &p)
 {
-  cout << "chromosome for GC distribution: chr" << p.lchr->name << endl;
+  std::cout << "chromosome for GC distribution: chr" << p.lchr->name << std::endl;
   int chrlen(p.lchr->getlen());
   int flen(p.getflen(values));
-  int flen4gc = min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
+  int flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
   BPRINT("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc+lenIgnoreOfFragment);
 
   // mappability
-  vector<char> array; 
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<string>(), ("chr" + p.lchr->name), chrlen);
+  std::vector<char> array; 
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.lchr->name), chrlen);
   else array = readMpbl_binary(p.lchr->getlen());
   if(values.count("bed")) arraySetBed(array, p.lchr->name, p.genome.getvbed());
 
   // make fastaGCarray
-  string fa= values["genome"].as<string>() + "/chr" + p.lchr->name + ".fa";
+  std::string fa= values["genome"].as<std::string>() + "/chr" + p.lchr->name + ".fa";
   auto FastaArray = makeFastaArray(fa, chrlen, flen4gc);
 
   // make GCarray for genome
@@ -75,16 +69,16 @@ void make_GCdist(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-vector<int> makeDistRead(Mapfile &p, vector<short> &fastaGCarray, const vector<char> &ar, SeqStats &chr, int chrlen, int flen, int flen4gc)
+std::vector<int> makeDistRead(Mapfile &p, std::vector<short> &fastaGCarray, const std::vector<char> &ar, SeqStats &chr, int chrlen, int flen, int flen4gc)
 {
   int gc, posi;
 
-  vector<int> array(flen4gc+1, 0);
+  std::vector<int> array(flen4gc+1, 0);
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x:chr.seq[strand].vRead) {
       if(x.duplicate) continue;
-      if(strand==STRAND_PLUS) posi = min(x.F3 + lenIgnoreOfFragment, chrlen -1);
-      else                    posi = max(x.F3 - flen + lenIgnoreOfFragment, 0);
+      if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, chrlen -1);
+      else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
       if(!ar[posi] || !ar[posi + flen4gc]) continue;
       gc = fastaGCarray[posi];
       if(gc != -1) array[gc]++;
@@ -94,9 +88,9 @@ vector<int> makeDistRead(Mapfile &p, vector<short> &fastaGCarray, const vector<c
   return array;
 }
 
-vector<int> makeDistGenome(const vector<short> &FastaArray, const vector<char> &ar, int chrlen, int flen4gc)
+std::vector<int> makeDistGenome(const std::vector<short> &FastaArray, const std::vector<char> &ar, int chrlen, int flen4gc)
 {
-  vector<int> array(flen4gc+1, 0);
+  std::vector<int> array(flen4gc+1, 0);
 
   int max = chrlen - lenIgnoreOfFragment - flen4gc;
   for(int i= lenIgnoreOfFragment + flen4gc; i<max; ++i) {
@@ -110,13 +104,13 @@ vector<int> makeDistGenome(const vector<short> &FastaArray, const vector<char> &
 
 
 /* return -1 when including Ns */
-vector<short> makeFastaArray(string filename, int length, int flen4gc)
+std::vector<short> makeFastaArray(std::string filename, int length, int flen4gc)
 {
   int s,e, n(0);
   int state(0);
   char c;
-  vector<short> array(length,0);
-  ifstream in(filename);
+  std::vector<short> array(length,0);
+  std::ifstream in(filename);
   if(!in) PRINTERR("Could not open " << filename << ".");
   
   while (!in.eof()) {
@@ -132,7 +126,7 @@ vector<short> makeFastaArray(string filename, int length, int flen4gc)
       if(c=='>') goto final;
       else if(isalpha((int)c)) {
 	if(c=='G' || c=='C' || c=='g' || c=='c') {
-	  s = max(0, n - flen4gc);
+	  s = std::max(0, n - flen4gc);
 	  e = n;
 	  for(int i=s; i<e; i++){
 	    if(array[i] != -1) array[i]++;
@@ -140,7 +134,7 @@ vector<short> makeFastaArray(string filename, int length, int flen4gc)
 	}else if(c=='A' || c=='T' || c=='a' || c=='t') {
 	  /* none */
 	}else{  /* N and others */
-	  s = max(0, n - flen4gc);
+	  s = std::max(0, n - flen4gc);
 	  e = n;
 	  for(int i=s; i<e; i++) array[i] = -1;
 	}
@@ -161,16 +155,16 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, boo
   for(int i=s; i<=e; ++i) {
     int posi;
     int flen(p.getflen(values));
-    int flen4gc = min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
-    cout << p.genome.chr[i].name << ".." << flush;
-    string fa = values["genome"].as<string>() + "/chr" + p.genome.chr[i].name + ".fa";
+    int flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
+    std::cout << p.genome.chr[i].name << ".." << std::flush;
+    std::string fa = values["genome"].as<std::string>() + "/chr" + p.genome.chr[i].name + ".fa";
     auto FastaArray = makeFastaArray(fa, p.genome.chr[i].getlen(), flen4gc);
     
     for(int strand=0; strand<STRANDNUM; ++strand) {
       for (auto &x: p.genome.chr[i].seq[strand].vRead) {
 	if(x.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
-	else                    posi = max(x.F3 - flen + lenIgnoreOfFragment, 0);
+	if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
+	else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(p.GCweight[gc]);
 	p.genome.chr[i].seq[strand].addReadAfterGC(x.getWeight(), mtx);
@@ -182,7 +176,7 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, boo
 
 void weightRead(const MyOpt::Variables &values, Mapfile &p)
 {
-  cout << "add weight to reads..." << flush;
+  std::cout << "add weight to reads..." << std::flush;
 
   boost::thread_group agroup;
   boost::mutex mtx;

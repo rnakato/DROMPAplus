@@ -1,17 +1,12 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
-#include <boost/algorithm/string.hpp>
 #include "pw_makefile.h"
-#include "readdata.h"
-#include "statistics.h"
-
-using namespace std;
 
 namespace {
   void printwarning(double w)
   {
-    cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << endl;
+    std::cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << std::endl;
   }
   
   template <class T, class S>
@@ -21,24 +16,24 @@ namespace {
   }
 }
   
-void addReadToWigArray(const MyOpt::Variables &, vector<int> &, const Read, long);
-vector<int> makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
-void norm2rpm(const MyOpt::Variables &, Mapfile &, SeqStats &, vector<int> &);
-void outputWig(const MyOpt::Variables &, Mapfile &, string);
-void outputBedGraph(const MyOpt::Variables &, Mapfile &, string);
-void outputBinary(const MyOpt::Variables &, Mapfile &, string);
+void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, long);
+std::vector<int> makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
+void norm2rpm(const MyOpt::Variables &, Mapfile &, SeqStats &, std::vector<int> &);
+void outputWig(const MyOpt::Variables &, Mapfile &, std::string);
+void outputBedGraph(const MyOpt::Variables &, Mapfile &, std::string);
+void outputBinary(const MyOpt::Variables &, Mapfile &, std::string);
 
 void makewig(const MyOpt::Variables &values, Mapfile &p)
 {
   printf("Convert read data to array: \n");
   int oftype = values["of"].as<int>();
-  string filename(p.getbinprefix());
+  std::string filename(p.getbinprefix());
 
   if (oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG) {
     filename += ".wig";
     outputWig(values, p, filename);
     if(oftype==TYPE_COMPRESSWIG) {
-      string command = "gzip -f " + filename;
+      std::string command = "gzip -f " + filename;
       if(system(command.c_str())) PRINTERR("gzip .wig failed.");
     }
   } else if (oftype==TYPE_BEDGRAPH || oftype==TYPE_BIGWIG) {
@@ -46,7 +41,7 @@ void makewig(const MyOpt::Variables &values, Mapfile &p)
     outputBedGraph(values, p, filename);
     if(oftype==TYPE_BIGWIG) {
       printf("Convert to bigWig...\n");
-      string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<string>() + " " + p.getprefix() + ".bw";
+      std::string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<std::string>() + " " + p.getprefix() + ".bw";
       if(system(command.c_str())) PRINTERR("conversion failed.");
       remove(filename.c_str()); 
     }
@@ -59,17 +54,19 @@ void makewig(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-void addReadToWigArray(const MyOpt::Variables &values, vector<int> &wigarray, const Read x, long chrlen)
+void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarray, const Read x, long chrlen)
 {
   int s, e;
-  s = min(x.F3, x.F5);
-  e = max(x.F3, x.F5);
-  if(values["rcenter"].as<int>()) {  // consider only center region of fragments
-    s = (s + e - values["rcenter"].as<int>())/2;
-    e = s + values["rcenter"].as<int>();
+  s = std::min(x.F3, x.F5);
+  e = std::max(x.F3, x.F5);
+
+  int rcenter(values["rcenter"].as<int>());
+  if(rcenter) {  // consider only center region of fragments
+    s = (s + e - rcenter)/2;
+    e = s + rcenter;
   }
-  s = max(0, s);
-  e = min(e, (int)(chrlen -1));
+  s = std::max(0, s);
+  e = std::min(e, (int)(chrlen -1));
 
   int sbin(s/values["binsize"].as<int>());
   int ebin(e/values["binsize"].as<int>());
@@ -77,10 +74,8 @@ void addReadToWigArray(const MyOpt::Variables &values, vector<int> &wigarray, co
   return;
 }
 
-void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray)
+void peakcall(Mapfile &mapfile, const SeqStats &chr, const std::vector<int> &wigarray)
 {
-  //  cout << "call peak..." << flush;
- 
   int size = wigarray.size();
   int ext(0);
   double pthre(3);
@@ -102,14 +97,13 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const vector<int> &wigarray
       }
     }
   }
-  //  cout << "done." << endl;
   return;
 }
 
-vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
+std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
-  cout << chr.name << ".." << flush;
-  vector<int> wigarray(chr.nbin, 0);
+  std::cout << chr.name << ".." << std::flush;
+  std::vector<int> wigarray(chr.nbin, 0);
 
   for(int strand=0; strand<STRANDNUM; ++strand) {
     for (auto x:chr.seq[strand].vRead) {
@@ -121,7 +115,7 @@ vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &c
   if (values.count("mp")) {
     int binsize = values["binsize"].as<int>();
     int mpthre = values["mpthre"].as<double>()*binsize;
-    auto mparray = readMpbl(values["mp"].as<string>(), ("chr" + chr.name), values["binsize"].as<int>(), chr.nbin);
+    auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + chr.name), values["binsize"].as<int>(), chr.nbin);
     for(int i=0; i<chr.nbin; ++i) {
       chr.ws.addmpDist(mparray[i]/static_cast<double>(binsize));
       if(mparray[i] > mpthre) wigarray[i] *= binsize/static_cast<double>(mparray[i]);
@@ -132,7 +126,7 @@ vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &c
 
   peakcall(p, chr, wigarray);
   /* Total read normalization */
-  if(values["ntype"].as<string>() != "NONE") norm2rpm(values, p, chr, wigarray);
+  if(values["ntype"].as<std::string>() != "NONE") norm2rpm(values, p, chr, wigarray);
 
 #ifdef DEBUG
   if (values.count("mp")) chr.ws.printmpDist();
@@ -141,11 +135,11 @@ vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &c
   return wigarray;
 }
 
-void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, vector<int> &wigarray)
+void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::vector<int> &wigarray)
 {
   static int on(0);
   double w(0);
-  string ntype(values["ntype"].as<string>());
+  std::string ntype(values["ntype"].as<std::string>());
   
   if(ntype == "GR") {
     double dn(p.genome.bothnread_nonred());
@@ -182,50 +176,50 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, vector<
   return;
 }
 
-void outputWig(const MyOpt::Variables &values, Mapfile &p, string filename)
+void outputWig(const MyOpt::Variables &values, Mapfile &p, std::string filename)
 {
   int binsize = values["binsize"].as<int>();
-  ofstream out(filename);
+  std::ofstream out(filename);
   out << boost::format("track type=wiggle_0\tname=\"%1%\"\tdescription=\"Merged tag counts for every %2% bp\"\n")
-    % values["output"].as<string>() % binsize;
+    % values["output"].as<std::string>() % binsize;
   
   for(auto &chr: p.genome.chr) {
-    vector<int> array = makeWigarray(values, p, chr);
+    std::vector<int> array = makeWigarray(values, p, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
     for(int i=0; i<chr.nbin; ++i) {
-      if(array[i]) out << i*binsize +1 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
+      if(array[i]) out << i*binsize +1 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
     }
   }
   
   return;
 }
 
-void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, string filename)
+void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, std::string filename)
 {
   int e;
   int binsize = values["binsize"].as<int>();
   
-  ofstream out(filename);
+  std::ofstream out(filename);
   out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].name % 0 % (p.genome.chr[1].getlen()/100);
-  out << "browser hide all" << endl;
-  out << "browser pack refGene encodeRegions" << endl;
-  out << "browser full altGraph" << endl;
+  out << "browser hide all" << std::endl;
+  out << "browser pack refGene encodeRegions" << std::endl;
+  out << "browser full altGraph" << std::endl;
   out << boost::format("track type=bedGraph name=\"%1%\" description=\"Merged tag counts for every %2% bp\" visibility=full\n")
-    % values["output"].as<string>() % binsize;
+    % values["output"].as<std::string>() % binsize;
   out.close();
 
-  string tempfile = filename + ".temp";
-  ofstream temp(tempfile);
+  std::string tempfile = filename + ".temp";
+  std::ofstream temp(tempfile);
   for(auto &chr: p.genome.chr) {
-    vector<int> array = makeWigarray(values, p, chr);
+    std::vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) {
       if(i==chr.nbin -1) e = chr.getlen() -1; else e = (i+1)*binsize;
-      if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << endl;
+      if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << std::endl;
     }
   }
   temp.close();
   
-  string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
+  std::string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
   if(system(command.c_str())) PRINTERR("sorting bedGraph failed.");
 
   remove(tempfile.c_str());
@@ -233,11 +227,11 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, string filename)
   return;
 }
 
-void outputBinary(const MyOpt::Variables &values, Mapfile &p, string filename)
+void outputBinary(const MyOpt::Variables &values, Mapfile &p, std::string filename)
 {
-  ofstream out(filename, ios::binary);
+  std::ofstream out(filename, std::ios::binary);
   for(auto &chr: p.genome.chr) {
-    vector<int> array = makeWigarray(values, p, chr);
+    std::vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.nbin; ++i) out.write((char *)&array[i], sizeof(int));
   }
   return;

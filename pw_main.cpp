@@ -10,7 +10,6 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include "pw_readmapfile.h"
-#include "readdata.h"
 #include "pw_makefile.h"
 #include "pw_gv.h"
 #include "pw_gc.h"

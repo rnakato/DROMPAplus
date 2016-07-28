@@ -20,7 +20,7 @@ OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_shiftprofile.o sta
 OBJS_DD = dd_main.o dd_readfile.o
 
 HEADS_UTIL = util.h readdata.h macro.h seq.h
-HEADS_PW = pw_gv.h pw_readmapfile.h pw_makefile.h pw_gc.h pw_shiftprofile.h statistics.h $(HEADS_UTIL)
+HEADS_PW = pw_gv.h pw_readmapfile.h statistics.h $(HEADS_UTIL)
 HEADS_DD = dd_gv.h dd_readfile.h $(HEADS_UTIL)
 
 .PHONY: all
@@ -50,8 +50,12 @@ clean:
 	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET)
 
 alglib.o: Makefile alglib.h
-dd_main.o: Makefile dd_opt.h
-pw_shiftprofile.o: Makefile pw_shiftprofile_p.h
+dd_main.o: dd_opt.h
+pw_main.o: pw_makefile.h pw_gc.h
+pw_readmapfile.o: pw_shiftprofile.h
+pw_makefile.o: pw_makefile.h
+pw_gc.o: pw_gc.h
+pw_shiftprofile.o: Makefile pw_shiftprofile_p.h pw_shiftprofile.h
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
 $(OBJS_PW): Makefile $(HEADS_PW)
 $(OBJS_DD): Makefile $(HEADS_DD)
