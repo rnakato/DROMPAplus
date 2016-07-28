@@ -7,18 +7,18 @@
 
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */
-void scan_samplestr(string str, unordered_map<string, SampleFile> &sample, vector<SamplePair> &samplepair)
+void scan_samplestr(std::string str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
 {
-vector<string> v;
+std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
 
   if(v.size() >8) {
-    cerr << "error: sample string has ',' more than 8: " << str << endl;
+    std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
     exit(1);
   }
   
   if(v[0] == "") {
-      cerr << "please specify ChIP sample: " << str << endl;
+      std::cerr << "please specify ChIP sample: " << str << std::endl;
       exit(1);
   } else {
     if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0]);
@@ -37,19 +37,19 @@ vector<string> v;
   return;
 }
 
-pdSample scan_pdstr(string str)
+pdSample scan_pdstr(std::string str)
 {
-  vector<string> v;
+  std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
 
   if(v.size() >2) {
-    cerr << "error: sample string has ',' more than 2: " << str << endl;
+    std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
     exit(1);
   }
 
   pdSample pd;
   if(v[0] == "") {
-      cerr << "please specify file: " << str << endl;
+      std::cerr << "please specify file: " << str << std::endl;
       exit(1);
   } else {
     pd.argv = v[0];

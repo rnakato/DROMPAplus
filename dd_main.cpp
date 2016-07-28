@@ -12,7 +12,6 @@
 #include "dd_gv.h"
 #include "dd_opt.h"
 
-using namespace std;
 using namespace boost::program_options;
 
 //             PC_BROAD    peak-calling (for broad mode)
@@ -23,7 +22,7 @@ void drompa(variables_map &, Param &);
 void dd_pd(variables_map &, Param &);
 void dd_overlook(variables_map &, Param &);
 
-void help_global(vector<Command> &cmds) {
+void help_global(std::vector<Command> &cmds) {
     auto helpmsg = R"(
     ===============
 
@@ -33,21 +32,21 @@ void help_global(vector<Command> &cmds) {
 
     Command:)";
 
-    cerr << "\n    DROMPA v" << VERSION << helpmsg << endl;
+    std::cerr << "\n    DROMPA v" << VERSION << helpmsg << std::endl;
     for(size_t i=0; i<cmds.size(); ++i) cmds[i].print();
-      cerr << endl;
+      std::cerr << std::endl;
     return;
 }
 
 void printVersion()
 {
-  cerr << "drompa version " << VERSION << endl;
+  std::cerr << "drompa version " << VERSION << std::endl;
   exit(0);
 }
 
-vector<Command> generateCommands()
+std::vector<Command> generateCommands()
 {
-  vector<Command> cmds;
+  std::vector<Command> cmds;
   cmds.push_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
@@ -104,7 +103,7 @@ int main(int argc, char* argv[])
   options_description genopts("Options");
   
   command.add_options()
-    ("command", value<string>(), "command to run");
+    ("command", value<std::string>(), "command to run");
   genopts.add_options()
     ("version,v", "print version");
 
@@ -125,7 +124,7 @@ int main(int argc, char* argv[])
 
     // check command and param
     int on(0);
-    string cmd = values["command"].as<string>();
+    std::string cmd = values["command"].as<std::string>();
     for(size_t i=0; i<cmds.size(); ++i) {
       if(cmd == cmds[i].name) {
 	cmds[i].execute(argc-1, argv+1);
@@ -134,77 +133,77 @@ int main(int argc, char* argv[])
     }
 
     if (!on) {
-      cerr << "  Invalid command: " << values["command"].as<string>() << endl;
+      std::cerr << "  Invalid command: " << values["command"].as<std::string>() << std::endl;
       help_global(cmds);
       exit(0);
     }
 
-  } catch (exception &e) {
-    cout << e.what() << endl;
+  } catch (std::exception &e) {
+    std::cout << e.what() << std::endl;
   }
 
   return 0;
 }
 
 template <class T>
-void readWig(T &in, vector<int> &array, string filename, string chrname, int binsize)
+void readWig(T &in, std::vector<int> &array, std::string filename, std::string chrname, int binsize)
 {
-  string head("chrom="+ chrname +"\tspan=");
+  std::string head("chrom="+ chrname +"\tspan=");
   int on(0);
 
-  string lineStr;
+  std::string lineStr;
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || !lineStr.find("track")) continue;
-    if(on && lineStr.find("chrom=")!= string::npos) break;
-    if(lineStr.find(head)!= string::npos) {
+    if(on && lineStr.find("chrom=")!= std::string::npos) break;
+    if(lineStr.find(head)!= std::string::npos) {
       on=1;
       continue;
     }
     if(!on) continue;
-    vector<string> v;
+    std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     int i = (stoi(v[0])-1)/binsize;
     array[i] = VALUE2WIGARRAY(stol(v[1]));
-    if(array[i]) cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
+    if(array[i]) std::cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
   }
   return;
 }
 
-void readBinary(vector<int> &array, string filename, int nbin)
+void readBinary(std::vector<int> &array, std::string filename, int nbin)
 {
   static int nbinsum(0);
-  ifstream in(filename, ios::in | ios::binary);
+  std::ifstream in(filename, std::ios::in | std::ios::binary);
   if (!in) PRINTERR("cannot open " << filename);
 
   in.seekg(nbinsum*sizeof(int));  
   for(int i=0; i<nbin; ++i) {
     in.read((char *)&array[i], sizeof(int));
-    //    if(array[i]) cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << endl;
+    //    if(array[i]) std::cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
   }
 
   nbinsum += nbin;
   return;
 }
 
-vector<int> read_wigdata(variables_map &values, unordered_map<string, SampleFile>::iterator itr, chrsize &chr)
+std::vector<int> read_wigdata(variables_map &values, std::unordered_map<std::string, SampleFile>::iterator itr, chrsize &chr)
 {
-  cout << chr.name << endl;
+  std::cout << chr.name << std::endl;
   int binsize(itr->second.getbinsize());
   int nbin(chr.len/binsize +1);
-  vector<int> array(nbin, 0);
+  std::vector<int> array(nbin, 0);
   int iftype(itr->second.getiftype());
-  string filename = itr->first;
+  std::string filename = itr->first;
 
   if (iftype==TYPE_UNCOMPRESSWIG) {
-    ifstream in(filename);
+    std::ifstream in(filename);
     if (!in) PRINTERR("cannot open " << filename);
     readWig(in, array, filename, chr.name, binsize);
   } else if (iftype==TYPE_COMPRESSWIG) {
-    string command = "zcat " + filename;
+    std::string command = "zcat " + filename;
     FILE *fp = popen(command.c_str(), "r");
-    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, ios_base::in);
-    istream in(static_cast<streambuf *>(p_fb));
+    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
+    std::istream in(static_cast<std::streambuf *>(p_fb));
     readWig(in, array, filename, chr.name, binsize);
   } else if (iftype==TYPE_BEDGRAPH) {
     //    outputBedGraph(values, p, filename);

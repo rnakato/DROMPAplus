@@ -13,33 +13,33 @@ enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTR
 class opt {
 public:
   boost::program_options::options_description opts;
-  opt(const string str): opts(str) {}
-  void add(vector<optstatus> st);
+  opt(const std::string str): opts(str) {}
+  void add(std::vector<optstatus> st);
 };
 
 class Command {
   opt opts;
-  string desc;
-  string requiredstr;
-  vector<optstatus> vopts;
+  std::string desc;
+  std::string requiredstr;
+  std::vector<optstatus> vopts;
   boost::program_options::variables_map values;
   Param p;
-  function<void(boost::program_options::variables_map &, Param &)> func;
+  std::function<void(boost::program_options::variables_map &, Param &)> func;
   
   public:
-  string name;
+  std::string name;
 
- Command(string n, string d, string r, function<void(boost::program_options::variables_map &, Param &)> _func, vector<optstatus> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
+ Command(std::string n, std::string d, std::string r, std::function<void(boost::program_options::variables_map &, Param &)> _func, std::vector<optstatus> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
     opts.add(v);
   };
   void print() const {
-    cout << setw(8) << " " << left << setw(12) << name
-	 << left << setw(40) << desc << endl;
+    std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
+	      << std::left << std::setw(40) << desc << std::endl;
   }
   void printhelp() const {
     BPRINT("%1%:  %2%\n") % name % desc;
     BPRINT("Usage: drompa %1% [options] -o <output> -gt <genometable> %2%\n\n") % name % requiredstr;
-    cout << opts.opts << endl;
+    std::cout << opts.opts << std::endl;
   }
   void checkParam();
   void InitDump();
@@ -59,22 +59,22 @@ class Command {
       notify(values);
       checkParam();
       InitDump();
-      p.gt = read_genometable(values["gt"].as<string>());
+      p.gt = read_genometable(values["gt"].as<std::string>());
 
       func(values, p);
 
-    } catch (exception &e) {
-      cout << e.what() << endl;
+    } catch (std::exception &e) {
+      std::cout << e.what() << std::endl;
     }
   }
 };
 
-void opt::add(vector<optstatus> st)
+void opt::add(std::vector<optstatus> st)
 {
   boost::program_options::options_description o("Required",100);
   o.add_options()
-    ("output,o",  boost::program_options::value<string>(),	 "Output prefix")
-    ("gt",        boost::program_options::value<string>(),	 "Genome table")
+    ("output,o",  boost::program_options::value<std::string>(),	 "Output prefix")
+    ("gt",        boost::program_options::value<std::string>(),	 "Genome table")
     ;
   opts.add(o);
 
@@ -84,7 +84,7 @@ void opt::add(vector<optstatus> st)
       {
 	boost::program_options::options_description o("Input",100);
 	o.add_options()
-	  ("input,i",   boost::program_options::value<vector<string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
+	  ("input,i",   boost::program_options::value<std::vector<std::string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
 	  //	  ("binsize,b", boost::program_options::value<int>()->default_value(binsize), "Bin size")
 	  ;
 	opts.add(o);
@@ -119,12 +119,12 @@ void opt::add(vector<optstatus> st)
       {
 	boost::program_options::options_description o("Annotation",100);
 	o.add_options()
-	  ("gene,g", boost::program_options::value<string>(),	  "Gene annotation file")
+	  ("gene,g", boost::program_options::value<std::string>(),	  "Gene annotation file")
 	  ("gftype", boost::program_options::value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
-	  ("ars",    boost::program_options::value<string>(),	  "ARS list (for yeast)")
-	  ("ter",    boost::program_options::value<string>(),	  "TER list (for S.cerevisiae)")  
-	  ("bed",    boost::program_options::value<vector<string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
-	  ("repeat", boost::program_options::value<string>(),	  "Display repeat annotation (RepeatMasker format)") 
+	  ("ars",    boost::program_options::value<std::string>(),	  "ARS list (for yeast)")
+	  ("ter",    boost::program_options::value<std::string>(),	  "TER list (for S.cerevisiae)")  
+	  ("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
+	  ("repeat", boost::program_options::value<std::string>(),	  "Display repeat annotation (RepeatMasker format)") 
 	  ;
 	opts.add(o);
 	break;
@@ -133,13 +133,13 @@ void opt::add(vector<optstatus> st)
       {
 	boost::program_options::options_description o("Optional data",100);
 	o.add_options()
-	  ("mp",     boost::program_options::value<string>(),  	  "Mappability file")
+	  ("mp",     boost::program_options::value<std::string>(),  	  "Mappability file")
 	  ("mpthre", boost::program_options::value<double>()->default_value(0.3), "Low mappability threshold")
-	  ("gap",    boost::program_options::value<string>(),	  "Specify gapped regions to be shaded")
-	  ("inter",  boost::program_options::value<vector<string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
-	  ("gc",     boost::program_options::value<string>(), 	  "Visualize GC contents graph")
+	  ("gap",    boost::program_options::value<std::string>(),	  "Specify gapped regions to be shaded")
+	  ("inter",  boost::program_options::value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
+	  ("gc",     boost::program_options::value<std::string>(), 	  "Visualize GC contents graph")
 	  ("gcsize", boost::program_options::value<int>()->default_value(100000), "Window size for GC contents")
-	  ("gd",     boost::program_options::value<string>(), 	  "Visualize gene density (number of genes for each window)")
+	  ("gd",     boost::program_options::value<std::string>(), 	  "Visualize gene density (number of genes for each window)")
 	  ("gdsize", boost::program_options::value<int>()->default_value(100000), "Window size for gene density")
 	  ;
 	opts.add(o);
@@ -170,8 +170,8 @@ void opt::add(vector<optstatus> st)
 	boost::program_options::options_description o("Region to draw",100);
 	o.add_options()
 	  ("chr",         boost::program_options::value<int>(),     "Output the specified chromosome only")
-	  ("region,r",    boost::program_options::value<string>(),  "Specify genomic regions for drawing")
-	  ("genefile",    boost::program_options::value<string>(),  "Specify gene loci to visualize")  
+	  ("region,r",    boost::program_options::value<std::string>(),  "Specify genomic regions for drawing")
+	  ("genefile",    boost::program_options::value<std::string>(),  "Specify gene loci to visualize")  
 	  ("len_genefile",boost::program_options::value<int>()->default_value(50000), "extended length for each gene locus")
 	  ;
 	opts.add(o);
@@ -195,7 +195,7 @@ void opt::add(vector<optstatus> st)
       {
 	boost::program_options::options_description o("For overlay",100);
 	o.add_options()
-	  ("ioverlay",  boost::program_options::value<vector<string>>(),	  "Input file")
+	  ("ioverlay",  boost::program_options::value<std::vector<std::string>>(),	  "Input file")
 	  //	  ("binsize2",  boost::program_options::value<int>()->default_value(binsize), "Bin size")
 	  ("scale_tag2",   boost::program_options::value<double>(), "Scale for read line")
 	  ("scale_ratio2", boost::program_options::value<double>(), "Scale for fold enrichment")
@@ -226,7 +226,7 @@ void opt::add(vector<optstatus> st)
       {
 	boost::program_options::options_description o("PD",100);
 	o.add_options()
-	  ("pd",   boost::program_options::value<vector<string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
+	  ("pd",   boost::program_options::value<std::vector<std::string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
 	  ("prop",   boost::program_options::value<double>(),  "scale_tag")
 	  ("pdsize", boost::program_options::value<int>()->default_value(100000), "windowsize for peak density")
 	  ;
@@ -278,7 +278,7 @@ void Command::checkParam() {
 
 	//	chkminus<int>(values, "binsize", 0);
 
-	vector<string> v(values["input"].as<vector<string>>());
+	std::vector<std::string> v(values["input"].as<std::vector<std::string>>());
 	for(auto x:v) scan_samplestr(x, p.sample, p.samplepair);
 	
 	break;
@@ -298,7 +298,7 @@ void Command::checkParam() {
     case OPTANNO_PC:
       {
 	chkrange<int>(values, "gftype", 0, 3);
-	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(values[x].as<string>());
+	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(values[x].as<std::string>());
 	break;
       }
     case OPTANNO_GV:
@@ -314,7 +314,7 @@ void Command::checkParam() {
       }
     case OPTREGION:
       {
-	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(values[x].as<string>());
+	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(values[x].as<std::string>());
 	chkminus<int>(values, "len_genefile", -1);
 	break;
       }
@@ -343,7 +343,7 @@ void Command::checkParam() {
 	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 	
-	vector<string> v(values["pd"].as<vector<string>>());
+	std::vector<std::string> v(values["pd"].as<std::vector<std::string>>());
 	for(auto x:v) p.pd.push_back(scan_pdstr(x));
 	break;
       }
@@ -368,18 +368,18 @@ void Command::checkParam() {
 
 void Command::InitDump()
 {
-  vector<string> str_bool = {"ON", "OFF"};
-  vector<string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
-  //  vector<string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
-  vector<string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
-  vector<string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
-  vector<string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
-  vector<string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
+  std::vector<std::string> str_bool = {"ON", "OFF"};
+  std::vector<std::string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
+  //  std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+  std::vector<std::string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
+  std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
+  std::vector<std::string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
+  std::vector<std::string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
 
   BPRINT("\n======================================\n");
   BPRINT("drompa version %1%: %2%\n\n") % VERSION % name;
-  BPRINT("output prefix: %1%\n")     % values["output"].as<string>();
-  BPRINT("Genome-table file: %1%\n") % values["gt"].as<string>();
+  BPRINT("output prefix: %1%\n")     % values["output"].as<std::string>();
+  BPRINT("Genome-table file: %1%\n") % values["gt"].as<std::string>();
 
   for(auto x: vopts) {
     switch(x) {
@@ -387,7 +387,7 @@ void Command::InitDump()
       {
 	BPRINT("\nSamples\n");
 	for(uint i=0; i<p.samplepair.size(); ++i) {
-	  cout << (i+1) << ": ";
+	  std::cout << (i+1) << ": ";
 	  p.samplepair[i].print();
 	}
 	//	BPRINT("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
@@ -412,17 +412,17 @@ void Command::InitDump()
       {
 	BPRINT("\nAnnotations:\n");
 	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
-			     % values["gene"].as<string>() % str_gftype[values["gftype"].as<int>()];
-	printOpt<string>(values, "ars",    "   ARS file");
-	printOpt<string>(values, "ter",    "   TER file");
-	printOpt<string>(values, "repeat", "   Repeat file");
-	printOpt<string>(values, "gc", "   GCcontents file");
-	printOpt<string>(values, "gd", "   Gene density file");
-	/*	if(d->arsfile)     BPRINT("   ARS file: %1%\n")          % values["ars"].as<string>();
-	if(d->terfile)     BPRINT("   TER file: %1%\n")          % values["ter"].as<string>();
-	if(d->repeat.argv) BPRINT("   Repeat file: %1%\n")       % values["repeat"].as<string>();*/
-	printOpt<string>(values, "region", "   Region file");
-	printVOpt<string>(values, "bed", "   Bed file");
+			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
+	printOpt<std::string>(values, "ars",    "   ARS file");
+	printOpt<std::string>(values, "ter",    "   TER file");
+	printOpt<std::string>(values, "repeat", "   Repeat file");
+	printOpt<std::string>(values, "gc", "   GCcontents file");
+	printOpt<std::string>(values, "gd", "   Gene density file");
+	/*	if(d->arsfile)     BPRINT("   ARS file: %1%\n")          % values["ars"].as<std::string>();
+	if(d->terfile)     BPRINT("   TER file: %1%\n")          % values["ter"].as<std::string>();
+	if(d->repeat.argv) BPRINT("   Repeat file: %1%\n")       % values["repeat"].as<std::string>();*/
+	printOpt<std::string>(values, "region", "   Region file");
+	printVOpt<std::string>(values, "bed", "   Bed file");
 	//	if(name != "PROFILE" || name != "HEATMAP") BPRINT("   name: %1%\n") % d->bed[i]->name;
 	break;
       }
@@ -430,15 +430,15 @@ void Command::InitDump()
       {
 	BPRINT("\nAnnotations:\n");
 	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
-			     % values["gene"].as<string>() % str_gftype[values["gftype"].as<int>()];
-	printOpt<string>(values, "gc", "   GCcontents file");
-	printOpt<string>(values, "gd", "   Gene density file");
+			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
+	printOpt<std::string>(values, "gc", "   GCcontents file");
+	printOpt<std::string>(values, "gd", "   Gene density file");
 	/*	
-	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<string>();
-	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<string>();*/
-	printVOpt<string>(values, "inter", "   Interaction file");
+	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
+	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
+	printVOpt<std::string>(values, "inter", "   Interaction file");
 	if (values.count("mp")) {
-	  BPRINT("Mappability file directory: %1%\n") % values["mp"].as<string>();
+	  BPRINT("Mappability file directory: %1%\n") % values["mp"].as<std::string>();
 	  BPRINT("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
 	}
 	break;
@@ -470,7 +470,7 @@ void Command::InitDump()
 	if(values.count("ioverlay")) { 
 	  BPRINT("\nOverlayed samples\n");
 	  for(uint i=0; i<p.samplepair.size(); ++i) {
-	    cout << (i+1) << ": ";
+	    std::cout << (i+1) << ": ";
 	    p.samplepair[i].print();
 	  }
 	}

@@ -10,8 +10,6 @@
 #include "readdata.h"
 #include "macro.h"
 
-using namespace std;
-
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;
@@ -19,10 +17,10 @@ class SampleFile {
   int binsize;
  public:
     // *genome, *chr;
-  vector<int> data;
+  std::vector<int> data;
  SampleFile() {}
- SampleFile(string &str) {
-   vector<string> v;
+ SampleFile(std::string &str) {
+   std::vector<std::string> v;
    boost::split(v, str, boost::algorithm::is_any_of("."));
    int last(v.size()-1);
    if(v[last] == "wig") iftype = TYPE_UNCOMPRESSWIG;    
@@ -55,10 +53,10 @@ class yScale {
 
 class SamplePair {
   int overlay;
-  string argvChIP, argvInput;
+  std::string argvChIP, argvInput;
   //  double fc; //comp
 
-  string peak_argv;
+  std::string peak_argv;
   /*  Peak *peak;
   char *peak_argv;
   char *peakarray;
@@ -66,10 +64,10 @@ class SamplePair {
   int *binnum;*/
   
  public:
-  string name;
+  std::string name;
   yScale scale;
 
- SamplePair(vector<string> v): argvInput(""), peak_argv(""), name("") {
+ SamplePair(std::vector<std::string> v): argvInput(""), peak_argv(""), name("") {
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") name      = v[2];
@@ -91,17 +89,17 @@ class SamplePair {
 
 class pdSample {
  public:
-  string argv;
-  string name;
+  std::string argv;
+  std::string name;
   pdSample(){}
 };
 
 class Param {
  public:
-  vector<chrsize> gt;
-  unordered_map<string, SampleFile> sample;
-  vector<SamplePair> samplepair;
-  vector<pdSample> pd;
+  std::vector<chrsize> gt;
+  std::unordered_map<std::string, SampleFile> sample;
+  std::vector<SamplePair> samplepair;
+  std::vector<pdSample> pd;
   Param(){}
 };
 

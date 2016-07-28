@@ -6,7 +6,7 @@
 
 #include "dd_gv.h"
 
-void scan_samplestr(string str, unordered_map<string, SampleFile> &sample, vector<SamplePair> &samplepair);
-pdSample scan_pdstr(string str);
+void scan_samplestr(std::string str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair);
+pdSample scan_pdstr(std::string str);
   
 #endif /* _DD_READFILE_H_ */
