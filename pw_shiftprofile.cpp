@@ -5,10 +5,6 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/thread.hpp>
 
-/*namespace {
-  enum {BP_BACKGROUD, BP_REPEAT, BP_PEAK};
-  }*/
-
 void addmp(std::map<int, double> &mpto, const std::map<int, double> &mpfrom, double w)
 {
   for(auto itr = mpfrom.begin(); itr != mpfrom.end(); ++itr) {
@@ -155,84 +151,6 @@ int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<T> array, int s
   
   return e;
 }
-
-/*template <class T>
-void func(T &dist, const Mapfile &p, const int i) {
-
-  auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
-  auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
-
-  int flen(dist.getnsci());
-  int readlen(p.getlenF3());
-  
-  std::vector<short> fragarray(dist.chr[i].width, 0);
-  std::vector<short> reparray(dist.chr[i].width, 0);
-  for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
-    if(fwd[j] && rev[j+flen]) {
-      ++dist.chr[i].numOfFragmentWithFlen;
-      for(int k=0; k<flen; ++k) ++fragarray[j - dist.chr[i].start +k];
-    }
-    if(fwd[j] && rev[j+readlen]) {
-      ++dist.chr[i].numOfFragmentWithReplen;
-      for(int k=0; k<readlen; ++k) ++reparray[j - dist.chr[i].start +k];
-    }
-  }
-
-  for(int j=dist.chr[i].start; j<dist.chr[i].end-flen; ++j) {
-    if(fragarray[j]) ++dist.chr[i].numOfCoveredBaseWithFlen;
-    if(reparray[j])  ++dist.chr[i].numOfCoveredBaseWithReplen;
-  }
-
-  std::vector<int> dfrag(10000,0);
-  std::vector<int> drep(10000,0);
-  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
-    ++dfrag[fragarray[j]];
-    ++drep[reparray[j]];
-  }
-
-  double pdfrag(0), pdrep(0);
-  double dfragsum = accumulate(dfrag.begin(), dfrag.end(), 0);
-  double drepsum = accumulate(drep.begin(), drep.end(), 0);
-  int thre4fragarray(0);
-  for(int j=0; j<flen; ++j) {
-    double a(dfrag[j]/dfragsum);
-    pdfrag += a;
-    if(!thre4fragarray && pdfrag > 0.95) thre4fragarray = j;
-    double b(drep[j]/drepsum);
-    pdrep += b;
-    std::cerr << j << "\t" << a << "\t" << pdfrag << "\t" << b<< "\t" << pdrep << std::endl;
-  }
-
-  std::cout << flen << " thre4fragarray " << thre4fragarray << std::endl;
-  
-  std::vector<range> vrep;
-  int thre4reparray(10);
-  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
-    if(reparray[j]>=thre4reparray) j = getRepeatRegion(vrep, j, reparray, dist.chr[i].start, dist.chr[i].end);
-  }
-
-  std::vector<char> anoarray(dist.chr[i].width, BP_BACKGROUD);
-  for(int j=dist.chr[i].start; j<dist.chr[i].end; ++j) {
-    if(fragarray[j] > thre4fragarray) anoarray[j-dist.chr[i].start] = BP_PEAK;
-  }
-  for(auto x:vrep) {
-    for(int j=x.start; j<x.end; ++j) anoarray[j] = BP_REPEAT;
-  }
-
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x: p.genome.chr[i].seq[strand].vRead) {
-      if(x.duplicate || !RANGE(x.F3, dist.chr[i].start, dist.chr[i].end-1)) continue;
-      if(anoarray[x.F3 - dist.chr[i].start]==BP_BACKGROUD)   ++dist.chr[i].nread_back;
-      else if(anoarray[x.F3 - dist.chr[i].start]==BP_REPEAT) ++dist.chr[i].nread_rep;
-      else ++dist.chr[i].nread_peak;
-    }
-  }
-
-  //  std::cout << dist.chr[i].nread << "\t" << dist.chr[i].nread_back << "\t" << dist.chr[i].nread_peak << "\t" << dist.chr[i].nread_rep << std::endl;
-
-  return;
-}
-*/
 
 template <class T>
 void func(T &dist, const Mapfile &p, const int i) {

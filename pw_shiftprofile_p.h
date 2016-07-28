@@ -13,6 +13,7 @@ namespace {
   const int ng_to(5000);
   const int ng_step(100);
   const int SizeOfFragOverlapDist(10000);
+  const int sizeOfvDistOfDistaneOfFrag = 10000;
 }
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
@@ -27,9 +28,10 @@ class FragmentVariability {
   long numOfCoveredBase;
   double AccuOfFragOverlapDist;
   static const int length4Accu = 500;
+  std::vector<int> vDistOfDistaneOfFrag;
 
  public:
- FragmentVariability(): fraglen(0), numOfFragment(0), FragOverlapDist(SizeOfFragOverlapDist,0), numOfCoveredBase(0), AccuOfFragOverlapDist(0) {}
+ FragmentVariability(): fraglen(0), numOfFragment(0), FragOverlapDist(SizeOfFragOverlapDist,0), numOfCoveredBase(0), AccuOfFragOverlapDist(0), vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {}
   void setVariability(const int l, const int start, const int end ,const int width,
 		      const boost::dynamic_bitset<> &fwd,
 		      const boost::dynamic_bitset<> &rev) {
@@ -37,10 +39,14 @@ class FragmentVariability {
     std::vector<short> array(width, 0);
 
     int last(0);
-    for(int i=start; i<end - fraglen; ++i) {
+    int e = end - std::max(fraglen, length4Accu);
+    for(int i=start; i<e; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
 	++numOfFragment;
-	if(last) vDistanceOfFrag.push_back(i - last);
+	if(last) {
+	  vDistanceOfFrag.push_back(i - last);
+	  if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
+	}
 	last = i;
 	for(int j=0; j<length4Accu; ++j) ++array[i - start +j]; // backとchipで同じ長さに正規化
       }
@@ -82,10 +88,13 @@ class FragmentVariability {
       return -1;
     }
     else {
-      long size(accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0));
-      return FragOverlapDist[i]/static_cast<double>(size);
+      return FragOverlapDist[i]/static_cast<double>(accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0));
     }
-    //else return FragOverlapDist[i]/static_cast<double>(numOfCoveredBase);
+  }
+  double getDistOfDistanceOfFragment(const int i) const {
+    long sum = accumulate(vDistOfDistaneOfFrag.begin(), vDistOfDistaneOfFrag.end(), 0);
+    double r = vDistOfDistaneOfFrag[i]/static_cast<double>(sum);
+    return r;
   }
   double getMedianOfDistanceOfFragment() const {
     if (vDistanceOfFrag.empty()) return 0;
@@ -100,6 +109,7 @@ class FragmentVariability {
     numOfCoveredBase += x.numOfCoveredBase;
     AccuOfFragOverlapDist += x.AccuOfFragOverlapDist;
     for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
+    for(uint i=0; i<vDistOfDistaneOfFrag.size(); ++i) vDistOfDistaneOfFrag[i] += x.vDistOfDistaneOfFrag[i];
     std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
   }
 };
@@ -195,15 +205,37 @@ class ReadShiftProfile {
     out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
     out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
-    out << "Accumulated read dist" << std::endl;
+    out << "Accumulated frag distance dist" << std::endl;
+    out << "\tFragment\tRepeat\tBackground\tFragment Accumulated\tRepeat Accumulated\tBackground Accumulated" << std::endl;
+    double a(0), b(0), c(0);
+    double scoreFrag(0), scoreRep(0);
+    for(size_t i=0; i<sizeOfvDistOfDistaneOfFrag; ++i) {
+      a += fvfrag.getDistOfDistanceOfFragment(i);
+      b += fvrep.getDistOfDistanceOfFragment(i);
+      c += fvback.getDistOfDistanceOfFragment(i);
+      scoreFrag += a-c;
+      scoreRep += b-c;
+      out << i << "\t"
+	  << fvfrag.getDistOfDistanceOfFragment(i) << "\t"
+	  << fvrep.getDistOfDistanceOfFragment(i) << "\t"
+	  << fvback.getDistOfDistanceOfFragment(i) << "\t"
+	  << a << "\t" << b << "\t" << c << std::endl;
+    }
+    out << "\tFrag score\tRep score"<< std::endl;
+    out << scoreFrag << "\t" << scoreRep << std::endl;
+    /*    out << "Accumulated read dist" << std::endl;
     out << "\tFragment\tRepeat\tBackground" << std::endl;
     double a(0), b(0), c(0);
     for(size_t i=0; i<SizeOfFragOverlapDist; ++i) {
       a += fvfrag.getPropOfOverlapDist(i);
       b += fvrep.getPropOfOverlapDist(i);
       c += fvback.getPropOfOverlapDist(i);
-      out << i << "\t" << a << "\t" << b << "\t" << c <<  std::endl;
-    }
+      out << i << "\t"
+	  << fvfrag.getPropOfOverlapDist(i) << "\t"
+	  << fvrep.getPropOfOverlapDist(i) << "\t"
+	  << fvback.getPropOfOverlapDist(i) << "\t"
+	  << a << "\t" << b << "\t" << c << std::endl;
+	  }*/
     /*    int sep(10000);
     out << "Accumulated read dist" << std::endl;
     out << "\tFragment\tRepeat\tBackground" << std::endl;
