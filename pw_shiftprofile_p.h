@@ -22,35 +22,39 @@ void addmp(std::map<int, double> &, const std::map<int, double> &, double w);
 class FragmentVariability {
   int fraglen;
   long numOfFragment;
-  //  std::vector<int> vDistanceOfFrag;
+  std::vector<int> vDistanceOfFrag;
   std::vector<int> FragOverlapDist;
+  long numOfCoveredBase;
   double AccuOfFragOverlapDist;
-  long seqsize;
-  
+  static const int length4Accu = 500;
+
  public:
- FragmentVariability(): fraglen(0), numOfFragment(0), FragOverlapDist(SizeOfFragOverlapDist,0), AccuOfFragOverlapDist(0), seqsize(0) {}
+ FragmentVariability(): fraglen(0), numOfFragment(0), FragOverlapDist(SizeOfFragOverlapDist,0), numOfCoveredBase(0), AccuOfFragOverlapDist(0) {}
   void setVariability(const int l, const int start, const int end ,const int width,
 		      const boost::dynamic_bitset<> &fwd,
 		      const boost::dynamic_bitset<> &rev) {
     fraglen = l;
     std::vector<short> array(width, 0);
-    seqsize = width;
-    
-    //    int last(0);
+
+    int last(0);
     for(int i=start; i<end - fraglen; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
-	//	++numOfFragment;
-	//if(last) vDistanceOfFrag.push_back(i - last);
-	//last = i;
-	for(int j=0; j<fraglen; ++j) ++array[i - start +j];
+	++numOfFragment;
+	if(last) vDistanceOfFrag.push_back(i - last);
+	last = i;
+	for(int j=0; j<length4Accu; ++j) ++array[i - start +j]; // backとchipで同じ長さに正規化
       }
     }
 
-    for(int i=0; i<width; ++i) ++FragOverlapDist[array[i]];
-    for(int i=0; i<SizeOfFragOverlapDist; ++i) AccuOfFragOverlapDist += i*FragOverlapDist[i];
+    for(int i=0; i<width; ++i) {
+      ++FragOverlapDist[array[i]];
+      if(array[i]) ++numOfCoveredBase;
+    }
+    //    for(int i=0; i<SizeOfFragOverlapDist; ++i) AccuOfFragOverlapDist += i*FragOverlapDist[i];
   }
-  long getseqsize() const { return seqsize; }
-  double getAccuOfOverlapDist(const long num) const {
+  long getseqsize() const { return accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0); }
+  /*  double getAccuOfOverlapDist(const long num) const {
+    long seqsize(getseqsize());
     if(num<0 || num>= seqsize) {
       std::cerr << "error: invalid num " << num << "for getAccuOfOverlapDist. max: " << seqsize << std::endl;
       return -1;
@@ -71,28 +75,32 @@ class FragmentVariability {
     //    std::cout<< sum << ", "<< AccuOfFragOverlapDist << ", "<< sum/AccuOfFragOverlapDist << std::endl;
  
     return sum/AccuOfFragOverlapDist;
-  }
+    }*/
   double getPropOfOverlapDist(const int i) const {
     if(i<0 || i>= SizeOfFragOverlapDist) {
       std::cerr << "error: invalid num " << i << "for getPropOfOverlapDist. max: " << SizeOfFragOverlapDist << std::endl;
       return -1;
     }
-    else return FragOverlapDist[i]/seqsize;
+    else {
+      long size(accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0));
+      return FragOverlapDist[i]/static_cast<double>(size);
+    }
+    //else return FragOverlapDist[i]/static_cast<double>(numOfCoveredBase);
   }
-  /*  double getMedianOfDistanceOfFragment() const {
+  double getMedianOfDistanceOfFragment() const {
     if (vDistanceOfFrag.empty()) return 0;
     std::vector<int> v;
     std::copy(vDistanceOfFrag.begin(), vDistanceOfFrag.end(), back_inserter(v));
     std::sort(v.begin(),v.end());
     return v[v.size()/2];
-    }*/
+  }
   void add2genome(const FragmentVariability &x) {
     fraglen           = x.fraglen;
     numOfFragment    += x.numOfFragment;
+    numOfCoveredBase += x.numOfCoveredBase;
     AccuOfFragOverlapDist += x.AccuOfFragOverlapDist;
     for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
-    seqsize += x.seqsize;
-    //    std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
+    std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
   }
 };
 
@@ -181,16 +189,24 @@ class ReadShiftProfile {
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
-    /*    out << "Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
+    out << "Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
     out << "Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
     out << "Background median distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
     out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;*/
+    out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
-    int sep(10000);
     out << "Accumulated read dist" << std::endl;
     out << "\tFragment\tRepeat\tBackground" << std::endl;
     double a(0), b(0), c(0);
+    for(size_t i=0; i<SizeOfFragOverlapDist; ++i) {
+      a += fvfrag.getPropOfOverlapDist(i);
+      b += fvrep.getPropOfOverlapDist(i);
+      c += fvback.getPropOfOverlapDist(i);
+      out << i << "\t" << a << "\t" << b << "\t" << c <<  std::endl;
+    }
+    /*    int sep(10000);
+    out << "Accumulated read dist" << std::endl;
+    out << "\tFragment\tRepeat\tBackground" << std::endl;
     for(size_t i=0; i<fvfrag.getseqsize()/sep; ++i) {
       a += fvfrag.getAccuOfOverlapDist(i*sep);
       b += fvrep.getAccuOfOverlapDist(i*sep);
@@ -200,7 +216,7 @@ class ReadShiftProfile {
 	  << fvrep.getAccuOfOverlapDist(i*sep)  << "\t" 
 	  << fvback.getAccuOfOverlapDist(i*sep) << std::endl;
     }
-    out << a << "\t"<< b << "\t"<< c << "\t" << (c-a) << "\t"<< (b-a) << std::endl;
+    out << a << "\t"<< b << "\t"<< c << "\t" << (c-a) << "\t"<< (c-b) << std::endl;*/
     
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
