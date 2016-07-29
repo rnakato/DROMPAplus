@@ -22,8 +22,7 @@ void addmp(std::map<int, double> &, const std::map<int, double> &, double w);
 
 class FragmentVariability {
   int fraglen;
-  long numOfFragment;
-  std::vector<int> vDistanceOfFrag;
+  //  std::vector<int> vDistanceOfFrag;
   std::vector<int> FragOverlapDist;
   long numOfCoveredBase;
   double AccuOfFragOverlapDist;
@@ -31,7 +30,7 @@ class FragmentVariability {
   std::vector<int> vDistOfDistaneOfFrag;
 
  public:
- FragmentVariability(): fraglen(0), numOfFragment(0), FragOverlapDist(SizeOfFragOverlapDist,0), numOfCoveredBase(0), AccuOfFragOverlapDist(0), vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {}
+ FragmentVariability(): fraglen(0), FragOverlapDist(SizeOfFragOverlapDist,0), numOfCoveredBase(0), AccuOfFragOverlapDist(0), vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {}
   void setVariability(const int l, const int start, const int end ,const int width,
 		      const boost::dynamic_bitset<> &fwd,
 		      const boost::dynamic_bitset<> &rev) {
@@ -42,9 +41,8 @@ class FragmentVariability {
     int e = end - std::max(fraglen, length4Accu);
     for(int i=start; i<e; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
-	++numOfFragment;
 	if(last) {
-	  vDistanceOfFrag.push_back(i - last);
+	  //	  vDistanceOfFrag.push_back(i - last);
 	  if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
 	}
 	last = i;
@@ -96,21 +94,20 @@ class FragmentVariability {
     double r = vDistOfDistaneOfFrag[i]/static_cast<double>(sum);
     return r;
   }
-  double getMedianOfDistanceOfFragment() const {
+  /*  double getMedianOfDistanceOfFragment() const {
     if (vDistanceOfFrag.empty()) return 0;
     std::vector<int> v;
     std::copy(vDistanceOfFrag.begin(), vDistanceOfFrag.end(), back_inserter(v));
     std::sort(v.begin(),v.end());
     return v[v.size()/2];
-  }
+    }*/
   void add2genome(const FragmentVariability &x) {
     fraglen           = x.fraglen;
-    numOfFragment    += x.numOfFragment;
     numOfCoveredBase += x.numOfCoveredBase;
     AccuOfFragOverlapDist += x.AccuOfFragOverlapDist;
     for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
     for(uint i=0; i<vDistOfDistaneOfFrag.size(); ++i) vDistOfDistaneOfFrag[i] += x.vDistOfDistaneOfFrag[i];
-    std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
+    //    std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
   }
 };
 
@@ -199,30 +196,31 @@ class ReadShiftProfile {
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
-    out << "Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Background median distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
-    out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
+    //    out << "Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
+    //out << "Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
+    //out << "Background median distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
+    //out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
+    //out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
     out << "Accumulated frag distance dist" << std::endl;
     out << "\tFragment\tRepeat\tBackground\tFragment Accumulated\tRepeat Accumulated\tBackground Accumulated" << std::endl;
     double a(0), b(0), c(0);
-    double scoreFrag(0), scoreRep(0);
+    double diffMaxFrag(0), diffMaxRep(0);
     for(size_t i=0; i<sizeOfvDistOfDistaneOfFrag; ++i) {
       a += fvfrag.getDistOfDistanceOfFragment(i);
       b += fvrep.getDistOfDistanceOfFragment(i);
       c += fvback.getDistOfDistanceOfFragment(i);
-      scoreFrag += a-c;
-      scoreRep += b-c;
+      diffMaxFrag = std::max(diffMaxFrag, a-c);
+      diffMaxRep  = std::max(diffMaxRep,  b-c);
       out << i << "\t"
 	  << fvfrag.getDistOfDistanceOfFragment(i) << "\t"
 	  << fvrep.getDistOfDistanceOfFragment(i) << "\t"
 	  << fvback.getDistOfDistanceOfFragment(i) << "\t"
 	  << a << "\t" << b << "\t" << c << std::endl;
     }
-    out << "\tFrag score\tRep score"<< std::endl;
-    out << scoreFrag << "\t" << scoreRep << std::endl;
+    out << boost::format("Fragment score: %1%\n") % diffMaxFrag;
+    out << boost::format("Read score: %1%\n")     % diffMaxRep;
+
     /*    out << "Accumulated read dist" << std::endl;
     out << "\tFragment\tRepeat\tBackground" << std::endl;
     double a(0), b(0), c(0);
