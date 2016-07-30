@@ -3,8 +3,8 @@
  */
 #include "readdata.h"
 #include "macro.h"
+#include "util.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <sstream>
 
 int countmp(HashOfGeneDataMap &mp)
@@ -248,9 +248,7 @@ std::vector<chrsize> read_genometable(const std::string& fileName)
     if(lineStr.empty() || lineStr[0] == '#') continue;
     std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    chrsize temp;
-    temp.name = rmchr(v[0]);
-    temp.len = stoi(v[1]);
+    chrsize temp(rmchr(v[0]), stoi(v[1]));
     gt.push_back(temp);
   }
   return gt;
@@ -322,23 +320,9 @@ std::vector<char> arraySetBed(std::vector<char> &array, std::string chrname, std
   return array;
 }
 
-void isFile(std::string str)
-{
-  boost::filesystem::path const file(str);
-  if(!boost::filesystem::exists(file)) PRINTERR(str << " does not exist.");
-}
-
 std::string IntToString(int n)
 {
   std::ostringstream stream;
   stream << n;
   return stream.str();
-}
-
-std::string rmchr(const std::string &chr)
-{
-  std::string s;
-  if(!chr.find("chr")) s = chr.substr(3);
-  else s = chr;
-  return s;
 }

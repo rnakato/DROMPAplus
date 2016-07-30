@@ -1,10 +1,13 @@
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * This file is a part of DROMPA sources.
+ */
 #ifndef SEQ_H
 #define SEQ_H
 
 #include <iostream>
 #include <vector>
 #include <string>
-#include <map>
+#include <fstream>
 
 enum Strand {STRAND_PLUS, STRAND_MINUS, STRANDNUM};
 enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
@@ -32,10 +35,21 @@ class var {
 };
 
 class chrsize {
- public:
   std::string name;
   int len;
+
+ public:
  chrsize(): name(""), len(0) {}
+ chrsize(const std::string &n, const int l): name(n), len(l) {}
+  std::string getname() const { return name; }
+  int getlen() const { return len; }
+};
+
+class sepchr {
+ public:
+  uint s;
+  uint e;
+ sepchr(uint start, uint end): s(start), e(end) {}
 };
 
 class range {
@@ -134,11 +148,11 @@ class genedata {
   std::string tname;
   std::string gname;
   std::string chr;
-  int    txStart;   // "Transcription start position"
-  int    txEnd;     // "Transcription end position"
-  int    cdsStart;  // "Coding region start"
-  int    cdsEnd;    // "Coding region end"
-  int    exonCount; // "Number of exons"
+  int txStart;   // "Transcription start position"
+  int txEnd;     // "Transcription end position"
+  int cdsStart;  // "Coding region start"
+  int cdsEnd;    // "Coding region end"
+  int exonCount; // "Number of exons"
   std::string strand;
   std::vector<range> exon;
 
@@ -263,26 +277,5 @@ class Peak : public bed {
     out << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\t-log10(qvalue)\tname" << std::endl;
   }
 };
-
-class sepchr {
- public:
-  uint s;
-  uint e;
- sepchr(uint start, uint end): s(start), e(end) {}
-};
-
-template <class T>
-class printClass {
-  int on;
-  std::string str;
- printClass(): on(0) {}
-  void print() {
-    if(!on) {
-      std::cout << str << std::endl;
-      on++;
-    }
-  }
-};
-
 
 #endif  // SEQ_H

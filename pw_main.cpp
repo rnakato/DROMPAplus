@@ -129,11 +129,8 @@ int main(int argc, char* argv[])
   calcGenomeCoverage(values, p);
   
   // GC contents
-  if (values.count("genome")) {
-    make_GCdist(values, p);
-    weightRead(values, p);
-  }
-
+  if (values.count("genome")) normalizeByGCcontents(values, p);
+  
   // make and output wigdata
   makewig(values, p);
   
@@ -346,7 +343,7 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const Se
     p.seq[STRAND_MINUS].printafterGC(out);
   }
   out << boost::format("%1$.3f\t") % p.depth;
-  if(p.w) out << boost::format("%1$.3f\t") % p.w; else out << " - \t";
+  if(p.getweight4rpm()) out << boost::format("%1$.3f\t") % p.getweight4rpm(); else out << " - \t";
   if(values["ntype"].as<std::string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
 
   p.printGcov(out, mapfile.islackOfRead4GenomeCov());
@@ -371,7 +368,7 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 
   p.printComplexity(out);
   p.printFlen(values, out);
-  if(values.count("genome")) out << "GC summit: " << p.maxGC << std::endl;
+  if(values.count("genome")) out << "GC summit: " << p.getmaxGC() << std::endl;
 
   // Global stats
   out << "\n\tlength\tmappable base\tmappability\t";

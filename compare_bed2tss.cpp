@@ -218,10 +218,10 @@ void count_genome(const Variables &values, const HashOfGeneDataMap &mp, std::vec
 
   auto gt = read_genometable(values["gt"].as<std::string>());
   for(auto chr:gt) {
-    auto array = makeGenomeArray(values, chr.name, chr.len, mp, vconv);
+    auto array = makeGenomeArray(values, chr.getname(), chr.getlen(), mp, vconv);
     
     for (T &x: vbed) {
-      if(x.bed.chr == chr.name) s.inc(array[x.bed.summit]);
+      if(x.bed.chr == chr.getname()) s.inc(array[x.bed.summit]);
     }
     
     for(size_t i=0; i<array.size(); i++) n.inc(array[i]);

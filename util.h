@@ -9,6 +9,9 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
+std::string rmchr(const std::string &chr);
+void isFile(std::string);
+
 template <class T>
 void printOpt(boost::program_options::variables_map &values, std::string opt, std::string str)
 {

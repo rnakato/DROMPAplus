@@ -6,9 +6,6 @@
 
 #define VERSION "3.3.0+"
 
-//template<class T>
-//using dict = std::map<std::string, T>;
-
 enum {NUM_1K=1000,
       NUM_1M=1000000,
       NUM_10M=10000000,

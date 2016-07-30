@@ -5,6 +5,7 @@
 #define _PW_SHIFTPROFILE_P_H_
 
 #include "pw_gv.h"
+#include <boost/dynamic_bitset.hpp>
 
 namespace {
   const int mp_from(500);

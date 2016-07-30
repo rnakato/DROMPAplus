@@ -10,18 +10,15 @@ namespace {
   }
   
   template <class T, class S>
-  double setw(T nm, S dn)
-  {
-    return (dn ? nm/static_cast<double>(dn): 0);
-  }
+  double setw(T nm, S dn) { return (dn ? nm/static_cast<double>(dn): 0); }
 }
   
-void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, long);
+void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, const long);
 std::vector<int> makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
 void norm2rpm(const MyOpt::Variables &, Mapfile &, SeqStats &, std::vector<int> &);
-void outputWig(const MyOpt::Variables &, Mapfile &, std::string);
-void outputBedGraph(const MyOpt::Variables &, Mapfile &, std::string);
-void outputBinary(const MyOpt::Variables &, Mapfile &, std::string);
+void outputWig(const MyOpt::Variables &, Mapfile &, const std::string &);
+void outputBedGraph(const MyOpt::Variables &, Mapfile &, const std::string &);
+void outputBinary(const MyOpt::Variables &, Mapfile &, const std::string &);
 
 void makewig(const MyOpt::Variables &values, Mapfile &p)
 {
@@ -54,7 +51,7 @@ void makewig(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarray, const Read x, long chrlen)
+void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarray, const Read x, const long chrlen)
 {
   int s, e;
   s = std::min(x.F3, x.F5);
@@ -176,7 +173,7 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
   return;
 }
 
-void outputWig(const MyOpt::Variables &values, Mapfile &p, std::string filename)
+void outputWig(const MyOpt::Variables &values, Mapfile &p, const std::string &filename)
 {
   int binsize = values["binsize"].as<int>();
   std::ofstream out(filename);
@@ -194,7 +191,7 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, std::string filename)
   return;
 }
 
-void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, std::string filename)
+void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::string &filename)
 {
   int e;
   int binsize = values["binsize"].as<int>();
@@ -227,7 +224,7 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, std::string file
   return;
 }
 
-void outputBinary(const MyOpt::Variables &values, Mapfile &p, std::string filename)
+void outputBinary(const MyOpt::Variables &values, Mapfile &p, const std::string &filename)
 {
   std::ofstream out(filename, std::ios::binary);
   for(auto &chr: p.genome.chr) {

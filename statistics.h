@@ -5,8 +5,7 @@
 #define _STATISTICS_H_
 
 #include <vector>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics.hpp>
+#include <cmath>
 
 double _getNegativeBinomial(int k, double p, double n);
 double _getZIP(int k, double p, double p0);
@@ -52,7 +51,7 @@ T getPercentile(std::vector<T> array, double per, int binnum=0)
   }
   if(!sortarray.size()) return 0;
   
-  std::sort(sortarray.begin(), sortarray.end());
+  sort(sortarray.begin(), sortarray.end());
 
   return sortarray[(int)(sortarray.size()*per)];
 };

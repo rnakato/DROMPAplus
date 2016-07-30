@@ -1,5 +1,6 @@
-#include <string>
-#include <iostream>
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * This file is a part of DROMPA sources.
+ */
 #include <algorithm>
 #include <random>
 #include <boost/format.hpp>
@@ -9,6 +10,7 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include "readdata.h"
+#include "util.h"
 #include "gene_bed.h"
 #include "alglib.h"
 

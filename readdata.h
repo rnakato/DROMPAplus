@@ -4,19 +4,15 @@
 #ifndef READGENE_H
 #define READGENE_H
 
-#include <iostream>
 #include <unordered_map>
-#include <string>
-#include <fstream>
-#include <vector>
 #include <boost/algorithm/string.hpp>
 #include "seq.h"
 #include "macro.h"
 
-enum bpstatus {UNMAPPABLE, INBED, MAPPABLE, COVREAD_ALL, COVREAD_NORM};
-
 using GeneDataMap = std::unordered_map<std::string, genedata>;
 using HashOfGeneDataMap = std::unordered_map<std::string, GeneDataMap>;
+
+enum bpstatus {UNMAPPABLE, INBED, MAPPABLE, COVREAD_ALL, COVREAD_NORM};
 
 int countmp(HashOfGeneDataMap &);
 std::vector<std::string> scanGeneName(const HashOfGeneDataMap &);
@@ -33,9 +29,7 @@ std::vector<int>  readMpbl(std::string, std::string, int, int);
 std::vector<char> readMpbl_binary(int);
 std::vector<char> readMpbl_binary(std::string, std::string, int);
 std::vector<char> arraySetBed(std::vector<char> &, std::string, std::vector<bed>);
-void isFile(std::string);
 std::string IntToString(int n);
-std::string rmchr(const std::string &chr);
 
 template <class T>
 std::vector<T> parseBed(const std::string &fileName)

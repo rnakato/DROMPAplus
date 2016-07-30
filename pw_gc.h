@@ -6,7 +6,6 @@
 
 #include "pw_gv.h"
 
-void make_GCdist(const MyOpt::Variables &, Mapfile &);
-void weightRead(const MyOpt::Variables &, Mapfile &);
+void normalizeByGCcontents(const MyOpt::Variables &, Mapfile &);
 
 #endif /* _PW_GC_H_ */

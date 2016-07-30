@@ -4,8 +4,6 @@
 #ifndef _READMAPFILE_H_
 #define _READMAPFILE_H_
 
-#include <boost/program_options.hpp>
-#include "seq.h"
 #include "pw_gv.h"
 
 void read_mapfile(const MyOpt::Variables &, Mapfile &);

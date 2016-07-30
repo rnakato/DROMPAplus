@@ -188,9 +188,9 @@ void readBinary(std::vector<int> &array, std::string filename, int nbin)
 
 std::vector<int> read_wigdata(variables_map &values, std::unordered_map<std::string, SampleFile>::iterator itr, chrsize &chr)
 {
-  std::cout << chr.name << std::endl;
+  std::cout << chr.getname() << std::endl;
   int binsize(itr->second.getbinsize());
-  int nbin(chr.len/binsize +1);
+  int nbin(chr.getlen()/binsize +1);
   std::vector<int> array(nbin, 0);
   int iftype(itr->second.getiftype());
   std::string filename = itr->first;
@@ -198,13 +198,13 @@ std::vector<int> read_wigdata(variables_map &values, std::unordered_map<std::str
   if (iftype==TYPE_UNCOMPRESSWIG) {
     std::ifstream in(filename);
     if (!in) PRINTERR("cannot open " << filename);
-    readWig(in, array, filename, chr.name, binsize);
+    readWig(in, array, filename, chr.getname(), binsize);
   } else if (iftype==TYPE_COMPRESSWIG) {
     std::string command = "zcat " + filename;
     FILE *fp = popen(command.c_str(), "r");
     __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
     std::istream in(static_cast<std::streambuf *>(p_fb));
-    readWig(in, array, filename, chr.name, binsize);
+    readWig(in, array, filename, chr.getname(), binsize);
   } else if (iftype==TYPE_BEDGRAPH) {
     //    outputBedGraph(values, p, filename);
   } else if (iftype==TYPE_BINARY) {

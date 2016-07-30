@@ -4,11 +4,12 @@
 #ifndef _DD_GV_H_
 #define _DD_GV_H_
 
+#include <iostream>
 #include <unordered_map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
-#include "readdata.h"
 #include "macro.h"
+#include "seq.h"
 
 /*namespace MyOpt {
     using Variables = boost::program_options::variables_map;
