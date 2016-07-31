@@ -128,45 +128,6 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
   return array;
 }
 
-/*template <class T>
-void estimateFragmentVariability(T &dist, const Mapfile &p, const int i) {
-  auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  dist.chr[i].start, dist.chr[i].end);
-  auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], dist.chr[i].start, dist.chr[i].end);
-
-  FragmentVariability fvback;
-  fvback.setVariability(ng_to, dist.chr[i].start, dist.chr[i].end, dist.chr[i].width, fwd, rev);
-  for (int j=-mp_from; j<mp_to; ++j) {
-    FragmentVariability fv;
-    fv.setVariability(j, dist.chr[i].start, dist.chr[i].end, dist.chr[i].width, fwd, rev);
-
-    double diffMax(0);
-    for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback.getAccuOfDistanceOfFragment(k));
-    }
-    dist.chr[i].fvmap[j] = diffMax;
-  }
-  
- dist.chr[i].setFragmentVariability4Frag(dist.getnsci(), fwd, rev);
-  dist.chr[i].setFragmentVariability4Rep(p.getlenF3(), fwd, rev);
-  dist.chr[i].setFragmentVariability4Back(ng_to, fwd, rev);
-
-  return;
-}*/
-
-/*template <class T>
-void genThread_countbkreads(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr, boost::mutex &mtx)
-{
-  for(uint i=chr_s; i<=chr_e; ++i) {
-    std::cout << p.genome.chr[i].name << ".." << std::flush;
-    estimateFragmentVariability(dist, p, i);
-    
-    if(p.genome.chr[i].isautosome()) dist.addnread2genome(i, mtx);
- 
-    std::string filename = p.getprefix() + "." + typestr + "." + p.genome.chr[i].name + ".csv";
-    dist.outputmpChr(filename, i);
-  }
-  }*/
-
 template <class T>
 void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr) {
   for(uint i=chr_s; i<=chr_e; ++i) {
@@ -222,17 +183,6 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   dist.setflen();
   p.seteflen(dist.getnsci());
 
-  /*  std::cout << "count reads in background.." << std::flush;
-  for(uint i=0; i<p.genome.vsepchr.size(); i++) {
-    agroup.create_thread(bind(genThread_countbkreads<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr, boost::ref(mtx)));
-  }
-  agroup.join_all();
-
-  // set fragment length;
-  for(uint i=0; i<p.genome.chr.size(); ++i) {
-    if(p.genome.chr[i].isautosome()) dist.addfvmap2genome(i);
-    }*/
-
   std::string filename = p.getprefix() + "." + typestr + ".csv";
   dist.outputmpGenome(filename);
 
@@ -250,7 +200,7 @@ void strShiftProfile(Mapfile &p, std::string typestr, int numthreads)
   return;
 }
 
-void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev, FragmentVariability &fvback, const int s, const int e, boost::mutex &mtx)
+void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev, const FragmentVariability &fvback, const int s, const int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
     FragmentVariability fv;
@@ -258,7 +208,8 @@ void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const
 
     double diffMax(0);
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback.getAccuOfDistanceOfFragment(k));
+      //      diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback.getAccuOfDistanceOfFragment(k));
+      diffMax = fv.getAccuOfDistanceOfFragment(k);
     }
     chr.setmp(step, diffMax, mtx);
   }
@@ -272,7 +223,7 @@ void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, 
   boost::thread_group agroup;
   boost::mutex mtx;
   for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::cref(fwd), boost::cref(rev), boost::ref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
 }

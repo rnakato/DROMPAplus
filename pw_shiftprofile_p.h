@@ -9,12 +9,12 @@
 
 namespace {
   const int mp_from(500);
-  const int mp_to(1500);
+  const int mp_to(5000);
   const int ng_from(4000);
   const int ng_to(5000);
   const int ng_step(100);
   //  const int SizeOfFragOverlapDist(10000);
-  const int sizeOfvDistOfDistaneOfFrag = 10000;
+  const int sizeOfvDistOfDistaneOfFrag = 2000;
 }
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
@@ -22,24 +22,24 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w);
 
 class FragmentVariability {
-  int fraglen;
   //  std::vector<int> FragOverlapDist;
+  double sumOfvDistOfDistaneOfFrag;
   static const int length4Accu = 500;
   std::vector<int> vDistOfDistaneOfFrag;
   std::vector<double> vAccuOfDistaneOfFrag;
 
  public:
- FragmentVariability(): fraglen(0),
+ FragmentVariability(): sumOfvDistOfDistaneOfFrag(0),
     vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0),
     vAccuOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {} //, FragOverlapDist(SizeOfFragOverlapDist,0)
-  void setVariability(const int l, const int start, const int end, const int width,
-		      const std::vector<char> &fwd,
-		      const std::vector<char> &rev) {
-    fraglen = l;
-    int last(0);
-    int s = start;
-    if(start + fraglen <0) s = start - fraglen;
-    int e = end - std::max(fraglen, length4Accu);
+  
+  void setVariability(const int fraglen, const int start, const int end, const int width,
+		      const std::vector<char> &fwd, const std::vector<char> &rev) {
+
+    int s(start);
+    if(start + fraglen < 0) s = start - fraglen;
+    int e(end - std::max(fraglen, length4Accu));
+    int last(s);
     for(int i=s; i<e; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
 	if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
@@ -47,12 +47,15 @@ class FragmentVariability {
       }
     }
 
+    sumOfvDistOfDistaneOfFrag = accumulate(vDistOfDistaneOfFrag.begin(), vDistOfDistaneOfFrag.end(), 0);
+
     double a(0);
-    for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      a += getDistOfDistanceOfFragment(k);
-      vAccuOfDistaneOfFrag[k] = a;
+    for(int i=0; i<sizeOfvDistOfDistaneOfFrag; ++i) {
+      a += getDistOfDistanceOfFragment(i);
+      vAccuOfDistaneOfFrag[i] = a;
     }
   }
+  
   //  long getseqsize() const { return accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0); }
   /*  double getPropOfOverlapDist(const int i) const {
     if(i<0 || i>= SizeOfFragOverlapDist) {
@@ -64,15 +67,12 @@ class FragmentVariability {
     }
     }*/
   double getDistOfDistanceOfFragment(const int i) const {
-    long sum = accumulate(vDistOfDistaneOfFrag.begin(), vDistOfDistaneOfFrag.end(), 0);
-    double r = vDistOfDistaneOfFrag[i]/static_cast<double>(sum);
-    return r;
+    return vDistOfDistaneOfFrag[i] / sumOfvDistOfDistaneOfFrag;
   }
   double getAccuOfDistanceOfFragment(const int i) const {
     return vAccuOfDistaneOfFrag[i];
   }
   void add2genome(const FragmentVariability &x) {
-    fraglen = x.fraglen;
     //    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
     for(uint i=0; i<vDistOfDistaneOfFrag.size(); ++i) vDistOfDistaneOfFrag[i] += x.vDistOfDistaneOfFrag[i];
   }
@@ -85,6 +85,10 @@ class ReadShiftProfile {
   double r;
   double bk;
   double w;
+
+ protected:
+  long len;
+  long nread;
   
  public:
   std::map<int, double> mp;
@@ -92,32 +96,19 @@ class ReadShiftProfile {
   int start;
   int end;
   int width;
-  long nread;
 
-  long len;
   double rchr;
 
-  std::map<int, double> fvmap;
-  /*  FragmentVariability fvfrag;
-  FragmentVariability fvrep;
-  FragmentVariability fvback;*/
-
- ReadShiftProfile(const int len, const double wref, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), w(wref), start(s), end(e), width(e-s), nread(n), len(l), rchr(1) {}
+ ReadShiftProfile(const int len, const double wref, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), w(wref), len(l), nread(n), start(s), end(e), width(e-s), rchr(1) {}
   virtual ~ReadShiftProfile() {}
   void setmp(int i, double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
   }
-  /*  void setFragmentVariability4Frag(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
-    fvfrag.setVariability(l, start, end, width, fwd, rev);
+
+  void setrchr(const long n) {
+    rchr = n ? nread/static_cast<double>(n): 0;
   }
-  void setFragmentVariability4Rep(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
-    fvrep.setVariability(l, start, end, width, fwd, rev);
-  }
-  void setFragmentVariability4Back(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
-    fvback.setVariability(l, start, end, width, fwd, rev);
-    }*/
-  
   int getnsci() const { return nsci; }
   double getmpsum() const {
     double sum(0);
@@ -164,39 +155,7 @@ class ReadShiftProfile {
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
     out << "Background uniformity\t" << const_bu / be << std::endl;
-    //    out << "Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment() << std::endl;
-    //out << "Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment() << std::endl;
-    //out << "Background median distance\t" << fvback.getMedianOfDistanceOfFragment() << std::endl;
-    //out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
-    //out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
-    /*    out << "Accumulated frag distance dist" << std::endl;
-    out << "\tFragment\tRepeat\tBackground\tFragment Accumulated\tRepeat Accumulated\tBackground Accumulated" << std::endl;
-    double a(0), b(0), c(0);
-    double diffMaxFrag(0), diffMaxRep(0);
-    for(size_t i=0; i<sizeOfvDistOfDistaneOfFrag; ++i) {
-      a += fvfrag.getDistOfDistanceOfFragment(i);
-      b += fvrep.getDistOfDistanceOfFragment(i);
-      c += fvback.getDistOfDistanceOfFragment(i);
-      diffMaxFrag = std::max(diffMaxFrag, a-c);
-      diffMaxRep  = std::max(diffMaxRep,  b-c);
-      out << i << "\t"
-	  << fvfrag.getDistOfDistanceOfFragment(i) << "\t"
-	  << fvrep.getDistOfDistanceOfFragment(i) << "\t"
-	  << fvback.getDistOfDistanceOfFragment(i) << "\t"
-	  << a << "\t" << b << "\t" << c << std::endl;
-    }
-    out << boost::format("Fragment score: %1%\n") % diffMaxFrag;
-    out << boost::format("Read score: %1%\n")     % diffMaxRep;
-    */
-    
-    out << "Accumulated frag distance Diff dist" << std::endl;
-    out << "shift\tScore" << std::endl;
-
-    for(auto itr = fvmap.begin(); itr != fvmap.end(); ++itr) {
-      out << boost::format("%1%\t%2%\n") % itr->first % itr->second;
-    }
-    
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
       out << itr->first            << "\t"
@@ -226,7 +185,7 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
     for(auto x:p.genome.chr) {
       ReadShiftProfile v(p.getlenF3(), wref, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
       //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
-      v.rchr = nread? v.nread/static_cast<double>(nread): 0;
+      v.setrchr(nread);
       chr.push_back(v);
     }
     // seprange
@@ -246,15 +205,6 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
   void addmp2genome(const int i) {
     addmp(mp, chr[i].mp, chr[i].rchr);
     addmp(nc, chr[i].nc, chr[i].rchr);
-  }
-  void addfvmap2genome(const int i) {
-    addmp(fvmap, chr[i].fvmap, chr[i].rchr);
-  }
-  void addnread2genome(const int i, boost::mutex &mtx) {
-    boost::mutex::scoped_lock lock(mtx);
-    /*    fvfrag.add2genome(chr[i].fvfrag);
-    fvrep.add2genome(chr[i].fvrep);
-    fvback.add2genome(chr[i].fvback);*/
   }
   void outputmpGenome(const std::string &filename) const {
     print2file(filename, name);
