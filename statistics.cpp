@@ -3,6 +3,8 @@
  */
 #include "statistics.h"
 #include "macro.h"
+#include <iostream>
+#include <boost/format.hpp>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_multimin.h>
@@ -90,7 +92,7 @@ void func_iteration(gsl_multimin_fminimizer *s, size_t ndim)
     status = gsl_multimin_test_size(size, 1e-3);  /* sizeが閾値(1e-3)より小さければGSL_SUCCESS を、そうでなければGSL_CONTINUEを返す。 */
 
 #ifdef DEBUG
-    if(status == GSL_SUCCESS) cout << "converged to minimum at " << iter << endl;
+    if(status == GSL_SUCCESS) std::cout << "converged to minimum at " << iter << std::endl;
     if(ndim==2) BPRINT("%1% p=%2% p0=%3% f() = %4% size = %5%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_multimin_fminimizer_minimum(s) % size;
     else BPRINT("%1% p=%2% n=%3% p0=%4% f() = %5% size = %6%\n") % iter % gsl_vector_get(s->x, 0) % gsl_vector_get(s->x, 1) % gsl_vector_get(s->x, 2) % gsl_multimin_fminimizer_minimum(s) % size;
 #endif

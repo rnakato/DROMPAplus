@@ -13,7 +13,7 @@ namespace {
   const int ng_from(4000);
   const int ng_to(5000);
   const int ng_step(100);
-  const int SizeOfFragOverlapDist(10000);
+  //  const int SizeOfFragOverlapDist(10000);
   const int sizeOfvDistOfDistaneOfFrag = 10000;
 }
 
@@ -23,65 +23,38 @@ void addmp(std::map<int, double> &, const std::map<int, double> &, double w);
 
 class FragmentVariability {
   int fraglen;
-  //  std::vector<int> vDistanceOfFrag;
-  std::vector<int> FragOverlapDist;
-  long numOfCoveredBase;
-  double AccuOfFragOverlapDist;
+  //  std::vector<int> FragOverlapDist;
   static const int length4Accu = 500;
   std::vector<int> vDistOfDistaneOfFrag;
+  std::vector<double> vAccuOfDistaneOfFrag;
 
  public:
- FragmentVariability(): fraglen(0), FragOverlapDist(SizeOfFragOverlapDist,0), numOfCoveredBase(0), AccuOfFragOverlapDist(0), vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {}
-  void setVariability(const int l, const int start, const int end ,const int width,
-		      const boost::dynamic_bitset<> &fwd,
-		      const boost::dynamic_bitset<> &rev) {
+ FragmentVariability(): fraglen(0),
+    vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0),
+    vAccuOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {} //, FragOverlapDist(SizeOfFragOverlapDist,0)
+  void setVariability(const int l, const int start, const int end, const int width,
+		      const std::vector<char> &fwd,
+		      const std::vector<char> &rev) {
     fraglen = l;
-    std::vector<short> array(width, 0);
-
     int last(0);
+    int s = start;
+    if(start + fraglen <0) s = start - fraglen;
     int e = end - std::max(fraglen, length4Accu);
-    for(int i=start; i<e; ++i) {
+    for(int i=s; i<e; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
-	if(last) {
-	  //	  vDistanceOfFrag.push_back(i - last);
-	  if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
-	}
+	if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
 	last = i;
-	for(int j=0; j<length4Accu; ++j) ++array[i - start +j]; // backとchipで同じ長さに正規化
       }
     }
 
-    for(int i=0; i<width; ++i) {
-      ++FragOverlapDist[array[i]];
-      if(array[i]) ++numOfCoveredBase;
+    double a(0);
+    for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
+      a += getDistOfDistanceOfFragment(k);
+      vAccuOfDistaneOfFrag[k] = a;
     }
-    //    for(int i=0; i<SizeOfFragOverlapDist; ++i) AccuOfFragOverlapDist += i*FragOverlapDist[i];
   }
-  long getseqsize() const { return accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0); }
-  /*  double getAccuOfOverlapDist(const long num) const {
-    long seqsize(getseqsize());
-    if(num<0 || num>= seqsize) {
-      std::cerr << "error: invalid num " << num << "for getAccuOfOverlapDist. max: " << seqsize << std::endl;
-      return -1;
-    }
-    long sum(0);
-    long currentnum(0);
- 
-    for(int i=0; i<SizeOfFragOverlapDist; ++i) {
-      //      std::cout<< i << ", "<< currentnum << ", "<< num << "\t" << FragOverlapDist[i] << std::endl;
-      if(currentnum + FragOverlapDist[i] < num) {
-	sum += i*FragOverlapDist[i];
-	currentnum += FragOverlapDist[i];
-      } else {
-	sum += i * (num-currentnum);
-	break;
-      }
-    }
-    //    std::cout<< sum << ", "<< AccuOfFragOverlapDist << ", "<< sum/AccuOfFragOverlapDist << std::endl;
- 
-    return sum/AccuOfFragOverlapDist;
-    }*/
-  double getPropOfOverlapDist(const int i) const {
+  //  long getseqsize() const { return accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0); }
+  /*  double getPropOfOverlapDist(const int i) const {
     if(i<0 || i>= SizeOfFragOverlapDist) {
       std::cerr << "error: invalid num " << i << "for getPropOfOverlapDist. max: " << SizeOfFragOverlapDist << std::endl;
       return -1;
@@ -89,26 +62,19 @@ class FragmentVariability {
     else {
       return FragOverlapDist[i]/static_cast<double>(accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0));
     }
-  }
+    }*/
   double getDistOfDistanceOfFragment(const int i) const {
     long sum = accumulate(vDistOfDistaneOfFrag.begin(), vDistOfDistaneOfFrag.end(), 0);
     double r = vDistOfDistaneOfFrag[i]/static_cast<double>(sum);
     return r;
   }
-  /*  double getMedianOfDistanceOfFragment() const {
-    if (vDistanceOfFrag.empty()) return 0;
-    std::vector<int> v;
-    std::copy(vDistanceOfFrag.begin(), vDistanceOfFrag.end(), back_inserter(v));
-    std::sort(v.begin(),v.end());
-    return v[v.size()/2];
-    }*/
+  double getAccuOfDistanceOfFragment(const int i) const {
+    return vAccuOfDistaneOfFrag[i];
+  }
   void add2genome(const FragmentVariability &x) {
-    fraglen           = x.fraglen;
-    numOfCoveredBase += x.numOfCoveredBase;
-    AccuOfFragOverlapDist += x.AccuOfFragOverlapDist;
-    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
+    fraglen = x.fraglen;
+    //    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
     for(uint i=0; i<vDistOfDistaneOfFrag.size(); ++i) vDistOfDistaneOfFrag[i] += x.vDistOfDistaneOfFrag[i];
-    //    std::copy(x.vDistanceOfFrag.begin(), x.vDistanceOfFrag.end(), std::back_inserter(vDistanceOfFrag));
   }
 };
 
@@ -131,9 +97,10 @@ class ReadShiftProfile {
   long len;
   double rchr;
 
-  FragmentVariability fvfrag;
+  std::map<int, double> fvmap;
+  /*  FragmentVariability fvfrag;
   FragmentVariability fvrep;
-  FragmentVariability fvback;
+  FragmentVariability fvback;*/
 
  ReadShiftProfile(const int len, const double wref, int s=0, int e=0, long n=0, long l=0): lenF3(len), nsc(0), nsci(0), r(0), bk(0), w(wref), start(s), end(e), width(e-s), nread(n), len(l), rchr(1) {}
   virtual ~ReadShiftProfile() {}
@@ -141,7 +108,7 @@ class ReadShiftProfile {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
   }
-  void setFragmentVariability4Frag(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
+  /*  void setFragmentVariability4Frag(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
     fvfrag.setVariability(l, start, end, width, fwd, rev);
   }
   void setFragmentVariability4Rep(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
@@ -149,7 +116,7 @@ class ReadShiftProfile {
   }
   void setFragmentVariability4Back(const int l, const boost::dynamic_bitset<> &fwd, const boost::dynamic_bitset<> &rev) {
     fvback.setVariability(l, start, end, width, fwd, rev);
-  }
+    }*/
   
   int getnsci() const { return nsci; }
   double getmpsum() const {
@@ -203,7 +170,7 @@ class ReadShiftProfile {
     //out << "Normalized Fraglen median distance\t" << fvfrag.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
     //out << "Normalized Readlen median distance\t" << fvrep.getMedianOfDistanceOfFragment()/fvback.getMedianOfDistanceOfFragment() << std::endl;
 
-    out << "Accumulated frag distance dist" << std::endl;
+    /*    out << "Accumulated frag distance dist" << std::endl;
     out << "\tFragment\tRepeat\tBackground\tFragment Accumulated\tRepeat Accumulated\tBackground Accumulated" << std::endl;
     double a(0), b(0), c(0);
     double diffMaxFrag(0), diffMaxRep(0);
@@ -221,33 +188,14 @@ class ReadShiftProfile {
     }
     out << boost::format("Fragment score: %1%\n") % diffMaxFrag;
     out << boost::format("Read score: %1%\n")     % diffMaxRep;
+    */
+    
+    out << "Accumulated frag distance Diff dist" << std::endl;
+    out << "shift\tScore" << std::endl;
 
-    /*    out << "Accumulated read dist" << std::endl;
-    out << "\tFragment\tRepeat\tBackground" << std::endl;
-    double a(0), b(0), c(0);
-    for(size_t i=0; i<SizeOfFragOverlapDist; ++i) {
-      a += fvfrag.getPropOfOverlapDist(i);
-      b += fvrep.getPropOfOverlapDist(i);
-      c += fvback.getPropOfOverlapDist(i);
-      out << i << "\t"
-	  << fvfrag.getPropOfOverlapDist(i) << "\t"
-	  << fvrep.getPropOfOverlapDist(i) << "\t"
-	  << fvback.getPropOfOverlapDist(i) << "\t"
-	  << a << "\t" << b << "\t" << c << std::endl;
-	  }*/
-    /*    int sep(10000);
-    out << "Accumulated read dist" << std::endl;
-    out << "\tFragment\tRepeat\tBackground" << std::endl;
-    for(size_t i=0; i<fvfrag.getseqsize()/sep; ++i) {
-      a += fvfrag.getAccuOfOverlapDist(i*sep);
-      b += fvrep.getAccuOfOverlapDist(i*sep);
-      c += fvback.getAccuOfOverlapDist(i*sep);
-      if(fvfrag.getAccuOfOverlapDist(i*sep) || fvrep.getAccuOfOverlapDist(i*sep) || fvback.getAccuOfOverlapDist(i*sep))
-      out << i*sep << "\t" << fvfrag.getAccuOfOverlapDist(i*sep) << "\t"  
-	  << fvrep.getAccuOfOverlapDist(i*sep)  << "\t" 
-	  << fvback.getAccuOfOverlapDist(i*sep) << std::endl;
+    for(auto itr = fvmap.begin(); itr != fvmap.end(); ++itr) {
+      out << boost::format("%1%\t%2%\n") % itr->first % itr->second;
     }
-    out << a << "\t"<< b << "\t"<< c << "\t" << (c-a) << "\t"<< (c-b) << std::endl;*/
     
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
@@ -299,11 +247,14 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
     addmp(mp, chr[i].mp, chr[i].rchr);
     addmp(nc, chr[i].nc, chr[i].rchr);
   }
+  void addfvmap2genome(const int i) {
+    addmp(fvmap, chr[i].fvmap, chr[i].rchr);
+  }
   void addnread2genome(const int i, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
-    fvfrag.add2genome(chr[i].fvfrag);
+    /*    fvfrag.add2genome(chr[i].fvfrag);
     fvrep.add2genome(chr[i].fvrep);
-    fvback.add2genome(chr[i].fvback);
+    fvback.add2genome(chr[i].fvback);*/
   }
   void outputmpGenome(const std::string &filename) const {
     print2file(filename, name);
@@ -367,6 +318,19 @@ class shiftHamming : public ReadShiftProfileGenome {
     auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
     
+    setDist(chr[i], fwd, rev);
+  }
+};
+
+class shiftFragVar : public ReadShiftProfileGenome {
+ public:
+ shiftFragVar(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1) {}
+
+  void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
+  void execchr(const Mapfile &p, int i) {
+    auto fwd = genVector(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
+    auto rev = genVector(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
+
     setDist(chr[i], fwd, rev);
   }
 };

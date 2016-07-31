@@ -306,6 +306,12 @@ class SeqStatsGenome: public SeqStats {
   std::vector<bed> vbed;
   void readGenomeTable(const std::string &, const int);
   
+  void printstats() const {
+    std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
+    print();
+    for(auto x:chr) x.print();
+  }
+
  public:
   std::vector<SeqStats> chr;
   std::vector<sepchr> vsepchr;
@@ -328,14 +334,13 @@ class SeqStatsGenome: public SeqStats {
     vsepchr = getVsepchr(values["threads"].as<int>());
     
 #ifdef DEBUG
-  cout << "chr\tautosome" << endl;
-  for(auto x:chr) {
-    cout << x.name << "\t" << x.isautosome() << endl;
-  }
-  for(uint i=0; i<vsepchr.size(); i++) cout << "thread " << (i+1) << ": "<< vsepchr[i].s << "-" << vsepchr[i].e << endl;
-
-  printstats();
-
+    std::cout << "chr\tautosome" << std::endl;
+    for(auto x:chr) std::cout << x.name << "\t" << x.isautosome() << std::endl;
+    for(uint i=0; i<vsepchr.size(); i++)
+      std::cout << "thread " << (i+1) << ": "
+		<< vsepchr[i].s << "-" << vsepchr[i].e
+		<< std::endl;
+    printstats();
 #endif
   }
 
@@ -355,11 +360,6 @@ class SeqStatsGenome: public SeqStats {
 	seq[i].nread_red    += x.seq[i].nread_red;
       }
     }
-  }
-  void printstats() const {
-    std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
-    print();
-    for(auto x:chr) x.print();
   }
   void setbed(const std::string bedfilename) {
     isFile(bedfilename);
@@ -537,12 +537,12 @@ class Mapfile {
     else out << boost::format("Library complexity: %1$.3f (%2%/%3%)\n") % complexity() % nt_nonred % nt_all;
   }
   double complexity() const { return nt_nonred/static_cast<double>(nt_all); }
-  /*  void printstats() const {
+  void printstats() const {
     std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
     genome.print();
-    for (auto x:chr) x.print();
+    for (auto x:genome.chr) x.print();
   }
-  void setFRiP() {
+  /*  void setFRiP() {
     std::cout << "calculate FRiP score.." << std::flush;
     for(auto &c: chr) {
       calcFRiP(c, vbed);
