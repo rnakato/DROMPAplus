@@ -388,7 +388,7 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
 
     // thresholdが2以上の時にbitを使うと、total readがおかしくなるので
     // background uniformityが1を超える可能性がある
-    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
+    //    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
     std::cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
 

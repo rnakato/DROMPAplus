@@ -9,7 +9,7 @@
 
 namespace {
   const int mp_from(500);
-  const int mp_to(5000);
+  const int mp_to(1500);
   const int ng_from(4000);
   const int ng_to(5000);
   const int ng_step(100);
@@ -32,10 +32,9 @@ class FragmentVariability {
  FragmentVariability(): sumOfvDistOfDistaneOfFrag(0),
     vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0),
     vAccuOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {} //, FragOverlapDist(SizeOfFragOverlapDist,0)
-  
+
   void setVariability(const int fraglen, const int start, const int end, const int width,
 		      const std::vector<char> &fwd, const std::vector<char> &rev) {
-
     int s(start);
     if(start + fraglen < 0) s = start - fraglen;
     int e(end - std::max(fraglen, length4Accu));
@@ -55,7 +54,7 @@ class FragmentVariability {
       vAccuOfDistaneOfFrag[i] = a;
     }
   }
-  
+
   //  long getseqsize() const { return accumulate(FragOverlapDist.begin(), FragOverlapDist.end(), 0); }
   /*  double getPropOfOverlapDist(const int i) const {
     if(i<0 || i>= SizeOfFragOverlapDist) {
@@ -67,10 +66,22 @@ class FragmentVariability {
     }
     }*/
   double getDistOfDistanceOfFragment(const int i) const {
-    return vDistOfDistaneOfFrag[i] / sumOfvDistOfDistaneOfFrag;
+    if(i<0 || i>= sizeOfvDistOfDistaneOfFrag) {
+      std::cerr << "error: invalid num " << i << "for getDistOfDistanceOfFragment max: " << sizeOfvDistOfDistaneOfFrag << std::endl;
+      return -1;
+    }
+    else {
+      return vDistOfDistaneOfFrag[i] / sumOfvDistOfDistaneOfFrag;
+    }
   }
   double getAccuOfDistanceOfFragment(const int i) const {
-    return vAccuOfDistaneOfFrag[i];
+    if(i<0 || i>= sizeOfvDistOfDistaneOfFrag) {
+      std::cerr << "error: invalid num " << i << "for getAccuOfDistanceOfFragment max: " << sizeOfvDistOfDistaneOfFrag << std::endl;
+      return -1;
+    }
+    else {
+      return vAccuOfDistaneOfFrag[i];
+    }
   }
   void add2genome(const FragmentVariability &x) {
     //    for(uint i=0; i<FragOverlapDist.size(); ++i) FragOverlapDist[i] += x.FragOverlapDist[i];
@@ -106,9 +117,7 @@ class ReadShiftProfile {
     mp[i] = val;
   }
 
-  void setrchr(const long n) {
-    rchr = n ? nread/static_cast<double>(n): 0;
-  }
+  void setrchr(const long n) { rchr = n ? nread/static_cast<double>(n): 0; }
   int getnsci() const { return nsci; }
   double getmpsum() const {
     double sum(0);

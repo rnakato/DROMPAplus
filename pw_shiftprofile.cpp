@@ -208,8 +208,8 @@ void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const
 
     double diffMax(0);
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      //      diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback.getAccuOfDistanceOfFragment(k));
-      diffMax = fv.getAccuOfDistanceOfFragment(k);
+      //      std::cout << fv.getAccuOfDistanceOfFragment(k) << "\t" << fvback.getAccuOfDistanceOfFragment(k) << std::endl;
+      diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback.getAccuOfDistanceOfFragment(k));
     }
     chr.setmp(step, diffMax, mtx);
   }
@@ -218,7 +218,7 @@ void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const
 void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev)
 {
   FragmentVariability fvback;
-  fvback.setVariability(ng_to, chr.start, chr.end, chr.width, fwd, rev);
+  fvback.setVariability(ng_from, chr.start, chr.end, chr.width, fwd, rev);
 
   boost::thread_group agroup;
   boost::mutex mtx;
