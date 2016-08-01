@@ -169,8 +169,8 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
     }
     agroup.join_all();
   } else {
-    //genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
-    genThread(dist, p, 0, 0, typestr);
+    genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
+    //genThread(dist, p, 0, 0, typestr);
   }
 
   //  GaussianSmoothing(p.dist.hd);
