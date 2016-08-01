@@ -382,13 +382,13 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
 {
   if(!values.count("pair") && !values.count("nomodel")) {
     clock_t t1 = clock();
-    //  strShiftProfile(p, "exjaccard", values["threads"].as<int>());
+    strShiftProfile(p, "exjaccard", values["threads"].as<int>());
     clock_t t2 = clock();
     std::cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
     // thresholdが2以上の時にbitを使うと、total readがおかしくなるので
     // background uniformityが1を超える可能性がある
-    //    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
+    strShiftProfile(p, "jaccard", values["threads"].as<int>()); 
     clock_t t3 = clock();
     std::cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";
 
@@ -396,17 +396,19 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
     clock_t t4 = clock();
     std::cout << "Fragment variability: " << static_cast<double>(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
 
-    exit(0);
     
-    //    strShiftProfile(p, "hdp", values["threads"].as<int>());
+    
+    strShiftProfile(p, "hdp", values["threads"].as<int>());
     clock_t t5 = clock();
     std::cout << "Hamming: " << static_cast<double>(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";
 
-    //    strShiftProfile(p, "ccp", values["threads"].as<int>());
+    strShiftProfile(p, "ccp", values["threads"].as<int>());
     clock_t t6 = clock();
     std::cout << "ccp: " << static_cast<double>(t6 - t5) / CLOCKS_PER_SEC << "sec.\n";
   }
-
+  
+  exit(0);
+  
   p.genome.calcdepthAll(p.getflen(values));
   p.genome.setF5All(p.getflen(values));
 }
