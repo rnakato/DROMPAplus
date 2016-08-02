@@ -119,6 +119,29 @@ std::vector<char> genVector(const strandData &seq, int start, int end)
   return array;
 }
 
+std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int end, const int numRead4fvp, const long nread)
+{
+  double r(1);
+  static int on(0);
+  if(numRead4fvp) r = numRead4fvp/static_cast<double>(nread);
+  if(r>1){
+    if(!on) {
+      std::cerr << "\nWarning: number of reads for Fragment variability is < "<< (int)(numRead4fvp/NUM_1M) <<" million.\n";
+      //    p.lackOfRead4FragmentVar_on();
+      on=1;
+    }
+  }
+  double r4cmp = r*RAND_MAX;
+  std::vector<char> array(end-start, 0);
+  for (auto x: seq.vRead) {
+    if(!x.duplicate && RANGE(x.F3, start, end-1)){
+      if(rand() >= r4cmp) continue;
+      ++array[x.F3 - start];
+    }
+  }
+  return array;
+}
+
 boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 {
   boost::dynamic_bitset<> array(end-start);
@@ -130,11 +153,11 @@ boost::dynamic_bitset<> genBitset(const strandData &seq, int start, int end)
 }
 
 template <class T>
-void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr) {
+void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string typestr, int numRead4fvp) {
   for(uint i=chr_s; i<=chr_e; ++i) {
     std::cout << p.genome.chr[i].name << ".." << std::flush;
-   
-    dist.execchr(p, i);
+
+    dist.execchr(p, i, numRead4fvp);
     dist.chr[i].setflen();
     
     std::string filename = p.getprefix() + "." + typestr + "." + p.genome.chr[i].name + ".csv";
@@ -143,20 +166,7 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string ty
 }
 
 template <class T>
-int getRepeatRegion(std::vector<range> &vrep, int j, std::vector<T> array, int start, int end)
-{
-  int lower_thre=5;
-  int s, e;
-  for(s=j; s>=start; --s) if(array[s]<lower_thre) break;
-  for(e=j; e<end; ++e)    if(array[e]<lower_thre) break;
-
-  vrep.push_back(range(s,e));
-  
-  return e;
-}
-
-template <class T>
-void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
+void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads, int numRead4fvp=0)
 {
   T dist(p, numthreads);
   dist.printStartMessage();
@@ -165,14 +175,14 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   boost::mutex mtx;
 
   if(typestr == "hdp" || typestr == "jaccard") {
-      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
+    agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr, numRead4fvp));
       /*    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
-      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr));
+      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr, numRead4fvp));
       }*/
     agroup.join_all();
   } else {
-    genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
-    //genThread(dist, p, 0, 0, typestr);
+    genThread(dist, p, 0, p.genome.chr.size()-1, typestr, numRead4fvp);
+    //genThread(dist, p, 0, 0, typestr, numRead4fvp);
 
     if(typestr == "fvp") {
       std::string filename = p.getprefix() + ".mpfv.csv";
@@ -196,13 +206,14 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   return;
 }
 
-void strShiftProfile(Mapfile &p, std::string typestr, int numthreads)
+void strShiftProfile(const MyOpt::Variables &values, Mapfile &p, std::string typestr)
 {
+  int numthreads(values["threads"].as<int>());
   if(typestr=="exjaccard")    makeProfile<shiftJacVec>(p, typestr, numthreads);
   else if(typestr=="jaccard") makeProfile<shiftJacBit>(p, typestr, numthreads);
   else if(typestr=="ccp")     makeProfile<shiftCcp>(p, typestr, numthreads);
   else if(typestr=="hdp")     makeProfile<shiftHamming>(p, typestr, numthreads);
-  else if(typestr=="fvp")     makeProfile<shiftFragVar>(p, typestr, numthreads);
+  else if(typestr=="fvp")     makeProfile<shiftFragVar>(p, typestr, numthreads, values["nfvp"].as<int>());
   
   return;
 }

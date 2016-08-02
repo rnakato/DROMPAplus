@@ -6,6 +6,6 @@
 
 #include "pw_gv.h"
 
-void strShiftProfile(Mapfile &p, std::string, int);
+void strShiftProfile(const MyOpt::Variables &values, Mapfile &p, std::string);
 
 #endif /* _PW_SHIFTPROFILE_H_ */

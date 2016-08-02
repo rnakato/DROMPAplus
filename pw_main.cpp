@@ -230,6 +230,7 @@ void setOpts(MyOpt::Opts &allopts)
   optsingle.add_options()
     ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
     ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
+    ("nfvp",        value<int>()->default_value(10000000),   "read number for calculating fragment variability")
     ;
   MyOpt::Opts optpair("For paired-end read",100);
   optpair.add_options()
@@ -286,6 +287,7 @@ void init_dump(const MyOpt::Variables &values){
     std::cout << "Single-end mode: ";
     BPRINT("fragment length will be estimated from hamming distance\n");
     if (values.count("nomodel")) BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
+    if(values["nfvp"].as<int>()) BPRINT("\t%1% reads used for fragment variability\n") % values["nfvp"].as<int>();
   } else {
     std::cout << "Paired-end mode: ";
     BPRINT("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
