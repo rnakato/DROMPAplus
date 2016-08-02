@@ -82,10 +82,11 @@ void shiftJacBit::setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &
   for(int step=-mp_from; step<mp_to; ++step) {
     rev >>= 1;
     int xy((fwd & rev).count());
+    //    chr.mp[step] = xy;
     chr.mp[step] = xy/static_cast<double>(xysum-xy);
   }
   rev >>= (ng_from - mp_to);
-  
+
   for(int step=ng_from; step<ng_to; step+=ng_step) {
     rev >>= ng_step;
     int xy((fwd & rev).count());
@@ -164,13 +165,19 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   boost::mutex mtx;
 
   if(typestr == "hdp" || typestr == "jaccard") {
-    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+      agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
+      /*    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
       agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr));
-    }
+      }*/
     agroup.join_all();
   } else {
     genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
     //genThread(dist, p, 0, 0, typestr);
+
+    if(typestr == "fvp") {
+      std::string filename = p.getprefix() + ".mpfv.csv";
+      dist.printmpfv(filename);
+    }
   }
 
   //  GaussianSmoothing(p.dist.hd);
@@ -200,7 +207,7 @@ void strShiftProfile(Mapfile &p, std::string typestr, int numthreads)
   return;
 }
 
-void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev, const FragmentVariability &fvback, const int s, const int e, boost::mutex &mtx)
+void genThreadFragVar(ReadShiftProfile &chr, std::map<int, FragmentVariability> &mpfv, const std::vector<char> &fwd, const std::vector<char> &rev, const FragmentVariability &fvback, const int s, const int e, boost::mutex &mtx)
 {
   for(int step=s; step<e; ++step) {
     FragmentVariability fv;
@@ -212,18 +219,56 @@ void genThreadFragVar(ReadShiftProfile &chr, const std::vector<char> &fwd, const
       diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback.getAccuOfDistanceOfFragment(k));
     }
     chr.setmp(step, diffMax, mtx);
+    mpfv[step].add2genome(fv, mtx);
   }
 }
 
 void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev)
 {
-  FragmentVariability fvback;
+   FragmentVariability fvback;
   fvback.setVariability(ng_from, chr.start, chr.end, chr.width, fwd, rev);
 
+#ifdef DEBUG
+  FragmentVariability fv1;
+  fv1.setVariability(50, chr.start, chr.end, chr.width, fwd, rev);
+  FragmentVariability fv2;
+  fv2.setVariability(150, chr.start, chr.end, chr.width, fwd, rev);
+  FragmentVariability fv3;
+  fv3.setVariability(500, chr.start, chr.end, chr.width, fwd, rev);
+  FragmentVariability fv4;
+  fv4.setVariability(1000, chr.start, chr.end, chr.width, fwd, rev);
+  FragmentVariability fv5;
+  fv5.setVariability(2000, chr.start, chr.end, chr.width, fwd, rev);
+  FragmentVariability fv6;
+  fv6.setVariability(3000, chr.start, chr.end, chr.width, fwd, rev);
+
+  std::cout << "\n\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000" << std::endl;
+  for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
+    std::cout << k << "\t"
+	      << fv1.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fv2.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fv3.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fv4.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fv5.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fv6.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fvback.getAccuOfDistanceOfFragment(k) << "\t"
+	      << fv1.getDistOfDistanceOfFragment(k) << "\t"
+	      << fv2.getDistOfDistanceOfFragment(k) << "\t"
+	      << fv3.getDistOfDistanceOfFragment(k) << "\t"
+	      << fv4.getDistOfDistanceOfFragment(k) << "\t"
+	      << fv5.getDistOfDistanceOfFragment(k) << "\t"
+	      << fv6.getDistOfDistanceOfFragment(k) << "\t"
+	      << fvback.getDistOfDistanceOfFragment(k) << "\t"
+	      << std::endl;
+  }
+#endif
+  
   boost::thread_group agroup;
   boost::mutex mtx;
   for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::ref(mpfv), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
+
+  return;
 }
