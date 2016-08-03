@@ -119,22 +119,12 @@ std::vector<char> genVector(const strandData &seq, int start, int end)
   return array;
 }
 
-std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int end, const int numRead4fvp, const long nread)
+std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int end, const double r4cmp)
 {
-  double r(1);
-  static int on(0);
-  if(numRead4fvp) r = numRead4fvp/static_cast<double>(nread);
-  if(r>1){
-    if(!on) {
-      std::cerr << "\nWarning: number of reads for Fragment variability is < "<< (int)(numRead4fvp/NUM_1M) <<" million.\n";
-      //    p.lackOfRead4FragmentVar_on();
-      on=1;
-    }
-  }
-  double r4cmp = r*RAND_MAX;
   std::vector<char> array(end-start, 0);
   for (auto x: seq.vRead) {
     if(!x.duplicate && RANGE(x.F3, start, end-1)){
+    //    if(!x.duplicate && RANGE(x.F3, start, 120000000)) {
       if(rand() >= r4cmp) continue;
       ++array[x.F3 - start];
     }
@@ -175,10 +165,10 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads, i
   boost::mutex mtx;
 
   if(typestr == "hdp" || typestr == "jaccard") {
-    agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
-      /*    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+    //agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
+    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
       agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr));
-      }*/
+    }
     agroup.join_all();
   } else {
     genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
@@ -199,21 +189,33 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads, i
   return;
 }
 
-void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthreads, int numRead4fvp)
+void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthreads, const int numRead4fvp, const int flen)
 {
-  shiftFragVar dist(p, numthreads, numRead4fvp);
+  shiftFragVar dist(p, numthreads, flen);
   dist.printStartMessage();
+  
+  double r(1);
+  if(numRead4fvp) r = numRead4fvp/static_cast<double>(p.genome.bothnread());
+  if(r>1){
+    std::cerr << "\nWarning: number of reads for Fragment variability is < "<< (int)(numRead4fvp/NUM_1M) <<" million.\n";
+    dist.lackOfReads_on();
+  }
+  double r4cmp = r*RAND_MAX;
 
   for(uint i=0; i<=p.genome.chr.size()-1; ++i) {
-    std::cout << p.genome.chr[i].name << ".." << std::flush;
-    dist.execchr(p, i);
-    std::string filename = p.getprefix() + "." + typestr + "." + p.genome.chr[i].name + ".csv";
-    dist.outputmpChr(filename, i);
+    if(p.genome.chr[i].isautosome()) {
+      std::cout << p.genome.chr[i].name << ".." << std::flush;
+      dist.execchr(p, i, r4cmp);
+      std::string filename = p.getprefix() + "." + typestr + "." + p.genome.chr[i].name + ".csv";
+      dist.outputmpChr(filename, i);
+      dist.addmp2genome(i);
+
+      /*      std::string filename1 = p.getprefix() + ".mpfv.csv";
+      dist.printmpfv(filename1);
+      exit(0);*/
+    }
   }
 
-  for(uint i=0; i<p.genome.chr.size(); ++i) {
-    if(p.genome.chr[i].isautosome()) dist.addmp2genome(i);
-  }
   std::string filename1 = p.getprefix() + ".mpfv.csv";
   dist.printmpfv(filename1);
   std::string filename2 = p.getprefix() + "." + typestr + ".csv";
@@ -229,7 +231,7 @@ void strShiftProfile(const MyOpt::Variables &values, Mapfile &p, std::string typ
   else if(typestr=="jaccard") makeProfile<shiftJacBit>(p, typestr, numthreads);
   else if(typestr=="ccp")     makeProfile<shiftCcp>(p, typestr, numthreads);
   else if(typestr=="hdp")     makeProfile<shiftHamming>(p, typestr, numthreads);
-  else if(typestr=="fvp")     makeFragVarProfile(p, typestr, numthreads, values["nfvp"].as<int>());
+  else if(typestr=="fvp")     makeFragVarProfile(p, typestr, numthreads, values["nfvp"].as<int>(), p.getflen(values));
   
   return;
 }
@@ -238,11 +240,11 @@ void genThreadFragVar(ReadShiftProfile &chr, std::map<int, FragmentVariability> 
 {
   for(int step=s; step<e; ++step) {
     FragmentVariability fv;
-    fv.setVariability(step, chr.start, chr.end, chr.width, fwd, rev);
+    fv.setVariability(step, chr.start, chr.end, fwd, rev);
 
     double diffMax(0);
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      //      std::cout << fv.getAccuOfDistanceOfFragment(k) << "\t" << fvback.getAccuOfDistanceOfFragment(k) << std::endl;
+      //      std::cout << fv.getAccuOfDistanceOfFragment(k) << "\t" << fvback[k] << std::endl;
       diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback[k]);
     }
     chr.setmp(step, diffMax, mtx);
@@ -250,36 +252,51 @@ void genThreadFragVar(ReadShiftProfile &chr, std::map<int, FragmentVariability> 
   }
 }
 
-void shiftFragVar::execchr(const Mapfile &p, int i)
+void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev)
 {
-  auto fwd = genVector4FixedReadsNum(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end, numRead4fvp, p.genome.bothnread());
-  auto rev = genVector4FixedReadsNum(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end, numRead4fvp, p.genome.bothnread());
-
   boost::thread_group agroup;
   boost::mutex mtx;
 
+  std::vector<double> fvback(sizeOfvDistOfDistaneOfFrag,0);
+  int n(0);
   for(int step=ng_from; step<ng_to; step+=ng_step) {
     FragmentVariability fv;
-    fv.setVariability(step, chr[i].start, chr[i].end, chr[i].width, fwd, rev);
+    fv.setVariability(step, chr.start, chr.end, fwd, rev);    
+    for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
+      fvback[k] += fv.getAccuOfDistanceOfFragment(k);
+    }
+    ++n;
+    
     ncfv[step].add2genome(fv, mtx);
   }
-
-  std::vector<double> fvback;
-  for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-    double d(0);
-    int n(0);
-    for(auto itr = ncfv.begin(); itr != ncfv.end(); ++itr) {
-
-      d += itr->second.getAccuOfDistanceOfFragment(k);
-      n++;
-    }
-    fvback.push_back(d/n);
-  }
+  for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) fvback[k] /= n;
 
   for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr[i]), boost::ref(mpfv), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::ref(mpfv), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
   }
   agroup.join_all();
 
+  return;
+}
+
+void scanRepeatRegion(const std::vector<char> &fwd, const std::vector<char> &rev)
+{
+  int SizeOfFragOverlapDist(10000);
+  std::vector<int> FragOverlapDist(SizeOfFragOverlapDist,0);
+
+  int size(fwd.size());
+  std::vector<short> array(size, 0);
+  int fraglen=1000;
+  int last(0);
+  for(int i=0; i<size - fraglen; ++i) {
+    if(fwd[i] && rev[i+fraglen]) {
+      for(int j=0; j<fraglen; ++j) ++array[i+j];
+      if(i-last==1) std::cout << last << "-" << i << std::endl;
+      last=i;
+    }
+  }
+
+  //  for(int i=0; i<size; ++i) if(array[i]>1) std::cout << i << "\t" << array[i] << std::endl;
+  exit (0);
   return;
 }

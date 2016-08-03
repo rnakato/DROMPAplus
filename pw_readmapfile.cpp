@@ -387,7 +387,7 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
     std::cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
     // thresholdが2以上の時にbitを使うと、total readがおかしくなるので
-    // background uniformityが1を超える可能性がある
+        // background uniformityが1を超える可能性がある
     strShiftProfile(values, p, "jaccard"); 
     clock_t t3 = clock();
     std::cout << "Jaccard Bit: " << static_cast<double>(t3 - t2) / CLOCKS_PER_SEC << "sec.\n";

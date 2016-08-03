@@ -17,24 +17,23 @@ namespace {
 }
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
-std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int end, const int, const long);
+std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int end, const double r4cmp);
 boost::dynamic_bitset<> genBitset(const strandData &seq, int, int);
 void addmp(std::map<int, double> &, const std::map<int, double> &, double w);
 
 class FragmentVariability {
   double sumOfvDistOfDistaneOfFrag;
-  static const int length4Accu = 500;
   std::vector<int> vDistOfDistaneOfFrag;
 
  public:
  FragmentVariability(): sumOfvDistOfDistaneOfFrag(0),
     vDistOfDistaneOfFrag(sizeOfvDistOfDistaneOfFrag, 0) {}
 
-  void setVariability(const int fraglen, const int start, const int end, const int width,
+  void setVariability(const int fraglen, const int start, const int end,
 		      const std::vector<char> &fwd, const std::vector<char> &rev) {
     int s(start);
     if(start + fraglen < 0) s = start - fraglen;
-    int e(end - std::max(fraglen, length4Accu));
+    int e(end - fraglen);
     int last(s);
     for(int i=s; i<e; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
@@ -99,7 +98,7 @@ class ReadShiftProfile {
  ReadShiftProfile(const int len, const double wref, int s=0, int e=0, long n=0, long l=0):
   lenF3(len), nsc(0), nsci(0), r(0), bk(0), dirOfProfileSummit(wref), len(l), nread(n), start(s), end(e), width(e-s), rchr(1) {}
   virtual ~ReadShiftProfile() {}
-  void setmp(int i, double val, boost::mutex &mtx) {
+  void setmp(const int i, const double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
   }
@@ -160,16 +159,21 @@ class ReadShiftProfile {
 	  << (itr->second * rRPKM) << "\t"
 	  << (itr->second * r)     << std::endl;
   }
-  void print2file4fvp(const std::string filename, const std::string name) const {
+  void print2file4fvp(const std::string filename, const std::string name, const int flen, const bool lackOfReads) const {
     if(!nread) {
       std::cerr << filename << ": no read" << std::endl;
     }
     std::ofstream out(filename);
 
+    //    std::cout << flen <<"," << lenF3 <<std::endl;
+
+    std::string str("");
+    if(lackOfReads) str = " (read number is insufficient)";
+    out << "Fragment score" << str << "\t" << mp.at(flen) << std::endl;
+    out << "Read score" << str << "\t" << mp.at(lenF3) << std::endl;
     out << "Strand shift\t" << name << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
-      out << itr->first            << "\t"
-	  << itr->second           << std::endl;
+      out << itr->first << "\t" << itr->second << std::endl;
   }
 };
 
@@ -190,7 +194,6 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
     }
     for(auto x:p.genome.chr) {
       ReadShiftProfile v(p.getlenF3(), wref, 0, x.getlen(), x.bothnread_nonred(), x.getlenmpbl());
-      //ReadShiftProfile v(p, 0, 120000000, x.bothnread_nonred(), x.getlenmpbl());
       v.setrchr(nread);
       chr.push_back(v);
     }
@@ -277,16 +280,28 @@ class shiftHamming : public ReadShiftProfileGenome {
   }
 };
 
+void scanRepeatRegion(const std::vector<char> &fwd, const std::vector<char> &rev);
+
 class shiftFragVar : public ReadShiftProfileGenome {
   std::map<int, FragmentVariability> mpfv;
   std::map<int, FragmentVariability> ncfv;
-  int numRead4fvp;
+  int flen;
+  bool lackOfReads;
  public:
- shiftFragVar(const Mapfile &p, int numthreads, int n):
-  ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1), numRead4fvp(n) {}
+ shiftFragVar(const Mapfile &p, const int numthreads, const int fl):
+  ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1), flen(fl), lackOfReads(false) {}
 
-  void execchr(const Mapfile &p, int i);
+  void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
+  void execchr(const Mapfile &p, const int i, const double r4cmp) {
+    auto fwd = genVector4FixedReadsNum(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end, r4cmp);
+    auto rev = genVector4FixedReadsNum(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end, r4cmp);
 
+    //    scanRepeatRegion(fwd, rev);
+    
+    setDist(chr[i], fwd, rev);
+  }
+
+  void lackOfReads_on() { lackOfReads=true; }
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
     out << "\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000" << std::endl;
@@ -311,10 +326,10 @@ class shiftFragVar : public ReadShiftProfileGenome {
   }
   
   void outputmpGenome(const std::string &filename) const {
-    print2file4fvp(filename, name);
+    print2file4fvp(filename, name, flen, lackOfReads);
   }
-  void outputmpChr(const std::string &filename, const int i) const {
-    chr[i].print2file4fvp(filename, name);
+  void outputmpChr(const std::string &filename, const int i) const {  
+    chr[i].print2file4fvp(filename, name, flen, lackOfReads);
   }
 };
 
