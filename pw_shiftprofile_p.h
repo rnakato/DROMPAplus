@@ -160,12 +160,22 @@ class ReadShiftProfile {
 	  << (itr->second * rRPKM) << "\t"
 	  << (itr->second * r)     << std::endl;
   }
+  void print2file4fvp(const std::string filename, const std::string name) const {
+    if(!nread) {
+      std::cerr << filename << ": no read" << std::endl;
+    }
+    std::ofstream out(filename);
+
+    out << "Strand shift\t" << name << std::endl;
+    for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
+      out << itr->first            << "\t"
+	  << itr->second           << std::endl;
+  }
 };
 
 class ReadShiftProfileGenome: public ReadShiftProfile {
-  std::string name;
-
  protected:
+  std::string name;
   std::vector<range> seprange;
   
  public:
@@ -220,7 +230,7 @@ class shiftJacVec : public ReadShiftProfileGenome {
  shiftJacVec(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Jaccard index", p, numthreads, 1) {}
 
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
-  void execchr(const Mapfile &p, int i, int numRead4fvp=0) {
+  void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
@@ -233,7 +243,7 @@ class shiftJacBit : public ReadShiftProfileGenome {
  shiftJacBit(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Jaccard index", p, numthreads, 1) {}
 
   void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
-  void execchr(const Mapfile &p, int i, int numRead4fvp=0) {
+  void execchr(const Mapfile &p, int i) {
     auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
@@ -246,7 +256,7 @@ class shiftCcp : public ReadShiftProfileGenome {
  shiftCcp(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Cross correlation", p, numthreads, 1) {}
   
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
-  void execchr(const Mapfile &p, int i, int numRead4fvp=0) {
+  void execchr(const Mapfile &p, int i) {
     auto fwd = genVector(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genVector(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
 
@@ -259,7 +269,7 @@ class shiftHamming : public ReadShiftProfileGenome {
  shiftHamming(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Hamming distance", p, numthreads, -1) {}
 
   void setDist(ReadShiftProfile &chr, const boost::dynamic_bitset<> &fwd, boost::dynamic_bitset<> &rev);
-  void execchr(const Mapfile &p, int i, int numRead4fvp=0) {
+  void execchr(const Mapfile &p, int i) {
     auto fwd = genBitset(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end);
     auto rev = genBitset(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end);
     
@@ -269,16 +279,13 @@ class shiftHamming : public ReadShiftProfileGenome {
 
 class shiftFragVar : public ReadShiftProfileGenome {
   std::map<int, FragmentVariability> mpfv;
+  std::map<int, FragmentVariability> ncfv;
+  int numRead4fvp;
  public:
- shiftFragVar(const Mapfile &p, int numthreads): ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1) {}
+ shiftFragVar(const Mapfile &p, int numthreads, int n):
+  ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1), numRead4fvp(n) {}
 
-  void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
-  void execchr(const Mapfile &p, int i, int numRead4fvp) {
-    auto fwd = genVector4FixedReadsNum(p.genome.chr[i].seq[STRAND_PLUS],  chr[i].start, chr[i].end, numRead4fvp, p.genome.bothnread());
-    auto rev = genVector4FixedReadsNum(p.genome.chr[i].seq[STRAND_MINUS], chr[i].start, chr[i].end, numRead4fvp, p.genome.bothnread());
-
-    setDist(chr[i], fwd, rev);
-  }
+  void execchr(const Mapfile &p, int i);
 
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
@@ -301,6 +308,13 @@ class shiftFragVar : public ReadShiftProfileGenome {
 		<< mpfv.at(3999).getDistOfDistanceOfFragment(k) << "\t"
 		<< std::endl;
     }
+  }
+  
+  void outputmpGenome(const std::string &filename) const {
+    print2file4fvp(filename, name);
+  }
+  void outputmpChr(const std::string &filename, const int i) const {
+    chr[i].print2file4fvp(filename, name);
   }
 };
 
