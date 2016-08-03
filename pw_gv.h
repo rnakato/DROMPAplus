@@ -87,6 +87,9 @@ class strandData {
     boost::mutex::scoped_lock lock(mtx);
     nread_afterGC += w;
   }
+  void setnread_nonread_nofilter() {
+    nread_nonred = nread;
+  }
 };
 
 class Wigstats {
@@ -359,6 +362,11 @@ class SeqStatsGenome: public SeqStats {
 	seq[i].nread_nonred += x.seq[i].nread_nonred;
 	seq[i].nread_red    += x.seq[i].nread_red;
       }
+    }
+  }
+  void setnread2nread_red() {
+    for(auto &x:chr) {
+      for(int i=0; i<STRANDNUM; i++) x.seq[i].setnread_nonread_nofilter();
     }
   }
   void setbed(const std::string bedfilename) {

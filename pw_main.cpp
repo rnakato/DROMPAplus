@@ -109,10 +109,13 @@ int main(int argc, char* argv[])
   Mapfile p(values);
   read_mapfile(values, p);
 
-  // PCR bias filtering
-  check_redundant_reads(values, p);
+  if(!values.count("nofilter")) {
+    checkRedundantReads(values, p);
+  } else {
+    p.genome.setnread2nread_red();
+  }
   p.genome.setnread_red();
-
+  
   estimateFragLength(values, p);
 
   // BED file
@@ -295,6 +298,8 @@ void init_dump(const MyOpt::Variables &values){
   if (!values.count("nofilter")) {
     BPRINT("PCR bias filtering: ON\n");
     if (values["thre_pb"].as<int>()) BPRINT("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int>();
+  } else {
+    BPRINT("PCR bias filtering: OFF\n");
   }
   BPRINT("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
   if (values.count("bed")) BPRINT("Bed file: %1%\n") % values["bed"].as<std::string>();

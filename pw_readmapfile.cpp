@@ -328,7 +328,7 @@ void hashFilterCmpPair(std::unordered_map<std::string, int> &mp, Mapfile &p, con
   return;
 }
 
-void check_redundant_reads(const MyOpt::Variables &values, Mapfile &p)
+void checkRedundantReads(const MyOpt::Variables &values, Mapfile &p)
 {
   p.setthre4filtering(values);
   
@@ -339,12 +339,12 @@ void check_redundant_reads(const MyOpt::Variables &values, Mapfile &p)
     p.lackOfRead4Complexity_on();
   }
   p.setr4cmp(r*RAND_MAX);
-
+  
   for(uint i=0; i<p.genome.chr.size(); ++i) {
-     if (values.count("pair")) filtering_eachchr_pair(values, p, p.genome.chr[i]);
-     else                      filtering_eachchr_single(values, p, p.genome.chr[i]);
+    if (values.count("pair")) filtering_eachchr_pair(values, p, p.genome.chr[i]);
+    else                      filtering_eachchr_single(values, p, p.genome.chr[i]);
   }
-
+  
   printf("done.\n");
   return;
 }
