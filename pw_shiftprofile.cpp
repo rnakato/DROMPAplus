@@ -121,14 +121,20 @@ std::vector<char> genVector(const strandData &seq, int start, int end)
 
 std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int end, const double r4cmp)
 {
+  static int n(0);
+  int nseq(0);
   std::vector<char> array(end-start, 0);
   for (auto x: seq.vRead) {
     if(!x.duplicate && RANGE(x.F3, start, end-1)){
     //    if(!x.duplicate && RANGE(x.F3, start, 120000000)) {
       if(rand() >= r4cmp) continue;
       ++array[x.F3 - start];
+      ++n;
+      ++nseq;
     }
   }
+
+  //  std::cout << "total num: " << n  << ", each: " << nseq << std::endl;
   return array;
 }
 
@@ -165,10 +171,10 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads, i
   boost::mutex mtx;
 
   if(typestr == "hdp" || typestr == "jaccard") {
-    //agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
-    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+    agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
+    /*for(uint i=0; i<p.genome.vsepchr.size(); i++) {
       agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr));
-    }
+      }*/
     agroup.join_all();
   } else {
     genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
@@ -195,7 +201,7 @@ void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthr
   dist.printStartMessage();
   
   double r(1);
-  if(numRead4fvp) r = numRead4fvp/static_cast<double>(p.genome.bothnread());
+  if(numRead4fvp) r = numRead4fvp/static_cast<double>(dist.getnread());
   if(r>1){
     std::cerr << "\nWarning: number of reads for Fragment variability is < "<< (int)(numRead4fvp/NUM_1M) <<" million.\n";
     dist.lackOfReads_on();

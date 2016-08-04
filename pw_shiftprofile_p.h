@@ -9,11 +9,11 @@
 
 namespace {
   const int mp_from(500);
-  const int mp_to(4000);
+  const int mp_to(1500);
   const int ng_from(4000);
   const int ng_to(5000);
   const int ng_step(100);
-  const int sizeOfvDistOfDistaneOfFrag = 500;
+  const int sizeOfvDistOfDistaneOfFrag = 10000;
 }
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
@@ -201,6 +201,7 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
     defSepRange(numthreads);
   }
   virtual ~ReadShiftProfileGenome(){}
+  long getnread() const { return nread; }
   void defSepRange(const int numthreads) {
     int length(mp_to+mp_from);
     int sepsize = length/numthreads +1;
@@ -304,7 +305,7 @@ class shiftFragVar : public ReadShiftProfileGenome {
   void lackOfReads_on() { lackOfReads=true; }
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
-    out << "\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000" << std::endl;
+    /*    out << "\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000" << std::endl;
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
       out << k << "\t"
 		<< mpfv.at(50).getAccuOfDistanceOfFragment(k) << "\t"
@@ -321,6 +322,19 @@ class shiftFragVar : public ReadShiftProfileGenome {
 		<< mpfv.at(2000).getDistOfDistanceOfFragment(k) << "\t"
 		<< mpfv.at(3000).getDistOfDistanceOfFragment(k) << "\t"
 		<< mpfv.at(3999).getDistOfDistanceOfFragment(k) << "\t"
+		<< std::endl;
+		}*/
+    out << "\tlen50\tlen150\tlen500\tlen1000\tlen50\tlen150\tlen500\tlen1000" << std::endl;
+    for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
+      out << k << "\t"
+		<< mpfv.at(50).getAccuOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(150).getAccuOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(500).getAccuOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(1000).getAccuOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(50).getDistOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(150).getDistOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(500).getDistOfDistanceOfFragment(k) << "\t"
+		<< mpfv.at(1000).getDistOfDistanceOfFragment(k) << "\t"
 		<< std::endl;
     }
   }
