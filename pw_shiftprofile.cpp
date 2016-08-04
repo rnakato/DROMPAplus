@@ -162,7 +162,7 @@ void genThread(T &dist, const Mapfile &p, uint chr_s, uint chr_e, std::string ty
 }
 
 template <class T>
-void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads, int numRead4fvp=0)
+void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
 {
   T dist(p, numthreads);
   dist.printStartMessage();
@@ -195,9 +195,9 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads, i
   return;
 }
 
-void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthreads, const int numRead4fvp, const int flen)
+void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthreads, const int numRead4fvp, const int flen, const bool fvpfull)
 {
-  shiftFragVar dist(p, numthreads, flen);
+  shiftFragVar dist(p, numthreads, flen, fvpfull);
   dist.printStartMessage();
   
   double r(1);
@@ -238,7 +238,7 @@ void strShiftProfile(const MyOpt::Variables &values, Mapfile &p, std::string typ
   else if(typestr=="jaccard") makeProfile<shiftJacBit>(p, typestr, numthreads);
   else if(typestr=="ccp")     makeProfile<shiftCcp>(p, typestr, numthreads);
   else if(typestr=="hdp")     makeProfile<shiftHamming>(p, typestr, numthreads);
-  else if(typestr=="fvp")     makeFragVarProfile(p, typestr, numthreads, values["nfvp"].as<int>(), p.getflen(values));
+  else if(typestr=="fvp")     makeFragVarProfile(p, typestr, numthreads, values["nfvp"].as<int>(), p.getflen(values), values.count("fvpfull"));
   
   return;
 }
@@ -278,10 +278,27 @@ void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, 
   }
   for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) fvback[k] /= n;
 
-  for(uint i=0; i<seprange.size(); i++) {
-    agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::ref(mpfv), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+  if (fvpfull) {
+    for(uint i=0; i<seprange.size(); i++) {
+      agroup.create_thread(bind(&genThreadFragVar, boost::ref(chr), boost::ref(mpfv), boost::cref(fwd), boost::cref(rev), boost::cref(fvback), seprange[i].start, seprange[i].end, boost::ref(mtx)));
+    }
+    agroup.join_all();
+  } else {
+    std::vector<int> v{flen, chr.getlenF3()};
+    std::copy(v4mpfv.begin(), v4mpfv.end(), std::back_inserter(v));
+    for(auto x: v) {
+      FragmentVariability fv;
+      fv.setVariability(x, chr.start, chr.end, fwd, rev);
+      
+      double diffMax(0);
+      for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
+	//      std::cout << fv.getAccuOfDistanceOfFragment(k) << "\t" << fvback[k] << std::endl;
+	diffMax = std::max(diffMax, fv.getAccuOfDistanceOfFragment(k) - fvback[k]);
+      }
+      chr.setmp(x, diffMax, mtx);
+      mpfv[x].add2genome(fv, mtx);
+    }
   }
-  agroup.join_all();
 
   return;
 }
@@ -304,6 +321,5 @@ void scanRepeatRegion(const std::vector<char> &fwd, const std::vector<char> &rev
   }
 
   //  for(int i=0; i<size; ++i) if(array[i]>1) std::cout << i << "\t" << array[i] << std::endl;
-  exit (0);
   return;
 }

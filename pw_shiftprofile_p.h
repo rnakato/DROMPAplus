@@ -14,6 +14,8 @@ namespace {
   const int ng_to(5000);
   const int ng_step(100);
   const int sizeOfvDistOfDistaneOfFrag = 10000;
+
+  const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000};
 }
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
@@ -104,6 +106,7 @@ class ReadShiftProfile {
   }
 
   void setrchr(const long n) { rchr = n ? nread/static_cast<double>(n): 0; }
+  int getlenF3() const { return lenF3; }
   int getnsci() const { return nsci; }
   double getmpsum() const {
     double sum(0);
@@ -281,16 +284,15 @@ class shiftHamming : public ReadShiftProfileGenome {
   }
 };
 
-void scanRepeatRegion(const std::vector<char> &fwd, const std::vector<char> &rev);
-
 class shiftFragVar : public ReadShiftProfileGenome {
   std::map<int, FragmentVariability> mpfv;
   std::map<int, FragmentVariability> ncfv;
   int flen;
   bool lackOfReads;
+  bool fvpfull;
  public:
- shiftFragVar(const Mapfile &p, const int numthreads, const int fl):
-  ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1), flen(fl), lackOfReads(false) {}
+ shiftFragVar(const Mapfile &p, const int numthreads, const int fl, const bool b):
+  ReadShiftProfileGenome("Fragment Variability", p, numthreads, 1), flen(fl), lackOfReads(false), fvpfull(b) {}
 
   void setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, const std::vector<char> &rev);
   void execchr(const Mapfile &p, const int i, const double r4cmp) {
@@ -305,37 +307,19 @@ class shiftFragVar : public ReadShiftProfileGenome {
   void lackOfReads_on() { lackOfReads=true; }
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
-    /*    out << "\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000\tlen50\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen4000" << std::endl;
+    for(auto x: v4mpfv) if(x < mp_to) out << "\tlen" << x;
+    for(auto x: v4mpfv) if(x < mp_to) out << "\tlen" << x;
+    out << std::endl;
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      out << k << "\t"
-		<< mpfv.at(50).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(150).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(500).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(1000).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(2000).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(3000).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(3999).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(50).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(150).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(500).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(1000).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(2000).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(3000).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(3999).getDistOfDistanceOfFragment(k) << "\t"
-		<< std::endl;
-		}*/
-    out << "\tlen50\tlen150\tlen500\tlen1000\tlen50\tlen150\tlen500\tlen1000" << std::endl;
-    for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
-      out << k << "\t"
-		<< mpfv.at(50).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(150).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(500).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(1000).getAccuOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(50).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(150).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(500).getDistOfDistanceOfFragment(k) << "\t"
-		<< mpfv.at(1000).getDistOfDistanceOfFragment(k) << "\t"
-		<< std::endl;
+      out << k << "\t";
+
+      for(auto x: v4mpfv) {
+	if(x < mp_to) out << mpfv.at(x).getAccuOfDistanceOfFragment(k) << "\t";
+      }
+      for(auto x: v4mpfv) {
+	 if(x < mp_to) out <<  mpfv.at(x).getDistOfDistanceOfFragment(k) << "\t";
+      }
+      out << std::endl;
     }
   }
   
