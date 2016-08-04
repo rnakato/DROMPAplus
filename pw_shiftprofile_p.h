@@ -51,7 +51,7 @@ class FragmentVariability {
       return -1;
     }
     else {
-      return vDistOfDistaneOfFrag[i] / sumOfvDistOfDistaneOfFrag;
+      return sumOfvDistOfDistaneOfFrag ? vDistOfDistaneOfFrag[i] / sumOfvDistOfDistaneOfFrag : 0;
     }
   }
   double getAccuOfDistanceOfFragment(const int i) const {

@@ -200,6 +200,7 @@ void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthr
     std::cerr << "\nWarning: number of reads for Fragment variability is < "<< (int)(numRead4fvp/NUM_1M) <<" million.\n";
     dist.lackOfReads_on();
   }
+
   double r4cmp = r*RAND_MAX;
 
   for(uint i=0; i<=p.genome.chr.size()-1; ++i) {
