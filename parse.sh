@@ -1,8 +1,11 @@
 #!/bin/bash
 
+dir=parse2wigdir+
 /home/rnakato/git/DROMPAplus/parsejaccard.pl 
-for file in `ls parse2wigdir/*.jaccard.csv | sed -e 's/parse2wigdir\///g' -e 's/.jaccard.csv//g'`
+for file in `ls $dir/*.jaccard.csv | sed -e 's/'$dir'\///g' -e 's/.jaccard.csv//g'`
 do
     echo -en "$file\t"
-    /home/rnakato/git/DROMPAplus/parsejaccard.pl parse2wigdir/$file.jaccard.csv
+    echo -en "`grep "Fragment score" $dir/$file.fvp.csv |cut -f2`\t"
+    echo -en "`grep "Read score" $dir/$file.fvp.csv |cut -f2`\t"
+    /home/rnakato/git/DROMPAplus/parsejaccard.pl $dir/$file.jaccard.csv
 done
