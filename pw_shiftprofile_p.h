@@ -13,7 +13,7 @@ namespace {
   const int ng_from(4000);
   const int ng_to(5000);
   const int ng_step(100);
-  const int sizeOfvDistOfDistaneOfFrag = 10000;
+  const int sizeOfvDistOfDistaneOfFrag = 5000;
 
   const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000};
 }
@@ -41,7 +41,6 @@ class FragmentVariability {
       if(fwd[i] && rev[i+fraglen]) {
 	if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
 	else ++vDistOfDistaneOfFrag[sizeOfvDistOfDistaneOfFrag-1];
-	//	if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
 	last = i;
       }
     }
@@ -309,6 +308,16 @@ class shiftFragVar : public ReadShiftProfileGenome {
   void lackOfReads_on() { lackOfReads=true; }
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
+
+    out << "Accumulated: " << std::endl;
+    for(auto x: v4mpfv) {
+      if(x < mp_to) {
+	double sum(0);
+	for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) sum += mpfv.at(x).getAccuOfDistanceOfFragment(k);
+	out << "len" << x << "\t" << sum << std::endl;
+      }
+    }
+    
     for(auto x: v4mpfv) if(x < mp_to) out << "\tlen" << x;
     for(auto x: v4mpfv) if(x < mp_to) out << "\tlen" << x;
     out << std::endl;

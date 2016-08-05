@@ -171,10 +171,10 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
   boost::mutex mtx;
 
   if(typestr == "hdp" || typestr == "jaccard") {
-    agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
-    /*for(uint i=0; i<p.genome.vsepchr.size(); i++) {
+    //agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), 0, 0, typestr));
+    for(uint i=0; i<p.genome.vsepchr.size(); i++) {
       agroup.create_thread(bind(genThread<T>, boost::ref(dist), boost::cref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, typestr));
-      }*/
+    }
     agroup.join_all();
   } else {
     genThread(dist, p, 0, p.genome.chr.size()-1, typestr);
