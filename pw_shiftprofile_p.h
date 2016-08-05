@@ -40,6 +40,8 @@ class FragmentVariability {
     for(int i=s; i<e; ++i) {
       if(fwd[i] && rev[i+fraglen]) {
 	if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
+	else ++vDistOfDistaneOfFrag[sizeOfvDistOfDistaneOfFrag-1];
+	//	if(RANGE(i-last, 0, sizeOfvDistOfDistaneOfFrag-1)) ++vDistOfDistaneOfFrag[i-last];
 	last = i;
       }
     }
