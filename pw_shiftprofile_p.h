@@ -15,7 +15,7 @@ namespace {
   const int ng_step(100);
   const int sizeOfvDistOfDistaneOfFrag = 5000;
 
-  const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000};
+  const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000, 10000, 100000, 1000000};
 }
 
 std::vector<char> genVector(const strandData &seq, int start, int end);
@@ -287,7 +287,6 @@ class shiftHamming : public ReadShiftProfileGenome {
 
 class shiftFragVar : public ReadShiftProfileGenome {
   std::map<int, FragmentVariability> mpfv;
-  std::map<int, FragmentVariability> ncfv;
   int flen;
   bool lackOfReads;
   bool fvpfull;
@@ -309,26 +308,33 @@ class shiftFragVar : public ReadShiftProfileGenome {
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
 
-    out << "Accumulated: " << std::endl;
+    /*    out << "Accumulated: " << std::endl;
     for(auto x: v4mpfv) {
-      if(x < mp_to) {
-	double sum(0);
-	for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) sum += mpfv.at(x).getAccuOfDistanceOfFragment(k);
-	out << "len" << x << "\t" << sum << std::endl;
-      }
-    }
+      if(fvpfull && x > mp_to) continue;
+      double sum(0);
+      for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) sum += mpfv.at(x).getAccuOfDistanceOfFragment(k);
+      out << "len" << x << "\t" << sum << std::endl;
+      }*/
     
-    for(auto x: v4mpfv) if(x < mp_to) out << "\tlen" << x;
-    for(auto x: v4mpfv) if(x < mp_to) out << "\tlen" << x;
+    for(auto x: v4mpfv) {
+      if(fvpfull && x > mp_to) continue;
+      out << "\tlen" << x;
+    }
+    for(auto x: v4mpfv) {
+      if(fvpfull && x > mp_to) continue;
+      out << "\tlen" << x;
+    }
     out << std::endl;
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
       out << k << "\t";
 
       for(auto x: v4mpfv) {
-	if(x < mp_to) out << mpfv.at(x).getAccuOfDistanceOfFragment(k) << "\t";
+	if(fvpfull && x > mp_to) continue;
+	out << mpfv.at(x).getAccuOfDistanceOfFragment(k) << "\t";
       }
       for(auto x: v4mpfv) {
-	 if(x < mp_to) out <<  mpfv.at(x).getDistOfDistanceOfFragment(k) << "\t";
+	if(fvpfull && x > mp_to) continue;
+	out <<  mpfv.at(x).getDistOfDistanceOfFragment(k) << "\t";
       }
       out << std::endl;
     }

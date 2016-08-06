@@ -216,10 +216,6 @@ void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthr
       std::string filename = p.getprefix() + "." + typestr + "." + p.genome.chr[i].name + ".csv";
       dist.outputmpChr(filename, i);
       dist.addmp2genome(i);
-
-      /*      std::string filename1 = p.getprefix() + ".mpfv.csv";
-      dist.printmpfv(filename1);
-      exit(0);*/
     }
   }
 
@@ -273,8 +269,7 @@ void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, 
       fvback[k] += fv.getAccuOfDistanceOfFragment(k);
     }
     ++n;
-    
-    ncfv[step].add2genome(fv, mtx);
+
   }
   for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) fvback[k] /= n;
 

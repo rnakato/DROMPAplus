@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 
 if($#ARGV==-1) {
-    print "\tNSC\tRLSC\tfragment length\tBackground enrichment\tBackground uniformity";
-    print "\tFraglen median distance\tReadlen median distance\tBackground median distance\tNormalized Fraglen median distance\n";
+    print "\tFragment score\tRead score\tlen50\tlen100\tlen150\tlen500\tlen1000\tlen2000\tlen3000\tlen10000\tlen100000\tlen1000000";
+    print "\tNSC\tRLSC\tfragment length\tBackground enrichment\tBackground uniformity\n";
     exit;
 }
 
