@@ -280,9 +280,10 @@ void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, 
     }
     agroup.join_all();
   } else {
-    std::vector<int> v{flen, chr.getlenF3()};
-    std::copy(v4mpfv.begin(), v4mpfv.end(), std::back_inserter(v));
-    for(auto x: v) {
+    //    std::vector<int> v{flen, chr.getlenF3()};
+    // std::copy(v4mpfv.begin(), v4mpfv.end(), std::back_inserter(v));
+    // for(auto x: v) {
+    for(auto x: v4mpfv) {
       FragmentVariability fv;
       fv.setVariability(x, chr.start, chr.end, fwd, rev);
       
