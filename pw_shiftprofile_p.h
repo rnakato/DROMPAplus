@@ -192,8 +192,9 @@ class ReadShiftProfile {
     out << "Fragment score" << str << "\t" << mp.at(flen) << std::endl;
     out << "Read score" << str << "\t" << mp.at(lenF3) << std::endl;
     out << "Strand shift\t" << name << std::endl;
-    for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
-      out << itr->first << "\t" << itr->second << std::endl;
+    for(auto itr = mp.begin(); itr != mp.end(); ++itr)
+      if(itr->first != flen && itr->first != lenF3)
+	out << itr->first << "\t" << itr->second << std::endl;
   }
 };
 
