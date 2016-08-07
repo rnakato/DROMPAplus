@@ -6,6 +6,7 @@
 
 #include "pw_gv.h"
 #include <boost/dynamic_bitset.hpp>
+#include "alglib.h"
 
 namespace {
   const int mp_from(500);
@@ -48,6 +49,7 @@ class FragmentVariability {
     sumOfvDistOfDistaneOfFrag = accumulate(vDistOfDistaneOfFrag.begin(), vDistOfDistaneOfFrag.end(), 0);
   }
 
+  double getsumOfvDistOfDistaneOfFrag() const { return sumOfvDistOfDistaneOfFrag; }
   double getDistOfDistanceOfFragment(const int i) const {
     if(i<0 || i>= sizeOfvDistOfDistaneOfFrag) {
       std::cerr << "error: invalid num " << i << "for getDistOfDistanceOfFragment max: " << sizeOfvDistOfDistaneOfFrag << std::endl;
@@ -68,6 +70,20 @@ class FragmentVariability {
 	vAccuOfDistaneOfFrag += getDistOfDistanceOfFragment(j);
       }
       return vAccuOfDistaneOfFrag;
+    }
+  }
+  double getPvalueOfBinomTest(const int i, const double myu) const {
+    if(i<0 || i>= sizeOfvDistOfDistaneOfFrag) {
+      std::cerr << "error: invalid num " << i << "for getPvalueOfBinomTest max: " << sizeOfvDistOfDistaneOfFrag << std::endl;
+      return -1;
+    }
+    else {
+      double sum(0);
+      for(int j=0; j<=i; ++j) {
+	sum += vDistOfDistaneOfFrag[j];
+      }
+      std::cout << sum << "," <<  sumOfvDistOfDistaneOfFrag << "," << myu << std::endl;
+      return stdNormdist(sum, sumOfvDistOfDistaneOfFrag*myu, sqrt(sumOfvDistOfDistaneOfFrag*myu*(1-myu))); 
     }
   }
   void add2genome(const FragmentVariability &x, boost::mutex &mtx) {
@@ -308,14 +324,6 @@ class shiftFragVar : public ReadShiftProfileGenome {
   void printmpfv(const std::string &filename) const {
     std::ofstream out(filename);
 
-    /*    out << "Accumulated: " << std::endl;
-    for(auto x: v4mpfv) {
-      if(fvpfull && x > mp_to) continue;
-      double sum(0);
-      for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) sum += mpfv.at(x).getAccuOfDistanceOfFragment(k);
-      out << "len" << x << "\t" << sum << std::endl;
-      }*/
-    
     for(auto x: v4mpfv) {
       if(fvpfull && x > mp_to) continue;
       out << "\tlen" << x;
@@ -325,6 +333,14 @@ class shiftFragVar : public ReadShiftProfileGenome {
       out << "\tlen" << x;
     }
     out << std::endl;
+
+    /*    for(auto x: v4mpfv) {
+      double myu(mpfv.at(100000).getAccuOfDistanceOfFragment(sizeOfvDistOfDistaneOfFrag-2));
+      if(fvpfull && x > mp_to) continue;
+      out << "\t" << mpfv.at(x).getPvalueOfBinomTest(sizeOfvDistOfDistaneOfFrag-2, myu);
+    }
+    out << std::endl;*/
+
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {
       out << k << "\t";
 
@@ -334,7 +350,8 @@ class shiftFragVar : public ReadShiftProfileGenome {
       }
       for(auto x: v4mpfv) {
 	if(fvpfull && x > mp_to) continue;
-	out <<  mpfv.at(x).getDistOfDistanceOfFragment(k) << "\t";
+	out << mpfv.at(x).getsumOfvDistOfDistaneOfFrag() << "\t";
+	//	out <<  mpfv.at(x).getDistOfDistanceOfFragment(k) << "\t";
       }
       out << std::endl;
     }

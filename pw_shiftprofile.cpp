@@ -129,8 +129,8 @@ std::vector<char> genVector4FixedReadsNum(const strandData &seq, int start, int 
     //    if(!x.duplicate && RANGE(x.F3, start, 120000000)) {
       if(rand() >= r4cmp) continue;
       ++array[x.F3 - start];
-      ++n;
-      ++nseq;
+      //      ++n;
+      //++nseq;
     }
   }
 
@@ -262,7 +262,8 @@ void shiftFragVar::setDist(ReadShiftProfile &chr, const std::vector<char> &fwd, 
 
   std::vector<double> fvback(sizeOfvDistOfDistaneOfFrag,0);
   int n(0);
-  for(int step=ng_from; step<ng_to; step+=ng_step) {
+  //  for(int step=ng_from; step<ng_to; step+=ng_step) {
+  for(int step=NUM_100K; step<NUM_1M; step+=NUM_100K) {
     FragmentVariability fv;
     fv.setVariability(step, chr.start, chr.end, fwd, rev);    
     for(size_t k=0; k<sizeOfvDistOfDistaneOfFrag; ++k) {

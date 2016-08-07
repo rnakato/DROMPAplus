@@ -7,6 +7,7 @@
 #define VERSION "3.3.0+"
 
 enum {NUM_1K=1000,
+      NUM_100K=100000,
       NUM_1M=1000000,
       NUM_10M=10000000,
       NUM_100M=100000000};
