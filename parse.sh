@@ -5,19 +5,8 @@ dir=parse2wigdir+
 for file in `ls $dir/*.mpfv.csv | sed -e 's/'$dir'\///g' -e 's/.mpfv.csv//g'`
 do
     echo -en "$file\t"
-    echo -en "`grep "Fragment score" $dir/$file.fvp.csv |cut -f2`\t"
-    echo -en "`grep "Read score" $dir/$file.fvp.csv |cut -f2`\t"
+    /home/rnakato/git/DROMPAplus/parsefvp.pl $dir/$file.fvp.csv
 
-    echo -en "`middle.sh $dir/$file.fvp.csv 4 4 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 5 5 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 6 6 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 7 7 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 8 8 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 9 9 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 10 10 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 11 11 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 12 12 | cut -f2`\t"
-    echo -en "`middle.sh $dir/$file.fvp.csv 13 13 | cut -f2`\t"
     echo -en "`cut -f2 $dir/$file.mpfv.csv | tail -n2 | head -n1`\t"
     echo -en "`cut -f3 $dir/$file.mpfv.csv | tail -n2 | head -n1`\t"
     echo -en "`cut -f4 $dir/$file.mpfv.csv | tail -n2 | head -n1`\t"

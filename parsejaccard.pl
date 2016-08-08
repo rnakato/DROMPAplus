@@ -13,12 +13,7 @@ while(<File>){
     last if($_ =~ /Strand shift/);
     chomp;
     my @clm= split(/\t/, $_);
-    if($clm[0] =~ /insufficient/) {
-	print "(insufficient) $clm[1]\t";
-    }
-    else {
-	print "$clm[1]\t";
-    }
+    print "$clm[1]\t";
 }
 close (File);
 
