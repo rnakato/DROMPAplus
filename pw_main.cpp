@@ -234,6 +234,7 @@ void setOpts(MyOpt::Opts &allopts)
     ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
     ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
     ("nfvp",        value<int>()->default_value(10000000),   "read number for calculating fragment variability")
+    ("fvpbu",   "consider background uniformity for fragment variability estimation")
     ("fvpfull",   "outout full fragment variability profile")
     ;
   MyOpt::Opts optpair("For paired-end read",100);

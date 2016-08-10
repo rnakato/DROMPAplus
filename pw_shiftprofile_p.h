@@ -104,6 +104,7 @@ class ReadShiftProfile {
  protected:
   long len;
   long nread;
+  double backgroundUniformity;
   
  public:
   std::map<int, double> mp;
@@ -115,13 +116,14 @@ class ReadShiftProfile {
   double rchr;
 
  ReadShiftProfile(const int len, const double wref, int s=0, int e=0, long n=0, long l=0):
-  lenF3(len), nsc(0), nsci(0), r(0), bk(0), dirOfProfileSummit(wref), len(l), nread(n), start(s), end(e), width(e-s), rchr(1) {}
+  lenF3(len), nsc(0), nsci(0), r(0), bk(0), dirOfProfileSummit(wref), len(l), nread(n), backgroundUniformity(0), start(s), end(e), width(e-s), rchr(1) {}
   virtual ~ReadShiftProfile() {}
   void setmp(const int i, const double val, boost::mutex &mtx) {
     boost::mutex::scoped_lock lock(mtx);
     mp[i] = val;
   }
 
+  double getbackgroundUniformity() const { return backgroundUniformity; }
   void setrchr(const long n) { rchr = n ? nread/static_cast<double>(n): 0; }
   int getlenF3() const { return lenF3; }
   int getnsci() const { return nsci; }
@@ -155,7 +157,7 @@ class ReadShiftProfile {
     }
   }
 
-  void print2file(const std::string filename, const std::string name) const {
+  void print2file(const std::string filename, const std::string name) {
     if(!nread) {
       std::cerr << filename << ": no read" << std::endl;
     }
@@ -163,13 +165,14 @@ class ReadShiftProfile {
     double rRPKM = (NUM_10M/static_cast<double>(nread)) / (NUM_100M/static_cast<double>(len));
     double be(bk * rRPKM);
     double const_bu(1/39.0);  // N/(4*L-N), N=10M, L=100M
-
+    backgroundUniformity = const_bu / be;
+    
     std::ofstream out(filename);
     out << "NSC\t" << nsc * dirOfProfileSummit << std::endl;
     out << "RLSC\t"<< (mp.at(lenF3) *r *dirOfProfileSummit) << std::endl;
     out << "Estimated fragment length\t" << nsci << std::endl;
     out << "Background enrichment\t" << be << std::endl;
-    out << "Background uniformity\t" << const_bu / be << std::endl;
+    out << "Background uniformity\t" << backgroundUniformity << std::endl;
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
@@ -237,10 +240,10 @@ class ReadShiftProfileGenome: public ReadShiftProfile {
     addmp(mp, chr[i].mp, chr[i].rchr);
     addmp(nc, chr[i].nc, chr[i].rchr);
   }
-  void outputmpGenome(const std::string &filename) const {
+  void outputmpGenome(const std::string &filename) {
     print2file(filename, name);
   }
-  void outputmpChr(const std::string &filename, const int i) const {
+  void outputmpChr(const std::string &filename, const int i) {
     chr[i].print2file(filename, name);
   }
   void printStartMessage() const {

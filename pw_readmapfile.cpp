@@ -382,7 +382,7 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
 {
   if(!values.count("pair") && !values.count("nomodel")) {
     clock_t t1 = clock();
-    strShiftProfile(values, p, "exjaccard");
+    //    strShiftProfile(values, p, "exjaccard");
     clock_t t2 = clock();
     std::cout << "Jaccard Vec: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
@@ -394,6 +394,7 @@ void estimateFragLength(const MyOpt::Variables &values, Mapfile &p)
     clock_t t4 = clock();
     std::cout << "Fragment variability: " << static_cast<double>(t4 - t3) / CLOCKS_PER_SEC << "sec.\n";
 
+    exit(0);
     strShiftProfile(values, p, "hdp");
     clock_t t5 = clock();
     std::cout << "Hamming: " << static_cast<double>(t5 - t4) / CLOCKS_PER_SEC << "sec.\n";

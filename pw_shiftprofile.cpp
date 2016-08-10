@@ -191,17 +191,25 @@ void makeProfile(Mapfile &p, const std::string &typestr, const int numthreads)
 
   std::string filename = p.getprefix() + "." + typestr + ".csv";
   dist.outputmpGenome(filename);
+  if(typestr == "jaccard") {
+    p.setbackgroundUniformity(dist.getbackgroundUniformity());
+  }
 
   return;
 }
 
-void makeFragVarProfile(Mapfile &p, const std::string &typestr, const int numthreads, const int numRead4fvp, const int flen, const bool fvpfull)
+void makeFragVarProfile(const MyOpt::Variables &values, Mapfile &p, const std::string &typestr, const int numthreads, const int flen)
 {
-  shiftFragVar dist(p, numthreads, flen, fvpfull);
+  shiftFragVar dist(p, numthreads, flen, values.count("fvpfull"));
   dist.printStartMessage();
-  
+
+  int numRead4fvp(values["nfvp"].as<int>());
   double r(1);
-  if(numRead4fvp) r = numRead4fvp/static_cast<double>(dist.getnread());
+  std::cout << "backgrounduniformity: " << p.getbackgroundUniformity() << std::endl;
+  if(numRead4fvp) {
+    r = numRead4fvp/static_cast<double>(dist.getnread());
+    if(values.count("fvpbu")) r *= p.getbackgroundUniformity();
+  }
   if(r>1){
     std::cerr << "\nWarning: number of reads for Fragment variability is < "<< (int)(numRead4fvp/NUM_1M) <<" million.\n";
     dist.lackOfReads_on();
@@ -234,7 +242,7 @@ void strShiftProfile(const MyOpt::Variables &values, Mapfile &p, std::string typ
   else if(typestr=="jaccard") makeProfile<shiftJacBit>(p, typestr, numthreads);
   else if(typestr=="ccp")     makeProfile<shiftCcp>(p, typestr, numthreads);
   else if(typestr=="hdp")     makeProfile<shiftHamming>(p, typestr, numthreads);
-  else if(typestr=="fvp")     makeFragVarProfile(p, typestr, numthreads, values["nfvp"].as<int>(), p.getflen(values), values.count("fvpfull"));
+  else if(typestr=="fvp")     makeFragVarProfile(values, p, typestr, numthreads, p.getflen(values));
   
   return;
 }
