@@ -16,7 +16,7 @@ while(<File>){
     $n++;   
 
     next if($n==3);
-    last if($n>13);
+    last if($n>12);
     if($clm[0] =~ /insufficient/) {
 	print "($clm[1])\t";
     } else {
