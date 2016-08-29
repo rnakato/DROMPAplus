@@ -23,6 +23,7 @@ Variables argv_init(int argc, char* argv[])
     ("all,a", "Output also non-neighboring sites")
     ("name,n", "Output name instead of id")
     ("conv,c", "Consider convergent sites")
+    ("redundant", "redundant mode (output multiple genes for each peak)")
     ("refFlat,r", "refFlat format as input (default: gtf)")
     ("gene",      "Gene-level comparison (default: transcript-level)")
     ("intron,i",  "consider exon and intron (default: whole-genic)")
@@ -68,23 +69,31 @@ void merge_tss2bed(const Variables &values, const HashOfGeneDataMap &mp, std::ve
   int downdist = values["downdist"].as<int>();
   for (T &x: vbed) {
     int d, dmin(-1);
-    if(mp.find(x.bed.chr) != mp.end()) {
-      for(auto itr = mp.at(x.bed.chr).begin(); itr != mp.at(x.bed.chr).end(); ++itr) {
-	if(itr->second.strand == "+") d = x.bed.summit - itr->second.txStart;
-	else                          d = itr->second.txEnd - x.bed.summit;
+    if (mp.find(x.bed.chr) != mp.end()) {
+      for (auto itr = mp.at(x.bed.chr).begin(); itr != mp.at(x.bed.chr).end(); ++itr) {
+	if (itr->second.strand == "+") d = x.bed.summit - itr->second.txStart;
+	else                           d = itr->second.txEnd - x.bed.summit;
 
-	if((x.st != TSS && !x.d) || dmin > abs(d)){
+	if((x.gene.st != TSS && !x.gene.d) || abs(d) < dmin) {
 	  dmin = abs(d);
-	  x.d = d;
-	  x.gene = &itr->second;
+	  x.gene.d = d;
+	  x.gene.gene = &itr->second;
 	}
-	if(d > updist && d < downdist) x.st = TSS;
+	if (d > updist && d < downdist) {
+	  x.gene.st = TSS;
+	  
+	  hitGene g;
+	  g.st = TSS;
+	  g.d = d;
+	  g.gene = &itr->second;
+	  x.genelist.push_back(g);
+	}
       }
     }
   }
 
   tssdist d;
-  for (auto x: vbed) d.inc(x.d, x.st);
+  for (auto x: vbed) d.inc(x.gene.d, x.gene.st);
   d.print();
 
   BPRINT("# Sites from upstream %1% bp to downstream %2% bp around TSS\n") % updist % downdist;
@@ -92,7 +101,7 @@ void merge_tss2bed(const Variables &values, const HashOfGeneDataMap &mp, std::ve
   vbed[0].printHead();
   std::cout << "\tfrom TSS\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
   for (auto x: vbed) {
-    if(x.st == TSS || values.count("all")) x.printWithTss();
+    if(x.gene.st == TSS || values.count("all")) x.printWithTss(values.count("redundant"));
   }
 
   return;
@@ -106,26 +115,26 @@ void merge_gene2bed(const Variables &values, const HashOfGeneDataMap &mp, std::v
 
   std::vector<convsite> vconv;
   if(values.count("conv")) vconv = gen_convergent(values["limconv"].as<int>(), mp);
-  
+
   for (T &x: vbed) {
     if(mp.find(x.bed.chr) == mp.end()) continue;
 
     int on=0;
     if(values.count("conv")) on = scanBedConv(x, vconv);
     if(on) continue;
-    
+
     scanBedGene(x, mp, updist, downdist);
   }
 
   gdist d;
-  for (auto x: vbed) d.inc(x.st);
+  for (auto x: vbed) d.inc(x.gene.st);
   BPRINT("# Input sites total: %1%, upstream: %2%, downstream: %3%, genic: %4%, intergenic: %5%") % d.genome % d.up % d.down % d.genic % d.inter;  
   if(values.count("conv")) BPRINT(", convergent: %1%, divergent: %2%, parallel: %3%\n") % d.conv % d.div % d.par;
   else std::cout << std::endl;
   
   vbed[0].printHead();
   std::cout << "\tstatus\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
-  for (auto x: vbed) x.printWithGene();
+  for (auto x: vbed) x.printWithGene(values.count("redundant"));
   
   return;
 }
@@ -172,7 +181,7 @@ std::vector<int> makeGenomeArray(const Variables &values, std::string chr, int s
       for(i=e; i<=r; i++) stUpdate(array[i], UPSTREAM);
       for(i=l; i<=s; i++) stUpdate(array[i], DOWNSTREAM);
     }
-    
+
     if(values.count("intron")) {
       for(i=0; i<itr->second.exonCount; i++) {
 	int es = itr->second.exon[i].start;

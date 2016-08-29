@@ -82,18 +82,18 @@ tssdist func(const variables_map &values, unordered_map<string, unordered_map<st
 	if(itr->second.strand == "+") d = x.bed.summit - itr->second.txStart;
 	else                          d = itr->second.txEnd - x.bed.summit;
 	
-	if((x.st != TSS && !x.d) || dmin > abs(d)){
+	if((x.gene.st != TSS && !x.gene.d) || dmin > abs(d)){
 	  dmin = abs(d);
-	  x.d = d;
-	  x.gene = &itr->second;
+	  x.gene.d = d;
+	  x.gene.gene = &itr->second;
 	}
-	if(d > updist && d < downdist) x.st = TSS;
+	if(d > updist && d < downdist) x.gene.st = TSS;
       }
     }
   }
   
   tssdist d;
-  for (auto x: vbed) d.inc(x.d, x.st);
+  for (auto x: vbed) d.inc(x.gene.d, x.gene.st);
   
   return d;
 }
@@ -197,7 +197,7 @@ gdist func_gene(const variables_map &values, unordered_map<string, unordered_map
   }
   
   gdist d;
-  for (auto x: vbed) d.inc(x.st);
+  for (auto x: vbed) d.inc(x.gene.st);
   
   return d;
 }

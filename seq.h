@@ -176,48 +176,88 @@ class genedata {
   }
 };
 
-template <class T>
-class bed_gene {
+class hitGene {
  public:
   status st;
   int d;
-  T bed;
   const genedata *gene;
- bed_gene(): st(INTERGENIC), d(0), gene(nullptr) {}
- bed_gene(std::vector<std::string> s): st(INTERGENIC), d(0), bed(s), gene(nullptr) {}
+ hitGene(): st(INTERGENIC), d(0), gene(nullptr) {}
+};
+
+template <class T>
+class bed_gene {
+ public:
+  T bed;
+  hitGene gene;
+  std::vector<hitGene> genelist;
+ bed_gene(): gene() {}
+ bed_gene(std::vector<std::string> s): bed(s), gene() {}
   void print() const { bed.print();}
-  void printWithGene() const {
-    print();
-    if(st == UPSTREAM)        std::cout << "\tupstream\t";
-    else if(st == DOWNSTREAM) std::cout << "\tdownstream\t";
-    else if(st == GENIC)      std::cout << "\tgenic\t";
-    else if(st == INTERGENIC) std::cout << "\tintergenic\t";
-    else if(st == CONVERGENT) std::cout << "\tconvergent\t";
-    else if(st == DIVERGENT)  std::cout << "\tdivergent\t";
-    else if(st == PARALLEL)   std::cout << "\tparallel\t";
-    gene->print();
-    std::cout << std::endl;
-  }
-  void printWithTss() const {
-    print();
-    if(st == TSS) {
-      std::cout << "\t" << d << "\t"; 	
-      gene->print();
+  void printWithGene(bool redundant) const {
+
+    if(redundant) {
+      for(auto x:genelist) {
+	print();
+	if(x.st == UPSTREAM)        std::cout << "\tupstream\t";
+	else if(x.st == DOWNSTREAM) std::cout << "\tdownstream\t";
+	else if(x.st == GENIC)      std::cout << "\tgenic\t";
+	else if(x.st == INTERGENIC) std::cout << "\tintergenic\t";
+	else if(x.st == CONVERGENT) std::cout << "\tconvergent\t";
+	else if(x.st == DIVERGENT)  std::cout << "\tdivergent\t";
+	else if(x.st == PARALLEL)   std::cout << "\tparallel\t";
+	x.gene->print();
+	std::cout << std::endl;
+      }
+    } else {
+      print();
+      if(gene.st == UPSTREAM)        std::cout << "\tupstream\t";
+      else if(gene.st == DOWNSTREAM) std::cout << "\tdownstream\t";
+      else if(gene.st == GENIC)      std::cout << "\tgenic\t";
+      else if(gene.st == INTERGENIC) std::cout << "\tintergenic\t";
+      else if(gene.st == CONVERGENT) std::cout << "\tconvergent\t";
+      else if(gene.st == DIVERGENT)  std::cout << "\tdivergent\t";
+      else if(gene.st == PARALLEL)   std::cout << "\tparallel\t";
+      gene.gene->print();
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
+  }
+  void printWithTss(bool redundant) const {
+    if(redundant) {
+      for(auto x:genelist) {
+	print();
+	std::cout << "\t" << x.d << "\t"; 	
+	x.gene->print();
+	std::cout << std::endl;
+      }
+    } else {
+      print();
+      if(gene.st == TSS) {
+	std::cout << "\t" << gene.d << "\t"; 	
+	gene.gene->print();
+      }
+      std::cout << std::endl;
+    }
   }
   
   void update(const status &pst, const genedata &pgene) {
-    if(st < pst){
-      st = pst;
-      gene = &pgene;
+    if(gene.st < pst){
+      gene.st = pst;
+      gene.gene = &pgene;
     }
+    hitGene g;
+    g.st = pst;
+    g.gene = &pgene;
+    genelist.push_back(g);
   }
   void update(const status &pst, const genedata *pgene) {
-    if(st < pst){
-      st = pst;
-      gene = pgene;
+    if(gene.st < pst){
+      gene.st = pst;
+      gene.gene = pgene;
     }
+    hitGene g;
+    g.st = pst;
+    g.gene = pgene;
+    genelist.push_back(g);
   }
   void printHead () const { bed.printHead(); }
 };
