@@ -21,6 +21,7 @@ Variables argv_init(int argc, char* argv[])
     ("downdist,d", boost::program_options::value<int>()->default_value(5000), "Allowed downstream distance from TSS")
     ("limconv,l",  boost::program_options::value<int>()->default_value(10000), "Maxmum distance between genes for convergent sites")
     ("all,a", "Output also non-neighboring sites")
+    ("nottss", "Output non-neighboring sites only")
     ("name,n", "Output name instead of id")
     ("conv,c", "Consider convergent sites")
     ("redundant", "redundant mode (output multiple genes for each peak)")
@@ -101,7 +102,10 @@ void merge_tss2bed(const Variables &values, const HashOfGeneDataMap &mp, std::ve
   vbed[0].printHead();
   std::cout << "\tfrom TSS\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
   for (auto x: vbed) {
-    if(x.gene.st == TSS || values.count("all")) x.printWithTss(values.count("redundant"));
+    if(values.count("all") ||
+       (!values.count("nottss") && x.gene.st == TSS) ||
+       (values.count("nottss")  && x.gene.st != TSS))
+      x.printWithTss(values.count("redundant"));
   }
 
   return;
