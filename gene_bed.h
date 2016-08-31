@@ -86,7 +86,6 @@ void scanBedGene(T &x, const HashOfGeneDataMap &mp, int updist, int downdist)
     if((strand == "+" && s - updist <= summit && summit <= s) ||
        (strand == "-" && e          <= summit && summit <= e + updist)) {  // upstream
       x.update(UPSTREAM, itr->second);
-      break;
     } else if((strand == "+" && e            <= summit && summit <= e + downdist) ||
 	      (strand == "-" && s - downdist <= summit && summit <= s)) {  // downstream
       x.update(DOWNSTREAM, itr->second);

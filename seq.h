@@ -194,7 +194,6 @@ class bed_gene {
  bed_gene(std::vector<std::string> s): bed(s), gene() {}
   void print() const { bed.print();}
   void printWithGene(bool redundant) const {
-
     if(redundant) {
       for(auto x:genelist) {
 	print();

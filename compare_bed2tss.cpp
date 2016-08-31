@@ -32,7 +32,7 @@ Variables argv_init(int argc, char* argv[])
     ("bed12", "bed12 format as input")
     ("help,h", "print this message")
     ;
-  
+
   Variables values;
   
   if (argc==1) {
@@ -135,11 +135,11 @@ void merge_gene2bed(const Variables &values, const HashOfGeneDataMap &mp, std::v
   BPRINT("# Input sites total: %1%, upstream: %2%, downstream: %3%, genic: %4%, intergenic: %5%") % d.genome % d.up % d.down % d.genic % d.inter;  
   if(values.count("conv")) BPRINT(", convergent: %1%, divergent: %2%, parallel: %3%\n") % d.conv % d.div % d.par;
   else std::cout << std::endl;
-  
+
   vbed[0].printHead();
   std::cout << "\tstatus\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
   for (auto x: vbed) x.printWithGene(values.count("redundant"));
-  
+
   return;
 }
 
