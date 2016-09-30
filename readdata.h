@@ -42,9 +42,10 @@ std::vector<T> parseBed(const std::string &fileName)
   std::vector<std::string> v;
   while (!in.eof()) {
     getline(in, lineStr);
-
-    if(lineStr.empty() || lineStr[0] == '#' || !lineStr.find("chromosome")) continue;
+    
+    if(lineStr.empty() || lineStr[0] == '#') continue;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    if(v[4] == "abs_summit") continue;
     T bed(v);
     vbed.push_back(bed);
   }
