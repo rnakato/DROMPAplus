@@ -6,14 +6,21 @@ if($#ARGV==-1) {
     exit;
 }
 
+my $on=0;
 open(File, $ARGV[0]) ||die "error: can't open $ARGV[0].\n";
-
 while(<File>){
     next if($_ eq "\n");
-    last if($_ =~ /Strand shift/);
+    if($_ =~ /Strand shift/){
+	$on=1;
+	next;
+    }
     chomp;
     my @clm= split(/\t/, $_);
-    print "$clm[1]\t";
+    if(!$on){
+	print "$clm[1]\t";
+    } else {
+	print "$clm[3]\t" if($clm[0] == -200 || $clm[0] == 0 || $clm[0] == 100 || $clm[0] == 150 || $clm[0] == 500 || $clm[0] == 1000 || $clm[0] == 1499);
+    }
 }
 close (File);
 
