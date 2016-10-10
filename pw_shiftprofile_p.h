@@ -11,9 +11,12 @@
 namespace {
   const int mp_from(500);
   const int mp_to(1500);
-  const int ng_from(4000);
-  const int ng_to(5000);
-  const int ng_step(100);
+  //  const int ng_from(4000);
+  // const int ng_to(5000);
+  //const int ng_step(100);
+  const int ng_from(5000);
+  const int ng_to(20000);
+  const int ng_step(1000);
   const int sizeOfvDistOfDistaneOfFrag = 5000;
 
   const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000, 10000, 100000, 1000000};
@@ -176,6 +179,12 @@ class ReadShiftProfile {
 
     out << "Strand shift\t" << name << "\tprop\tper 10M reads\tper control" << std::endl;
     for(auto itr = mp.begin(); itr != mp.end(); ++itr) 
+      out << itr->first            << "\t"
+	  << itr->second           << "\t"
+	  << (itr->second/sum)     << "\t"
+	  << (itr->second * rRPKM) << "\t"
+	  << (itr->second * r)     << std::endl;
+    for(auto itr = nc.begin(); itr != nc.end(); ++itr) 
       out << itr->first            << "\t"
 	  << itr->second           << "\t"
 	  << (itr->second/sum)     << "\t"
