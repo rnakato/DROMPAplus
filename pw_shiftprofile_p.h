@@ -17,6 +17,7 @@ namespace {
   const int ng_from(10000);
   const int ng_to(1000000);
   const int ng_step(10000);
+  const int thre4bkdis(500000);
   const int sizeOfvDistOfDistaneOfFrag = 5000;
 
   const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000, 10000, 100000, 1000000};
@@ -138,8 +139,10 @@ class ReadShiftProfile {
   void setControlRatio() {
     int n(0);
     for(auto itr = nc.begin(); itr != nc.end(); ++itr) {
-      bk += itr->second;
-      ++n;
+      if(itr->first >= thre4bkdis) {
+	bk += itr->second;
+	++n;
+      }
     }
     bk /= n;
     r = 1/bk;
