@@ -14,9 +14,9 @@ namespace {
   //  const int ng_from(4000);
   // const int ng_to(5000);
   //const int ng_step(100);
-  const int ng_from(5000);
-  const int ng_to(20000);
-  const int ng_step(1000);
+  const int ng_from(10000);
+  const int ng_to(100000);
+  const int ng_step(10000);
   const int sizeOfvDistOfDistaneOfFrag = 5000;
 
   const std::vector<int> v4mpfv{50, 100, 150, 500, 1000, 2000, 3000, 10000, 100000, 1000000};
