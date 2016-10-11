@@ -15,7 +15,7 @@ namespace {
   // const int ng_to(5000);
   //const int ng_step(100);
   const int ng_from(10000);
-  const int ng_to(100000);
+  const int ng_to(1000000);
   const int ng_step(10000);
   const int sizeOfvDistOfDistaneOfFrag = 5000;
 
