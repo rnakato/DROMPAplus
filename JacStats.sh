@@ -11,7 +11,7 @@ echo -e "\tLen-200\tlen0\tlen100\tlen150\tlen500\tlen1000\tlen1500\tlen5000\tlen
 for file in `ls $dir/parse2wigdir+/*.fvp.csv | sed -e 's/.fvp.csv//g'`
 do
     echo -en "$file\t"
-    /home/rnakato/git/DROMPAplus/parsefvp.pl $file.fvp.csv
+    parsefvp.pl $file.fvp.csv
 
 #    echo -en "`cut -f2 $file.mpfv.csv | tail -n2 | head -n1`\t"
  #   echo -en "`cut -f3 $file.mpfv.csv | tail -n2 | head -n1`\t"
@@ -33,8 +33,8 @@ do
 #    echo -en "`cat $file.mpfv.csv | awk '{m+=$9} END{print m;}'`\t"
 #    echo -en "`cat $file.mpfv.csv | awk '{m+=$10} END{print m;}'`\t"
 #    echo -en "`cat $file.mpfv.csv | awk '{m+=$11} END{print m;}'`\t"
-    echo -en "`/home/rnakato/git/DROMPAplus/parsejaccard.pl -n 3 $file.jaccard.csv`"
-    echo -en "`/home/rnakato/git/DROMPAplus/parsejaccard.pl -n 4 $file.jaccard.csv`"
+    echo -en "`parsejaccard.pl -n 3 $file.jaccard.csv`"
+    echo -en "`parsejaccard.pl -n 4 $file.jaccard.csv`"
 #    echo -en "`head -n1 ppout/$file.resultfile | cut -f3,9,10,11`\t"
 #    echo -en "`grep "# d = " macs/${file}_peaks.xls | sed -e 's/# d = //g'`\t"                                           
  #   echo -en "`grep "Redundant rate in treatment" macs/${file}_peaks.xls  |  awk -F' ' '{print $6}'`\t"
