@@ -1,16 +1,18 @@
 CC = g++
-CFLAGS += -std=c++11 -O2 -Wall
+CFLAGS += -std=c++11 -O2 -Wall -W
 LDFLAGS =
 LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams
-LIBS_DP += -lz -lgsl -lgslcblas -lboost_system -lboost_thread
+LIBS_DP += -lz -lgsl -lgslcblas -lboost_thread
+
 SRCDIR = ./src
 OBJDIR = ./obj
 LIBDIR = ./lib
 BINDIR = ./bin
 ALGLBDIR = $(SRCDIR)/alglib-3.10.0/src
+
 PROGRAMS = parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene
 TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
-$(warning $(TARGET))
+#$(warning $(TARGET))
 
 ifdef DEBUG
 CFLAGS += -DDEBUG
@@ -24,7 +26,7 @@ OBJS_MG = $(OBJDIR)/multibed2gene.o $(OBJDIR)/gene_bed.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_readmapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/pw_gc.o $(OBJDIR)/pw_shiftprofile.o $(OBJDIR)/statistics.o $(LIBDIR)/libalglib.a
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o
 
-.PHONY: all $(TARGET) clean
+.PHONY: all clean
 
 all: $(TARGET)
 
@@ -43,7 +45,6 @@ $(BINDIR)/multibed2gene: $(OBJS_MG) $(OBJS_UTIL)
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
-
 $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL)
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
 
@@ -59,7 +60,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 clean:
 	rm -rf bin lib obj
-#	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET)
 
 HEADS_UTIL = $(SRCDIR)/util.h $(SRCDIR)/readdata.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
 
