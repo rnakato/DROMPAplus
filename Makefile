@@ -63,7 +63,7 @@ clean:
 
 HEADS_UTIL = $(SRCDIR)/util.h $(SRCDIR)/readdata.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
 
-$(OBJDIR)/alglib.o: Makefile $(SRCDIR)/alglib.h
+$(SRCDIR)/alglib.o: Makefile $(SRCDIR)/alglib.h
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_opt.h
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.h $(SRCDIR)/pw_gc.h
 $(OBJDIR)/pw_readmapfile.o: $(SRCDIR)/pw_shiftprofile.h
