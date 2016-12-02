@@ -23,7 +23,7 @@ void setOpts(MyOpt::Opts &);
 void init_dump(const MyOpt::Variables &);
 void output_stats(const MyOpt::Variables &values, const Mapfile &p);
 void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p);
-void output_wigstats(const MyOpt::Variables &values, Mapfile &p);
+void output_wigstats(Mapfile &p);
 
 void SeqStatsGenome::readGenomeTable(const std::string &gt, const int binsize)
 {
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
   p.printPeak(values);
   
   // output stats
-  output_wigstats(values, p);
+  output_wigstats(p);
   output_stats(values, p);
 
   return 0;
@@ -491,7 +491,7 @@ void calcFRiP(SeqStats &chr, const std::vector<bed> vbed)
   return;
 }
 
-void output_wigstats(const MyOpt::Variables &values, Mapfile &p)
+void output_wigstats(Mapfile &p)
 {
   std::string filename = p.getbinprefix() + ".binarray_dist.csv";
   std::ofstream out(filename);
