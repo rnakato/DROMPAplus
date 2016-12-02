@@ -1,65 +1,79 @@
 CC = g++
-CFLAGS += -std=c++11 -O2
-#WFLAGS += -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Werror -Wno-unused # Warninig
+CFLAGS += -std=c++11 -O2 -Wall
+LDFLAGS =
 LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams
 LIBS_DP += -lz -lgsl -lgslcblas -lboost_system -lboost_thread
-TARGET = alglib.o parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene
-ALGLBDIR = alglib-3.10.0/src
+SRCDIR = ./src
+OBJDIR = ./obj
+LIBDIR = ./lib
+BINDIR = ./bin
+ALGLBDIR = $(SRCDIR)/alglib-3.10.0/src
+PROGRAMS = parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene
+TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
+$(warning $(TARGET))
 
 ifdef DEBUG
 CFLAGS += -DDEBUG
 endif
 
-OBJS_UTIL = readdata.o util.o
-OBJS_ALGLIB = alglib.o specialfunctions.o ap.o alglibinternal.o
-OBJS_GTF = gtf2refFlat.o
-OBJS_COM = compare_bed2tss.o gene_bed.o
-OBJS_PO = peak_occurance.o gene_bed.o
-OBJS_MG = multibed2gene.o gene_bed.o
-OBJS_PW = pw_main.o pw_readmapfile.o pw_makefile.o pw_gc.o pw_shiftprofile.o statistics.o
-OBJS_DD = dd_main.o dd_readfile.o
+OBJS_UTIL = $(OBJDIR)/readdata.o $(OBJDIR)/util.o
+OBJS_GTF = $(OBJDIR)/gtf2refFlat.o
+OBJS_COM = $(OBJDIR)/compare_bed2tss.o $(OBJDIR)/gene_bed.o
+OBJS_PO = $(OBJDIR)/peak_occurance.o $(OBJDIR)/gene_bed.o $(LIBDIR)/libalglib.a
+OBJS_MG = $(OBJDIR)/multibed2gene.o $(OBJDIR)/gene_bed.o
+OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_readmapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/pw_gc.o $(OBJDIR)/pw_shiftprofile.o $(OBJDIR)/statistics.o $(LIBDIR)/libalglib.a
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o
 
-HEADS_UTIL = util.h readdata.h macro.h seq.h
-HEADS_PW = pw_gv.h pw_readmapfile.h statistics.h $(HEADS_UTIL)
-HEADS_DD = dd_gv.h dd_readfile.h $(HEADS_UTIL)
-
-.PHONY: all
+.PHONY: all $(TARGET) clean
 
 all: $(TARGET)
 
-gtf2refFlat: $(OBJS_GTF) $(OBJS_UTIL)
+$(BINDIR)/gtf2refFlat: $(OBJS_GTF) $(OBJS_UTIL)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS)
-compare_bed2tss: $(OBJS_COM) $(OBJS_UTIL)
+$(BINDIR)/compare_bed2tss: $(OBJS_COM) $(OBJS_UTIL)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS)
-peak_occurance: $(OBJS_PO) $(OBJS_UTIL)
-	$(CC) -o $@ $^ $(OBJS_ALGLIB) $(LIBS)
-multibed2gene: $(OBJS_MG) $(OBJS_UTIL)
+$(BINDIR)/peak_occurance: $(OBJS_PO) $(OBJS_UTIL)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS)
-parse2wig+: $(OBJS_PW) $(OBJS_UTIL)
-	$(CC) -o $@ $^ $(OBJS_ALGLIB) $(LIBS) $(LIBS_DP)
-
-drompa+: $(OBJS_DD) $(OBJS_UTIL)
+$(BINDIR)/multibed2gene: $(OBJS_MG) $(OBJS_UTIL)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CC) -o $@ $^ $(LIBS)
+$(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
 
-alglib.o: alglib.cpp
+$(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL)
+	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
+
+$(LIBDIR)/libalglib.a: $(SRCDIR)/alglib.cpp
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -c $< $(ALGLBDIR)/specialfunctions.cpp $(ALGLBDIR)/ap.cpp $(ALGLBDIR)/alglibinternal.cpp $(CFLAGS)
-.cpp.o:
-	$(CC) -c $< $(CFLAGS) $(WFLAGS)
+	ar r $@ alglib.o alglibinternal.o ap.o specialfunctions.o
+	rm alglib.o alglibinternal.o ap.o specialfunctions.o
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CC) -o $@ -c $< $(CFLAGS) $(WFLAGS)
 
 clean:
-	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET)
+	rm -rf bin lib obj
+#	rm gtf2refFlat.o $(OBJS_COM) peak_occurance.o multibed2gene.o $(OBJS_PW) $(OBJS_DD) $(OBJS_UTIL) $(TARGET)
 
-alglib.o: Makefile alglib.h
-dd_main.o: dd_opt.h
-pw_main.o: pw_makefile.h pw_gc.h
-pw_readmapfile.o: pw_shiftprofile.h
-pw_makefile.o: pw_makefile.h
-pw_gc.o: pw_gc.h
-pw_shiftprofile.o: Makefile pw_shiftprofile_p.h pw_shiftprofile.h
+HEADS_UTIL = $(SRCDIR)/util.h $(SRCDIR)/readdata.h $(SRCDIR)/macro.h $(SRCDIR)/seq.h
+
+$(OBJDIR)/alglib.o: Makefile $(SRCDIR)/alglib.h
+$(OBJDIR)/dd_main.o: $(SRCDIR)/dd_opt.h
+$(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.h $(SRCDIR)/pw_gc.h
+$(OBJDIR)/pw_readmapfile.o: $(SRCDIR)/pw_shiftprofile.h
+$(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.h
+$(OBJDIR)/pw_gc.o: $(SRCDIR)/pw_gc.h
+$(OBJDIR)/pw_shiftprofile.o: Makefile $(SRCDIR)/pw_shiftprofile_p.h $(SRCDIR)/pw_shiftprofile.h
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
-$(OBJS_PW): Makefile $(HEADS_PW)
-$(OBJS_DD): Makefile $(HEADS_DD)
+$(OBJS_PW): Makefile $(SRCDIR)/pw_gv.h $(SRCDIR)/pw_readmapfile.h $(SRCDIR)/statistics.h $(HEADS_UTIL)
+$(OBJS_DD): Makefile $(SRCDIR)/dd_gv.h $(SRCDIR)/dd_readfile.h $(HEADS_UTIL)
 $(OBJS_GTF): Makefile $(HEADS_UTIL)
-$(OBJS_COM): Makefile $(HEADS_UTIL) gene_bed.h
-$(OBJS_PO):  Makefile $(HEADS_UTIL) gene_bed.h
-$(OBJS_MG):  Makefile $(HEADS_UTIL) gene_bed.h
+$(OBJS_COM): Makefile $(HEADS_UTIL) $(SRCDIR)/gene_bed.h
+$(OBJS_PO):  Makefile $(HEADS_UTIL) $(SRCDIR)/gene_bed.h
+$(OBJS_MG):  Makefile $(HEADS_UTIL) $(SRCDIR)/gene_bed.h
