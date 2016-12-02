@@ -108,6 +108,8 @@ int main(int argc, char* argv[])
 
   Mapfile p(values);
   read_mapfile(values, p);
+  /* output distributions of read length and fragment length */
+  p.outputDistFile(values);
 
   if(!values.count("nofilter")) {
     checkRedundantReads(values, p);
