@@ -445,7 +445,7 @@ class Mapfile {
     lenF3(0), lenF5(0), eflen(0), flen_def(values["flen"].as<int>()),
     vlenF3(ReadMax,0), vlenF5(ReadMax,0), vflen(FragMax,0),
     thre4filtering(0), nt_all(0), nt_nonred(0), nt_red(0),
-    lackOfRead4Complexity(false), lackOfRead4GenomeCov(false), lackOfRead4FragmentVar(false), r4cmp(0), genome(values), maxGC(0), backgroundUniformity(0)
+    lackOfRead4Complexity(false), lackOfRead4GenomeCov(false), lackOfRead4FragmentVar(false), r4cmp(0), maxGC(0), backgroundUniformity(0), genome(values)
     {
       long lenmax(0);
       for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
