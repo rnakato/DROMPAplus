@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include "readdata.h"
+#include "SSP/src/readdata.h"
 #include "gene_bed.h"
 
 using namespace std;

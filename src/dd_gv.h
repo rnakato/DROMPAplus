@@ -1,4 +1,4 @@
-/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+/* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
 #ifndef _DD_GV_H_
@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
-#include "macro.h"
-#include "seq.h"
+#include "SSP/src/macro.h"
+#include "SSP/src/seq.h"
 
 /*namespace MyOpt {
     using Variables = boost::program_options::variables_map;

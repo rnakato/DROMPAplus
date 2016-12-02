@@ -1,5 +1,5 @@
 #include "gene_bed.h"
-#include "macro.h"
+#include "SSP/src/macro.h"
 
 void mergeArray(std::vector<strRange> &array)
 {

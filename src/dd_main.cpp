@@ -1,3 +1,6 @@
+/* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * This file is a part of DROMPA sources.
+ */
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -7,8 +10,8 @@
 #include <ext/stdio_filebuf.h>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include "readdata.h"
-#include "macro.h"
+#include "SSP/src/readdata.h"
+#include "SSP/src/macro.h"
 #include "dd_gv.h"
 #include "dd_opt.h"
 

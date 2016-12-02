@@ -1,7 +1,7 @@
 #ifndef GENE_BED_H
 #define GENE_BED_H
 
-#include "readdata.h"
+#include "SSP/src/readdata.h"
 #include <boost/format.hpp>
 
 class tssdist {

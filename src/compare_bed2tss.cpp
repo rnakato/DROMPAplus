@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include "readdata.h"
+#include "SSP/src/readdata.h"
 #include "gene_bed.h"
-#include "macro.h"
+#include "SSP/src/macro.h"
 
 using Variables = boost::program_options::variables_map;
 

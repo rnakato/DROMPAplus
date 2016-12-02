@@ -9,10 +9,10 @@
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include "readdata.h"
-#include "util.h"
+#include "SSP/src/readdata.h"
+#include "SSP/src/util.h"
 #include "gene_bed.h"
-#include "alglib.h"
+#include "SSP/src/alglib/alglib.h"
 
 using namespace std;
 using namespace boost::accumulators;

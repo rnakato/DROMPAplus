@@ -4,7 +4,7 @@
 #ifndef _PW_GC_H_
 #define _PW_GC_H_
 
-#include "pw_gv.h"
+#include "SSP/src/pw_gv.h"
 
 void normalizeByGCcontents(const MyOpt::Variables &, Mapfile &);
 

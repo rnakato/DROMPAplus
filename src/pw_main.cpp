@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-#include "pw_readmapfile.h"
+#include "SSP/src/pw_readmapfile.h"
 #include "pw_makefile.h"
-#include "pw_gv.h"
 #include "pw_gc.h"
+#include "version.h"
+#include "SSP/src/pw_gv.h"
+#include "SSP/src/ssp_estFlen.h"
 
 namespace {
   const int numGcov(5000000);
@@ -62,24 +64,6 @@ std::vector<sepchr> SeqStatsGenome::getVsepchr(const int numthreads)
     vsepchr.push_back(sep);
   }
   return vsepchr;
-}
-
-void getMpbl(const std::string mpdir, std::vector<SeqStats> &chr)
-{
-  std::string lineStr;
-  std::vector<std::string> v;
-  std::string mpfile = mpdir + "/map_fragL150_genome.txt";
-  std::ifstream in(mpfile);
-  if(!in) PRINTERR("Could nome open " << mpfile << ".");
-  while (!in.eof()) {
-    getline(in, lineStr);
-    if(lineStr.empty() || lineStr[0] == '#') continue;
-    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    for(auto &x: chr) {
-      if(x.name == rmchr(v[0])) x.len_mpbl = stoi(v[1]);
-    }
-  }
-  return;
 }
 
 void printVersion()
@@ -235,9 +219,8 @@ void setOpts(MyOpt::Opts &allopts)
   optsingle.add_options()
     ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
     ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
-    ("nfvp",        value<int>()->default_value(10000000),   "read number for calculating fragment variability")
-    ("fvpbu",   "consider background uniformity for fragment variability estimation")
-    ("fvpfull",   "outout full fragment variability profile")
+    ("nfcs",        value<int>()->default_value(10000000),   "read number for calculating fragment variability")
+    ("fcsfull",   "outout full fragment variability profile")
     ;
   MyOpt::Opts optpair("For paired-end read",100);
   optpair.add_options()
@@ -294,7 +277,7 @@ void init_dump(const MyOpt::Variables &values){
     std::cout << "Single-end mode: ";
     BPRINT("fragment length will be estimated from hamming distance\n");
     if (values.count("nomodel")) BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
-    if(values["nfvp"].as<int>()) BPRINT("\t%1% reads used for fragment variability\n") % values["nfvp"].as<int>();
+    if(values["nfcs"].as<int>()) BPRINT("\t%1% reads used for fragment variability\n") % values["nfcs"].as<int>();
   } else {
     std::cout << "Paired-end mode: ";
     BPRINT("Maximum fragment length: %1%\n") % values["maxins"].as<int>();

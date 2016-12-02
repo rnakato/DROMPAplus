@@ -4,9 +4,10 @@
 #ifndef _DD_OPT_H_
 #define _DD_OPT_H_
 
-#include "util.h"
+#include "SSP/src/util.h"
 #include "dd_gv.h"
 #include "dd_readfile.h"
+#include "version.h"
 
 enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTCG, OPTPD, OPTTR, OPTPROF, OPTOVERLAY, OPTOTHER};
 
