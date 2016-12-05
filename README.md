@@ -17,3 +17,6 @@ Requirements
  sudo yum install boost-devel
  sudo yum install gsl-devel
  sudo yum install zlib-devel
+
+
+ git clone https://github.com/rnakato/SSP.git src/SSP
