@@ -30,10 +30,10 @@ and install samtools from [the website](http://samtools.sourceforge.net/).
      wget http://github.com/coherentgraphics/cpdf-binaries/archive/master.zip
      unzip master.zip
     
-#### 2.3. Install DROMPA
+#### 2.3. Install DROMPAplus
     git clone https://github.com/rnakato/DROMPAplus.git
+    git clone https://github.com/rnakato/SSP.git DROMPAplus/src/SSP
     cd DROMPAplus
-    git clone https://github.com/rnakato/SSP.git src/SSP
     make
 
 If you get an installation error, make sure that all required libraries are installed.
@@ -41,7 +41,7 @@ If you get an installation error, make sure that all required libraries are inst
 #### 2.4. Add the PATH environment variable
 For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type:
 
-    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus
+    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin
     export PATH = $PATH:$HOME/my_chipseq_exp/cpdf-binaries-master/Linux-Intel-**bit
 
 #3. Usage
