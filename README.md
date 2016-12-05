@@ -16,7 +16,8 @@ DROMPAplus is written in C++ and requires the following programs and libraries:
 #### 2.1. Install required libraries
 for Ubuntu:
 
-    sudo apt-get install git build-essential libgtk2.0-dev libboost-all-dev libgsl-dev libz-dev samtools r-base
+    sudo apt-get install git build-essential libgtk2.0-dev libboost-all-dev \
+    libgsl-dev libz-dev samtools r-base
  
 for CentOS:
 
@@ -40,8 +41,8 @@ If you get an installation error, make sure that all required libraries are inst
 #### 2.4. Add the PATH environment variable
 For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type:
 
-    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPA3:$HOME/my_chipseq_exp/cpdf-binaries-master/Linux-Intel-**bit
-
+    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus
+    export PATH = $PATH:$HOME/my_chipseq_exp/cpdf-binaries-master/Linux-Intel-**bit
 
 #3. Usage
  See Manual.pdf for detail.
