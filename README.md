@@ -30,10 +30,10 @@ and install samtools from [the website](http://samtools.sourceforge.net/).
      wget http://github.com/coherentgraphics/cpdf-binaries/archive/master.zip
      unzip master.zip
     
-#### 2.3. Install DROMPA
+#### 2.3. Install DROMPAplus
     git clone https://github.com/rnakato/DROMPAplus.git
+    git clone https://github.com/rnakato/SSP.git DROMPAplus/src/SSP
     cd DROMPAplus
-    git clone https://github.com/rnakato/SSP.git src/SSP
     make
 
 If you get an installation error, make sure that all required libraries are installed.
