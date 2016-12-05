@@ -98,11 +98,9 @@ tssdist func(const variables_map &values, unordered_map<string, unordered_map<st
   return d;
 }
 
-template <class T>
 unordered_map<string, unordered_map<string, genedata>>
-					    generate_rand(const variables_map &values,
-							  unordered_map<string, unordered_map<string, genedata>> mp,
-							  vector<string> vgname, vector<T> &vbed, int size_emp)
+					    generate_rand(unordered_map<string, unordered_map<string, genedata>> mp,
+							  vector<string> vgname, int size_emp)
 {
   std::random_device random_device;  // 乱数生成器
   std::mt19937 random_engine{random_device()}; // メルセンヌ・ツイスター 32bit
@@ -151,7 +149,7 @@ void compare_tss(const variables_map &values,
   cerr << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
     cerr << i << ".." << flush;
-    auto rmp = generate_rand(values, mp, vgname, vbed, n_emp);
+    auto rmp = generate_rand(mp, vgname, n_emp);
     tssdist d_rand = func(values, rmp, vbed);
     vn1(d_rand.n1);
     vn5(d_rand.n5);
@@ -219,7 +217,7 @@ void merge_gene2bed(const variables_map &values,
   cerr << "random permutation: " << endl;
   for(int i=0; i<max; ++i) {
     cerr << i << ".." << flush;
-    auto rmp = generate_rand(values, mp, vgname, vbed, n_emp);
+    auto rmp = generate_rand(mp, vgname, n_emp);
     gdist d_rand = func_gene(values, rmp, vbed);
     vup(d_rand.up);
     vdown(d_rand.down);
