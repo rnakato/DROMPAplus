@@ -41,7 +41,7 @@ If you get an installation error, make sure that all required libraries are inst
 #### 2.4. Add the PATH environment variable
 For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type:
 
-    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus
+    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin
     export PATH = $PATH:$HOME/my_chipseq_exp/cpdf-binaries-master/Linux-Intel-**bit
 
 #3. Usage
