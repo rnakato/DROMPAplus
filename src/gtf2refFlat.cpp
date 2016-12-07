@@ -13,11 +13,11 @@ variables_map argv_init(int argc, char* argv[])
   allopts.add_options()
     ("gtf,g", value<string>(), "Gene file")
     ("name,n", "Output name instead of id")
-    ("help,h", "print this message")
+    ("unique,u", "Only output one transcript per one gene (default: all transcripts)")
+    ("help,h", "Print this message")
     ;
   
   variables_map values;
-  
   if (argc==1) {
     cout << "\n" << allopts << endl;
     exit(0);
@@ -37,7 +37,6 @@ variables_map argv_init(int argc, char* argv[])
 	exit(0);
       }
     }
-
     notify(values);
 
   } catch (exception &e) {
@@ -51,12 +50,14 @@ int main(int argc, char* argv[])
 {
   variables_map values = argv_init(argc, argv);
 
-  auto tmp = parseGtf(values["gtf"].as<string>(), values.count("name"));  // hash for transcripts
+  auto tmp = parseGtf(values["gtf"].as<string>(), values.count("name")); // hash for transcripts
   auto gmp = construct_gmp(tmp);                 // hash for genes
 
   //printMap(tmp);
   //printMap(gmp);
-  printRefFlat(tmp);
+    
+  if (values.count("unique")) printRefFlat(gmp); 
+  else printRefFlat(tmp);
 
   return 0;
 }

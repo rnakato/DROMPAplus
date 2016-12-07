@@ -158,8 +158,8 @@ void readWig(T &in, std::vector<int> &array, std::string filename, std::string c
   while (!in.eof()) {
     getline(in, lineStr);
     if(lineStr.empty() || !lineStr.find("track")) continue;
-    if(on && lineStr.find("chrom=")!= std::string::npos) break;
-    if(lineStr.find(head)!= std::string::npos) {
+    if(on && isStr(lineStr, "chrom=")) break;
+    if(isStr(lineStr, head)) {
       on=1;
       continue;
     }
