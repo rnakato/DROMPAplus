@@ -22,7 +22,7 @@ Variables argv_init(int argc, char* argv[])
     ("limconv,l",  boost::program_options::value<int>()->default_value(10000), "Maxmum distance between genes for convergent sites")
     ("all,a", "Output also non-neighboring sites")
     ("nottss", "Output non-neighboring sites only")
-    ("name,n", "Output name instead of id")
+    //    ("name,n", "Output name instead of id")
     ("conv,c", "Consider convergent sites")
     ("redundant", "redundant mode (output multiple genes for each peak)")
     ("refFlat,r", "refFlat format as input (default: gtf)")
@@ -100,7 +100,7 @@ void merge_tss2bed(const Variables &values, const HashOfGeneDataMap &mp, std::ve
   BPRINT("# Sites from upstream %1% bp to downstream %2% bp around TSS\n") % updist % downdist;
 
   vbed[0].printHead();
-  std::cout << "\tfrom TSS\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
+  std::cout << "\tfrom TSS\ttranscript name\tgene name\ttranscript id\tgene id\tstrand\ttxStart\ttxEnd" << std::endl;
   for (auto x: vbed) {
     if(values.count("all") ||
        (!values.count("nottss") && x.gene.st == TSS) ||
@@ -257,7 +257,7 @@ void count_genome(const Variables &values, const HashOfGeneDataMap &mp, std::vec
 }
 
 template <class T>
-void func(const Variables &values, HashOfGeneDataMap &mp, std::vector<T> &vbed)
+void selectfunc(const Variables &values, HashOfGeneDataMap &mp, std::vector<T> &vbed)
 {
   int mode = values["mode"].as<int>();
   if(!mode) merge_tss2bed(values, mp, vbed);
@@ -280,8 +280,8 @@ void compare_bed(const Variables &values, std::string filename)
 
   if(values.count("gene")) {
     auto gmp = construct_gmp(tmp);
-    func(values, gmp, vbed);
-  } else func(values, tmp, vbed);
+    selectfunc(values, gmp, vbed);
+  } else selectfunc(values, tmp, vbed);
 
   return;
 }
