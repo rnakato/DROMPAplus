@@ -137,7 +137,7 @@ void merge_gene2bed(const Variables &values, const HashOfGeneDataMap &mp, std::v
   else std::cout << std::endl;
 
   vbed[0].printHead();
-  std::cout << "\tstatus\ttranscript name\tgene name\tstrand\ttxStart\ttxEnd" << std::endl;
+  std::cout << "\tstatus\ttranscript name\tgene name\ttranscript id\tgene id\tstrand\ttxStart\ttxEnd" << std::endl;
   for (auto x: vbed) x.printWithGene(values.count("redundant"));
 
   return;
