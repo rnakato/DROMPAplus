@@ -50,14 +50,14 @@ int main(int argc, char* argv[])
 {
   variables_map values = argv_init(argc, argv);
 
-  auto tmp = parseGtf(values["gtf"].as<string>(), values.count("name")); // hash for transcripts
-  auto gmp = construct_gmp(tmp);                 // hash for genes
+  auto tmp = parseGtf(values["gtf"].as<string>()); // hash for transcripts
+  auto gmp = construct_gmp(tmp);                   // hash for genes
 
   //printMap(tmp);
   //printMap(gmp);
     
-  if (values.count("unique")) printRefFlat(gmp); 
-  else printRefFlat(tmp);
+  if (values.count("unique")) printRefFlat(gmp, values.count("name")); 
+  else printRefFlat(tmp, values.count("name"));
 
   return 0;
 }

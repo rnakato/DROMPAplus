@@ -274,7 +274,7 @@ void compare_bed(const Variables &values, std::string filename)
 
   HashOfGeneDataMap tmp;
   if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<std::string>());
-  else                        tmp = parseGtf(values["genefile"].as<std::string>(), values.count("name"));
+  else                        tmp = parseGtf(values["genefile"].as<std::string>());
   
   //printMap(tmp);
 

@@ -109,7 +109,7 @@ void compare_bed(const variables_map &values)
 
   unordered_map<string, unordered_map<string, genedata>> tmp; // hash for transcripts
   if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
-  else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
+  else                        tmp = parseGtf(values["genefile"].as<string>());
 
   //printMap(tmp);
 

@@ -262,7 +262,7 @@ void compare_bed(const variables_map &values, string filename)
 
   unordered_map<string, unordered_map<string, genedata>> tmp;
   if(values.count("refFlat")) tmp = parseRefFlat(values["genefile"].as<string>());
-  else                        tmp = parseGtf(values["genefile"].as<string>(), values.count("name"));
+  else                        tmp = parseGtf(values["genefile"].as<string>());
   
   //printMap(tmp);
   
