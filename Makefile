@@ -13,7 +13,7 @@ SSPSRCDIR = $(SSPDIR)/src
 SSPOBJDIR = $(SSPDIR)/obj
 ALGLIBDIR = $(SSPSRCDIR)/alglib
 
-PROGRAMS = parse2wig+ drompa+ gtf2refFlat compare_bed2tss peak_occurance multibed2gene
+PROGRAMS = parse2wig+ drompa+
 TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
 #$(warning $(TARGET))
 
@@ -22,10 +22,6 @@ CFLAGS += -DDEBUG
 endif
 
 OBJS_UTIL = $(SSPOBJDIR)/readdata.o $(SSPOBJDIR)/util.o
-OBJS_GTF = $(OBJDIR)/gtf2refFlat.o
-OBJS_COM = $(OBJDIR)/compare_bed2tss.o $(OBJDIR)/gene_bed.o
-OBJS_PO = $(OBJDIR)/peak_occurance.o $(OBJDIR)/gene_bed.o $(ALGLIBDIR)/libalglib.a
-OBJS_MG = $(OBJDIR)/multibed2gene.o $(OBJDIR)/gene_bed.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/pw_readmapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/pw_gc.o $(SSPOBJDIR)/ssp_shiftprofile.o $(SSPOBJDIR)/statistics.o $(SSPOBJDIR)/ssp_estFlen.o $(ALGLIBDIR)/libalglib.a
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o
 
@@ -33,18 +29,6 @@ OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o
 
 all: $(TARGET)
 
-$(BINDIR)/gtf2refFlat: $(OBJS_GTF) $(OBJS_UTIL)
-	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS)
-$(BINDIR)/compare_bed2tss: $(OBJS_COM) $(OBJS_UTIL)
-	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS)
-$(BINDIR)/peak_occurance: $(OBJS_PO) $(OBJS_UTIL)
-	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS)
-$(BINDIR)/multibed2gene: $(OBJS_MG) $(OBJS_UTIL)
-	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS)
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
@@ -61,7 +45,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(WFLAGS)
 
 clean:
-	rm -rf bin lib obj
+	rm -rf bin obj
 
 HEADS_UTIL = $(SSPSRCDIR)/util.h $(SSPSRCDIR)/readdata.h $(SSPSRCDIR)/macro.h $(SSPSRCDIR)/seq.h
 
@@ -73,7 +57,3 @@ $(OBJDIR)/pw_gc.o: $(SRCDIR)/pw_gc.h
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
 $(OBJS_PW): Makefile $(SSPSRCDIR)/pw_gv.h $(SSPSRCDIR)/pw_readmapfile.h $(SSPSRCDIR)/statistics.h $(HEADS_UTIL)
 $(OBJS_DD): Makefile $(SRCDIR)/dd_gv.h $(SRCDIR)/dd_readfile.h $(HEADS_UTIL)
-$(OBJS_GTF): Makefile $(HEADS_UTIL)
-$(OBJS_COM): Makefile $(HEADS_UTIL) $(SRCDIR)/gene_bed.h
-$(OBJS_PO):  Makefile $(HEADS_UTIL) $(SRCDIR)/gene_bed.h
-$(OBJS_MG):  Makefile $(HEADS_UTIL) $(SRCDIR)/gene_bed.h
