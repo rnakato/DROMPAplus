@@ -1,0 +1,3 @@
+[submodule "src/SSP"]
+	path = src/SSP
+	url = git@github.com:rnakato/SSP.git
