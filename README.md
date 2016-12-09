@@ -33,7 +33,7 @@ and install samtools from [the website](http://samtools.sourceforge.net/).
 #### 2.3. Install DROMPAplus
     git clone --recursive https://github.com/rnakato/DROMPAplus.git
     cd DROMPAplus
-    make -j4
+    make
 
 If you get an installation error, make sure that all required libraries are installed.
 
