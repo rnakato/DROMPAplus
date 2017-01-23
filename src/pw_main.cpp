@@ -143,7 +143,7 @@ void checkParam(const MyOpt::Variables &values)
   std::vector<std::string> dbopts = {"ndepth", "mpthre"};
   for (auto x: dbopts) chkminus<double>(values, x, 0);
   
-  if(!RANGE(values["of"].as<int>(), 0, PWFILETYPENUM-1)) PRINTERR("invalid wigfile type.\n");
+  if(!my_range(values["of"].as<int>(), 0, PWFILETYPENUM-1)) PRINTERR("invalid wigfile type.\n");
 
   std::string ftype = values["ftype"].as<std::string>();
   if(ftype != "SAM" && ftype != "BAM" && ftype != "BOWTIE" && ftype != "TAGALIGN") PRINTERR("invalid --ftype.\n");
