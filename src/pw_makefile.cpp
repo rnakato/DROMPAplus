@@ -147,9 +147,9 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
       on=1;
     }
   } else if(ntype == "GD") {
-    w = setw(values["ndepth"].as<double>(), p.genome.depth);
+    w = setw(values["ndepth"].as<double>(), p.genome.getdepth());
     if(!on) {
-      BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.depth % values["ndepth"].as<double>() % w;
+      BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.getdepth() % values["ndepth"].as<double>() % w;
       if(w>2) printwarning(w);
       on=1;
     }
@@ -160,8 +160,8 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
     BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<int64_t>(dn) % nm % w;
     if(w>2) printwarning(w);
   } else if(ntype == "CD") {
-    w = setw(values["ndepth"].as<double>(), chr.depth);
-    BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.depth % values["ndepth"].as<double>() % w;
+    w = setw(values["ndepth"].as<double>(), chr.getdepth());
+    BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.getdepth() % values["ndepth"].as<double>() % w;
     if(w>2) printwarning(w);
   }
 

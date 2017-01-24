@@ -15,7 +15,6 @@
 #include "version.h"
 #include "SSP/src/pw_gv.h"
 #include "SSP/src/ssp_shiftprofile.h"
-//#include "SSP/src/ssp_estFlen.h"
 
 namespace {
   const int numGcov(5000000);
@@ -83,8 +82,10 @@ int main(int argc, char* argv[])
   }
   p.genome.setnread_red();
 
-  //  estimateFragLength(values, p);
-  strShiftProfile(values, p, "jaccard"); 
+  strShiftProfile(values, p, "jaccard");
+  for (auto &x:p.genome.chr) calcdepth(x, p.getflen(values));
+  calcdepth(p.genome, p.getflen(values));
+  
 
   // BED file
   if (values.count("bed")) {
@@ -334,7 +335,7 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T 
     p.seq[STRAND_PLUS].printafterGC(out);
     p.seq[STRAND_MINUS].printafterGC(out);
   }
-  out << boost::format("%1$.3f\t") % p.depth;
+  out << boost::format("%1$.3f\t") % p.getdepth();
   if(p.getweight4rpm()) out << boost::format("%1$.3f\t") % p.getweight4rpm(); else out << " - \t";
   if(values["ntype"].as<std::string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
 
