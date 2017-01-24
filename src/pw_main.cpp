@@ -14,7 +14,8 @@
 #include "pw_gc.h"
 #include "version.h"
 #include "SSP/src/pw_gv.h"
-#include "SSP/src/ssp_estFlen.h"
+#include "SSP/src/ssp_shiftprofile.h"
+//#include "SSP/src/ssp_estFlen.h"
 
 namespace {
   const int numGcov(5000000);
@@ -44,26 +45,6 @@ void SeqStatsGenome::readGenomeTable(const std::string &gt, const int binsize)
   }
 
   return;
-}
-
-std::vector<sepchr> SeqStatsGenome::getVsepchr(const int numthreads)
-{
-  std::vector<sepchr> vsepchr;
-
-  uint sepsize = len/numthreads;
-  for(uint i=0; i<chr.size(); ++i) {
-    uint s = i;
-    long len(0);
-    while(len < sepsize && i<chr.size()) {
-      len += chr[i].getlen();
-      i++;
-    }
-    i--;
-    uint e = i;
-    sepchr sep(s,e);
-    vsepchr.push_back(sep);
-  }
-  return vsepchr;
 }
 
 void printVersion()
@@ -101,8 +82,9 @@ int main(int argc, char* argv[])
     p.genome.setnread2nread_red();
   }
   p.genome.setnread_red();
-  
-  estimateFragLength(values, p);
+
+  //  estimateFragLength(values, p);
+  strShiftProfile(values, p, "jaccard"); 
 
   // BED file
   if (values.count("bed")) {
@@ -257,7 +239,22 @@ void setOpts(MyOpt::Opts &allopts)
     ("version,v", "print version")
     ("help,h", "show help message")
     ;
-  allopts.add(optreq).add(optIO).add(optsingle).add(optpair).add(optpcr).add(optnorm).add(optmp).add(optgc).add(optother);
+  MyOpt::Opts optssp("Strand shift profile",100);
+  optssp.add_options()
+    ("ng_from", value<int32_t>()->default_value(5*NUM_100K), "start shift of background")
+    ("ng_to",   value<int32_t>()->default_value(NUM_1M),     "end shift of background")
+    ("ng_step", value<int32_t>()->default_value(5000),       "step shift on of background")
+    ("ng_from_fcs", value<int32_t>()->default_value(NUM_100K), "fcs start of background")
+    ("ng_to_fcs",   value<int32_t>()->default_value(NUM_1M),   "fcs end of background")
+    ("ng_step_fcs", value<int32_t>()->default_value(NUM_100K), "fcs step on of background")
+    ("num4ssp", value<int32_t>()->default_value(NUM_10M),    "Read number for calculating backgroud uniformity (per 100 Mbp)")
+    ("ssp_cc",    "make ssp based on cross correlation")
+    ("ssp_hd",    "make ssp based on hamming distance")
+    ("ssp_exjac", "make ssp based on extended Jaccard index")
+    ("eachchr", "make chromosome-sparated ssp files")
+    ("mptable", value<std::string>(), "Genome table for mappable regions")
+    ;
+  allopts.add(optreq).add(optIO).add(optsingle).add(optpair).add(optpcr).add(optnorm).add(optmp).add(optgc).add(optssp).add(optother);
   return;
 }
 
@@ -313,7 +310,8 @@ void init_dump(const MyOpt::Variables &values){
   return;
 }
 
-void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const SeqStats &p, const Mapfile &mapfile)
+template <class T>
+void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T &p, const Mapfile &mapfile)
 {
   /* genome data */
   out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";

@@ -13,7 +13,7 @@ namespace {
   double setw(T nm, S dn) { return (dn ? nm/static_cast<double>(dn): 0); }
 }
   
-void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, const long);
+void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, const int64_t);
 std::vector<int> makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
 void norm2rpm(const MyOpt::Variables &, Mapfile &, SeqStats &, std::vector<int> &);
 void outputWig(const MyOpt::Variables &, Mapfile &, const std::string &);
@@ -51,7 +51,7 @@ void makewig(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarray, const Read x, const long chrlen)
+void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarray, const Read x, const int64_t chrlen)
 {
   int s, e;
   s = std::min(x.F3, x.F5);
@@ -142,7 +142,7 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
     double dn(p.genome.bothnread_nonred());
     w = setw(values["nrpm"].as<int>(), dn);
     if(!on) {
-      BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (long)dn % values["nrpm"].as<int>() % w;
+      BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (int64_t)dn % values["nrpm"].as<int>() % w;
       if(w>2) printwarning(w);
       on=1;
     }
@@ -157,7 +157,7 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
     double nm = values["nrpm"].as<int>() * (chr.getlenmpbl()/static_cast<double>(p.genome.getlenmpbl()));
     double dn = chr.bothnread_nonred();
     w = setw(nm, dn);
-    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<long>(dn) % nm % w;
+    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<int64_t>(dn) % nm % w;
     if(w>2) printwarning(w);
   } else if(ntype == "CD") {
     w = setw(values["ndepth"].as<double>(), chr.depth);
