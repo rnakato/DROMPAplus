@@ -44,6 +44,37 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   return;
 }
 
+void calcFRiP(SeqStats &chr, const std::vector<bed> &vbed)
+{
+  uint64_t nread_inbed(0);
+  std::vector<int8_t> array(chr.getlen(), MAPPABLE);
+  arraySetBed(array, chr.getname(), vbed);
+  for(int strand=0; strand<STRANDNUM; ++strand) {
+    for (auto &x: chr.getvReadref_notconst((Strand)strand)) {
+      if(x.duplicate) continue;
+      int s(std::min(x.F3, x.F5));
+      int e(std::max(x.F3, x.F5));
+      for(int i=s; i<=e; ++i) {
+	if(array[i]==INBED) {
+	  x.inpeak = 1;
+	  ++nread_inbed;
+	  break;
+	}
+      }
+    }
+  }
+  chr.setFRiP(nread_inbed);
+  return;
+}
+
+void setFRiP(SeqStatsGenome &genome)
+{
+  std::cout << "calculate FRiP score.." << std::flush;
+  for(auto &x: genome.chr) calcFRiP(x, genome.getvbedref());
+  std::cout << "done." << std::endl;
+  return;
+}
+
 int main(int argc, char* argv[])
 {
   MyOpt::Variables values = getOpts(argc, argv);
@@ -71,7 +102,7 @@ int main(int argc, char* argv[])
   // BED file
   if (values.count("bed")) {
     p.genome.setbed(values["bed"].as<std::string>());
-    p.genome.setFRiP();
+    setFRiP(p.genome);
   }
 
 #ifdef DEBUG
@@ -297,7 +328,7 @@ template <class T>
 void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T &p, const Mapfile &mapfile)
 {
   /* genome data */
-  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
+  out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.getnread(STRAND_BOTH) % p.getnread(STRAND_PLUS) % p.getnread(STRAND_MINUS)
@@ -374,9 +405,9 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfile &p, double r4cmp)
 {
   std::vector<int8_t> array;
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.lchr->name), chr.getlen());
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.lchr->getname()), chr.getlen());
   else array = readMpbl_binary(chr.getlen());
-  if(values.count("bed")) arraySetBed(array, chr.name, p.genome.getvbed());
+  if(values.count("bed")) arraySetBed(array, chr.getname(), p.genome.getvbedref());
 
   int32_t val(0);
   int32_t size = array.size();
@@ -390,7 +421,7 @@ std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr,
       int32_t s(std::max(0, std::min(x.F3, x.F5)));
       int32_t e(std::min(std::max(x.F3, x.F5), size-1));
       if(s >= size || e < 0) {
-	std::cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size() << std::endl;
+	std::cerr << "Warning: " << chr.getname() << " read " << s <<"-"<< e << " > array size " << array.size() << std::endl;
       }
       for(int32_t i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
     }
@@ -401,7 +432,7 @@ std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr,
 void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int32_t s, int32_t e, double r4cmp, boost::mutex &mtx)
 {
   for(int32_t i=s; i<=e; ++i) {
-    std::cout << p.genome.chr[i].name << ".." << std::flush;
+    std::cout << p.genome.chr[i].getname() << ".." << std::flush;
     auto array = makeGcovArray(values, p.genome.chr[i], p, r4cmp);
     p.genome.chr[i].calcGcov(array);
     p.genome.addGcov(i, mtx);
@@ -413,7 +444,7 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   std::cout << "calculate genome coverage.." << std::flush;
 
   // ignore peak region
-  double r = numGcov/static_cast<double>(p.genome.getnread_nonred(STRAND_BOTH) - p.genome.getNreadInbed());
+  double r = numGcov/static_cast<double>(p.genome.getnread_nonred(STRAND_BOTH) - p.genome.getnread_inbed());
   if(r>1){
     std::cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
     p.lackOfRead4GenomeCov_on();
@@ -431,27 +462,6 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-void calcFRiP(SeqStats &chr, const std::vector<bed> vbed)
-{
-  std::vector<int8_t> array(chr.getlen(), MAPPABLE);
-  arraySetBed(array, chr.name, vbed);
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto &x: chr.seq[strand].vRead) {
-      if(x.duplicate) continue;
-      int s(std::min(x.F3, x.F5));
-      int e(std::max(x.F3, x.F5));
-      for(int i=s; i<=e; ++i) {
-	if(array[i]==INBED) {
-	  x.inpeak = 1;
-	  ++chr.nread_inbed;
-	  break;
-	}
-      }
-    }
-  }
-  return;
-}
-
 void output_wigstats(Mapfile &p)
 {
   std::string filename = p.getbinprefix() + ".binarray_dist.csv";
@@ -460,7 +470,7 @@ void output_wigstats(Mapfile &p)
   std::cout << "generate " << filename << ".." << std::flush;
 
   out << "\tGenome\t\t\t";
-  for (auto x:p.genome.chr) out << x.name << "\t\t\t\t";
+  for (auto x:p.genome.chr) out << x.getname() << "\t\t\t\t";
   out << std::endl;
   out << "read number\tnum of bins genome\tprop\tZINB estimated\t";
   for (auto x:p.genome.chr) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";

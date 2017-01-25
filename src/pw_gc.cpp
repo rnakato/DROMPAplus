@@ -56,11 +56,11 @@ GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
   BPRINT("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc + lenIgnoreOfFragment);
   
   int chrlen(p.lchr->getlen());
-  std::string chrname(p.lchr->name);
+  std::string chrname(p.lchr->getname());
   std::vector<int8_t> mparray; 
   if(values.count("mp")) mparray = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + chrname), chrlen);
   else mparray = readMpbl_binary(chrlen);
-  if(values.count("bed")) arraySetBed(mparray, chrname, p.genome.getvbed());
+  if(values.count("bed")) arraySetBed(mparray, chrname, p.genome.getvbedref());
   
   std::string fastaname= values["genome"].as<std::string>() + "/chr" + chrname + ".fa";
   auto FastaArray = makeFastaArray(fastaname, chrlen, flen4gc);
@@ -94,8 +94,8 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, GCdist &dist, int
     int posi;
     int flen(p.getflen(values));
     int flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
-    std::cout << p.genome.chr[i].name << ".." << std::flush;
-    std::string fa = values["genome"].as<std::string>() + "/chr" + p.genome.chr[i].name + ".fa";
+    std::cout << p.genome.chr[i].getname() << ".." << std::flush;
+    std::string fa = values["genome"].as<std::string>() + "/chr" + p.genome.chr[i].getname() + ".fa";
     auto FastaArray = makeFastaArray(fa, p.genome.chr[i].getlen(), flen4gc);
     
     for(int strand=0; strand<STRANDNUM; ++strand) {
@@ -138,7 +138,7 @@ void weightRead(const MyOpt::Variables &values, Mapfile &p, GCdist &dist)
 
 void normalizeByGCcontents(const MyOpt::Variables &values, Mapfile &p)
 {
-  std::cout << "chromosome for GC distribution: chr" << p.lchr->name << std::endl;
+  std::cout << "chromosome for GC distribution: chr" << p.lchr->getname() << std::endl;
   GCdist dist(values, p);
 
   p.setmaxGC(dist.getmaxGC());

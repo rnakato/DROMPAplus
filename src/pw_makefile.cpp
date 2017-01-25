@@ -83,7 +83,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const std::vector<int> &wig
 
     if(!ext) {
       if(p > pthre) {
-	mapfile.addPeak(Peak(i, i, chr.name, val, p));
+	mapfile.addPeak(Peak(i, i, chr.getname(), val, p));
 	ext=1;
       }
     } else {
@@ -99,7 +99,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const std::vector<int> &wig
 
 std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
-  std::cout << chr.name << ".." << std::flush;
+  std::cout << chr.getname() << ".." << std::flush;
   std::vector<int> wigarray(chr.getnbin(), 0);
 
   for(int strand=0; strand<STRANDNUM; ++strand) {
@@ -112,7 +112,7 @@ std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqSta
   if (values.count("mp")) {
     int binsize = values["binsize"].as<int>();
     int mpthre = values["mpthre"].as<double>()*binsize;
-    auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + chr.name), values["binsize"].as<int>(), chr.getnbin());
+    auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + chr.getname()), values["binsize"].as<int>(), chr.getnbin());
     for(int i=0; i<chr.getnbin(); ++i) {
       chr.ws.addmpDist(mparray[i]/static_cast<double>(binsize));
       if(mparray[i] > mpthre) wigarray[i] *= binsize/static_cast<double>(mparray[i]);
@@ -182,7 +182,7 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, const std::string &fi
   
   for(auto &chr: p.genome.chr) {
     std::vector<int> array = makeWigarray(values, p, chr);
-    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.name % binsize;
+    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.getname() % binsize;
     for(int i=0; i<chr.getnbin(); ++i) {
       if(array[i]) out << i*binsize +1 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
     }
@@ -197,7 +197,7 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::strin
   int binsize = values["binsize"].as<int>();
   
   std::ofstream out(filename);
-  out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].name % 0 % (p.genome.chr[1].getlen()/100);
+  out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getname() % 0 % (p.genome.chr[1].getlen()/100);
   out << "browser hide all" << std::endl;
   out << "browser pack refGene encodeRegions" << std::endl;
   out << "browser full altGraph" << std::endl;
@@ -211,7 +211,7 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::strin
     std::vector<int> array = makeWigarray(values, p, chr);
     for(int i=0; i<chr.getnbin(); ++i) {
       if(i==chr.getnbin() -1) e = chr.getlen() -1; else e = (i+1)*binsize;
-      if(array[i]) temp << chr.name << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << std::endl;
+      if(array[i]) temp << chr.getname() << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << std::endl;
     }
   }
   temp.close();
