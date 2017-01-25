@@ -27,25 +27,6 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p);
 void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p);
 void output_wigstats(Mapfile &p);
 
-void SeqStatsGenome::readGenomeTable(const std::string &gt, const int binsize)
-{
-  std::vector<std::string> v;
-  std::string lineStr;
-  std::ifstream in(gt);
-  if(!in) PRINTERR("Could nome open " << gt << ".");
-
-  while (!in.eof()) {
-    getline(in, lineStr);
-    if(lineStr.empty() || lineStr[0] == '#') continue;
-    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    SeqStats s(v[0], stoi(v[1]));
-    s.nbin = s.getlen()/binsize +1;
-    chr.push_back(s);
-  }
-
-  return;
-}
-
 void printVersion()
 {
   std::cerr << "parse2wig version " << VERSION << std::endl;
@@ -315,7 +296,7 @@ template <class T>
 void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T &p, const Mapfile &mapfile)
 {
   /* genome data */
-  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
+  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << getpmpbl(p) << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.bothnread() % p.seq[STRAND_PLUS].nread % p.seq[STRAND_MINUS].nread
