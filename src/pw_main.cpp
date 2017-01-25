@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
 
   if(!values.count("nofilter")) {
     checkRedundantReads(values, p);
-  } else {
+  }/* else {
     p.genome.setnread2nread_red();
-  }
-  p.genome.setnread_red();
+    }*/
+  //  p.genome.setnread_red();
 
   strShiftProfile(values, p, "jaccard");
   for (auto &x:p.genome.chr) calcdepth(x, p.getflen(values));
@@ -109,8 +109,10 @@ void checkParam(const MyOpt::Variables &values)
   
   if(!my_range(values["of"].as<int>(), 0, PWFILETYPENUM-1)) PRINTERR("invalid wigfile type.\n");
 
-  std::string ftype = values["ftype"].as<std::string>();
-  if(ftype != "SAM" && ftype != "BAM" && ftype != "BOWTIE" && ftype != "TAGALIGN") PRINTERR("invalid --ftype.\n");
+  if(values.count("ftype")) {
+    std::string ftype = values["ftype"].as<std::string>();
+    if(ftype != "SAM" && ftype != "BAM" && ftype != "BOWTIE" && ftype != "TAGALIGN") PRINTERR("invalid --ftype.\n");
+  }
   std::string ntype = values["ntype"].as<std::string>();
   if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR("invalid --ntype.\n");
 
@@ -174,7 +176,7 @@ void setOpts(MyOpt::Opts &allopts)
   MyOpt::Opts optIO("Input/Output",100);
   optIO.add_options()
     ("binsize,b",   value<int>()->default_value(50),	  "bin size")
-    ("ftype,f",     value<std::string>()->default_value("SAM"), "{SAM|BAM|BOWTIE|TAGALIGN}: format of input file (default:SAM)\nTAGALIGN could be gzip'ed (extension: tagAlign.gz)")
+    ("ftype,f",     value<std::string>(), "{SAM|BAM|BOWTIE|TAGALIGN}: format of input file\nTAGALIGN could be gzip'ed (extension: tagAlign.gz)")
     ("of",        value<int>()->default_value(0),	  "output format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
     ("odir",        value<std::string>()->default_value("parse2wigdir+"),	  "output directory name")
     ("rcenter", value<int>()->default_value(0), "consider length around the center of fragment ")
@@ -246,7 +248,7 @@ void init_dump(const MyOpt::Variables &values){
   BPRINT("\n======================================\n");
   BPRINT("parse2wig version %1%\n\n") % VERSION;
   BPRINT("Input file %1%\n")         % values["input"].as<std::string>();
-  BPRINT("\tFormat: %1%\n")          % values["ftype"].as<std::string>();
+  if(values.count("ftype")) BPRINT("\tFormat: %1%\n") % values["ftype"].as<std::string>();
   BPRINT("Output file: %1%/%2%\n")   % values["odir"].as<std::string>() % values["output"].as<std::string>();
   BPRINT("\tFormat: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
   BPRINT("Genome-table file: %1%\n") % values["gt"].as<std::string>();
@@ -296,30 +298,31 @@ template <class T>
 void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T &p, const Mapfile &mapfile)
 {
   /* genome data */
-  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << getpmpbl(p) << "\t";
+  out << p.name << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
-    % p.bothnread() % p.seq[STRAND_PLUS].nread % p.seq[STRAND_MINUS].nread
-    % (p.bothnread()*100/static_cast<double>(mapfile.genome.bothnread()));
+    % p.getnread(STRAND_BOTH) % p.getnread(STRAND_PLUS) % p.getnread(STRAND_MINUS)
+    % (p.getnread(STRAND_BOTH)*100/static_cast<double>(mapfile.genome.getnread(STRAND_BOTH)));
 
   /* nonredundant reads */
-  printr(out, p.bothnread_nonred(), p.bothnread());
-  p.seq[STRAND_PLUS].printnonred(out);
-  p.seq[STRAND_MINUS].printnonred(out);
-  printr(out, p.bothnread_red(), p.bothnread());
-  p.seq[STRAND_PLUS].printred(out);
-  p.seq[STRAND_MINUS].printred(out);
+  printr(out, p.getnread_nonred(STRAND_BOTH), p.getnread(STRAND_BOTH));
+  //  p.seq[STRAND_PLUS].printnonred(out);
+  // p.seq[STRAND_MINUS].printnonred(out);
+  printr(out, p.getnread_red(STRAND_BOTH), p.getnread(STRAND_BOTH));
+  //  p.seq[STRAND_PLUS].printred(out);
+  // p.seq[STRAND_MINUS].printred(out);
 
   /* reads after GCnorm */
   if(values.count("genome")) {
-    printr(out, p.bothnread_afterGC(), p.bothnread());
-    p.seq[STRAND_PLUS].printafterGC(out);
-    p.seq[STRAND_MINUS].printafterGC(out);
+    printr(out, p.getnread_afterGC(STRAND_BOTH), p.getnread(STRAND_BOTH));
+    //  p.seq[STRAND_PLUS].printafterGC(out);
+    // p.seq[STRAND_MINUS].printafterGC(out);
   }
   out << boost::format("%1$.3f\t") % p.getdepth();
   if(p.getweight4rpm()) out << boost::format("%1$.3f\t") % p.getweight4rpm(); else out << " - \t";
-  if(values["ntype"].as<std::string>() == "NONE") out << p.bothnread_nonred() << "\t"; else out << p.bothnread_rpm() << "\t";
-
+  if(values["ntype"].as<std::string>() == "NONE") out << p.getnread_nonred(STRAND_BOTH) << "\t";
+  else out << p.getnread_rpm(STRAND_BOTH) << "\t";
+  
   p.printGcov(out, mapfile.islackOfRead4GenomeCov());
   
   p.ws.printPoispar(out);
@@ -381,28 +384,29 @@ std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr,
   else array = readMpbl_binary(chr.getlen());
   if(values.count("bed")) arraySetBed(array, chr.name, p.genome.getvbed());
 
-  int val(0);
-  int size = array.size();
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto &x: chr.seq[strand].vRead) {
+  int32_t val(0);
+  int32_t size = array.size();
+  for (int32_t strand=0; strand<STRANDNUM; ++strand) {
+    const std::vector<Read> &vReadref = chr.getvReadref((Strand)strand);
+    for (auto &x: vReadref) {
       if(x.duplicate) continue;
       
       if(rand() >= r4cmp) val=COVREAD_ALL; else val=COVREAD_NORM;
       
-      int s(std::max(0, std::min(x.F3, x.F5)));
-      int e(std::min(std::max(x.F3, x.F5), size-1));
+      int32_t s(std::max(0, std::min(x.F3, x.F5)));
+      int32_t e(std::min(std::max(x.F3, x.F5), size-1));
       if(s >= size || e < 0) {
 	std::cerr << "Warning: " << chr.name << " read " << s <<"-"<< e << " > array size " << array.size() << std::endl;
       }
-      for(int i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
+      for(int32_t i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
     }
   }
   return array;
 }
 
-void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int s, int e, double r4cmp, boost::mutex &mtx)
+void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int32_t s, int32_t e, double r4cmp, boost::mutex &mtx)
 {
-  for(int i=s; i<=e; ++i) {
+  for(int32_t i=s; i<=e; ++i) {
     std::cout << p.genome.chr[i].name << ".." << std::flush;
     auto array = makeGcovArray(values, p.genome.chr[i], p, r4cmp);
     p.genome.chr[i].calcGcov(array);
@@ -415,7 +419,7 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   std::cout << "calculate genome coverage.." << std::flush;
 
   // ignore peak region
-  double r = numGcov/static_cast<double>(p.genome.bothnread_nonred() - p.genome.getNreadInbed());
+  double r = numGcov/static_cast<double>(p.genome.getnread_nonred(STRAND_BOTH) - p.genome.getNreadInbed());
   if(r>1){
     std::cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
     p.lackOfRead4GenomeCov_on();

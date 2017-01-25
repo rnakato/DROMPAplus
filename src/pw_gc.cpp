@@ -99,13 +99,14 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, GCdist &dist, int
     auto FastaArray = makeFastaArray(fa, p.genome.chr[i].getlen(), flen4gc);
     
     for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &x: p.genome.chr[i].seq[strand].vRead) {
+      for (auto &x: p.genome.chr[i].getvReadref_notconst((Strand)strand)) {
 	if(x.duplicate) continue;
 	if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
 	else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(dist.getGCweight(gc));
-	p.genome.chr[i].seq[strand].addReadAfterGC(x.getWeight(), mtx);
+
+	p.genome.chr[i].addReadAfterGC((Strand)strand, x.getWeight(), mtx);
       }
     }
   }
@@ -126,11 +127,12 @@ void weightRead(const MyOpt::Variables &values, Mapfile &p, GCdist &dist)
   printf("done.\n");
 
   // Stats
-  for(auto &x:p.genome.chr) {
+  /*  for(auto &x:p.genome.chr) {
     for(int strand=0; strand<STRANDNUM; ++strand) {
+      p.genome.addReadAfterGC((Strand)strand, x.getWeight(), mtx);
       p.genome.seq[strand].nread_afterGC += x.seq[strand].nread_afterGC;
     }
-  }
+    }*/
   return;
 }
 
@@ -168,7 +170,7 @@ std::vector<int> makeDistRead(const std::vector<short> &fastaGCarray, const std:
   int posi;
   std::vector<int> array(flen4gc+1, 0);
   for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto x:chr.seq[strand].vRead) {
+    for (auto &x: chr.getvReadref((Strand)strand)) {
       if(x.duplicate) continue;
       if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, chrlen -1);
       else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
