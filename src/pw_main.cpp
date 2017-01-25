@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
   }
 
 #ifdef DEBUG
-  p.printstats();
+  p.genome.printReadstats();
 #endif
 
   // Genome coverage
@@ -186,7 +186,6 @@ void setOpts(MyOpt::Opts &allopts)
     ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
     ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
     ("nfcs",        value<int>()->default_value(10000000),   "read number for calculating fragment variability")
-    ("fcsfull",   "outout full fragment variability profile")
     ;
   MyOpt::Opts optpair("For paired-end read",100);
   optpair.add_options()
@@ -304,22 +303,17 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T 
     % p.getnread(STRAND_BOTH) % p.getnread(STRAND_PLUS) % p.getnread(STRAND_MINUS)
     % (p.getnread(STRAND_BOTH)*100/static_cast<double>(mapfile.genome.getnread(STRAND_BOTH)));
 
-  /* nonredundant reads */
-  printr(out, p.getnread_nonred(STRAND_BOTH), p.getnread(STRAND_BOTH));
-  //  p.seq[STRAND_PLUS].printnonred(out);
-  // p.seq[STRAND_MINUS].printnonred(out);
-  printr(out, p.getnread_red(STRAND_BOTH), p.getnread(STRAND_BOTH));
-  //  p.seq[STRAND_PLUS].printred(out);
-  // p.seq[STRAND_MINUS].printred(out);
+  std::vector<Strand> vstr = {STRAND_BOTH, STRAND_PLUS, STRAND_MINUS};
+  for (auto strand: vstr) printr(out, p.getnread_nonred(strand), p.getnread(strand));
+  for (auto strand: vstr) printr(out, p.getnread_red(strand),    p.getnread(strand));
 
   /* reads after GCnorm */
   if(values.count("genome")) {
-    printr(out, p.getnread_afterGC(STRAND_BOTH), p.getnread(STRAND_BOTH));
-    //  p.seq[STRAND_PLUS].printafterGC(out);
-    // p.seq[STRAND_MINUS].printafterGC(out);
+    for (auto strand: vstr) printr(out, p.getnread_afterGC(strand), p.getnread(strand));
   }
   out << boost::format("%1$.3f\t") % p.getdepth();
-  if(p.getweight4rpm()) out << boost::format("%1$.3f\t") % p.getweight4rpm(); else out << " - \t";
+  if(p.getweight4rpm()) out << boost::format("%1$.3f\t") % p.getweight4rpm();
+  else                  out << " - \t";
   if(values["ntype"].as<std::string>() == "NONE") out << p.getnread_nonred(STRAND_BOTH) << "\t";
   else out << p.getnread_rpm(STRAND_BOTH) << "\t";
   
