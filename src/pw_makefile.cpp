@@ -104,7 +104,7 @@ WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
   std::cout << chr.getname() << ".." << std::flush;
   WigArray wigarray(chr.getnbin(), 0);
 
-  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+  for (auto strand: {Strand::FWD, Strand::REV}) {
     for (auto &x: chr.getvReadref(strand)) {
       if(x.duplicate) continue;
       addReadToWigArray(values, wigarray, x, chr.getlen());
@@ -141,7 +141,7 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArra
   std::string ntype(values["ntype"].as<std::string>());
   
   if(ntype == "GR") {
-    double dn(p.genome.getnread_nonred(STRAND_BOTH));
+    double dn(p.genome.getnread_nonred(Strand::BOTH));
     w = setw(values["nrpm"].as<int>(), dn);
     if(!on) {
       std::cout << boost::format("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (int64_t)dn % values["nrpm"].as<int>() % w;
@@ -157,7 +157,7 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArra
     }
   } else if(ntype == "CR") {
     double nm = values["nrpm"].as<int>() * getratio(chr.getlenmpbl(), p.genome.getlenmpbl());
-    double dn = chr.getnread_nonred(STRAND_BOTH);
+    double dn = chr.getnread_nonred(Strand::BOTH);
     w = setw(nm, dn);
     std::cout << boost::format("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<int64_t>(dn) % nm % w;
     if(w>2) printwarning(w);

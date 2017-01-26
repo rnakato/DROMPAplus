@@ -51,7 +51,7 @@ void calcFRiP(SeqStats &chr, const std::vector<bed> &vbed)
   uint64_t nread_inbed(0);
   std::vector<BpStatus> array(chr.getlen(), BpStatus::MAPPABLE);
   arraySetBed(array, chr.getname(), vbed);
-  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+  for (auto strand: {Strand::FWD, Strand::REV}) {
     for (auto &x: chr.getvReadref_notconst(strand)) {
       if(x.duplicate) continue;
       int s(std::min(x.F3, x.F5));
@@ -328,10 +328,10 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T 
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
-    % p.getnread(STRAND_BOTH) % p.getnread(STRAND_PLUS) % p.getnread(STRAND_MINUS)
-    % getpercent(p.getnread(STRAND_BOTH), mapfile.genome.getnread(STRAND_BOTH));
+    % p.getnread(Strand::BOTH) % p.getnread(Strand::FWD) % p.getnread(Strand::REV)
+    % getpercent(p.getnread(Strand::BOTH), mapfile.genome.getnread(Strand::BOTH));
 
-  std::vector<Strand> vstr = {STRAND_BOTH, STRAND_PLUS, STRAND_MINUS};
+  std::vector<Strand::Strand> vstr = {Strand::BOTH, Strand::FWD, Strand::REV};
   for (auto strand: vstr) printNumandPer(out, p.getnread_nonred(strand), p.getnread(strand));
   for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
 
@@ -342,8 +342,8 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T 
   out << boost::format("%1$.3f\t") % p.getdepth();
   if(p.getsizefactor()) out << boost::format("%1$.3f\t") % p.getsizefactor();
   else                  out << " - \t";
-  if(values["ntype"].as<std::string>() == "NONE") out << p.getnread_nonred(STRAND_BOTH) << "\t";
-  else out << p.getnread_rpm(STRAND_BOTH) << "\t";
+  if(values["ntype"].as<std::string>() == "NONE") out << p.getnread_nonred(Strand::BOTH) << "\t";
+  else out << p.getnread_rpm(Strand::BOTH) << "\t";
   
   if(mapfile.islackOfRead4GenomeCov()) {
     out << boost::format("%1$.3f\t(%2$.3f)\t")
@@ -415,7 +415,7 @@ std::vector<BpStatus> makeGcovArray(const MyOpt::Variables &values, SeqStats &ch
   if(values.count("bed")) arraySetBed(array, chr.getname(), p.genome.getvbedref());
 
   int32_t size = array.size();
-  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+  for (auto strand: {Strand::FWD, Strand::REV}) {
     const std::vector<Read> &vReadref = chr.getvReadref(strand);
     for (auto &x: vReadref) {
       if(x.duplicate) continue;
@@ -448,7 +448,7 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   std::cout << "calculate genome coverage.." << std::flush;
 
   // ignore peak region
-  double r = getratio(numGcov, p.genome.getnread_nonred(STRAND_BOTH) - p.genome.getnread_inbed());
+  double r = getratio(numGcov, p.genome.getnread_nonred(Strand::BOTH) - p.genome.getnread_inbed());
   if(r>1){
     std::cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
     p.lackOfRead4GenomeCov_on();

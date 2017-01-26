@@ -99,10 +99,10 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, GCdist &dist, int
     std::string fa = values["genome"].as<std::string>() + "/chr" + p.genome.chr[i].getname() + ".fa";
     auto FastaArray = makeFastaArray(fa, p.genome.chr[i].getlen(), flen4gc);
     
-    for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+    for (auto strand: {Strand::FWD, Strand::REV}) {
       for (auto &x: p.genome.chr[i].getvReadref_notconst(strand)) {
 	if(x.duplicate) continue;
-	if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
+	if(strand==Strand::FWD) posi = std::min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
 	else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(dist.getGCweight(gc));
@@ -170,10 +170,10 @@ std::vector<int> makeDistRead(const std::vector<short> &fastaGCarray, const std:
 {
   int posi;
   std::vector<int> array(flen4gc+1, 0);
-  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+  for (auto strand: {Strand::FWD, Strand::REV}) {
     for (auto &x: chr.getvReadref(strand)) {
       if(x.duplicate) continue;
-      if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, chrlen -1);
+      if(strand==Strand::FWD) posi = std::min(x.F3 + lenIgnoreOfFragment, chrlen -1);
       else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
       if(mparray[posi]==BpStatus::UNMAPPABLE || mparray[posi + flen4gc]==BpStatus::UNMAPPABLE) continue;
       int gc = fastaGCarray[posi];
