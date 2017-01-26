@@ -15,6 +15,7 @@
 #include "version.h"
 #include "SSP/src/pw_gv.h"
 #include "SSP/src/ssp_shiftprofile.h"
+#include "readbpstatus.h"
 #include "mytype.h"
 
 namespace {
@@ -48,7 +49,7 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
 void calcFRiP(SeqStats &chr, const std::vector<bed> &vbed)
 {
   uint64_t nread_inbed(0);
-  std::vector<int8_t> array(chr.getlen(), MAPPABLE);
+  std::vector<BpStatus> array(chr.getlen(), BpStatus::MAPPABLE);
   arraySetBed(array, chr.getname(), vbed);
   for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
     for (auto &x: chr.getvReadref_notconst(strand)) {
@@ -56,7 +57,7 @@ void calcFRiP(SeqStats &chr, const std::vector<bed> &vbed)
       int s(std::min(x.F3, x.F5));
       int e(std::max(x.F3, x.F5));
       for(int i=s; i<=e; ++i) {
-	if(array[i]==INBED) {
+	if(array[i] == BpStatus::INBED) {
 	  x.inpeak = 1;
 	  ++nread_inbed;
 	  break;
@@ -406,28 +407,28 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
   return;
 }
 
-std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfile &p, double r4cmp)
+std::vector<BpStatus> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfile &p, double r4cmp)
 {
-  std::vector<int8_t> array;
+  std::vector<BpStatus> array;
   if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.lchr->getname()), chr.getlen());
   else array = readMpbl_binary(chr.getlen());
   if(values.count("bed")) arraySetBed(array, chr.getname(), p.genome.getvbedref());
 
-  int32_t val(0);
   int32_t size = array.size();
   for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
     const std::vector<Read> &vReadref = chr.getvReadref(strand);
     for (auto &x: vReadref) {
       if(x.duplicate) continue;
       
-      if(rand() >= r4cmp) val=COVREAD_ALL; else val=COVREAD_NORM;
+      BpStatus val(BpStatus::UNMAPPABLE);
+      if(rand() >= r4cmp) val = BpStatus::COVREAD_ALL; else val = BpStatus::COVREAD_NORM;
       
       int32_t s(std::max(0, std::min(x.F3, x.F5)));
       int32_t e(std::min(std::max(x.F3, x.F5), size-1));
       if(s >= size || e < 0) {
 	std::cerr << "Warning: " << chr.getname() << " read " << s <<"-"<< e << " > array size " << array.size() << std::endl;
       }
-      for(int32_t i=s; i<=e; ++i) if(array[i]==MAPPABLE) array[i]=val;
+      for(int32_t i=s; i<=e; ++i) if(array[i]==BpStatus::MAPPABLE) array[i]=val;
     }
   }
   return array;

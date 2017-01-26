@@ -3,6 +3,7 @@
  */
 #include "pw_makefile.h"
 #include "mytype.h"
+#include "readbpstatus.h"
 
 namespace {
   void printwarning(double w)

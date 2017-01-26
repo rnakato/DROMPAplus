@@ -2,6 +2,7 @@
  * This file is a part of DROMPA sources.
  */
 #include "pw_gc.h"
+#include "readbpstatus.h"
 
 namespace {
   const int lenIgnoreOfFragment(5);
@@ -9,8 +10,8 @@ namespace {
   const double threGcDepth(1e-3);
 }
 
-std::vector<int> makeDistGenome(const std::vector<short> &, const std::vector<int8_t> &, const int, const int);
-std::vector<int> makeDistRead(const std::vector<short> &, const std::vector<int8_t> &, const SeqStats &, const int, const int, const int);
+std::vector<int> makeDistGenome(const std::vector<short> &, const std::vector<BpStatus> &, const int, const int);
+std::vector<int> makeDistRead(const std::vector<short> &, const std::vector<BpStatus> &, const SeqStats &, const int, const int, const int);
 std::vector<short> makeFastaArray(const std::string &, const int, const int);
 
 class GCdist {
@@ -57,7 +58,7 @@ GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
   
   int chrlen(p.lchr->getlen());
   std::string chrname(p.lchr->getname());
-  std::vector<int8_t> mparray; 
+  std::vector<BpStatus> mparray; 
   if(values.count("mp")) mparray = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + chrname), chrlen);
   else mparray = readMpbl_binary(chrlen);
   if(values.count("bed")) arraySetBed(mparray, chrname, p.genome.getvbedref());
@@ -151,13 +152,13 @@ void normalizeByGCcontents(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-std::vector<int> makeDistGenome(const std::vector<short> &FastaArray, const std::vector<int8_t> &mparray, const int chrlen, const int flen4gc)
+std::vector<int> makeDistGenome(const std::vector<short> &FastaArray, const std::vector<BpStatus> &mparray, const int chrlen, const int flen4gc)
 {
   std::vector<int> array(flen4gc+1, 0);
 
   int end = chrlen - lenIgnoreOfFragment - flen4gc;
   for(int i= lenIgnoreOfFragment + flen4gc; i<end; ++i) {
-    if(mparray[i]) {
+    if(mparray[i] != BpStatus::UNMAPPABLE) {
       short gc(FastaArray[i]);
       if(gc != -1) array[gc]++;
     }
@@ -165,7 +166,7 @@ std::vector<int> makeDistGenome(const std::vector<short> &FastaArray, const std:
   return array;
 }
 
-std::vector<int> makeDistRead(const std::vector<short> &fastaGCarray, const std::vector<int8_t> &mparray, const SeqStats &chr, const int chrlen, const int flen, const int flen4gc)
+std::vector<int> makeDistRead(const std::vector<short> &fastaGCarray, const std::vector<BpStatus> &mparray, const SeqStats &chr, const int chrlen, const int flen, const int flen4gc)
 {
   int posi;
   std::vector<int> array(flen4gc+1, 0);
@@ -174,7 +175,7 @@ std::vector<int> makeDistRead(const std::vector<short> &fastaGCarray, const std:
       if(x.duplicate) continue;
       if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, chrlen -1);
       else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
-      if(!mparray[posi] || !mparray[posi + flen4gc]) continue;
+      if(mparray[posi]==BpStatus::UNMAPPABLE || mparray[posi + flen4gc]==BpStatus::UNMAPPABLE) continue;
       int gc = fastaGCarray[posi];
       if(gc != -1) array[gc]++;
     }
