@@ -15,9 +15,9 @@ namespace {
   double setw(T nm, S dn) { return (dn ? getratio(nm, dn): 0); }
 }
   
-void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, const int64_t);
-std::vector<int> makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
-void norm2rpm(const MyOpt::Variables &, Mapfile &, SeqStats &, std::vector<int> &);
+void addReadToWigArray(const MyOpt::Variables &, WigArray &, const Read, const int64_t);
+WigArray makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
+void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(const MyOpt::Variables &, Mapfile &, const std::string &);
 void outputBedGraph(const MyOpt::Variables &, Mapfile &, const std::string &);
 void outputBinary(const MyOpt::Variables &, Mapfile &, const std::string &);
@@ -53,7 +53,7 @@ void makewig(const MyOpt::Variables &values, Mapfile &p)
   return;
 }
 
-void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarray, const Read x, const int64_t chrlen)
+void addReadToWigArray(const MyOpt::Variables &values, WigArray &wigarray, const Read x, const int64_t chrlen)
 {
   int s, e;
   s = std::min(x.F3, x.F5);
@@ -69,18 +69,18 @@ void addReadToWigArray(const MyOpt::Variables &values, std::vector<int> &wigarra
 
   int sbin(s/values["binsize"].as<int>());
   int ebin(e/values["binsize"].as<int>());
-  for(int j=sbin; j<=ebin; ++j) wigarray[j] += VALUE2WIGARRAY(x.getWeight());
+  for(int j=sbin; j<=ebin; ++j) wigarray.addval(j, x.getWeight());
   return;
 }
 
-void peakcall(Mapfile &mapfile, const SeqStats &chr, const std::vector<int> &wigarray)
+void peakcall(Mapfile &mapfile, const SeqStats &chr, const WigArray &wigarray)
 {
   int size = wigarray.size();
   int ext(0);
   double pthre(3);
 
   for(int i=0; i<size; ++i) {
-    double val(WIGARRAY2VALUE(wigarray[i]));
+    double val(wigarray.getval(i));
     double p(getlogpZINB(val, chr.ws.nb_p, chr.ws.nb_n));
 
     if(!ext) {
@@ -99,10 +99,10 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const std::vector<int> &wig
   return;
 }
 
-std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
+WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
 {
   std::cout << chr.getname() << ".." << std::flush;
-  std::vector<int> wigarray(chr.getnbin(), 0);
+  WigArray wigarray(chr.getnbin(), 0);
 
   for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
     for (auto &x: chr.getvReadref(strand)) {
@@ -117,7 +117,7 @@ std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqSta
     auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + chr.getname()), values["binsize"].as<int>(), chr.getnbin());
     for(int i=0; i<chr.getnbin(); ++i) {
       chr.ws.addmpDist(getratio(mparray[i], binsize));
-      if(mparray[i] > mpthre) wigarray[i] *= getratio(binsize, mparray[i]);
+      if(mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));
     }
   }
   chr.ws.getWigStats(wigarray);
@@ -134,7 +134,7 @@ std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqSta
   return wigarray;
 }
 
-void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::vector<int> &wigarray)
+void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArray &wigarray)
 {
   static int on(0);
   double w(0);
@@ -167,7 +167,7 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
     if(w>2) printwarning(w);
   }
 
-  for(int i=0; i<chr.getnbin(); ++i) { if(wigarray[i]) wigarray[i] *= w;}
+  for(int i=0; i<chr.getnbin(); ++i) { wigarray.multipleval(i, w);}
 
   chr.setsizefactor(w);
   if(ntype == "GR" || ntype == "GD") p.genome.setsizefactor(w);
@@ -182,11 +182,12 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, const std::string &fi
     % values["output"].as<std::string>() % binsize;
   
   for(auto &chr: p.genome.chr) {
-    std::vector<int> array = makeWigarray(values, p, chr);
+    WigArray array = makeWigarray(values, p, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.getname() % binsize;
-    for(int i=0; i<chr.getnbin(); ++i) {
-      if(array[i]) out << i*binsize +1 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
-    }
+    array.outputAsWig(out, binsize);
+    /*    for(int i=0; i<chr.getnbin(); ++i) {
+      if(array[i]) out << i*binsize +1 << "\t" << wigarray2value(array[i]) << std::endl;
+      }*/
   }
   
   return;
@@ -194,8 +195,7 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, const std::string &fi
 
 void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::string &filename)
 {
-  int e;
-  int binsize = values["binsize"].as<int>();
+  int32_t binsize = values["binsize"].as<int>();
   
   std::ofstream out(filename);
   out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getname() % 0 % (p.genome.chr[1].getlen()/100);
@@ -207,15 +207,17 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::strin
   out.close();
 
   std::string tempfile = filename + ".temp";
-  std::ofstream temp(tempfile);
+  std::ofstream out2(tempfile);
   for(auto &chr: p.genome.chr) {
-    std::vector<int> array = makeWigarray(values, p, chr);
-    for(int i=0; i<chr.getnbin(); ++i) {
+    WigArray array = makeWigarray(values, p, chr);
+    array.outputAsBedGraph(out2, binsize, chr.getname(), chr.getlen() -1);
+    
+    /*    for(int i=0; i<chr.getnbin(); ++i) {
       if(i==chr.getnbin() -1) e = chr.getlen() -1; else e = (i+1)*binsize;
-      if(array[i]) temp << chr.getname() << " " << i*binsize << " " <<e << " " << WIGARRAY2VALUE(array[i]) << std::endl;
-    }
+      if(array[i]) out2 << chr.getname() << " " << i*binsize << " " << e << " " << wigarray2value(array[i]) << std::endl;
+      }*/
   }
-  temp.close();
+  out2.close();
   
   std::string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
   if(system(command.c_str())) PRINTERR("sorting bedGraph failed.");
@@ -229,8 +231,8 @@ void outputBinary(const MyOpt::Variables &values, Mapfile &p, const std::string 
 {
   std::ofstream out(filename, std::ios::binary);
   for(auto &chr: p.genome.chr) {
-    std::vector<int> array = makeWigarray(values, p, chr);
-    for(int i=0; i<chr.getnbin(); ++i) out.write((char *)&array[i], sizeof(int));
+    WigArray array = makeWigarray(values, p, chr);
+    array.outputAsBinary(out);
   }
   return;
 }

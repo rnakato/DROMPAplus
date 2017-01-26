@@ -2,16 +2,17 @@
  * This file is a part of DROMPA sources.
  */
 #include <iostream>
-#include <iomanip>
 #include <string>
 #include <vector>
+#include <iomanip>
 #include <fstream>
 #include <unordered_map>
-#include <ext/stdio_filebuf.h>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
+#include <ext/stdio_filebuf.h>
 #include "SSP/src/readdata.h"
 #include "SSP/src/macro.h"
+#include "SSP/src/mapfileclass.h"
 #include "dd_gv.h"
 #include "dd_opt.h"
 #include "mytype.h"
@@ -150,7 +151,7 @@ int main(int argc, char* argv[])
 }
 
 template <class T>
-void readWig(T &in, std::vector<int> &array, std::string filename, std::string chrname, int binsize)
+void readWig(T &in, WigArray &array, std::string filename, std::string chrname, int binsize)
 {
   std::string head("chrom="+ chrname +"\tspan=");
   int on(0);
@@ -168,37 +169,38 @@ void readWig(T &in, std::vector<int> &array, std::string filename, std::string c
     std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     int i = (stoi(v[0])-1)/binsize;
-    array[i] = VALUE2WIGARRAY(stol(v[1]));
-    if(array[i]) std::cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
+    array.setval(i, stol(v[1]));
   }
+
+  // array.printArray();
   return;
 }
 
-void readBinary(std::vector<int> &array, std::string filename, int nbin)
+void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
 {
   static int nbinsum(0);
   std::ifstream in(filename, std::ios::in | std::ios::binary);
   if (!in) PRINTERR("cannot open " << filename);
 
-  in.seekg(nbinsum*sizeof(int));  
-  for(int i=0; i<nbin; ++i) {
-    in.read((char *)&array[i], sizeof(int));
-    //    if(array[i]) std::cout << i*50 << "\t" << WIGARRAY2VALUE(array[i]) << std::endl;
-  }
+  in.seekg(nbinsum * sizeof(int32_t));
+
+  array.readBinary(in, nbin);
+  // array.printArray();
 
   nbinsum += nbin;
   return;
 }
 
-std::vector<int> read_wigdata(variables_map &values, std::unordered_map<std::string, SampleFile>::iterator itr, chrsize &chr)
+WigArray read_wigdata(variables_map &values, std::unordered_map<std::string, SampleFile>::iterator itr, chrsize &chr)
 {
   std::cout << chr.getname() << std::endl;
   int binsize(itr->second.getbinsize());
   int nbin(chr.getlen()/binsize +1);
-  std::vector<int> array(nbin, 0);
   std::string filename = itr->first;
-
+  
+  WigArray array(nbin, 0);
   WigType iftype(itr->second.getiftype());
+
   if (iftype == WigType::UNCOMPRESSWIG) {
     std::ifstream in(filename);
     if (!in) PRINTERR("cannot open " << filename);
@@ -226,7 +228,7 @@ void drompa(variables_map &values, Param &p)
 
   for(auto chr:p.gt) {
     for(auto itr = p.sample.begin(); itr != p.sample.end(); ++itr) {
-      read_wigdata(values, itr, chr);
+      auto wigarray = read_wigdata(values, itr, chr);
     }
   }
 
