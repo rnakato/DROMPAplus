@@ -21,7 +21,7 @@ ifdef DEBUG
 CFLAGS += -DDEBUG
 endif
 
-OBJS_UTIL = $(SSPOBJDIR)/readdata.o $(SSPOBJDIR)/util.o
+OBJS_UTIL = $(SSPOBJDIR)/readdata.o $(SSPOBJDIR)/util.o $(SSPOBJDIR)/mthread.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/pw_readmapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/pw_gc.o $(SSPOBJDIR)/ssp_shiftprofile.o $(SSPOBJDIR)/statistics.o  $(ALGLIBDIR)/libalglib.a
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o
 
@@ -47,7 +47,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 clean:
 	rm -rf bin obj
 
-HEADS_UTIL = $(SSPSRCDIR)/util.h $(SSPSRCDIR)/readdata.h $(SSPSRCDIR)/macro.h $(SSPSRCDIR)/seq.h
+HEADS_UTIL = $(SSPSRCDIR)/util.h $(SSPSRCDIR)/readdata.h $(SSPSRCDIR)/macro.h $(SSPSRCDIR)/seq.h $(SSPSRCDIR)/mthread.h
 
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_opt.h
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.h $(SRCDIR)/pw_gc.h
