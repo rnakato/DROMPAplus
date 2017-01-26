@@ -355,12 +355,8 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T 
       % getratio(p.getncovnorm(), p.getnbp());
   }
 
-  p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.getFRiP();
 
-  p.ws.printZINBpar(out);
-  
-  out << std::endl;
   return;
 }
 
@@ -400,7 +396,16 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 
   // SeqStats
   print_SeqStats(values, out, p.genome, p);
-  for(auto x:p.genome.chr) print_SeqStats(values, out, x, p);
+  p.wsGenome.printPoispar(out);
+  p.wsGenome.printZINBpar(out);
+  out << std::endl;
+  
+  for(auto &chr: p.genome.chr) {
+    print_SeqStats(values, out, chr, p);
+    chr.ws.printPoispar(out);
+    chr.ws.printZINBpar(out);
+    out << std::endl;
+  }
   
   std::cout << "stats is output in " << filename << "." << std::endl;
 
@@ -473,18 +478,18 @@ void output_wigstats(Mapfile &p)
   std::cout << "generate " << filename << ".." << std::flush;
 
   out << "\tGenome\t\t\t";
-  for (auto x:p.genome.chr) out << x.getname() << "\t\t\t\t";
+  for (auto &x: p.genome.chr) out << x.getname() << "\t\t\t\t";
   out << std::endl;
   out << "read number\tnum of bins genome\tprop\tZINB estimated\t";
-  for (auto x:p.genome.chr) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
+  for (size_t i=0; i<p.genome.chr.size(); ++i) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
   out << std::endl;
 
-  for(size_t i=0; i<p.genome.ws.wigDist.size(); ++i) {
+  for(size_t i=0; i<p.wsGenome.wigDist.size(); ++i) {
     out << i << "\t";
-    p.genome.ws.printwigDist(out, i);
-    out << p.genome.ws.getZINB(i) << "\t";
+    p.wsGenome.printwigDist(out, i);
+    out << p.wsGenome.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
-    for (auto x:p.genome.chr) {
+    for (auto &x: p.genome.chr) {
       x.ws.printwigDist(out, i);
       out << x.ws.getPoisson(i) << "\t";
       out << x.ws.getZINB(i) << "\t";

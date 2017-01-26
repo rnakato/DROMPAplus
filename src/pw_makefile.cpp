@@ -16,7 +16,7 @@ namespace {
 }
   
 void addReadToWigArray(const MyOpt::Variables &, WigArray &, const Read, const int64_t);
-WigArray makeWigarray(const MyOpt::Variables &, Mapfile &, SeqStats &);
+WigArray makeWigarray(const MyOpt::Variables &, Mapfile &, SeqWigStats &);
 void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(const MyOpt::Variables &, Mapfile &, const std::string &);
 void outputBedGraph(const MyOpt::Variables &, Mapfile &, const std::string &);
@@ -73,7 +73,7 @@ void addReadToWigArray(const MyOpt::Variables &values, WigArray &wigarray, const
   return;
 }
 
-void peakcall(Mapfile &mapfile, const SeqStats &chr, const WigArray &wigarray)
+void peakcall(Mapfile &mapfile, const SeqWigStats &chr, const WigArray &wigarray)
 {
   int size = wigarray.size();
   int ext(0);
@@ -99,7 +99,7 @@ void peakcall(Mapfile &mapfile, const SeqStats &chr, const WigArray &wigarray)
   return;
 }
 
-WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
+WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqWigStats &chr)
 {
   std::cout << chr.getname() << ".." << std::flush;
   WigArray wigarray(chr.getnbin(), 0);
@@ -121,7 +121,7 @@ WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr)
     }
   }
   chr.ws.getWigStats(wigarray);
-  p.genome.ws.addWigDist(chr.ws);
+  p.wsGenome.addWigDist(chr.ws);
 
   peakcall(p, chr, wigarray);
   /* Total read normalization */
@@ -185,9 +185,6 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, const std::string &fi
     WigArray array = makeWigarray(values, p, chr);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.getname() % binsize;
     array.outputAsWig(out, binsize);
-    /*    for(int i=0; i<chr.getnbin(); ++i) {
-      if(array[i]) out << i*binsize +1 << "\t" << wigarray2value(array[i]) << std::endl;
-      }*/
   }
   
   return;
