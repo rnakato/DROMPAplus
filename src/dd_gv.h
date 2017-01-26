@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include "SSP/src/macro.h"
 #include "SSP/src/seq.h"
+#include "mytype.h"
 
 /*namespace MyOpt {
     using Variables = boost::program_options::variables_map;
@@ -19,7 +20,7 @@
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;
-  int iftype;
+  WigType iftype;
   int binsize;
  public:
     // *genome, *chr;
@@ -29,12 +30,12 @@ class SampleFile {
    std::vector<std::string> v;
    boost::split(v, str, boost::algorithm::is_any_of("."));
    int last(v.size()-1);
-   if(v[last] == "wig") iftype = TYPE_UNCOMPRESSWIG;    
+   if(v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;    
    else if(v[last] == "gz" && v[last-1] == "wig") {
-     iftype = TYPE_COMPRESSWIG;
+     iftype = WigType::COMPRESSWIG;
      --last;
-   } else if(v[last] == "bedGraph") iftype = TYPE_BEDGRAPH;
-   else if(v[last] == "bin")        iftype = TYPE_BINARY;
+   } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
+   else if(v[last] == "bin")        iftype = WigType::BINARY;
    else PRINTERR("invalid postfix: " << str);
    try {
      binsize = stoi(v[last-1]);
@@ -44,8 +45,8 @@ class SampleFile {
    if(binsize <= 0) PRINTERR("invalid binsize: " << str);
    //   cout << iftype << "\t" << binsize << endl;
  }
- int getbinsize() const { return binsize; }
- int getiftype()  const { return iftype; }
+ int getbinsize()    const { return binsize; }
+ WigType getiftype() const { return iftype; }
 };
 
 class yScale {

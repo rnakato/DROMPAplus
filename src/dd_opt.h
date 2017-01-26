@@ -9,20 +9,20 @@
 #include "dd_readfile.h"
 #include "version.h"
 
-enum optstatus {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTCG, OPTPD, OPTTR, OPTPROF, OPTOVERLAY, OPTOTHER};
+enum class DrompaOpt {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
 
 class opt {
 public:
   boost::program_options::options_description opts;
   opt(const std::string str): opts(str) {}
-  void add(std::vector<optstatus> st);
+  void add(std::vector<DrompaOpt> st);
 };
 
 class Command {
   opt opts;
   std::string desc;
   std::string requiredstr;
-  std::vector<optstatus> vopts;
+  std::vector<DrompaOpt> vopts;
   boost::program_options::variables_map values;
   Param p;
   std::function<void(boost::program_options::variables_map &, Param &)> func;
@@ -30,7 +30,7 @@ class Command {
   public:
   std::string name;
 
- Command(std::string n, std::string d, std::string r, std::function<void(boost::program_options::variables_map &, Param &)> _func, std::vector<optstatus> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
+ Command(std::string n, std::string d, std::string r, std::function<void(boost::program_options::variables_map &, Param &)> _func, std::vector<DrompaOpt> v): opts("Options"), desc(d), requiredstr(r), vopts(v), func(_func), name(n) {
     opts.add(v);
   };
   void print() const {
@@ -70,7 +70,7 @@ class Command {
   }
 };
 
-void opt::add(std::vector<optstatus> st)
+void opt::add(std::vector<DrompaOpt> st)
 {
   boost::program_options::options_description o("Required",100);
   o.add_options()
@@ -81,7 +81,7 @@ void opt::add(std::vector<optstatus> st)
 
   for(auto x: st) {
     switch(x) {
-    case OPTCHIP:
+    case DrompaOpt::CHIP:
       {
 	boost::program_options::options_description o("Input",100);
 	o.add_options()
@@ -91,7 +91,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTNORM:
+    case DrompaOpt::NORM:
       {
 	boost::program_options::options_description o("",100);
 	o.add_options()
@@ -101,7 +101,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTTHRE: 
+    case DrompaOpt::THRE: 
       {
 	boost::program_options::options_description o("Threshold",100);
 	o.add_options()
@@ -116,7 +116,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTANNO_PC:
+    case DrompaOpt::ANNO_PC:
       {
 	boost::program_options::options_description o("Annotation",100);
 	o.add_options()
@@ -130,7 +130,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTANNO_GV:
+    case DrompaOpt::ANNO_GV:
       {
 	boost::program_options::options_description o("Optional data",100);
 	o.add_options()
@@ -146,7 +146,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTDRAW:
+    case DrompaOpt::DRAW:
       {
 	boost::program_options::options_description o("Drawing",100);
 	o.add_options()
@@ -166,7 +166,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTREGION:
+    case DrompaOpt::REGION:
       {
 	boost::program_options::options_description o("Region to draw",100);
 	o.add_options()
@@ -179,7 +179,7 @@ void opt::add(std::vector<optstatus> st)
 	break;
       }
     
-    case OPTSCALE:
+    case DrompaOpt::SCALE:
       {
 	boost::program_options::options_description o("Scale for Y axis",100);
 	o.add_options()
@@ -192,7 +192,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTOVERLAY:
+    case DrompaOpt::OVERLAY:
       {
 	boost::program_options::options_description o("For overlay",100);
 	o.add_options()
@@ -205,7 +205,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTCG: 
+    case DrompaOpt::CG: 
       {
 	boost::program_options::options_description o("CG",100);
 	o.add_options()
@@ -214,7 +214,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTTR: 
+    case DrompaOpt::TR: 
       {
 	boost::program_options::options_description o("TR",100);
 	o.add_options()
@@ -223,7 +223,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTPD:
+    case DrompaOpt::PD:
       {
 	boost::program_options::options_description o("PD",100);
 	o.add_options()
@@ -234,7 +234,7 @@ void opt::add(std::vector<optstatus> st)
 	opts.add(o);
 	break;
       }
-    case OPTPROF:
+    case DrompaOpt::PROF:
       {
 	boost::program_options::options_description o("PROFILE AND HEATMAP",100);
 	o.add_options()
@@ -252,7 +252,7 @@ void opt::add(std::vector<optstatus> st)
 	break;
       }
       
-    case OPTOTHER:
+    case DrompaOpt::OTHER:
       {
 	boost::program_options::options_description o("Others",100);
 	o.add_options()
@@ -273,7 +273,7 @@ void Command::checkParam() {
 
   for(auto x: vopts) {
     switch(x) {
-    case OPTCHIP:
+    case DrompaOpt::CHIP:
       {
 	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 
@@ -284,62 +284,62 @@ void Command::checkParam() {
 	
 	break;
       }
-    case OPTNORM:
+    case DrompaOpt::NORM:
       {
 	chkminus<int>(values, "sm", 0);
 	chkrange<int>(values, "norm", 0, 1);
 	break;
       }
-    case OPTTHRE: 
+    case DrompaOpt::THRE: 
       {
 	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
 	chkminus<int>(values, "width4lmd", 0);
 	break;
       }
-    case OPTANNO_PC:
+    case DrompaOpt::ANNO_PC:
       {
 	chkrange<int>(values, "gftype", 0, 3);
 	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(values[x].as<std::string>());
 	break;
       }
-    case OPTANNO_GV:
+    case DrompaOpt::ANNO_GV:
       {
 	chkminus<int>(values, "mpthre", -1);
 	for (auto x: {"gcsize", "gdsize"}) chkminus<int>(values, x, 0);
 	break;
       }
-    case OPTDRAW:
+    case DrompaOpt::DRAW:
       {
 	for (auto x: {"ls", "lpp"}) chkminus<int>(values, x, 0);
 	break;
       }
-    case OPTREGION:
+    case DrompaOpt::REGION:
       {
 	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(values[x].as<std::string>());
 	chkminus<int>(values, "len_genefile", -1);
 	break;
       }
-    case OPTSCALE:
+    case DrompaOpt::SCALE:
       {
 	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","bn","ystep"}) chkminus<int>(values, x, 0);
 	break;
       }
-    case OPTOVERLAY:
+    case DrompaOpt::OVERLAY:
       {
 	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2"}) chkminus<int>(values, x, 0);
 	break;
       }
-    case OPTCG: 
+    case DrompaOpt::CG: 
       {
 	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
 	break;
       }
-    case OPTTR: 
+    case DrompaOpt::TR: 
       {
 	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
 	break;
       }
-    case OPTPD:
+    case DrompaOpt::PD:
       {
 	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
@@ -348,7 +348,7 @@ void Command::checkParam() {
 	for(auto x:v) p.pd.push_back(scan_pdstr(x));
 	break;
       }
-    case OPTPROF:
+    case DrompaOpt::PROF:
       {
 	chkrange<int>(values, "ptype", 0, 4);
 	chkrange<int>(values, "stype", 0, 1);
@@ -357,7 +357,7 @@ void Command::checkParam() {
 	break;
       }
       
-    case OPTOTHER:
+    case DrompaOpt::OTHER:
       {
 	for (auto x: {"threads"}) chkminus<int>(values, x, 0);
 	break;
@@ -384,7 +384,7 @@ void Command::InitDump()
 
   for(auto x: vopts) {
     switch(x) {
-    case OPTCHIP:
+    case DrompaOpt::CHIP:
       {
 	std::cout << boost::format("\nSamples\n");
 	for(uint i=0; i<p.samplepair.size(); ++i) {
@@ -394,13 +394,13 @@ void Command::InitDump()
 	//	std::cout << boost::format("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
 	break;
       }
-    case OPTNORM:
+    case DrompaOpt::NORM:
       {
 	std::cout << boost::format("   ChIP/Input normalization: %s\n") % str_norm[values["norm"].as<int>()];
 	if(values["sm"].as<int>()) std::cout << boost::format("   smoothing width: %1% bp\n") % values["sm"].as<int>();
 	break;
       }
-    case OPTTHRE: 
+    case DrompaOpt::THRE: 
       {
 	std::cout << boost::format("   Peak intensity threshold: %1$.2f\n")               % values["IPmaxthre"].as<double>();
 	std::cout << boost::format("   Enrichment threshold: %1$.2f\n")                   % values["enrichthre"].as<double>();
@@ -409,7 +409,7 @@ void Command::InitDump()
 	std::cout << boost::format("   FDR threshold: %1$.2e\n")                          % values["FDR"].as<double>();
   	break;
       }
-    case OPTANNO_PC:
+    case DrompaOpt::ANNO_PC:
       {
 	std::cout << boost::format("\nAnnotations:\n");
 	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
@@ -427,7 +427,7 @@ void Command::InitDump()
 	//	if(name != "PROFILE" || name != "HEATMAP") std::cout << boost::format("   name: %1%\n") % d->bed[i]->name;
 	break;
       }
-    case OPTANNO_GV:
+    case DrompaOpt::ANNO_GV:
       {
 	std::cout << boost::format("\nAnnotations:\n");
 	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
@@ -444,7 +444,7 @@ void Command::InitDump()
 	}
 	break;
       }
-    case OPTDRAW:
+    case DrompaOpt::DRAW:
       {
 	std::cout << boost::format("\nFigure parameter:\n");
 	std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[values["showctag"].as<int>()] % str_bool[values["showitag"].as<int>()];
@@ -457,16 +457,16 @@ void Command::InitDump()
 	break;
       }
     
-    case OPTREGION:
+    case DrompaOpt::REGION:
       {
 	break;
       }
-    case OPTSCALE:
+    case DrompaOpt::SCALE:
       {
 	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","scale_tag2","scale_ratio2","scale_pvalue2","bn","ystep"}) chkminus<int>(values, x, 0);
 	break;
       }
-    case OPTOVERLAY:
+    case DrompaOpt::OVERLAY:
       {
 	if(values.count("ioverlay")) { 
 	  std::cout << boost::format("\nOverlayed samples\n");
@@ -477,17 +477,17 @@ void Command::InitDump()
 	}
 	break;
       }
-    case OPTCG: 
+    case DrompaOpt::CG: 
       {
 	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
 	break;
       }
-    case OPTTR: 
+    case DrompaOpt::TR: 
       {
 	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
 	break;
       }
-    case OPTPD:
+    case DrompaOpt::PD:
       {
 	std::cout << boost::format("\nSamples\n");
 	for(uint i=0; i<p.pd.size(); ++i) {
@@ -495,7 +495,7 @@ void Command::InitDump()
 	}
 	break;
       }
-    case OPTPROF:
+    case DrompaOpt::PROF:
       {
 	std::cout << boost::format("   show type: %1$\n")             % str_stype[values["stype"].as<int>()];
 	std::cout << boost::format("   profile type: %1$\n")          % str_ptype[values["ptype"].as<int>()];
@@ -503,7 +503,7 @@ void Command::InitDump()
 	break;
       }
       
-    case OPTOTHER:
+    case DrompaOpt::OTHER:
       {
 	for (auto x: {"threads"}) chkminus<int>(values, x, 0);
 	break;

@@ -15,6 +15,7 @@
 #include "version.h"
 #include "SSP/src/pw_gv.h"
 #include "SSP/src/ssp_shiftprofile.h"
+#include "mytype.h"
 
 namespace {
   const int numGcov(5000000);
@@ -133,7 +134,7 @@ void checkParam(const MyOpt::Variables &values)
   std::vector<std::string> dbopts = {"ndepth", "mpthre"};
   for (auto x: dbopts) chkminus<double>(values, x, 0);
   
-  if(!my_range(values["of"].as<int>(), 0, PWFILETYPENUM-1)) PRINTERR("invalid wigfile type.\n");
+  if(!my_range(values["of"].as<int>(), 0, static_cast<int>(WigType::WIGTYPENUM) -1)) PRINTERR("invalid wigfile type.\n");
 
   if(values.count("ftype")) {
     std::string ftype = values["ftype"].as<std::string>();

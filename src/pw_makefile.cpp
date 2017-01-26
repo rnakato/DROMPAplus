@@ -2,6 +2,7 @@
  * This file is a part of DROMPA sources.
  */
 #include "pw_makefile.h"
+#include "mytype.h"
 
 namespace {
   void printwarning(double w)
@@ -23,26 +24,26 @@ void outputBinary(const MyOpt::Variables &, Mapfile &, const std::string &);
 void makewig(const MyOpt::Variables &values, Mapfile &p)
 {
   printf("Convert read data to array: \n");
-  int oftype = values["of"].as<int>();
+  WigType oftype(static_cast<WigType>(values["of"].as<int>()));
   std::string filename(p.getbinprefix());
 
-  if (oftype==TYPE_COMPRESSWIG || oftype==TYPE_UNCOMPRESSWIG) {
+  if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
     filename += ".wig";
     outputWig(values, p, filename);
-    if(oftype==TYPE_COMPRESSWIG) {
+    if(oftype==WigType::COMPRESSWIG) {
       std::string command = "gzip -f " + filename;
       if(system(command.c_str())) PRINTERR("gzip .wig failed.");
     }
-  } else if (oftype==TYPE_BEDGRAPH || oftype==TYPE_BIGWIG) {
+  } else if (oftype==WigType::BEDGRAPH || oftype==WigType::BIGWIG) {
     filename += ".bedGraph";
     outputBedGraph(values, p, filename);
-    if(oftype==TYPE_BIGWIG) {
+    if(oftype==WigType::BIGWIG) {
       printf("Convert to bigWig...\n");
       std::string command = "bedGraphToBigWig " + filename + " " + values["gt"].as<std::string>() + " " + p.getprefix() + ".bw";
       if(system(command.c_str())) PRINTERR("conversion failed.");
       remove(filename.c_str()); 
     }
-  } else if (oftype==TYPE_BINARY) {
+  } else if (oftype==WigType::BINARY) {
     filename += ".bin";
     outputBinary(values, p, filename);
   }

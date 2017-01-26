@@ -14,6 +14,7 @@
 #include "SSP/src/macro.h"
 #include "dd_gv.h"
 #include "dd_opt.h"
+#include "mytype.h"
 
 using namespace boost::program_options;
 
@@ -53,43 +54,43 @@ std::vector<Command> generateCommands()
   cmds.push_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOVERLAY, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::NORM, DrompaOpt::THRE, DrompaOpt::ANNO_PC, DrompaOpt::ANNO_GV, DrompaOpt::DRAW, DrompaOpt::REGION, DrompaOpt::SCALE, DrompaOpt::OVERLAY, DrompaOpt::OTHER}));
   cmds.push_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTTHRE, OPTANNO_PC, OPTANNO_GV, OPTDRAW, OPTREGION, OPTSCALE, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::NORM, DrompaOpt::THRE, DrompaOpt::ANNO_PC, DrompaOpt::ANNO_GV, DrompaOpt::DRAW, DrompaOpt::REGION, DrompaOpt::SCALE, DrompaOpt::OTHER}));
   cmds.push_back(Command("GV", "global-view visualization",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::NORM, DrompaOpt::ANNO_GV, DrompaOpt::DRAW, DrompaOpt::SCALE, DrompaOpt::OTHER}));
   cmds.push_back(Command("PD", "peak density",
 			 "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			 dd_pd,
-			 {OPTPD, OPTANNO_GV, OPTDRAW, OPTSCALE, OPTOTHER}));
+			 {DrompaOpt::PD, DrompaOpt::ANNO_GV, DrompaOpt::DRAW, DrompaOpt::SCALE, DrompaOpt::OTHER}));
   cmds.push_back(Command("CI", "compare peak-intensity between two samples",
 			 "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::NORM, DrompaOpt::OTHER}));
   cmds.push_back(Command("PROFILE", "make R script of averaged read density",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::NORM, DrompaOpt::PROF, DrompaOpt::OTHER}));
   cmds.push_back(Command("HEATMAP", "make heatmap of multiple samples",
 			 "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTNORM, OPTPROF, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::NORM, DrompaOpt::PROF, DrompaOpt::OTHER}));
   cmds.push_back(Command("CG", "output ChIP-reads in each gene body",
 			 "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTCG, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::CG, DrompaOpt::OTHER}));
   cmds.push_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
 			 "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			 drompa,
-			 {OPTCHIP, OPTPROF, OPTOTHER}));
+			 {DrompaOpt::CHIP, DrompaOpt::PROF, DrompaOpt::OTHER}));
   cmds.push_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			 "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
 			 dd_overlook,
-			 {OPTOTHER}));
+			 {DrompaOpt::OTHER}));
   return cmds;
 }
 
@@ -195,22 +196,22 @@ std::vector<int> read_wigdata(variables_map &values, std::unordered_map<std::str
   int binsize(itr->second.getbinsize());
   int nbin(chr.getlen()/binsize +1);
   std::vector<int> array(nbin, 0);
-  int iftype(itr->second.getiftype());
   std::string filename = itr->first;
 
-  if (iftype==TYPE_UNCOMPRESSWIG) {
+  WigType iftype(itr->second.getiftype());
+  if (iftype == WigType::UNCOMPRESSWIG) {
     std::ifstream in(filename);
     if (!in) PRINTERR("cannot open " << filename);
     readWig(in, array, filename, chr.getname(), binsize);
-  } else if (iftype==TYPE_COMPRESSWIG) {
+  } else if (iftype == WigType::COMPRESSWIG) {
     std::string command = "zcat " + filename;
     FILE *fp = popen(command.c_str(), "r");
     __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
     std::istream in(static_cast<std::streambuf *>(p_fb));
     readWig(in, array, filename, chr.getname(), binsize);
-  } else if (iftype==TYPE_BEDGRAPH) {
+  } else if (iftype == WigType::BEDGRAPH) {
     //    outputBedGraph(values, p, filename);
-  } else if (iftype==TYPE_BINARY) {
+  } else if (iftype == WigType::BINARY) {
     readBinary(array, filename, nbin);
   }
 
