@@ -29,7 +29,7 @@ class GCdist {
     return RsumGC ? DistRead[i] / RsumGC: 0;
   }
   double getPropDepth(const int i) {
-    return DistGenome[i] ? DistRead[i]/static_cast<double>(DistGenome[i]): 0;
+    return DistGenome[i] ? getratio(DistRead[i], DistGenome[i]): 0;
   }
 
   void makeGCweightDist(const MyOpt::Variables &);
@@ -53,7 +53,7 @@ GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
   : flen(p.getflen(values))
 {
   flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
-  BPRINT("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc + lenIgnoreOfFragment);
+  std::cout << boost::format("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc + lenIgnoreOfFragment);
   
   int chrlen(p.lchr->getlen());
   std::string chrname(p.lchr->getname());
@@ -98,15 +98,15 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, GCdist &dist, int
     std::string fa = values["genome"].as<std::string>() + "/chr" + p.genome.chr[i].getname() + ".fa";
     auto FastaArray = makeFastaArray(fa, p.genome.chr[i].getlen(), flen4gc);
     
-    for(int strand=0; strand<STRANDNUM; ++strand) {
-      for (auto &x: p.genome.chr[i].getvReadref_notconst((Strand)strand)) {
+    for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+      for (auto &x: p.genome.chr[i].getvReadref_notconst(strand)) {
 	if(x.duplicate) continue;
 	if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, (int)p.genome.chr[i].getlen() -1);
 	else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);
 	int gc(FastaArray[posi]);
 	if(gc != -1) x.multiplyWeight(dist.getGCweight(gc));
 
-	p.genome.chr[i].addReadAfterGC((Strand)strand, x.getWeight(), mtx);
+	p.genome.chr[i].addReadAfterGC(strand, x.getWeight(), mtx);
       }
     }
   }
@@ -169,8 +169,8 @@ std::vector<int> makeDistRead(const std::vector<short> &fastaGCarray, const std:
 {
   int posi;
   std::vector<int> array(flen4gc+1, 0);
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto &x: chr.getvReadref((Strand)strand)) {
+  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+    for (auto &x: chr.getvReadref(strand)) {
       if(x.duplicate) continue;
       if(strand==STRAND_PLUS) posi = std::min(x.F3 + lenIgnoreOfFragment, chrlen -1);
       else                    posi = std::max(x.F3 - flen + lenIgnoreOfFragment, 0);

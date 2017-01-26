@@ -10,7 +10,7 @@ namespace {
   }
   
   template <class T, class S>
-  double setw(T nm, S dn) { return (dn ? nm/static_cast<double>(dn): 0); }
+  double setw(T nm, S dn) { return (dn ? getratio(nm, dn): 0); }
 }
   
 void addReadToWigArray(const MyOpt::Variables &, std::vector<int> &, const Read, const int64_t);
@@ -102,8 +102,8 @@ std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqSta
   std::cout << chr.getname() << ".." << std::flush;
   std::vector<int> wigarray(chr.getnbin(), 0);
 
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto &x: chr.getvReadref((Strand)strand)) {
+  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+    for (auto &x: chr.getvReadref(strand)) {
       if(x.duplicate) continue;
       addReadToWigArray(values, wigarray, x, chr.getlen());
     }
@@ -114,8 +114,8 @@ std::vector<int> makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqSta
     int mpthre = values["mpthre"].as<double>()*binsize;
     auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + chr.getname()), values["binsize"].as<int>(), chr.getnbin());
     for(int i=0; i<chr.getnbin(); ++i) {
-      chr.ws.addmpDist(mparray[i]/static_cast<double>(binsize));
-      if(mparray[i] > mpthre) wigarray[i] *= binsize/static_cast<double>(mparray[i]);
+      chr.ws.addmpDist(getratio(mparray[i], binsize));
+      if(mparray[i] > mpthre) wigarray[i] *= getratio(binsize, mparray[i]);
     }
   }
   chr.ws.getWigStats(wigarray);
@@ -142,34 +142,33 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, std::ve
     double dn(p.genome.getnread_nonred(STRAND_BOTH));
     w = setw(values["nrpm"].as<int>(), dn);
     if(!on) {
-      BPRINT("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (int64_t)dn % values["nrpm"].as<int>() % w;
+      std::cout << boost::format("\ngenomic read number = %1%, after=%2%, w=%3$.3f\n") % (int64_t)dn % values["nrpm"].as<int>() % w;
       if(w>2) printwarning(w);
       on=1;
     }
   } else if(ntype == "GD") {
     w = setw(values["ndepth"].as<double>(), p.genome.getdepth());
     if(!on) {
-      BPRINT("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.getdepth() % values["ndepth"].as<double>() % w;
+      std::cout << boost::format("\ngenomic depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % p.genome.getdepth() % values["ndepth"].as<double>() % w;
       if(w>2) printwarning(w);
       on=1;
     }
   } else if(ntype == "CR") {
-    double nm = values["nrpm"].as<int>() * (chr.getlenmpbl()/static_cast<double>(p.genome.getlenmpbl()));
+    double nm = values["nrpm"].as<int>() * getratio(chr.getlenmpbl(), p.genome.getlenmpbl());
     double dn = chr.getnread_nonred(STRAND_BOTH);
     w = setw(nm, dn);
-    BPRINT("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<int64_t>(dn) % nm % w;
+    std::cout << boost::format("read number = %1%, after=%2$.1f, w=%3$.3f\n") % static_cast<int64_t>(dn) % nm % w;
     if(w>2) printwarning(w);
   } else if(ntype == "CD") {
     w = setw(values["ndepth"].as<double>(), chr.getdepth());
-    BPRINT("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.getdepth() % values["ndepth"].as<double>() % w;
+    std::cout << boost::format("depth = %1$.2f, after=%2$.2f, w=%3$.3f\n") % chr.getdepth() % values["ndepth"].as<double>() % w;
     if(w>2) printwarning(w);
   }
 
   for(int i=0; i<chr.getnbin(); ++i) { if(wigarray[i]) wigarray[i] *= w;}
 
-  chr.setWeight(w);
-  if(ntype == "GR" || ntype == "GD") p.genome.setWeight(w);
-  //  else { for(int i=0; i<STRANDNUM; i++) p.genome.seq[i].nread_rpm += chr.seq[i].nread_rpm;}
+  chr.setsizefactor(w);
+  if(ntype == "GR" || ntype == "GD") p.genome.setsizefactor(w);
   return;
 }
 

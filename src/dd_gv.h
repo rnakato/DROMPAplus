@@ -84,11 +84,11 @@ class SamplePair {
     if(v.size() >=8 && v[7] != "") scale.pvalue = stof(v[7]);
   }
   void print() {
-    BPRINT("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % name % peak_argv;
-    BPRINT("   Input: %1%\n") % argvInput;
+    std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % name % peak_argv;
+    std::cout << boost::format("   Input: %1%\n") % argvInput;
   }
   void printall() {
-    BPRINT("ChIP:%1% Input:%2% name:%3% peak:%4% scale_tag %5% scale_ratio %6% scale_pvalue %7%\n")
+    std::cout << boost::format("ChIP:%1% Input:%2% name:%3% peak:%4% scale_tag %5% scale_ratio %6% scale_pvalue %7%\n")
       % argvChIP % argvInput % name % peak_argv % scale.tag % scale.ratio % scale.pvalue;
   }
 };

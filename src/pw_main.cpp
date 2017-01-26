@@ -49,8 +49,8 @@ void calcFRiP(SeqStats &chr, const std::vector<bed> &vbed)
   uint64_t nread_inbed(0);
   std::vector<int8_t> array(chr.getlen(), MAPPABLE);
   arraySetBed(array, chr.getname(), vbed);
-  for(int strand=0; strand<STRANDNUM; ++strand) {
-    for (auto &x: chr.getvReadref_notconst((Strand)strand)) {
+  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+    for (auto &x: chr.getvReadref_notconst(strand)) {
       if(x.duplicate) continue;
       int s(std::min(x.F3, x.F5));
       int e(std::max(x.F3, x.F5));
@@ -87,13 +87,8 @@ int main(int argc, char* argv[])
   /* output distributions of read length and fragment length */
   p.outputDistFile(values);
 
-  if(!values.count("nofilter")) {
-    checkRedundantReads(values, p);
-  }/* else {
-    p.genome.setnread2nread_red();
-    }*/
-  //  p.genome.setnread_red();
-
+  if(!values.count("nofilter")) checkRedundantReads(values, p);
+ 
   strShiftProfile(values, p, "jaccard");
   for (auto &x:p.genome.chr) calcdepth(x, p.getflen(values));
   calcdepth(p.genome, p.getflen(values));
@@ -275,50 +270,50 @@ void setOpts(MyOpt::Opts &allopts)
 void init_dump(const MyOpt::Variables &values){
   std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
  
-  BPRINT("\n======================================\n");
-  BPRINT("parse2wig version %1%\n\n") % VERSION;
-  BPRINT("Input file %1%\n")         % values["input"].as<std::string>();
-  if(values.count("ftype")) BPRINT("\tFormat: %1%\n") % values["ftype"].as<std::string>();
-  BPRINT("Output file: %1%/%2%\n")   % values["odir"].as<std::string>() % values["output"].as<std::string>();
-  BPRINT("\tFormat: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
-  BPRINT("Genome-table file: %1%\n") % values["gt"].as<std::string>();
-  BPRINT("Binsize: %1% bp\n")        % values["binsize"].as<int>();
-  BPRINT("Number of threads: %1%\n") % values["threads"].as<int>();
+  std::cout << boost::format("\n======================================\n");
+  std::cout << boost::format("parse2wig version %1%\n\n") % VERSION;
+  std::cout << boost::format("Input file %1%\n")         % values["input"].as<std::string>();
+  if(values.count("ftype")) std::cout << boost::format("\tFormat: %1%\n") % values["ftype"].as<std::string>();
+  std::cout << boost::format("Output file: %1%/%2%\n")   % values["odir"].as<std::string>() % values["output"].as<std::string>();
+  std::cout << boost::format("\tFormat: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
+  std::cout << boost::format("Genome-table file: %1%\n") % values["gt"].as<std::string>();
+  std::cout << boost::format("Binsize: %1% bp\n")        % values["binsize"].as<int>();
+  std::cout << boost::format("Number of threads: %1%\n") % values["threads"].as<int>();
   if (!values.count("pair")) {
     std::cout << "Single-end mode: ";
-    BPRINT("fragment length will be estimated from hamming distance\n");
-    if (values.count("nomodel")) BPRINT("Predefined fragment length: %1%\n") % values["flen"].as<int>();
-    if(values["nfcs"].as<int>()) BPRINT("\t%1% reads used for fragment variability\n") % values["nfcs"].as<int>();
+    std::cout << boost::format("fragment length will be estimated from hamming distance\n");
+    if (values.count("nomodel")) std::cout << boost::format("Predefined fragment length: %1%\n") % values["flen"].as<int>();
+    if(values["nfcs"].as<int>()) std::cout << boost::format("\t%1% reads used for fragment variability\n") % values["nfcs"].as<int>();
   } else {
     std::cout << "Paired-end mode: ";
-    BPRINT("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
+    std::cout << boost::format("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
   }
   if (!values.count("nofilter")) {
-    BPRINT("PCR bias filtering: ON\n");
-    if (values["thre_pb"].as<int>()) BPRINT("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int>();
+    std::cout << boost::format("PCR bias filtering: ON\n");
+    if (values["thre_pb"].as<int>()) std::cout << boost::format("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int>();
   } else {
-    BPRINT("PCR bias filtering: OFF\n");
+    std::cout << boost::format("PCR bias filtering: OFF\n");
   }
-  BPRINT("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
-  if (values.count("bed")) BPRINT("Bed file: %1%\n") % values["bed"].as<std::string>();
+  std::cout << boost::format("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
+  if (values.count("bed")) std::cout << boost::format("Bed file: %1%\n")  % values["bed"].as<std::string>();
 
   std::string ntype = values["ntype"].as<std::string>();
-  BPRINT("\nTotal read normalization: %1%\n") % ntype;
+  std::cout << boost::format("\nTotal read normalization: %1%\n") % ntype;
   if(ntype == "GR" || ntype == "CR"){
-    BPRINT("\tnormed read: %1% M for genome\n") % (values["nrpm"].as<int>() /static_cast<double>(NUM_1M));
+    std::cout << boost::format("\tnormed read: %1% M for genome\n") % getratio(values["nrpm"].as<int>(), NUM_1M);
   }
   else if(ntype == "GD" || ntype == "CD"){
-    BPRINT("\tnormed depth: %1%\n") % values["ndepth"].as<double>();
+    std::cout << boost::format("\tnormed depth: %1%\n") % values["ndepth"].as<double>();
   }
   printf("\n");
   if (values.count("mp")) {
     printf("Mappability normalization:\n");
-    BPRINT("\tFile directory: %1%\n") % values["mp"].as<std::string>();
-    BPRINT("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
+    std::cout << boost::format("\tFile directory: %1%\n") % values["mp"].as<std::string>();
+    std::cout << boost::format("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
   }
   if (values.count("genome")) {
     printf("Correcting GC bias:\n");
-    BPRINT("\tChromosome directory: %1%\n") % values["genome"].as<std::string>();
+    std::cout << boost::format("\tChromosome directory: %1%\n") % values["genome"].as<std::string>();
   }
   printf("======================================\n");
   return;
@@ -332,24 +327,32 @@ void print_SeqStats(const MyOpt::Variables &values, std::ofstream &out, const T 
   /* total reads*/
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.getnread(STRAND_BOTH) % p.getnread(STRAND_PLUS) % p.getnread(STRAND_MINUS)
-    % (p.getnread(STRAND_BOTH)*100/static_cast<double>(mapfile.genome.getnread(STRAND_BOTH)));
+    % getpercent(p.getnread(STRAND_BOTH), mapfile.genome.getnread(STRAND_BOTH));
 
   std::vector<Strand> vstr = {STRAND_BOTH, STRAND_PLUS, STRAND_MINUS};
-  for (auto strand: vstr) printr(out, p.getnread_nonred(strand), p.getnread(strand));
-  for (auto strand: vstr) printr(out, p.getnread_red(strand),    p.getnread(strand));
+  for (auto strand: vstr) printNumandPer(out, p.getnread_nonred(strand), p.getnread(strand));
+  for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
 
   /* reads after GCnorm */
   if(values.count("genome")) {
-    for (auto strand: vstr) printr(out, p.getnread_afterGC(strand), p.getnread(strand));
+    for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
   }
   out << boost::format("%1$.3f\t") % p.getdepth();
-  if(p.getweight4rpm()) out << boost::format("%1$.3f\t") % p.getweight4rpm();
+  if(p.getsizefactor()) out << boost::format("%1$.3f\t") % p.getsizefactor();
   else                  out << " - \t";
   if(values["ntype"].as<std::string>() == "NONE") out << p.getnread_nonred(STRAND_BOTH) << "\t";
   else out << p.getnread_rpm(STRAND_BOTH) << "\t";
   
-  p.printGcov(out, mapfile.islackOfRead4GenomeCov());
-  
+  if(mapfile.islackOfRead4GenomeCov()) {
+    out << boost::format("%1$.3f\t(%2$.3f)\t")
+      % getratio(p.getncov(),     p.getnbp())
+      % getratio(p.getncovnorm(), p.getnbp());
+  } else {
+    out << boost::format("%1$.3f\t%2$.3f\t")
+      % getratio(p.getncov(),     p.getnbp())
+      % getratio(p.getncovnorm(), p.getnbp());
+  }
+
   p.ws.printPoispar(out);
   if(values.count("bed")) out << boost::format("%1$.3f\t") % p.getFRiP();
 
@@ -411,8 +414,8 @@ std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr,
 
   int32_t val(0);
   int32_t size = array.size();
-  for (int32_t strand=0; strand<STRANDNUM; ++strand) {
-    const std::vector<Read> &vReadref = chr.getvReadref((Strand)strand);
+  for (auto strand: {STRAND_PLUS, STRAND_MINUS}) {
+    const std::vector<Read> &vReadref = chr.getvReadref(strand);
     for (auto &x: vReadref) {
       if(x.duplicate) continue;
       
@@ -429,13 +432,12 @@ std::vector<int8_t> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr,
   return array;
 }
 
-void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int32_t s, int32_t e, double r4cmp, boost::mutex &mtx)
+void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int32_t s, int32_t e, double r4cmp)
 {
   for(int32_t i=s; i<=e; ++i) {
     std::cout << p.genome.chr[i].getname() << ".." << std::flush;
     auto array = makeGcovArray(values, p.genome.chr[i], p, r4cmp);
     p.genome.chr[i].calcGcov(array);
-    p.genome.addGcov(i, mtx);
   }
 }
 
@@ -444,7 +446,7 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   std::cout << "calculate genome coverage.." << std::flush;
 
   // ignore peak region
-  double r = numGcov/static_cast<double>(p.genome.getnread_nonred(STRAND_BOTH) - p.genome.getnread_inbed());
+  double r = getratio(numGcov, p.genome.getnread_nonred(STRAND_BOTH) - p.genome.getnread_inbed());
   if(r>1){
     std::cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
     p.lackOfRead4GenomeCov_on();
@@ -452,9 +454,8 @@ void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
   double r4cmp = r*RAND_MAX;
 
   boost::thread_group agroup;
-  boost::mutex mtx;
   for(uint i=0; i<p.genome.vsepchr.size(); i++) {
-    agroup.create_thread(bind(calcGcovchr, boost::cref(values), boost::ref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, r4cmp, boost::ref(mtx)));
+    agroup.create_thread(bind(calcGcovchr, boost::cref(values), boost::ref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, r4cmp));
   }
   agroup.join_all();
   

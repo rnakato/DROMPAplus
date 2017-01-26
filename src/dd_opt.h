@@ -38,8 +38,8 @@ class Command {
 	      << std::left << std::setw(40) << desc << std::endl;
   }
   void printhelp() const {
-    BPRINT("%1%:  %2%\n") % name % desc;
-    BPRINT("Usage: drompa %1% [options] -o <output> -gt <genometable> %2%\n\n") % name % requiredstr;
+    std::cout << boost::format("%1%:  %2%\n") % name % desc;
+    std::cout << boost::format("Usage: drompa %1% [options] -o <output> -gt <genometable> %2%\n\n") % name % requiredstr;
     std::cout << opts.opts << std::endl;
   }
   void checkParam();
@@ -377,83 +377,83 @@ void Command::InitDump()
   std::vector<std::string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
   std::vector<std::string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
 
-  BPRINT("\n======================================\n");
-  BPRINT("drompa version %1%: %2%\n\n") % VERSION % name;
-  BPRINT("output prefix: %1%\n")     % values["output"].as<std::string>();
-  BPRINT("Genome-table file: %1%\n") % values["gt"].as<std::string>();
+  std::cout << boost::format("\n======================================\n");
+  std::cout << boost::format("drompa version %1%: %2%\n\n") % VERSION % name;
+  std::cout << boost::format("output prefix: %1%\n")     % values["output"].as<std::string>();
+  std::cout << boost::format("Genome-table file: %1%\n") % values["gt"].as<std::string>();
 
   for(auto x: vopts) {
     switch(x) {
     case OPTCHIP:
       {
-	BPRINT("\nSamples\n");
+	std::cout << boost::format("\nSamples\n");
 	for(uint i=0; i<p.samplepair.size(); ++i) {
 	  std::cout << (i+1) << ": ";
 	  p.samplepair[i].print();
 	}
-	//	BPRINT("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
+	//	std::cout << boost::format("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
 	break;
       }
     case OPTNORM:
       {
-	BPRINT("   ChIP/Input normalization: %s\n") % str_norm[values["norm"].as<int>()];
-	if(values["sm"].as<int>()) BPRINT("   smoothing width: %1% bp\n") % values["sm"].as<int>();
+	std::cout << boost::format("   ChIP/Input normalization: %s\n") % str_norm[values["norm"].as<int>()];
+	if(values["sm"].as<int>()) std::cout << boost::format("   smoothing width: %1% bp\n") % values["sm"].as<int>();
 	break;
       }
     case OPTTHRE: 
       {
-	BPRINT("   Peak intensity threshold: %1$.2f\n")               % values["IPmaxthre"].as<double>();
-	BPRINT("   Enrichment threshold: %1$.2f\n")                   % values["enrichthre"].as<double>();
-	BPRINT("   p-value threshold (internal, -log10): %1$.2e\n")   % values["pthre_internal"].as<double>();
-	BPRINT("   p-value threshold (enrichment, -log10): %1$.2e\n") % values["pthre_enrich"].as<double>();
-	BPRINT("   FDR threshold: %1$.2e\n")                          % values["FDR"].as<double>();
+	std::cout << boost::format("   Peak intensity threshold: %1$.2f\n")               % values["IPmaxthre"].as<double>();
+	std::cout << boost::format("   Enrichment threshold: %1$.2f\n")                   % values["enrichthre"].as<double>();
+	std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % values["pthre_internal"].as<double>();
+	std::cout << boost::format("   p-value threshold (enrichment, -log10): %1$.2e\n") % values["pthre_enrich"].as<double>();
+	std::cout << boost::format("   FDR threshold: %1$.2e\n")                          % values["FDR"].as<double>();
   	break;
       }
     case OPTANNO_PC:
       {
-	BPRINT("\nAnnotations:\n");
-	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
+	std::cout << boost::format("\nAnnotations:\n");
+	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
 			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
 	printOpt<std::string>(values, "ars",    "   ARS file");
 	printOpt<std::string>(values, "ter",    "   TER file");
 	printOpt<std::string>(values, "repeat", "   Repeat file");
 	printOpt<std::string>(values, "gc", "   GCcontents file");
 	printOpt<std::string>(values, "gd", "   Gene density file");
-	/*	if(d->arsfile)     BPRINT("   ARS file: %1%\n")          % values["ars"].as<std::string>();
-	if(d->terfile)     BPRINT("   TER file: %1%\n")          % values["ter"].as<std::string>();
-	if(d->repeat.argv) BPRINT("   Repeat file: %1%\n")       % values["repeat"].as<std::string>();*/
+	/*	if(d->arsfile)     std::cout << boost::format("   ARS file: %1%\n")          % values["ars"].as<std::string>();
+	if(d->terfile)     std::cout << boost::format("   TER file: %1%\n")          % values["ter"].as<std::string>();
+	if(d->repeat.argv) std::cout << boost::format("   Repeat file: %1%\n")       % values["repeat"].as<std::string>();*/
 	printOpt<std::string>(values, "region", "   Region file");
 	printVOpt<std::string>(values, "bed", "   Bed file");
-	//	if(name != "PROFILE" || name != "HEATMAP") BPRINT("   name: %1%\n") % d->bed[i]->name;
+	//	if(name != "PROFILE" || name != "HEATMAP") std::cout << boost::format("   name: %1%\n") % d->bed[i]->name;
 	break;
       }
     case OPTANNO_GV:
       {
-	BPRINT("\nAnnotations:\n");
-	if(values.count("gene")) BPRINT("   Gene file: %1%, Format: %2%\n")
+	std::cout << boost::format("\nAnnotations:\n");
+	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
 			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
 	printOpt<std::string>(values, "gc", "   GCcontents file");
 	printOpt<std::string>(values, "gd", "   Gene density file");
 	/*	
-	if(d->GC.argv)     BPRINT("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
-	if(d->GD.argv)     BPRINT("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
+	if(d->GC.argv)     std::cout << boost::format("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
+	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
 	printVOpt<std::string>(values, "inter", "   Interaction file");
 	if (values.count("mp")) {
-	  BPRINT("Mappability file directory: %1%\n") % values["mp"].as<std::string>();
-	  BPRINT("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
+	  std::cout << boost::format("Mappability file directory: %1%\n") % values["mp"].as<std::string>();
+	  std::cout << boost::format("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
 	}
 	break;
       }
     case OPTDRAW:
       {
-	BPRINT("\nFigure parameter:\n");
-	BPRINT("   Display read: ChIP %1%, Input %2%\n") % str_bool[values["showctag"].as<int>()] % str_bool[values["showitag"].as<int>()];
-	BPRINT("   Display enrichment: %1%\n")           % str_bool[values["showratio"].as<int>()];
-	BPRINT("   Display pvalue (internal): %1%\n")    % str_bool[values["showpinter"].as<int>()];
-	BPRINT("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[values["showpenrich"].as<int>()];
-	BPRINT("   Background color: %1%\n")             % str_bool[!values["offbg"].as<int>()];
-	BPRINT("   Y label: %1%\n")                      % str_bool[!values["offylab"].as<int>()];
-	BPRINT("   Y memory: %1%\n")                     % str_bool[!values["offymem"].as<int>()];
+	std::cout << boost::format("\nFigure parameter:\n");
+	std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[values["showctag"].as<int>()] % str_bool[values["showitag"].as<int>()];
+	std::cout << boost::format("   Display enrichment: %1%\n")           % str_bool[values["showratio"].as<int>()];
+	std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[values["showpinter"].as<int>()];
+	std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[values["showpenrich"].as<int>()];
+	std::cout << boost::format("   Background color: %1%\n")             % str_bool[!values["offbg"].as<int>()];
+	std::cout << boost::format("   Y label: %1%\n")                      % str_bool[!values["offylab"].as<int>()];
+	std::cout << boost::format("   Y memory: %1%\n")                     % str_bool[!values["offymem"].as<int>()];
 	break;
       }
     
@@ -469,7 +469,7 @@ void Command::InitDump()
     case OPTOVERLAY:
       {
 	if(values.count("ioverlay")) { 
-	  BPRINT("\nOverlayed samples\n");
+	  std::cout << boost::format("\nOverlayed samples\n");
 	  for(uint i=0; i<p.samplepair.size(); ++i) {
 	    std::cout << (i+1) << ": ";
 	    p.samplepair[i].print();
@@ -489,17 +489,17 @@ void Command::InitDump()
       }
     case OPTPD:
       {
-	BPRINT("\nSamples\n");
+	std::cout << boost::format("\nSamples\n");
 	for(uint i=0; i<p.pd.size(); ++i) {
-	  BPRINT("   IP%1%: %2%\tname: %3%\n") % (i+1) % p.pd[i].argv % p.pd[i].name;
+	  std::cout << boost::format("   IP%1%: %2%\tname: %3%\n") % (i+1) % p.pd[i].argv % p.pd[i].name;
 	}
 	break;
       }
     case OPTPROF:
       {
-	BPRINT("   show type: %1$\n")             % str_stype[values["stype"].as<int>()];
-	BPRINT("   profile type: %1$\n")          % str_ptype[values["ptype"].as<int>()];
-	BPRINT("   profile normalization: %1$\n") % str_ntype[values["ntype"].as<int>()];
+	std::cout << boost::format("   show type: %1$\n")             % str_stype[values["stype"].as<int>()];
+	std::cout << boost::format("   profile type: %1$\n")          % str_ptype[values["ptype"].as<int>()];
+	std::cout << boost::format("   profile normalization: %1$\n") % str_ntype[values["ntype"].as<int>()];
 	break;
       }
       
@@ -512,7 +512,7 @@ void Command::InitDump()
     return;
   }
   
-  if(values.count("chr")) BPRINT("output %1% only.\n") % values["chr"].as<int>();
+  if(values.count("chr")) std::cout << boost::format("output %1% only.\n") % values["chr"].as<int>();
 
   printf("======================================\n");
   return;
