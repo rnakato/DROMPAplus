@@ -85,15 +85,15 @@ int main(int argc, char* argv[])
   boost::filesystem::create_directory(dir);
 
   Mapfile p(values);
-  read_mapfile(values, p);
-  /* output distributions of read length and fragment length */
-  p.outputDistFile(values);
+  read_mapfile(values, p.genome);
+
+  p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
 
   if(!values.count("nofilter")) checkRedundantReads(values, p);
  
   strShiftProfile(values, p, "jaccard");
-  for (auto &x:p.genome.chr) calcdepth(x, p.getflen(values));
-  calcdepth(p.genome, p.getflen(values));
+  for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
+  calcdepth(p.genome, p.genome.dflen.getflen());
   
 
   // BED file
@@ -223,7 +223,7 @@ void setOpts(MyOpt::Opts &allopts)
   MyOpt::Opts optpcr("PCR bias filtering",100);
   optpcr.add_options()
     ("nofilter", 	  "do not filter PCR bias")
-    ("thre_pb",        value<int>()->default_value(0),	  "PCRbias threshold (default: more than max(1 read, 10 times greater than genome average)) ")
+    ("thre_pb",        value<int32_t>()->default_value(0),	  "PCRbias threshold (default: more than max(1 read, 10 times greater than genome average)) ")
     ("ncmp",        value<int>()->default_value(10000000),	  "read number for calculating library complexity")
     ;
   MyOpt::Opts optnorm("Total read normalization",100);
@@ -292,7 +292,7 @@ void init_dump(const MyOpt::Variables &values){
   }
   if (!values.count("nofilter")) {
     std::cout << boost::format("PCR bias filtering: ON\n");
-    if (values["thre_pb"].as<int>()) std::cout << boost::format("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int>();
+    if (values["thre_pb"].as<int32_t>()) std::cout << boost::format("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int32_t>();
   } else {
     std::cout << boost::format("PCR bias filtering: OFF\n");
   }
@@ -367,10 +367,10 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 
   out << "parse2wig version " << VERSION << std::endl;
   out << "Input file: \"" << values["input"].as<std::string>() << "\"" << std::endl;
-  out << "Redundancy threshold: >" << p.getthre4filtering() << std::endl;
+  out << "Redundancy threshold: >" << p.complexity.getThreshold() << std::endl;
 
-  p.printComplexity(out);
-  p.printFlen(values, out);
+  p.complexity.print(out);
+  p.genome.dflen.printFlen(out);
   if(values.count("genome")) out << "GC summit: " << p.getmaxGC() << std::endl;
 
   // Global stats

@@ -51,7 +51,7 @@ public:
 };
 
 GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
-  : flen(p.getflen(values))
+  : flen(p.genome.dflen.getflen())
 {
   flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
   std::cout << boost::format("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc + lenIgnoreOfFragment);
@@ -93,7 +93,7 @@ void weightReadchr(const MyOpt::Variables &values, Mapfile &p, GCdist &dist, int
 {
   for(int i=s; i<=e; ++i) {
     int posi;
-    int flen(p.getflen(values));
+    int flen(p.genome.dflen.getflen());
     int flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
     std::cout << p.genome.chr[i].getname() << ".." << std::flush;
     std::string fa = values["genome"].as<std::string>() + "/chr" + p.genome.chr[i].getname() + ".fa";
