@@ -77,6 +77,14 @@ void setFRiP(SeqStatsGenome &genome)
   return;
 }
 
+template <class T>
+void calcdepth(T &obj, const int32_t flen)
+{
+  uint64_t lenmpbl = obj.getlenmpbl();
+  double d = lenmpbl ? getratio(obj.getnread_nonred(Strand::BOTH) * flen, lenmpbl): 0;
+  obj.setdepth(d);
+}
+
 int main(int argc, char* argv[])
 {
   MyOpt::Variables values = getOpts(argc, argv);
@@ -89,7 +97,7 @@ int main(int argc, char* argv[])
 
   p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
 
-  if(!values.count("nofilter")) checkRedundantReads(values, p);
+  if(!values.count("nofilter")) p.complexity.checkRedundantReads(p.genome);
  
   strShiftProfile(values, p, "jaccard");
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
@@ -224,12 +232,12 @@ void setOpts(MyOpt::Opts &allopts)
   optpcr.add_options()
     ("nofilter", 	  "do not filter PCR bias")
     ("thre_pb",        value<int32_t>()->default_value(0),	  "PCRbias threshold (default: more than max(1 read, 10 times greater than genome average)) ")
-    ("ncmp",        value<int>()->default_value(10000000),	  "read number for calculating library complexity")
+    ("ncmp",        value<uint64_t>()->default_value(NUM_10M),	  "read number for calculating library complexity")
     ;
   MyOpt::Opts optnorm("Total read normalization",100);
   optnorm.add_options()
     ("ntype,n",        value<std::string>()->default_value("NONE"),  "Total read normalization\n{NONE|GR|GD|CR|CD}\n   NONE: not normalize\n   GR: for whole genome, read number\n   GD: for whole genome, read depth\n   CR: for each chromosome, read number\n   CD: for each chromosome, read depth")
-    ("nrpm",        value<int>()->default_value(20000000),	  "Total read number after normalization")
+    ("nrpm",        value<int>()->default_value(2*NUM_10M),	  "Total read number after normalization")
     ("ndepth",      value<double>()->default_value(1.0),	  "Averaged read depth after normalization")
     ("bed",        value<std::string>(),	  "specify the BED file of enriched regions (e.g., peak regions)")
     ;  
@@ -296,7 +304,7 @@ void init_dump(const MyOpt::Variables &values){
   } else {
     std::cout << boost::format("PCR bias filtering: OFF\n");
   }
-  std::cout << boost::format("\t%1% reads used for library complexity\n") % values["ncmp"].as<int>();
+  std::cout << boost::format("\t%1% reads used for library complexity\n") % values["ncmp"].as<uint64_t>();
   if (values.count("bed")) std::cout << boost::format("Bed file: %1%\n")  % values["bed"].as<std::string>();
 
   std::string ntype = values["ntype"].as<std::string>();

@@ -12,7 +12,7 @@
 #include <ext/stdio_filebuf.h>
 #include "SSP/src/readdata.h"
 #include "SSP/src/macro.h"
-#include "SSP/src/mapfileclass.h"
+#include "SSP/src/SeqStats.hpp"
 #include "SSP/src/wigstats.h"
 #include "dd_gv.h"
 #include "dd_opt.h"
