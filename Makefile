@@ -21,7 +21,7 @@ ifdef DEBUG
 CFLAGS += -DDEBUG
 endif
 
-OBJS_UTIL = $(SSPOBJDIR)/readdata.o $(SSPOBJDIR)/util.o
+OBJS_UTIL = $(SSPOBJDIR)/readdata.o $(SSPOBJDIR)/util.o $(SSPOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/pw_readmapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/readbpstatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/pw_gc.o $(SSPOBJDIR)/ssp_shiftprofile.o $(SSPOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o
 
@@ -47,7 +47,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 clean:
 	rm -rf bin obj
 
-HEADS_UTIL = $(SSPSRCDIR)/util.h $(SSPSRCDIR)/readdata.h $(SSPSRCDIR)/macro.h $(SSPSRCDIR)/seq.h $(SSPSRCDIR)/mthread.h
+HEADS_UTIL = $(SSPSRCDIR)/util.h $(SSPSRCDIR)/readdata.h $(SSPSRCDIR)/macro.h $(SSPSRCDIR)/seq.h $(SSPSRCDIR)/mthread.h $(SSPSRCDIR)/BoostOptions.hpp
 
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_opt.h
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.h $(SRCDIR)/pw_gc.h $(SRCDIR)/readbpstatus.h
@@ -56,5 +56,5 @@ $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.h $(SRCDIR)/readbpstatus.h
 $(OBJDIR)/pw_gc.o: $(SRCDIR)/pw_gc.h $(SRCDIR)/readbpstatus.h
 $(OBJDIR)/readbpstatus.o: $(SRCDIR)/readbpstatus.h
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
-$(OBJS_PW): Makefile $(SSPSRCDIR)/pw_gv.h $(SSPSRCDIR)/pw_readmapfile.h $(SSPSRCDIR)/statistics.h $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL)
+$(OBJS_PW): Makefile $(SRCDIR)/pw_gv.h $(SSPSRCDIR)/pw_readmapfile.h $(SSPSRCDIR)/statistics.h $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL)
 $(OBJS_DD): Makefile $(SRCDIR)/dd_gv.h $(SRCDIR)/dd_readfile.h $(HEADS_UTIL)

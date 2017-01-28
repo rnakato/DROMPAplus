@@ -4,7 +4,7 @@
 #ifndef _PW_MAKEFILE_H_
 #define _PW_MAKEFILE_H_
 
-#include "SSP/src/pw_gv.h"
+#include "pw_gv.h"
 
 void makewig(const MyOpt::Variables &, Mapfile &);
 

@@ -1,5 +1,5 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
 #include <iostream>
 #include <iomanip>
@@ -13,7 +13,7 @@
 #include "pw_makefile.h"
 #include "pw_gc.h"
 #include "version.h"
-#include "SSP/src/pw_gv.h"
+#include "pw_gv.h"
 #include "SSP/src/ssp_shiftprofile.h"
 #include "readbpstatus.h"
 #include "mytype.h"
@@ -22,7 +22,7 @@ namespace {
   const int numGcov(5000000);
 }
 
-MyOpt::Variables getOpts(int argc, char* argv[]);
+MyOpt::Variables getOpts(Mapfile &p, int argc, char* argv[]);
 void setOpts(MyOpt::Opts &);
 void init_dump(const MyOpt::Variables &);
 void output_stats(const MyOpt::Variables &values, const Mapfile &p);
@@ -87,19 +87,17 @@ void calcdepth(T &obj, const int32_t flen)
 
 int main(int argc, char* argv[])
 {
-  MyOpt::Variables values = getOpts(argc, argv);
-  
-  boost::filesystem::path dir(values["odir"].as<std::string>());
-  boost::filesystem::create_directory(dir);
+  Mapfile p;
+  MyOpt::Variables values = getOpts(p, argc, argv);
+  p.setValues(values);
 
-  Mapfile p(values);
   read_mapfile(values, p.genome);
 
   p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
 
-  if(!values.count("nofilter")) p.complexity.checkRedundantReads(p.genome);
+  p.complexity.checkRedundantReads(p.genome);
  
-  strShiftProfile(values, p, "jaccard");
+  strShiftProfile(p.sspst, values, p.genome, p.getprefix(), "jaccard");
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
   calcdepth(p.genome, p.genome.dflen.getflen());
   
@@ -160,13 +158,18 @@ void checkParam(const MyOpt::Variables &values)
   return;
 }
 
-MyOpt::Variables getOpts(int argc, char* argv[])
+MyOpt::Variables getOpts(Mapfile &p, int argc, char* argv[])
 {
+  DEBUGprint("setOpts...");
+
   MyOpt::Opts allopts("Options");
+  p.setOpts(allopts);
   setOpts(allopts);
   
   MyOpt::Variables values;
   
+  DEBUGprint("getOpts...");
+
   try {
     boost::program_options::parsed_options parsed = parse_command_line(argc, argv, allopts);
     store(parsed, values);
@@ -189,13 +192,18 @@ MyOpt::Variables getOpts(int argc, char* argv[])
     }
 
     notify(values);
-
     checkParam(values);
+
+    boost::filesystem::path dir(values["odir"].as<std::string>());
+    boost::filesystem::create_directory(dir);
+
     init_dump(values);
   } catch (std::exception &e) {
     std::cout << e.what() << std::endl;
     exit(0);
   }
+  
+  DEBUGprint("getOpts done.");
   return values;
 }
 
@@ -203,36 +211,12 @@ void setOpts(MyOpt::Opts &allopts)
 {
   using namespace boost::program_options;
 
-  MyOpt::Opts optreq("Required",100);
-  optreq.add_options()
-    ("input,i",   value<std::string>(), "Mapping file. Multiple files are allowed (separated by ',')")
-    ("output,o",  value<std::string>(), "Prefix of output files")
-    ("gt",        value<std::string>(), "Genome table (tab-delimited file describing the name and length of each chromosome)")
-    ;
-  MyOpt::Opts optIO("Input/Output",100);
-  optIO.add_options()
-    ("binsize,b",   value<int>()->default_value(50),	  "bin size")
-    ("ftype,f",     value<std::string>(), "{SAM|BAM|BOWTIE|TAGALIGN}: format of input file\nTAGALIGN could be gzip'ed (extension: tagAlign.gz)")
-    ("of",        value<int>()->default_value(0),	  "output format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
-    ("odir",        value<std::string>()->default_value("parse2wigdir+"),	  "output directory name")
+  MyOpt::setOptIO(allopts, "parse2wigdir+");
+  MyOpt::setOptPair(allopts);
+  MyOpt::Opts optOut("Output",100);
+  optOut.add_options()
+    ("of",        value<int>()->default_value(0), "output format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
     ("rcenter", value<int>()->default_value(0), "consider length around the center of fragment ")
-    ;
-  MyOpt::Opts optsingle("For single-end read",100);
-  optsingle.add_options()
-    ("nomodel",   "predefine the fragment length (default: estimated by hamming distance plot)")
-    ("flen",        value<int>()->default_value(150), "predefined fragment length\n(Automatically calculated in paired-end mode)")
-    ("nfcs",        value<int>()->default_value(10000000),   "read number for calculating fragment variability")
-    ;
-  MyOpt::Opts optpair("For paired-end read",100);
-  optpair.add_options()
-    ("pair", 	  "add when the input file is paired-end")
-    ("maxins",        value<int>()->default_value(500), "maximum fragment length")
-    ;
-  MyOpt::Opts optpcr("PCR bias filtering",100);
-  optpcr.add_options()
-    ("nofilter", 	  "do not filter PCR bias")
-    ("thre_pb",        value<int32_t>()->default_value(0),	  "PCRbias threshold (default: more than max(1 read, 10 times greater than genome average)) ")
-    ("ncmp",        value<uint64_t>()->default_value(NUM_10M),	  "read number for calculating library complexity")
     ;
   MyOpt::Opts optnorm("Total read normalization",100);
   optnorm.add_options()
@@ -252,28 +236,8 @@ void setOpts(MyOpt::Opts &allopts)
     ("flen4gc",    value<int>()->default_value(120),  "fragment length for calculation of GC distribution")
     ("gcdepthoff", "do not consider depth of GC contents")
     ;
-  MyOpt::Opts optother("Others",100);
-  optother.add_options()
-    ("threads,p",    value<int>()->default_value(1),  "number of threads to launch")
-    ("version,v", "print version")
-    ("help,h", "show help message")
-    ;
-  MyOpt::Opts optssp("Strand shift profile",100);
-  optssp.add_options()
-    ("ng_from", value<int32_t>()->default_value(5*NUM_100K), "start shift of background")
-    ("ng_to",   value<int32_t>()->default_value(NUM_1M),     "end shift of background")
-    ("ng_step", value<int32_t>()->default_value(5000),       "step shift on of background")
-    ("ng_from_fcs", value<int32_t>()->default_value(NUM_100K), "fcs start of background")
-    ("ng_to_fcs",   value<int32_t>()->default_value(NUM_1M),   "fcs end of background")
-    ("ng_step_fcs", value<int32_t>()->default_value(NUM_100K), "fcs step on of background")
-    ("num4ssp", value<int32_t>()->default_value(NUM_10M),    "Read number for calculating backgroud uniformity (per 100 Mbp)")
-    ("ssp_cc",    "make ssp based on cross correlation")
-    ("ssp_hd",    "make ssp based on hamming distance")
-    ("ssp_exjac", "make ssp based on extended Jaccard index")
-    ("eachchr", "make chromosome-sparated ssp files")
-    ("mptable", value<std::string>(), "Genome table for mappable regions")
-    ;
-  allopts.add(optreq).add(optIO).add(optsingle).add(optpair).add(optpcr).add(optnorm).add(optmp).add(optgc).add(optssp).add(optother);
+  allopts.add(optOut).add(optnorm).add(optmp).add(optgc);
+  MyOpt::setOptOther(allopts);
   return;
 }
 
@@ -291,9 +255,8 @@ void init_dump(const MyOpt::Variables &values){
   std::cout << boost::format("Number of threads: %1%\n") % values["threads"].as<int>();
   if (!values.count("pair")) {
     std::cout << "Single-end mode: ";
-    std::cout << boost::format("fragment length will be estimated from hamming distance\n");
+    std::cout << boost::format("fragment length will be estimated by strand-shift profile\n");
     if (values.count("nomodel")) std::cout << boost::format("Predefined fragment length: %1%\n") % values["flen"].as<int>();
-    if(values["nfcs"].as<int>()) std::cout << boost::format("\t%1% reads used for fragment variability\n") % values["nfcs"].as<int>();
   } else {
     std::cout << "Paired-end mode: ";
     std::cout << boost::format("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
@@ -304,7 +267,7 @@ void init_dump(const MyOpt::Variables &values){
   } else {
     std::cout << boost::format("PCR bias filtering: OFF\n");
   }
-  std::cout << boost::format("\t%1% reads used for library complexity\n") % values["ncmp"].as<uint64_t>();
+  std::cout << boost::format("\t%1% reads used for library complexity\n") % values["ncmp"].as<int64_t>();
   if (values.count("bed")) std::cout << boost::format("Bed file: %1%\n")  % values["bed"].as<std::string>();
 
   std::string ntype = values["ntype"].as<std::string>();
