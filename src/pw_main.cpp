@@ -7,9 +7,8 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
-#include "SSP/src/pw_readmapfile.h"
+#include "SSP/src/ParseMapfile.hpp"
 #include "pw_makefile.h"
 #include "pw_gc.h"
 #include "version.h"
@@ -91,13 +90,13 @@ int main(int argc, char* argv[])
   MyOpt::Variables values = getOpts(p, argc, argv);
   p.setValues(values);
 
-  read_mapfile(values, p.genome);
+  read_mapfile(p.genome);
 
   p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
 
   p.complexity.checkRedundantReads(p.genome);
  
-  strShiftProfile(p.sspst, values, p.genome, p.getprefix(), "jaccard");
+  strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
   calcdepth(p.genome, p.genome.dflen.getflen());
   
@@ -246,28 +245,17 @@ void init_dump(const MyOpt::Variables &values){
  
   std::cout << boost::format("\n======================================\n");
   std::cout << boost::format("parse2wig version %1%\n\n") % VERSION;
-  std::cout << boost::format("Input file %1%\n")         % values["input"].as<std::string>();
-  if(values.count("ftype")) std::cout << boost::format("\tFormat: %1%\n") % values["ftype"].as<std::string>();
-  std::cout << boost::format("Output file: %1%/%2%\n")   % values["odir"].as<std::string>() % values["output"].as<std::string>();
-  std::cout << boost::format("\tFormat: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
-  std::cout << boost::format("Genome-table file: %1%\n") % values["gt"].as<std::string>();
+
+  MyOpt::dumpIO(values);
+  MyOpt::dumpGenomeTable(values);
+
+  std::cout << boost::format("\tOutput format: %1%\n")          % str_wigfiletype[values["of"].as<int>()];
   std::cout << boost::format("Binsize: %1% bp\n")        % values["binsize"].as<int>();
-  std::cout << boost::format("Number of threads: %1%\n") % values["threads"].as<int>();
-  if (!values.count("pair")) {
-    std::cout << "Single-end mode: ";
-    std::cout << boost::format("fragment length will be estimated by strand-shift profile\n");
-    if (values.count("nomodel")) std::cout << boost::format("Predefined fragment length: %1%\n") % values["flen"].as<int>();
-  } else {
-    std::cout << "Paired-end mode: ";
-    std::cout << boost::format("Maximum fragment length: %1%\n") % values["maxins"].as<int>();
-  }
-  if (!values.count("nofilter")) {
-    std::cout << boost::format("PCR bias filtering: ON\n");
-    if (values["thre_pb"].as<int32_t>()) std::cout << boost::format("PCR bias threshold: > %1%\n") % values["thre_pb"].as<int32_t>();
-  } else {
-    std::cout << boost::format("PCR bias filtering: OFF\n");
-  }
-  std::cout << boost::format("\t%1% reads used for library complexity\n") % values["ncmp"].as<int64_t>();
+
+  MyOpt::dumpFragmentLengthDist(values);
+  MyOpt::dumpPair(values);
+  MyOpt::dumpLibComp(values);
+
   if (values.count("bed")) std::cout << boost::format("Bed file: %1%\n")  % values["bed"].as<std::string>();
 
   std::string ntype = values["ntype"].as<std::string>();
@@ -288,6 +276,7 @@ void init_dump(const MyOpt::Variables &values){
     printf("Correcting GC bias:\n");
     std::cout << boost::format("\tChromosome directory: %1%\n") % values["genome"].as<std::string>();
   }
+  MyOpt::dumpOther(values);
   printf("======================================\n");
   return;
 }

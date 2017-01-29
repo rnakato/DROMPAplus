@@ -54,6 +54,7 @@ class Mapfile: private Uncopyable {
   void setValues(const MyOpt::Variables &values) {
     genome.setValues(values);
     complexity.setValues(values);
+    sspst.setValues(values);
     samplename = values["output"].as<std::string>();
     lchr = setlchr(genome);
     oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
