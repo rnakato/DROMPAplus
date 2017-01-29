@@ -8,14 +8,9 @@
 #include <unordered_map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
-#include "SSP/src/macro.h"
-#include "SSP/src/seq.h"
-#include "mytype.h"
-
-/*namespace MyOpt {
-    using Variables = boost::program_options::variables_map;
-    using Opts      = boost::program_options::options_description;
-    }*/
+#include "SSP/common/inline.hpp"
+#include "SSP/common/seq.hpp"
+#include "MyType.hpp"
 
 class SampleFile {
   double lambda;

@@ -1,13 +1,13 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
 #include <iostream>
 #include <string>
 #include <cstdint>
 #include <boost/algorithm/string.hpp>
-#include "readbpstatus.h"
-#include "SSP/src/macro.h"
-#include "SSP/src/util.h"
+#include "ReadBpStatus.hpp"
+#include "SSP/common/inline.hpp"
+#include "SSP/common/util.hpp"
 
 std::vector<int32_t> readMpbl(std::string mpfile, std::string chrname, int32_t binsize, int32_t nbin)
 {

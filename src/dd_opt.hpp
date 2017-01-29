@@ -1,13 +1,13 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
-#ifndef _DD_OPT_H_
-#define _DD_OPT_H_
+#ifndef _DD_OPT_HPP_
+#define _DD_OPT_HPP_
 
-#include "SSP/src/util.h"
-#include "dd_gv.h"
-#include "dd_readfile.h"
-#include "version.h"
+#include "SSP/common/util.hpp"
+#include "dd_gv.hpp"
+#include "dd_readfile.hpp"
+#include "version.hpp"
 
 enum class DrompaOpt {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
 
@@ -518,4 +518,4 @@ void Command::InitDump()
   return;
 }
 
-#endif /* _DD_OPT_H_ */
+#endif /* _DD_OPT_HPP_ */

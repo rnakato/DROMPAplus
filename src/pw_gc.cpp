@@ -1,8 +1,12 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
-#include "pw_gc.h"
-#include "readbpstatus.h"
+#include "pw_gc.hpp"
+#include "pw_gv.hpp"
+#include "ReadBpStatus.hpp"
+#include "SSP/src/SeqStats.hpp"
+#include "WigStats.hpp"
+#include "SSP/common/util.hpp"
 
 namespace {
   const int lenIgnoreOfFragment(5);

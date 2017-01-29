@@ -1,5 +1,5 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
 #include <iostream>
 #include <string>
@@ -10,13 +10,13 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <ext/stdio_filebuf.h>
-#include "SSP/src/readdata.h"
-#include "SSP/src/macro.h"
+#include "ReadAnnotation.hpp"
+#include "SSP/common/inline.hpp"
 #include "SSP/src/SeqStats.hpp"
 #include "WigStats.hpp"
-#include "dd_gv.h"
-#include "dd_opt.h"
-#include "mytype.h"
+#include "dd_gv.hpp"
+#include "dd_opt.hpp"
+#include "MyType.hpp"
 
 using namespace boost::program_options;
 

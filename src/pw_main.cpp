@@ -9,13 +9,13 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include "SSP/src/ParseMapfile.hpp"
-#include "pw_makefile.h"
-#include "pw_gc.h"
-#include "version.h"
-#include "pw_gv.h"
-#include "SSP/src/ssp_shiftprofile.h"
-#include "readbpstatus.h"
-#include "mytype.h"
+#include "pw_makefile.hpp"
+#include "pw_gc.hpp"
+#include "version.hpp"
+#include "pw_gv.hpp"
+#include "SSP/src/ssp_shiftprofile.hpp"
+#include "ReadBpStatus.hpp"
+#include "MyType.hpp"
 
 namespace {
   const int numGcov(5000000);

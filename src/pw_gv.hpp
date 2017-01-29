@@ -8,11 +8,10 @@
 #include <numeric>
 #include <boost/thread.hpp>
 #include "WigStats.hpp"
-#include "SSP/src/readdata.h"
-#include "SSP/src/mthread.h"
+#include "SSP/src/MThread.hpp"
 #include "SSP/src/LibraryComplexity.hpp"
 #include "SSP/src/Mapfile.hpp"
-#include "SSP/src/ssp_shiftprofile.h"
+#include "SSP/src/ssp_shiftprofile.hpp"
 
 //namespace PW {
 class Mapfile: private Uncopyable {

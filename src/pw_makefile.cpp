@@ -1,9 +1,13 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
-#include "pw_makefile.h"
-#include "mytype.h"
-#include "readbpstatus.h"
+#include "pw_makefile.hpp"
+#include "pw_gv.hpp"
+#include "MyType.hpp"
+#include "ReadBpStatus.hpp"
+#include "WigStats.hpp"
+#include "SSP/src/SeqStats.hpp"
+#include "SSP/common/inline.hpp"
 
 namespace {
   void printwarning(double w)

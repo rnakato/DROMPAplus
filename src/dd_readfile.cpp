@@ -1,9 +1,8 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
-
 #include <unordered_map>
-#include "dd_readfile.h"
+#include "dd_readfile.hpp"
 
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */

@@ -7,7 +7,7 @@
 #include <vector>
 #include <fstream>
 #include <boost/bind.hpp>
-#include "SSP/src/macro.h"
+#include "SSP/common/inline.hpp"
 #include "SSP/src/BoostOptions.hpp"
 
 uint32_t getWigDistThre(const std::vector<uint64_t> &, const uint64_t);

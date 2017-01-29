@@ -4,7 +4,7 @@
 #ifndef _DD_READFILE_H_
 #define _DD_READFILE_H_
 
-#include "dd_gv.h"
+#include "dd_gv.hpp"
 
 void scan_samplestr(std::string str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair);
 pdSample scan_pdstr(std::string str);

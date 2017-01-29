@@ -1,16 +1,16 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
-#ifndef READBPSTATUS_H
-#define READBPSTATUS_H
+#ifndef _READBPSTATUS_HPP_
+#define _READBPSTATUS_HPP_
 
 #include <vector>
-#include "SSP/src/seq.h"
-#include "SSP/src/bpstatus.h"
+#include "SSP/common/seq.hpp"
+#include "SSP/src/BpStatus.hpp"
 
 std::vector<int32_t> readMpbl(std::string, std::string, int32_t, int32_t);
 std::vector<BpStatus> readMpbl_binary(int32_t);
 std::vector<BpStatus> readMpbl_binary(std::string, std::string, int32_t);
 std::vector<BpStatus> arraySetBed(std::vector<BpStatus> &, std::string, const std::vector<bed> &);
 
-#endif  // READBPSTATUS_H
+#endif // _READBPSTATUS_HPP_
