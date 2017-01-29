@@ -7,6 +7,7 @@
 #include <fstream>
 #include <numeric>
 #include <boost/thread.hpp>
+#include "WigStats.hpp"
 #include "SSP/src/readdata.h"
 #include "SSP/src/mthread.h"
 #include "SSP/src/LibraryComplexity.hpp"
@@ -24,42 +25,54 @@ class Mapfile: private Uncopyable {
   bool lackOfRead4GenomeCov;
   bool lackOfRead4FragmentVar;
   std::vector<Peak> vPeak;
+  int32_t id_longestChr;
 
   // GC bias
   int32_t maxGC;
 
  public:
   SeqStatsGenome genome;
-  WigStats wsGenome;
-  std::vector<SeqWigStats>::iterator lchr; // longest chromosome
+  WigStatsGenome wsGenome;
+  //  std::vector<WigStats> wsChr;
 
   // for SSP
   SSPstats sspst;
 
   class LibComp complexity;
   // Wigdist
-  int32_t nwigdist;
-  std::vector<int32_t> wigDist;
+  //  int32_t nwigdist;
+  //std::vector<int32_t> wigDist;
   
  Mapfile(): Greekchr(false),
     lackOfRead4GenomeCov(false),
     lackOfRead4FragmentVar(false),
+    id_longestChr(0),
     maxGC(0), genome(), complexity() {}
     
   void setOpts(MyOpt::Opts &allopts) {
     genome.setOpts(allopts);
+    wsGenome.setOpts(allopts);
     complexity.setOpts(allopts);
     sspst.setOpts(allopts);
   }
   void setValues(const MyOpt::Variables &values) {
     genome.setValues(values);
+    wsGenome.setValues(values);
+
+    for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
+      wsGenome.chr.push_back(WigStats(itr->getlen(), wsGenome.getbinsize()));
+    }
+    
     complexity.setValues(values);
     sspst.setValues(values);
     samplename = values["output"].as<std::string>();
-    lchr = setlchr(genome);
+    id_longestChr = setIdLongestChr(genome);
+    //    lchr = setlchr(genome);
     oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
     obinprefix = oprefix + "." + IntToString(values["binsize"].as<int32_t>());
   }
+
+  int32_t getIdLongestChr () const { return id_longestChr; }
 
   void setmaxGC(const int32_t m) { maxGC = m; }
   int32_t getmaxGC() const {return maxGC; }
@@ -85,16 +98,6 @@ class Mapfile: private Uncopyable {
     vPeak[vPeak.size()-1].renew(i, val, p);
   }
 
-  void estimateZINB() {
-    int32_t thre = wsGenome.getwigDistthre();
-    double par[thre+1];
-    par[0] = thre;
-    for(int32_t i=0; i<thre; ++i) par[i+1] = wsGenome.pwigDist[i];
-
-    iterateZINB(&par, lchr->ws.nb_p, lchr->ws.nb_n, wsGenome.nb_p, wsGenome.nb_n, wsGenome.nb_p0);
-
-    return;
-  }
 };
 //}
 

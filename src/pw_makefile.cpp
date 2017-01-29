@@ -16,7 +16,7 @@ namespace {
 }
   
 void addReadToWigArray(const MyOpt::Variables &, WigArray &, const Read, const int64_t);
-WigArray makeWigarray(const MyOpt::Variables &, Mapfile &, SeqWigStats &);
+WigArray makeWigarray(const MyOpt::Variables &, Mapfile &, int32_t);
 void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(const MyOpt::Variables &, Mapfile &, const std::string &);
 void outputBedGraph(const MyOpt::Variables &, Mapfile &, const std::string &);
@@ -73,7 +73,7 @@ void addReadToWigArray(const MyOpt::Variables &values, WigArray &wigarray, const
   return;
 }
 
-void peakcall(Mapfile &mapfile, const SeqWigStats &chr, const WigArray &wigarray)
+void peakcall(Mapfile &p, const int32_t id, const WigArray &wigarray)
 {
   int size = wigarray.size();
   int ext(0);
@@ -81,16 +81,16 @@ void peakcall(Mapfile &mapfile, const SeqWigStats &chr, const WigArray &wigarray
 
   for(int i=0; i<size; ++i) {
     double val(wigarray.getval(i));
-    double p(getlogpZINB(val, chr.ws.nb_p, chr.ws.nb_n));
+    double pZINB(getlogpZINB(val, p.wsGenome.chr[id].nb_p, p.wsGenome.chr[id].nb_n));
 
     if(!ext) {
-      if(p > pthre) {
-	mapfile.addPeak(Peak(i, i, chr.getname(), val, p));
+      if(pZINB > pthre) {
+	p.addPeak(Peak(i, i, p.genome.chr[id].getname(), val, pZINB));
 	ext=1;
       }
     } else {
-      if(p > pthre) {
-	mapfile.renewPeak(i, val, p);
+      if(pZINB > pthre) {
+	p.renewPeak(i, val, pZINB);
       } else {
 	ext=0;
       }
@@ -99,37 +99,31 @@ void peakcall(Mapfile &mapfile, const SeqWigStats &chr, const WigArray &wigarray
   return;
 }
 
-WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, SeqWigStats &chr)
+WigArray makeWigarray(const MyOpt::Variables &values, Mapfile &p, const int32_t id)
 {
-  std::cout << chr.getname() << ".." << std::flush;
-  WigArray wigarray(chr.getnbin(), 0);
+  std::cout << p.genome.chr[id].getname() << ".." << std::flush;
+  WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0);
 
   for (auto strand: {Strand::FWD, Strand::REV}) {
-    for (auto &x: chr.getvReadref(strand)) {
+    for (auto &x: p.genome.chr[id].getvReadref(strand)) {
       if(x.duplicate) continue;
-      addReadToWigArray(values, wigarray, x, chr.getlen());
+      addReadToWigArray(values, wigarray, x, p.genome.chr[id].getlen());
     }
   }
 
   if (values.count("mp")) {
     int binsize = values["binsize"].as<int>();
     int mpthre = values["mpthre"].as<double>()*binsize;
-    auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + chr.getname()), values["binsize"].as<int>(), chr.getnbin());
-    for(int i=0; i<chr.getnbin(); ++i) {
-      chr.ws.addmpDist(getratio(mparray[i], binsize));
+    auto mparray = readMpbl(values["mp"].as<std::string>(), ("chr" + p.genome.chr[id].getname()), values["binsize"].as<int>(), p.wsGenome.chr[id].getnbin());
+    for(int i=0; i<p.wsGenome.chr[id].getnbin(); ++i) {
       if(mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));
     }
   }
-  chr.ws.getWigStats(wigarray);
-  p.wsGenome.addWigDist(chr.ws);
+  p.wsGenome.addWigArray(id, wigarray);
 
-  peakcall(p, chr, wigarray);
+  peakcall(p, id, wigarray);
   /* Total read normalization */
-  if(values["ntype"].as<std::string>() != "NONE") norm2rpm(values, p, chr, wigarray);
-
-#ifdef DEBUG
-  if (values.count("mp")) chr.ws.printmpDist();
-#endif
+  if(values["ntype"].as<std::string>() != "NONE") norm2rpm(values, p, p.genome.chr[id], wigarray);
 
   return wigarray;
 }
@@ -167,7 +161,8 @@ void norm2rpm(const MyOpt::Variables &values, Mapfile &p, SeqStats &chr, WigArra
     if(w>2) printwarning(w);
   }
 
-  for(int i=0; i<chr.getnbin(); ++i) { wigarray.multipleval(i, w);}
+  int32_t nbin(chr.getlen()/p.wsGenome.getbinsize() +1);
+  for(int i=0; i<nbin; ++i) { wigarray.multipleval(i, w); }
 
   chr.setsizefactor(w);
   if(ntype == "GR" || ntype == "GD") p.genome.setsizefactor(w);
@@ -180,10 +175,10 @@ void outputWig(const MyOpt::Variables &values, Mapfile &p, const std::string &fi
   std::ofstream out(filename);
   out << boost::format("track type=wiggle_0\tname=\"%1%\"\tdescription=\"Merged tag counts for every %2% bp\"\n")
     % values["output"].as<std::string>() % binsize;
-  
-  for(auto &chr: p.genome.chr) {
-    WigArray array = makeWigarray(values, p, chr);
-    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % chr.getname() % binsize;
+
+  for(size_t i=0; i<p.genome.chr.size(); ++i) {
+    WigArray array = makeWigarray(values, p, i);
+    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % p.genome.chr[i].getname() % binsize;
     array.outputAsWig(out, binsize);
   }
   
@@ -205,14 +200,10 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::strin
 
   std::string tempfile = filename + ".temp";
   std::ofstream out2(tempfile);
-  for(auto &chr: p.genome.chr) {
-    WigArray array = makeWigarray(values, p, chr);
-    array.outputAsBedGraph(out2, binsize, chr.getname(), chr.getlen() -1);
-    
-    /*    for(int i=0; i<chr.getnbin(); ++i) {
-      if(i==chr.getnbin() -1) e = chr.getlen() -1; else e = (i+1)*binsize;
-      if(array[i]) out2 << chr.getname() << " " << i*binsize << " " << e << " " << wigarray2value(array[i]) << std::endl;
-      }*/
+  
+  for(size_t i=0; i<p.genome.chr.size(); ++i) {
+    WigArray array = makeWigarray(values, p, i);
+    array.outputAsBedGraph(out2, binsize, p.genome.chr[i].getname(), p.genome.chr[i].getlen() -1);
   }
   out2.close();
   
@@ -227,8 +218,9 @@ void outputBedGraph(const MyOpt::Variables &values, Mapfile &p, const std::strin
 void outputBinary(const MyOpt::Variables &values, Mapfile &p, const std::string &filename)
 {
   std::ofstream out(filename, std::ios::binary);
-  for(auto &chr: p.genome.chr) {
-    WigArray array = makeWigarray(values, p, chr);
+  
+  for(size_t i=0; i<p.genome.chr.size(); ++i) {
+    WigArray array = makeWigarray(values, p, i);
     array.outputAsBinary(out);
   }
   return;

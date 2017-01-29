@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
   // make and output wigdata
   makewig(values, p);
   
-  p.estimateZINB();  // for genome
+  p.wsGenome.estimateZINB(p.getIdLongestChr());  // for genome
   
   p.printPeak(values);
   
@@ -359,11 +359,11 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
   p.wsGenome.printPoispar(out);
   p.wsGenome.printZINBpar(out);
   out << std::endl;
-  
-  for(auto &chr: p.genome.chr) {
-    print_SeqStats(values, out, chr, p);
-    chr.ws.printPoispar(out);
-    chr.ws.printZINBpar(out);
+
+  for(size_t i=0; i<p.genome.chr.size(); ++i) {
+    print_SeqStats(values, out, p.genome.chr[i], p);
+    p.wsGenome.chr[i].printPoispar(out);
+    p.wsGenome.chr[i].printZINBpar(out);
     out << std::endl;
   }
   
@@ -375,7 +375,7 @@ void output_stats(const MyOpt::Variables &values, const Mapfile &p)
 std::vector<BpStatus> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfile &p, double r4cmp)
 {
   std::vector<BpStatus> array;
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.lchr->getname()), chr.getlen());
+  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.genome.chr[p.getIdLongestChr()].getname()), chr.getlen());
   else array = readMpbl_binary(chr.getlen());
   if(values.count("bed")) arraySetBed(array, chr.getname(), p.genome.getvbedref());
 
@@ -449,10 +449,10 @@ void output_wigstats(Mapfile &p)
     p.wsGenome.printwigDist(out, i);
     out << p.wsGenome.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
-    for (auto &x: p.genome.chr) {
-      x.ws.printwigDist(out, i);
-      out << x.ws.getPoisson(i) << "\t";
-      out << x.ws.getZINB(i) << "\t";
+    for (auto &x: p.wsGenome.chr) {
+      x.printwigDist(out, i);
+      out << x.getPoisson(i) << "\t";
+      out << x.getZINB(i) << "\t";
     }
     out << std::endl;
   }

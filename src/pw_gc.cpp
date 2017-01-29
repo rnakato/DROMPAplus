@@ -56,8 +56,8 @@ GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
   flen4gc = std::min(values["flen4gc"].as<int>(), flen - lenIgnoreOfFragment*2);
   std::cout << boost::format("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc + lenIgnoreOfFragment);
   
-  int chrlen(p.lchr->getlen());
-  std::string chrname(p.lchr->getname());
+  int chrlen(p.genome.chr[p.getIdLongestChr()].getlen());
+  std::string chrname(p.genome.chr[p.getIdLongestChr()].getname());
   std::vector<BpStatus> mparray; 
   if(values.count("mp")) mparray = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + chrname), chrlen);
   else mparray = readMpbl_binary(chrlen);
@@ -67,7 +67,7 @@ GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
   auto FastaArray = makeFastaArray(fastaname, chrlen, flen4gc);
   
   DistGenome = makeDistGenome(FastaArray, mparray, chrlen, flen4gc);
-  DistRead = makeDistRead(FastaArray, mparray, *p.lchr, chrlen, flen, flen4gc);
+  DistRead = makeDistRead(FastaArray, mparray, p.genome.chr[p.getIdLongestChr()], chrlen, flen, flen4gc);
 
   makeGCweightDist(values);
 }
@@ -139,7 +139,7 @@ void weightRead(const MyOpt::Variables &values, Mapfile &p, GCdist &dist)
 
 void normalizeByGCcontents(const MyOpt::Variables &values, Mapfile &p)
 {
-  std::cout << "chromosome for GC distribution: chr" << p.lchr->getname() << std::endl;
+  std::cout << "chromosome for GC distribution: chr" << p.genome.chr[p.getIdLongestChr()].getname() << std::endl;
   GCdist dist(values, p);
 
   p.setmaxGC(dist.getmaxGC());
