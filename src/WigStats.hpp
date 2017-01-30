@@ -146,10 +146,23 @@ class WigStats {
   }
 };
 
+enum class WigType {
+  BINARY,
+  COMPRESSWIG,
+  UNCOMPRESSWIG,
+  BEDGRAPH,
+  BIGWIG,
+  WIGTYPENUM
+};
+
 class WigStatsGenome {
   enum{ n_wigDist=200 };
+  std::vector<std::string> strType = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+
   MyOpt::Opts opt;
   int32_t binsize;
+  int32_t rcenter;
+  WigType type;
 
 public:
   std::vector<WigStats> chr;
@@ -162,9 +175,15 @@ public:
     ave(0), var(0), nb_p(0), nb_n(0), nb_p0(0)
   {
   opt.add_options()
+    ("wigformat",
+     boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -1, "--wigformat")),
+     "Wig format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
     ("binsize,b",
      boost::program_options::value<int32_t>()->default_value(50)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
      "bin size")
+    ("rcenter",
+     boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcemter")),
+     "consider length around the center of fragment")
     ;
   }
 
@@ -173,9 +192,18 @@ public:
   }
   void setValues(const MyOpt::Variables &values) {
     binsize = values["binsize"].as<int32_t>();
+    rcenter = values["rcenter"].as<int32_t>();
+    type    = static_cast<WigType>(values["wigformat"].as<int32_t>());
+  }
+  void dump() const {
+    std::cout << "\tOutput format: " << strType[static_cast<int32_t>(type)] << std::endl;
+    std::cout << "Binsize: " << binsize << " bp" << std::endl;
   }
 
   int32_t getbinsize() const { return binsize; }
+  int32_t getrcenter() const { return rcenter; }
+  WigType getWigType() const { return type; }
+  
   uint64_t getsum() const {
     uint64_t sum(0);
     for(auto &x: chr) sum += x.getsum();

@@ -10,7 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include "SSP/common/inline.hpp"
 #include "SSP/common/seq.hpp"
-#include "MyType.hpp"
+#include "WigStats.hpp"
 
 class SampleFile {
   double lambda;
