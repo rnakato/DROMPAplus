@@ -9,6 +9,8 @@
 #include "dd_readfile.hpp"
 #include "version.hpp"
 
+std::vector<chrsize> read_genometable(const std::string&);
+
 enum class DrompaOpt {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
 
 class opt {

@@ -22,9 +22,9 @@ ifdef DEBUG
 CFLAGS += -DDEBUG
 endif
 
-OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPOBJDIR)/BoostOptions.o
+OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/WigStats.o $(OBJDIR)/pw_gc.o $(SSPOBJDIR)/ssp_shiftprofile.o $(SSPCMNOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/ReadAnnotation.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o $(SSPCMNOBJDIR)/ReadAnnotation.o
 
 .PHONY: all clean
 
@@ -50,7 +50,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 clean:
 	rm -rf bin obj
 
-HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPSRCDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp
+HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp
 
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_opt.hpp
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/pw_gc.hpp $(SRCDIR)/ReadBpStatus.hpp

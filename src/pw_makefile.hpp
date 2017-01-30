@@ -4,7 +4,7 @@
 #ifndef _PW_MAKEFILE_HPP_
 #define _PW_MAKEFILE_HPP_
 
-#include "SSP/src/BoostOptions.hpp"
+#include "SSP/common/BoostOptions.hpp"
 
 class Mapfile;
 void makewig(const MyOpt::Variables &, Mapfile &);

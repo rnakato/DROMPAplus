@@ -2,10 +2,12 @@
  * All rights reserved.
  */
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <cstdint>
 #include <boost/algorithm/string.hpp>
 #include "ReadBpStatus.hpp"
+#include "SSP/common/BedFormat.hpp"
 #include "SSP/common/inline.hpp"
 #include "SSP/common/util.hpp"
 

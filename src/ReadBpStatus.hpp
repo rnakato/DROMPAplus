@@ -5,8 +5,9 @@
 #define _READBPSTATUS_HPP_
 
 #include <vector>
-#include "SSP/common/seq.hpp"
 #include "SSP/src/BpStatus.hpp"
+
+class bed;
 
 std::vector<int32_t> readMpbl(std::string, std::string, int32_t, int32_t);
 std::vector<BpStatus> readMpbl_binary(int32_t);

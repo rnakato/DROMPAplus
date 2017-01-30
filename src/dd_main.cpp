@@ -10,13 +10,13 @@
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <ext/stdio_filebuf.h>
-#include "ReadAnnotation.hpp"
-#include "SSP/common/inline.hpp"
-#include "SSP/src/SeqStats.hpp"
-#include "WigStats.hpp"
 #include "dd_gv.hpp"
 #include "dd_opt.hpp"
+#include "WigStats.hpp"
 #include "MyType.hpp"
+#include "SSP/common/ReadAnnotation.hpp"
+#include "SSP/src/SeqStats.hpp"
+#include "SSP/common/inline.hpp"
 
 using namespace boost::program_options;
 
