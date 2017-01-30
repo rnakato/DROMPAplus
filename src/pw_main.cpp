@@ -16,15 +16,10 @@
 #include "SSP/src/ssp_shiftprofile.hpp"
 #include "ReadBpStatus.hpp"
 
-namespace {
-  const int numGcov(5000000);
-}
-
 MyOpt::Variables getOpts(Mapfile &p, int argc, char* argv[]);
 void setOpts(MyOpt::Opts &);
 void init_dump(const Mapfile &p, const MyOpt::Variables &);
 void output_stats(const Mapfile &p);
-void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p);
 void output_wigstats(Mapfile &p);
 
 void printVersion()
@@ -97,7 +92,6 @@ int main(int argc, char* argv[])
   strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
   calcdepth(p.genome, p.genome.dflen.getflen());
-  
 
   // BED file
   if (values.count("bed")) {
@@ -110,7 +104,7 @@ int main(int argc, char* argv[])
 #endif
 
   // Genome coverage
-  calcGenomeCoverage(values, p);
+  p.calcGenomeCoverage();
   // GC contents
   if (values.count("genome")) normalizeByGCcontents(values, p);
   // make and output wigdata
@@ -246,8 +240,8 @@ void init_dump(const Mapfile &p, const MyOpt::Variables &values){
   return;
 }
 
-template <class T>
-void print_SeqStats(std::ofstream &out, const T &p, const Mapfile &mapfile)
+template <class T, class S>
+void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile &mapfile)
 {
   /* genome data */
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
@@ -269,16 +263,8 @@ void print_SeqStats(std::ofstream &out, const T &p, const Mapfile &mapfile)
   else                  out << " - \t";
   if(mapfile.rpm.getType() == "NONE") out << p.getnread_nonred(Strand::BOTH) << "\t";
   else out << p.getnread_rpm(Strand::BOTH) << "\t";
-  
-  if(mapfile.islackOfRead4GenomeCov()) {
-    out << boost::format("%1$.3f\t(%2$.3f)\t")
-      % getratio(p.getncov(),     p.getnbp())
-      % getratio(p.getncovnorm(), p.getnbp());
-  } else {
-    out << boost::format("%1$.3f\t%2$.3f\t")
-      % getratio(p.getncov(),     p.getnbp())
-      % getratio(p.getncovnorm(), p.getnbp());
-  }
+
+  gcov.printstats(out);
 
   if(mapfile.isBedOn()) out << boost::format("%1$.3f\t") % p.getFRiP();
 
@@ -320,13 +306,13 @@ void output_stats(const Mapfile &p)
   out << std::endl;
 
   // SeqStats
-  print_SeqStats(out, p.genome, p);
+  print_SeqStats(out, p.genome, p.gcov, p);
   p.wsGenome.printPoispar(out);
   p.wsGenome.printZINBpar(out);
   out << std::endl;
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
-    print_SeqStats(out, p.genome.chr[i], p);
+    print_SeqStats(out, p.genome.chr[i], p.gcov.chr[i], p);
     p.wsGenome.chr[i].printPoispar(out);
     p.wsGenome.chr[i].printZINBpar(out);
     out << std::endl;
@@ -334,64 +320,6 @@ void output_stats(const Mapfile &p)
   
   std::cout << "stats is output in " << filename << "." << std::endl;
 
-  return;
-}
-
-std::vector<BpStatus> makeGcovArray(const MyOpt::Variables &values, SeqStats &chr, Mapfile &p, double r4cmp)
-{
-  std::vector<BpStatus> array;
-  if(values.count("mp")) array = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + p.genome.chr[p.getIdLongestChr()].getname()), chr.getlen());
-  else array = readMpbl_binary(chr.getlen());
-  if(values.count("bed")) arraySetBed(array, chr.getname(), p.genome.getvbedref());
-
-  int32_t size = array.size();
-  for (auto strand: {Strand::FWD, Strand::REV}) {
-    const std::vector<Read> &vReadref = chr.getvReadref(strand);
-    for (auto &x: vReadref) {
-      if(x.duplicate) continue;
-      
-      BpStatus val(BpStatus::UNMAPPABLE);
-      if(rand() >= r4cmp) val = BpStatus::COVREAD_ALL; else val = BpStatus::COVREAD_NORM;
-      
-      int32_t s(std::max(0, std::min(x.F3, x.F5)));
-      int32_t e(std::min(std::max(x.F3, x.F5), size-1));
-      if(s >= size || e < 0) {
-	std::cerr << "Warning: " << chr.getname() << " read " << s <<"-"<< e << " > array size " << array.size() << std::endl;
-      }
-      for(int32_t i=s; i<=e; ++i) if(array[i]==BpStatus::MAPPABLE) array[i]=val;
-    }
-  }
-  return array;
-}
-
-void calcGcovchr(const MyOpt::Variables &values, Mapfile &p, int32_t s, int32_t e, double r4cmp)
-{
-  for(int32_t i=s; i<=e; ++i) {
-    std::cout << p.genome.chr[i].getname() << ".." << std::flush;
-    auto array = makeGcovArray(values, p.genome.chr[i], p, r4cmp);
-    p.genome.chr[i].calcGcov(array);
-  }
-}
-
-void calcGenomeCoverage(const MyOpt::Variables &values, Mapfile &p)
-{
-  std::cout << "calculate genome coverage.." << std::flush;
-
-  // ignore peak region
-  double r = getratio(numGcov, p.genome.getnread_nonred(Strand::BOTH) - p.genome.getnread_inbed());
-  if(r>1){
-    std::cerr << "Warning: number of reads is < "<< static_cast<int>(numGcov/NUM_1M) << " million.\n";
-    p.lackOfRead4GenomeCov_on();
-  }
-  double r4cmp = r*RAND_MAX;
-
-  boost::thread_group agroup;
-  for(uint i=0; i<p.genome.vsepchr.size(); i++) {
-    agroup.create_thread(bind(calcGcovchr, boost::cref(values), boost::ref(p), p.genome.vsepchr[i].s, p.genome.vsepchr[i].e, r4cmp));
-  }
-  agroup.join_all();
-  
-  std::cout << "done." << std::endl;
   return;
 }
 

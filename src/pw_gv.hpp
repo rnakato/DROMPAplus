@@ -6,8 +6,8 @@
 
 #include <fstream>
 #include <numeric>
-#include <boost/thread.hpp>
 #include "WigStats.hpp"
+#include "GenomeCoverage.hpp"
 #include "SSP/src/MThread.hpp"
 #include "SSP/src/LibraryComplexity.hpp"
 #include "SSP/src/Mapfile.hpp"
@@ -66,6 +66,7 @@ namespace RPM {
 }
 
 class Mapfile: private Uncopyable {
+  
   int32_t on_bed;
   int32_t on_GCnorm;
   std::string bedfilename;
@@ -79,8 +80,6 @@ class Mapfile: private Uncopyable {
   std::string mpdir;
   double mpthre;
 
-  bool lackOfRead4GenomeCov;
-  bool lackOfRead4FragmentVar;
   std::vector<Peak> vPeak;
   int32_t id_longestChr;
 
@@ -91,6 +90,7 @@ class Mapfile: private Uncopyable {
   SeqStatsGenome genome;
   WigStatsGenome wsGenome;
   RPM::Pnorm rpm;
+  GenomeCov::Genome gcov;
 
   // for SSP
   SSPstats sspst;
@@ -98,8 +98,6 @@ class Mapfile: private Uncopyable {
   class LibComp complexity;
   
   Mapfile(): Greekchr(false), mpdir(""),
-    lackOfRead4GenomeCov(false),
-    lackOfRead4FragmentVar(false),
     id_longestChr(0),
     maxGC(0), genome(), complexity() {}
     
@@ -156,13 +154,24 @@ class Mapfile: private Uncopyable {
   int32_t isGCnorm () const { return on_GCnorm; }
   int32_t isBedOn  () const { return on_bed; }
   const std::string & getSampleName() const { return samplename; }
-  const std::string & getMpDir()   const { return mpdir; }
+  const std::string & getMpDir()      const { return mpdir; }
 
   void setmaxGC(const int32_t m) { maxGC = m; }
   int32_t getmaxGC() const {return maxGC; }
 
-  void lackOfRead4GenomeCov_on() { lackOfRead4GenomeCov = true; }
-  bool islackOfRead4GenomeCov() const { return lackOfRead4GenomeCov; };
+  void calcGenomeCoverage() {
+    std::cout << "calculate genome coverage.." << std::flush;
+    
+    gcov.setr4cmp(genome.getnread_nonred(Strand::BOTH), genome.getnread_inbed());
+    
+    for(size_t i=0; i<genome.chr.size(); i++) {
+      auto array = GenomeCov::makeGcovArray(*this, genome.chr[i], gcov.getr4cmp());
+      GenomeCov::Chr chr(array, gcov.getlackOfRead());
+      gcov.chr.push_back(chr);
+    }
+    std::cout << "done." << std::endl;
+  }
+
   void printPeak() const {
     std::string filename = getbinprefix() + ".peak.xls";
     std::ofstream out(filename);

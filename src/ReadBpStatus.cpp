@@ -11,7 +11,7 @@
 #include "SSP/common/inline.hpp"
 #include "SSP/common/util.hpp"
 
-std::vector<int32_t> readMpbl(std::string mpfile, std::string chrname, int32_t binsize, int32_t nbin)
+std::vector<int32_t> readMpbl(const std::string &mpfile, const std::string &chrname, const int32_t binsize, const int32_t nbin)
 {
   std::string filename = mpfile + "/map_fragL150_" + chrname + "_bin" + IntToString(binsize) +".txt";
   std::vector<int32_t> mparray(nbin, 0);
@@ -34,7 +34,7 @@ std::vector<int32_t> readMpbl(std::string mpfile, std::string chrname, int32_t b
   return mparray;
 }
 
-std::vector<BpStatus> readMpbl_binary(std::string mpfile, std::string chrname, int32_t chrlen)
+std::vector<BpStatus> readMpbl_binary(const std::string &mpfile, const std::string &chrname, const int32_t chrlen)
 {
   std::string filename = mpfile + "/map_" + chrname + "_binary.txt";
   std::vector<BpStatus> mparray(chrlen, BpStatus::UNMAPPABLE);
@@ -54,13 +54,13 @@ std::vector<BpStatus> readMpbl_binary(std::string mpfile, std::string chrname, i
   return mparray;
 }
 
-std::vector<BpStatus> readMpbl_binary(int32_t chrlen)
+std::vector<BpStatus> readMpbl_binary(const int32_t chrlen)
 {
   std::vector<BpStatus> mparray(chrlen, BpStatus::MAPPABLE);
   return mparray;
 }
 
-std::vector<BpStatus> arraySetBed(std::vector<BpStatus> &array, std::string chrname, const std::vector<bed> &vbed)
+std::vector<BpStatus> arraySetBed(std::vector<BpStatus> &array, const std::string &chrname, const std::vector<bed> &vbed)
 {
   for(auto &bed: vbed) {
     if(bed.chr == chrname) {

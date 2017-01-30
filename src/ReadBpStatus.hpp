@@ -9,9 +9,9 @@
 
 class bed;
 
-std::vector<int32_t> readMpbl(std::string, std::string, int32_t, int32_t);
-std::vector<BpStatus> readMpbl_binary(int32_t);
-std::vector<BpStatus> readMpbl_binary(std::string, std::string, int32_t);
-std::vector<BpStatus> arraySetBed(std::vector<BpStatus> &, std::string, const std::vector<bed> &);
+std::vector<int32_t> readMpbl(const std::string &, const std::string &, const int32_t, const int32_t);
+std::vector<BpStatus> readMpbl_binary(const int32_t);
+std::vector<BpStatus> readMpbl_binary(const std::string &, const std::string &, const int32_t);
+std::vector<BpStatus> arraySetBed(std::vector<BpStatus> &, const std::string &, const std::vector<bed> &);
 
 #endif // _READBPSTATUS_HPP_
