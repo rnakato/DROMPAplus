@@ -3,8 +3,8 @@
  */
 #include "pw_makefile.hpp"
 #include "pw_gv.hpp"
-#include "ReadBpStatus.hpp"
 #include "WigStats.hpp"
+#include "SSP/src/ReadBpStatus.hpp"
 #include "SSP/src/SeqStats.hpp"
 #include "SSP/common/inline.hpp"
 

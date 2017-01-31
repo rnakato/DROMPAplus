@@ -3,7 +3,6 @@
  */
 #include <algorithm>
 #include "GenomeCoverage.hpp"
-#include "ReadBpStatus.hpp"
 #include "pw_gv.hpp"
 #include "SSP/src/SeqStats.hpp"
 
@@ -13,7 +12,7 @@ namespace GenomeCov {
     std::vector<BpStatus> array;
     if(p.getMpDir() != "") array = readMpbl_binary(p.getMpDir(), ("chr" + chr.getname()), chr.getlen());
     else array = readMpbl_binary(chr.getlen());
-    if(p.isBedOn()) arraySetBed(array, chr.getname(), p.genome.getvbedref());
+    if(p.genome.isBedOn()) OverrideBedToArray(array, chr.getname(), p.genome.getvbedref());
 
     for (auto strand: {Strand::FWD, Strand::REV}) {
       for (auto &x: chr.getvReadref(strand)) {
@@ -30,9 +29,7 @@ namespace GenomeCov {
 	  std::cerr << "Warning: " << chr.getname() << " read " << s <<"-"<< e << " > array size " << chr.getlen() << std::endl;
 	}
 	for(int32_t i=s; i<=e; ++i) {
-	  if(array[i]==BpStatus::MAPPABLE) {
-	    if(rand() >= r4cmp) array[i] = val;
-	  }
+	  if(array[i]==BpStatus::MAPPABLE) array[i] = val;
 	}
       }
     }

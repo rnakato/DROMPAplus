@@ -3,7 +3,6 @@
  */
 #include "pw_gc.hpp"
 #include "pw_gv.hpp"
-#include "ReadBpStatus.hpp"
 #include "SSP/src/SeqStats.hpp"
 #include "WigStats.hpp"
 #include "SSP/common/util.hpp"
@@ -12,23 +11,22 @@ namespace {
   const int lenIgnoreOfFragment(5);
   const double threGcDist(1e-5);
   const double threGcDepth(1e-3);
-}
 
-std::vector<int> makeDistGenome(const std::vector<short> &, const std::vector<BpStatus> &, const int, const int);
-std::vector<int> makeDistRead(const std::vector<short> &, const std::vector<BpStatus> &, const SeqStats &, const int, const int, const int);
-std::vector<short> makeFastaArray(const std::string &, const int, const int);
+  std::vector<int> makeDistGenome(const std::vector<short> &, const std::vector<BpStatus> &, const int, const int);
+  std::vector<int> makeDistRead(const std::vector<short> &, const std::vector<BpStatus> &, const SeqStats &, const int, const int, const int);
+  std::vector<short> makeFastaArray(const std::string &, const int, const int);
 
-class GCdist {
-  int flen;
-  int flen4gc;
-  std::vector<int> DistGenome;
-  std::vector<int> DistRead;
-  std::vector<double> GCweight;
+  class GCdist {
+    int flen;
+    int flen4gc;
+    std::vector<int> DistGenome;
+    std::vector<int> DistRead;
+    std::vector<double> GCweight;
 
-  double getPropGenome(const int i) {
-    double GsumGC = accumulate(DistGenome.begin(), DistGenome.end(), 0);
-    return GsumGC ? DistGenome[i] / GsumGC: 0;
-  }
+    double getPropGenome(const int i) {
+      double GsumGC = accumulate(DistGenome.begin(), DistGenome.end(), 0);
+      return GsumGC ? DistGenome[i] / GsumGC: 0;
+    }
   double getPropRead(const int i) {
     double RsumGC = accumulate(DistRead.begin(), DistRead.end(), 0);
     return RsumGC ? DistRead[i] / RsumGC: 0;
@@ -65,7 +63,7 @@ GCdist::GCdist(const MyOpt::Variables &values, const Mapfile &p)
   std::vector<BpStatus> mparray; 
   if(values.count("mp")) mparray = readMpbl_binary(values["mp"].as<std::string>(), ("chr" + chrname), chrlen);
   else mparray = readMpbl_binary(chrlen);
-  if(values.count("bed")) arraySetBed(mparray, chrname, p.genome.getvbedref());
+  if(values.count("bed")) OverrideBedToArray(mparray, chrname, p.genome.getvbedref());
   
   std::string fastaname= values["genome"].as<std::string>() + "/chr" + chrname + ".fa";
   auto FastaArray = makeFastaArray(fastaname, chrlen, flen4gc);
@@ -141,20 +139,6 @@ void weightRead(const MyOpt::Variables &values, Mapfile &p, GCdist &dist)
   return;
 }
 
-void normalizeByGCcontents(const MyOpt::Variables &values, Mapfile &p)
-{
-  std::cout << "chromosome for GC distribution: chr" << p.genome.chr[p.getIdLongestChr()].getname() << std::endl;
-  GCdist dist(values, p);
-
-  p.setmaxGC(dist.getmaxGC());
-
-  std::string filename = p.getprefix() + ".GCdist.xls";
-  dist.outputGCweightDist(filename);
-
-  weightRead(values, p, dist);
-
-  return;
-}
 
 std::vector<int> makeDistGenome(const std::vector<short> &FastaArray, const std::vector<BpStatus> &mparray, const int chrlen, const int flen4gc)
 {
@@ -232,4 +216,22 @@ std::vector<short> makeFastaArray(const std::string &filename, const int length,
 
  final:
   return array;
+}
+
+  
+}
+
+void normalizeByGCcontents(const MyOpt::Variables &values, Mapfile &p)
+{
+  std::cout << "chromosome for GC distribution: chr" << p.genome.chr[p.getIdLongestChr()].getname() << std::endl;
+  GCdist dist(values, p);
+
+  p.setmaxGC(dist.getmaxGC());
+
+  std::string filename = p.getprefix() + ".GCdist.xls";
+  dist.outputGCweightDist(filename);
+
+  weightRead(values, p, dist);
+
+  return;
 }

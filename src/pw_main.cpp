@@ -14,9 +14,8 @@
 #include "version.hpp"
 #include "pw_gv.hpp"
 #include "SSP/src/ssp_shiftprofile.hpp"
-#include "ReadBpStatus.hpp"
 
-MyOpt::Variables getOpts(Mapfile &p, int argc, char* argv[]);
+MyOpt::Variables getOpts(Mapfile &p, int32_t argc, char* argv[]);
 void setOpts(MyOpt::Opts &);
 void init_dump(const Mapfile &p, const MyOpt::Variables &);
 void output_stats(const Mapfile &p);
@@ -39,37 +38,6 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
   return;
 }
 
-void calcFRiP(SeqStats &chr, const std::vector<bed> &vbed)
-{
-  uint64_t nread_inbed(0);
-  std::vector<BpStatus> array(chr.getlen(), BpStatus::MAPPABLE);
-  arraySetBed(array, chr.getname(), vbed);
-  for (auto strand: {Strand::FWD, Strand::REV}) {
-    for (auto &x: chr.getvReadref_notconst(strand)) {
-      if(x.duplicate) continue;
-      int s(std::min(x.F3, x.F5));
-      int e(std::max(x.F3, x.F5));
-      for(int i=s; i<=e; ++i) {
-	if(array[i] == BpStatus::INBED) {
-	  x.inpeak = 1;
-	  ++nread_inbed;
-	  break;
-	}
-      }
-    }
-  }
-  chr.setFRiP(nread_inbed);
-  return;
-}
-
-void setFRiP(SeqStatsGenome &genome)
-{
-  std::cout << "calculate FRiP score.." << std::flush;
-  for(auto &x: genome.chr) calcFRiP(x, genome.getvbedref());
-  std::cout << "done." << std::endl;
-  return;
-}
-
 template <class T>
 void calcdepth(T &obj, const int32_t flen)
 {
@@ -78,7 +46,7 @@ void calcdepth(T &obj, const int32_t flen)
   obj.setdepth(d);
 }
 
-int main(int argc, char* argv[])
+int32_t main(int32_t argc, char* argv[])
 {
   Mapfile p;
   MyOpt::Variables values = getOpts(p, argc, argv);
@@ -99,11 +67,7 @@ int main(int argc, char* argv[])
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
   calcdepth(p.genome, p.genome.dflen.getflen());
 
-  // BED file
-  if (values.count("bed")) {
-    p.genome.setbed(values["bed"].as<std::string>());
-    setFRiP(p.genome);
-  }
+  p.genome.setFRiP();
 
 #ifdef DEBUG
   p.genome.printReadstats();
@@ -127,31 +91,7 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-void checkParam(const MyOpt::Variables &values)
-{
-  std::vector<std::string> intopts = {"binsize", "flen", "maxins" , "nrpm", "flen4gc", "threads"};
-  for (auto x: intopts) chkminus<int>(values, x, 0);
-  std::vector<std::string> intopts2 = {"rcenter", "thre_pb"};
-  for (auto x: intopts2) chkminus<int>(values, x, -1);
-  std::vector<std::string> dbopts = {"ndepth", "mpthre"};
-  for (auto x: dbopts) chkminus<double>(values, x, 0);
-  
-  if(values.count("ftype")) {
-    std::string ftype = values["ftype"].as<std::string>();
-    if(ftype != "SAM" && ftype != "BAM" && ftype != "BOWTIE" && ftype != "TAGALIGN") PRINTERR("invalid --ftype.\n");
-  }
-  std::string ntype = values["ntype"].as<std::string>();
-  if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR("invalid --ntype.\n");
-
-  if (values.count("genome")) {
-    //    if(!values.count("mp")) PRINTERR("--genome option requires --mp option.\n");
-    isFile(values["genome"].as<std::string>());
-  }
-  
-  return;
-}
-
-MyOpt::Variables getOpts(Mapfile &p, int argc, char* argv[])
+MyOpt::Variables getOpts(Mapfile &p, int32_t argc, char* argv[])
 {
   DEBUGprint("setOpts...");
 
@@ -185,7 +125,6 @@ MyOpt::Variables getOpts(Mapfile &p, int argc, char* argv[])
     }
 
     notify(values);
-    checkParam(values);
 
     boost::filesystem::path dir(values["odir"].as<std::string>());
     boost::filesystem::create_directory(dir);
@@ -210,14 +149,15 @@ void setOpts(MyOpt::Opts &allopts)
   MyOpt::Opts optmp("Mappability normalization",100);
   optmp.add_options()
     ("mp",        value<std::string>(),	  "Mappability file")
-    ("mpthre",    value<double>()->default_value(0.3),	  "Threshold of low mappability regions")
+    ("mpthre",    value<double>()->default_value(0.3)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--mpthre")),
+     "Threshold of low mappability regions")
     ;
   MyOpt::Opts optgc("GC bias normalization\n   (require large time and memory)",100);
   optgc.add_options()
     ("genome",     value<std::string>(),	  "reference genome sequence for GC content estimation")
-    ("flen4gc",    value<int>()->default_value(120),  "fragment length for calculation of GC distribution")
+    ("flen4gc",    value<int32_t>()->default_value(120)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--flen4gc")),
+     "fragment length for calculation of GC distribution")
     ("gcdepthoff", "do not consider depth of GC contents")
-    ("bed",        value<std::string>(),	  "specify the BED file of enriched regions (e.g., peak regions)")
     ;
   allopts.add(optmp).add(optgc);
   MyOpt::setOptOther(allopts);
@@ -272,7 +212,7 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
 
   gcov.printstats(out);
 
-  if(mapfile.isBedOn()) out << boost::format("%1$.3f\t") % p.getFRiP();
+  if(mapfile.genome.isBedOn()) out << boost::format("%1$.3f\t") % p.getFRiP();
 
   return;
 }
@@ -301,7 +241,7 @@ void output_stats(const Mapfile &p)
   out << "normalized read number\t";
   p.gcov.printhead(out);
   out << "bin mean\tbin variance\t";
-  if(p.isBedOn()) out << "FRiP\t";
+  if(p.genome.isBedOn()) out << "FRiP\t";
   out << "nb_p\tnb_n\tnb_p0\t";
   out << std::endl;
   out << "\t\t\t\t";
@@ -358,4 +298,33 @@ void output_wigstats(Mapfile &p)
 
   std::cout << "done." << std::endl;
   return;
+}
+
+void Mapfile::setValues(const MyOpt::Variables &values) {
+  DEBUGprint("Mapfile setValues...");
+  
+  on_GCnorm = values.count("genome");
+  if(on_GCnorm) {
+    GCdir = values["genome"].as<std::string>();
+  }
+  genome.setValues(values);
+  wsGenome.setValues(values);
+  
+  for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
+    wsGenome.chr.push_back(WigStats(itr->getlen(), wsGenome.getbinsize()));
+  }
+  
+  rpm.setValues(values);
+  complexity.setValues(values);
+  sspst.setValues(values);
+  
+  samplename = values["output"].as<std::string>();
+  id_longestChr = setIdLongestChr(genome);
+  oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
+  obinprefix = oprefix + "." + IntToString(values["binsize"].as<int32_t>());
+  
+  if (values.count("mp")) mpdir = values["mp"].as<std::string>();
+  mpthre = values["mpthre"].as<double>();
+  
+  DEBUGprint("Mapfile setValues done.");
 }

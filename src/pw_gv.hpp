@@ -46,6 +46,7 @@ namespace RPM {
       ntype  = values["ntype"].as<std::string>();
       nrpm   = values["nrpm"].as<int32_t>();
       ndepth = values["ndepth"].as<double>();
+      if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR("invalid --ntype.\n");
       DEBUGprint("Pnorm setValues done.");
     }
     void dump() const {
@@ -66,10 +67,7 @@ namespace RPM {
 }
 
 class Mapfile: private Uncopyable {
-  
-  int32_t on_bed;
   int32_t on_GCnorm;
-  std::string bedfilename;
   std::string GCdir;
 
   bool Greekchr;
@@ -108,37 +106,10 @@ class Mapfile: private Uncopyable {
     complexity.setOpts(allopts);
     sspst.setOpts(allopts);
   }
-  void setValues(const MyOpt::Variables &values) {
-    DEBUGprint("Mapfile setValues...");
-    
-    on_bed = values.count("bed");
-    if(on_bed) bedfilename = values["bed"].as<std::string>();
-    on_GCnorm = values.count("genome");
-    if(on_GCnorm) GCdir = values["genome"].as<std::string>();
-    genome.setValues(values);
-    wsGenome.setValues(values);
 
-    for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
-      wsGenome.chr.push_back(WigStats(itr->getlen(), wsGenome.getbinsize()));
-    }
-    
-    rpm.setValues(values);
-    complexity.setValues(values);
-    sspst.setValues(values);
-
-    samplename = values["output"].as<std::string>();
-    id_longestChr = setIdLongestChr(genome);
-    oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
-    obinprefix = oprefix + "." + IntToString(values["binsize"].as<int32_t>());
-
-    if (values.count("mp")) mpdir = values["mp"].as<std::string>();
-    mpthre = values["mpthre"].as<double>();
-    
-    DEBUGprint("Mapfile setValues done.");
-  }
-
+  void setValues(const MyOpt::Variables &values);
   void dump() const {
-    if(on_bed) std::cout << "Bed file: " << bedfilename << std::endl;
+    if(genome.isBedOn()) std::cout << "Bed file: " << genome.getbedfilename() << std::endl;
     if(mpdir != "") {
       printf("Mappability normalization:\n");
       std::cout << "\tFile directory: " << mpdir << std::endl;
@@ -152,7 +123,6 @@ class Mapfile: private Uncopyable {
 
   int32_t getIdLongestChr () const { return id_longestChr; }
   int32_t isGCnorm () const { return on_GCnorm; }
-  int32_t isBedOn  () const { return on_bed; }
   const std::string & getSampleName() const { return samplename; }
   const std::string & getMpDir()      const { return mpdir; }
 
@@ -161,9 +131,9 @@ class Mapfile: private Uncopyable {
 
   void calcGenomeCoverage() {
     std::cout << "calculate genome coverage.." << std::flush;
-    
+
     gcov.setr4cmp(genome.getnread_nonred(Strand::BOTH), genome.getnread_inbed());
-    
+
     for(size_t i=0; i<genome.chr.size(); i++) {
       auto array = GenomeCov::makeGcovArray(*this, genome.chr[i], gcov.getr4cmp());
       GenomeCov::Chr chr(array, gcov.getlackOfRead());

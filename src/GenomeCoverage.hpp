@@ -31,7 +31,7 @@ namespace GenomeCov {
 
     void printstats(std::ofstream &out) const {
       if(lackOfRead) {
-	std::cout<< getncov() << getncovnorm() << getnbp() << std::endl;
+	//	std::cout<< getncov() << getncovnorm() << getnbp() << std::endl;
  	out << boost::format("%1$.3f\t(%2$.3f)\t")
 	  % getratio(getncov(),     getnbp())
 	  % getratio(getncovnorm(), getnbp());
