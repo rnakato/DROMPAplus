@@ -84,12 +84,18 @@ int main(int argc, char* argv[])
   MyOpt::Variables values = getOpts(p, argc, argv);
 
   read_mapfile(p.genome);
-
   p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
 
   p.complexity.checkRedundantReads(p.genome);
- 
-  strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
+
+  if(!p.genome.isPaired()) {
+    strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
+    for (auto &x: p.genome.chr) {
+      x.setF5ToRead(p.genome.dflen.getflen());
+      x.printvRead();
+    }
+  }
+
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
   calcdepth(p.genome, p.genome.dflen.getflen());
 
@@ -293,7 +299,7 @@ void output_stats(const Mapfile &p)
   out << "read depth\t";
   out << "scaling weight\t";
   out << "normalized read number\t";
-  out << "gcov (Raw)\tgcov (Normed)\t";
+  p.gcov.printhead(out);
   out << "bin mean\tbin variance\t";
   if(p.isBedOn()) out << "FRiP\t";
   out << "nb_p\tnb_n\tnb_p0\t";

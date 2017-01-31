@@ -21,6 +21,12 @@ TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
 ifdef DEBUG
 CFLAGS += -DDEBUG
 endif
+ifdef PRINTFRAGMENT
+CFLAGS += -DPRINTFRAGMENT
+endif
+ifdef PRINTREAD
+CFLAGS += -DPRINTREAD
+endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/pw_gc.o $(SSPOBJDIR)/ssp_shiftprofile.o $(SSPCMNOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
