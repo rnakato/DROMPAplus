@@ -8,6 +8,7 @@
 #include <numeric>
 #include "WigStats.hpp"
 #include "GenomeCoverage.hpp"
+#include "GCnormalization.hpp"
 #include "SSP/src/MThread.hpp"
 #include "SSP/src/LibraryComplexity.hpp"
 #include "SSP/src/Mapfile.hpp"
@@ -67,16 +68,19 @@ namespace RPM {
 }
 
 class Mapfile: private Uncopyable {
-  int32_t on_GCnorm;
-  std::string GCdir;
+  MyOpt::Opts opt;
 
-  bool Greekchr;
+  int32_t on_bed;
+  std::string bedfilename;
+  std::vector<bed> vbed;
 
   std::string samplename;
   std::string oprefix;
   std::string obinprefix;
   std::string mpdir;
   double mpthre;
+
+  bool Greekchr;
 
   std::vector<Peak> vPeak;
   int32_t id_longestChr;
@@ -89,15 +93,30 @@ class Mapfile: private Uncopyable {
   WigStatsGenome wsGenome;
   RPM::Pnorm rpm;
   GenomeCov::Genome gcov;
+  GCnorm gc;
 
   // for SSP
   SSPstats sspst;
 
   class LibComp complexity;
   
-  Mapfile(): Greekchr(false), mpdir(""),
+  Mapfile():
+    opt("Fragment",100),
+    mpdir(""), mpthre(0),
+    Greekchr(false), 
     id_longestChr(0),
-    maxGC(0), genome(), complexity() {}
+    maxGC(0), genome(),
+    complexity()
+  {
+    opt.add_options()
+      ("bed", boost::program_options::value<std::string>(),
+       "specify the BED file of enriched regions (e.g., peak regions)")
+      ("mp",  boost::program_options::value<std::string>(), "directory of mappability file")
+      ("mpthre",
+       boost::program_options::value<double>()->default_value(0.3)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--mpthre")),
+       "Threshold of low mappability regions")
+      ;
+  }
     
   void setOpts(MyOpt::Opts &allopts) {
     genome.setOpts(allopts);
@@ -105,28 +124,30 @@ class Mapfile: private Uncopyable {
     rpm.setOpts(allopts);
     complexity.setOpts(allopts);
     sspst.setOpts(allopts);
+    allopts.add(opt);
+    gc.setOpts(allopts);
   }
 
   void setValues(const MyOpt::Variables &values);
   void dump() const {
-    if(genome.isBedOn()) std::cout << "Bed file: " << genome.getbedfilename() << std::endl;
+    if(isBedOn()) std::cout << "Bed file: " << getbedfilename() << std::endl;
     if(mpdir != "") {
       printf("Mappability normalization:\n");
       std::cout << "\tFile directory: " << mpdir << std::endl;
       std::cout << "\tLow mappablitiy threshold: " << mpthre << std::endl;
     }
-    if(on_GCnorm) {
+    if(gc.isGcNormOn()) {
       printf("Correcting GC bias:\n");
-      std::cout << "\tChromosome directory: " << GCdir << std::endl;
+      std::cout << "\tChromosome directory: " << gc.getGCdir() << std::endl;
     }
   }
 
   int32_t getIdLongestChr () const { return id_longestChr; }
-  int32_t isGCnorm () const { return on_GCnorm; }
+  int32_t isBedOn () const { return on_bed; }
+  const std::string & getbedfilename() const { return bedfilename; }
   const std::string & getSampleName() const { return samplename; }
   const std::string & getMpDir()      const { return mpdir; }
 
-  void setmaxGC(const int32_t m) { maxGC = m; }
   int32_t getmaxGC() const {return maxGC; }
 
   void calcGenomeCoverage() {
@@ -154,6 +175,7 @@ class Mapfile: private Uncopyable {
   const std::string & getprefix() const { return oprefix; }
   const std::string & getbinprefix() const { return obinprefix; }
   double getmpthre() const { return mpthre; }
+  const std::vector<bed> & getvbedref() const { return vbed; }
 
   void addPeak(const Peak &peak) {
     vPeak.push_back(peak);
@@ -161,7 +183,31 @@ class Mapfile: private Uncopyable {
   void renewPeak(const int32_t i, const double val, const double p) {
     vPeak[vPeak.size()-1].renew(i, val, p);
   }
+  void setFRiP() {
+    if(isBedOn()) { 
+    std::cout << "calculate FRiP score.." << std::flush;
+    for(auto &x: genome.chr) x.setFRiP(vbed);
+    std::cout << "done." << std::endl;
+    }
+  }
 
+  void normalizeByGCcontents() {
+    if(gc.isGcNormOn()) {
+      std::cout << "chromosome for GC distribution: chr"
+		<< genome.chr[id_longestChr].getname() << std::endl;
+      GCdist d(genome.dflen.getflen(), gc);
+
+      d.calcGCdist(genome.chr[id_longestChr], gc, getMpDir(), isBedOn(), vbed);
+      maxGC = d.getmaxGC();
+
+      std::string filename = getprefix() + ".GCdist.xls";
+      d.outputGCweightDist(filename);
+
+      weightRead(genome, d, gc.getGCdir());
+
+      return;
+    }
+  }
 };
 
 #endif /* _PW_GV_H_ */

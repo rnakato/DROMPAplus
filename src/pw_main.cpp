@@ -10,7 +10,6 @@
 #include <boost/filesystem.hpp>
 #include "SSP/src/ParseMapfile.hpp"
 #include "pw_makefile.hpp"
-#include "pw_gc.hpp"
 #include "version.hpp"
 #include "pw_gv.hpp"
 #include "SSP/src/ssp_shiftprofile.hpp"
@@ -56,7 +55,7 @@ int32_t main(int32_t argc, char* argv[])
 
   p.complexity.checkRedundantReads(p.genome);
 
-  if(!p.genome.isPaired()) {
+  if(!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
     strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
     for (auto &x: p.genome.chr) {
       x.setF5ToRead(p.genome.dflen.getflen());
@@ -67,7 +66,7 @@ int32_t main(int32_t argc, char* argv[])
   for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
   calcdepth(p.genome, p.genome.dflen.getflen());
 
-  p.genome.setFRiP();
+  p.setFRiP();
 
 #ifdef DEBUG
   p.genome.printReadstats();
@@ -76,7 +75,7 @@ int32_t main(int32_t argc, char* argv[])
   // Genome coverage
   p.calcGenomeCoverage();
   // GC contents
-  if (values.count("genome")) normalizeByGCcontents(values, p);
+  p.normalizeByGCcontents();
   // make and output wigdata
   makewig(p);
   
@@ -146,20 +145,10 @@ void setOpts(MyOpt::Opts &allopts)
 
   MyOpt::setOptIO(allopts, "parse2wigdir+");
   MyOpt::setOptPair(allopts);
-  MyOpt::Opts optmp("Mappability normalization",100);
-  optmp.add_options()
-    ("mp",        value<std::string>(),	  "Mappability file")
-    ("mpthre",    value<double>()->default_value(0.3)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--mpthre")),
-     "Threshold of low mappability regions")
-    ;
   MyOpt::Opts optgc("GC bias normalization\n   (require large time and memory)",100);
   optgc.add_options()
-    ("genome",     value<std::string>(),	  "reference genome sequence for GC content estimation")
-    ("flen4gc",    value<int32_t>()->default_value(120)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--flen4gc")),
-     "fragment length for calculation of GC distribution")
-    ("gcdepthoff", "do not consider depth of GC contents")
     ;
-  allopts.add(optmp).add(optgc);
+  allopts.add(optgc);
   MyOpt::setOptOther(allopts);
   return;
 }
@@ -201,7 +190,7 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
   for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
 
   /* reads after GCnorm */
-  if(mapfile.isGCnorm()) {
+  if(mapfile.gc.isGcNormOn()) {
     for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
   }
   out << boost::format("%1$.3f\t") % p.getdepth();
@@ -212,7 +201,7 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
 
   gcov.printstats(out);
 
-  if(mapfile.genome.isBedOn()) out << boost::format("%1$.3f\t") % p.getFRiP();
+  if(mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % p.getnread_inbed() % p.getFRiP();
 
   return;
 }
@@ -228,27 +217,27 @@ void output_stats(const Mapfile &p)
 
   p.complexity.print(out);
   p.genome.dflen.printFlen(out);
-  if(p.isGCnorm()) out << "GC summit: " << p.getmaxGC() << std::endl;
+  if(p.gc.isGcNormOn()) out << "GC summit: " << p.getmaxGC() << std::endl;
 
   // Global stats
   out << "\n\tlength\tmappable base\tmappability\t";
   out << "total reads\t\t\t\t";
   out << "nonredundant reads\t\t\t";
   out << "redundant reads\t\t\t";
-  if(p.isGCnorm()) out << "reads (GCnormed)\t\t\t";
+  if(p.gc.isGcNormOn()) out << "reads (GCnormed)\t\t\t";
   out << "read depth\t";
   out << "scaling weight\t";
   out << "normalized read number\t";
   p.gcov.printhead(out);
+  if(p.isBedOn()) out << "reads in peaks\tFRiP\t";
   out << "bin mean\tbin variance\t";
-  if(p.genome.isBedOn()) out << "FRiP\t";
   out << "nb_p\tnb_n\tnb_p0\t";
   out << std::endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
   out << "both\tforward\treverse\t";
   out << "both\tforward\treverse\t";
-  if(p.isGCnorm()) out << "both\tforward\treverse\t";
+  if(p.gc.isGcNormOn()) out << "both\tforward\treverse\t";
   out << std::endl;
 
   // SeqStats
@@ -302,11 +291,17 @@ void output_wigstats(Mapfile &p)
 
 void Mapfile::setValues(const MyOpt::Variables &values) {
   DEBUGprint("Mapfile setValues...");
-  
-  on_GCnorm = values.count("genome");
-  if(on_GCnorm) {
-    GCdir = values["genome"].as<std::string>();
+
+  on_bed = values.count("bed");
+  if(on_bed) {
+    bedfilename = values["bed"].as<std::string>();
+    isFile(bedfilename);
+    vbed = parseBed<bed>(bedfilename);
   }
+
+  if (values.count("mp")) mpdir = values["mp"].as<std::string>();
+  mpthre = values["mpthre"].as<double>();
+
   genome.setValues(values);
   wsGenome.setValues(values);
   
@@ -317,14 +312,12 @@ void Mapfile::setValues(const MyOpt::Variables &values) {
   rpm.setValues(values);
   complexity.setValues(values);
   sspst.setValues(values);
+  gc.setValues(values);
   
   samplename = values["output"].as<std::string>();
   id_longestChr = setIdLongestChr(genome);
   oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
   obinprefix = oprefix + "." + IntToString(values["binsize"].as<int32_t>());
-  
-  if (values.count("mp")) mpdir = values["mp"].as<std::string>();
-  mpthre = values["mpthre"].as<double>();
-  
+
   DEBUGprint("Mapfile setValues done.");
 }

@@ -10,9 +10,11 @@ namespace GenomeCov {
   std::vector<BpStatus> makeGcovArray(const Mapfile &p, const SeqStats &chr, const double r4cmp)
   {
     std::vector<BpStatus> array;
+    int32_t chrlen(chr.getlen());
+    
     if(p.getMpDir() != "") array = readMpbl_binary(p.getMpDir(), ("chr" + chr.getname()), chr.getlen());
     else array = readMpbl_binary(chr.getlen());
-    if(p.genome.isBedOn()) OverrideBedToArray(array, chr.getname(), p.genome.getvbedref());
+    if(p.isBedOn()) OverrideBedToArray(array, chr.getname(), p.getvbedref());
 
     for (auto strand: {Strand::FWD, Strand::REV}) {
       for (auto &x: chr.getvReadref(strand)) {
@@ -25,7 +27,7 @@ namespace GenomeCov {
 	int32_t s(std::max(0, std::min(x.F3, x.F5)));
 	int32_t e(std::min(std::max(x.F3, x.F5), static_cast<int32_t>(chr.getlen()-1)));
 	//	std::cout << static_cast<int>(val) << "\t"<< x.F3<< "\t"<< x.F5<< "\t"<< s<< "\t"<< e<<std::endl;
-	if(s >= chr.getlen() || e < 0) {
+	if(s >= chrlen || e < 0) {
 	  std::cerr << "Warning: " << chr.getname() << " read " << s <<"-"<< e << " > array size " << chr.getlen() << std::endl;
 	}
 	for(int32_t i=s; i<=e; ++i) {
