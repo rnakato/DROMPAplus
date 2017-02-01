@@ -14,11 +14,11 @@
 #include "pw_gv.hpp"
 #include "SSP/src/ssp_shiftprofile.hpp"
 
-MyOpt::Variables getOpts(Mapfile &p, int32_t argc, char* argv[]);
+void getOpts(Mapfile &p, int32_t argc, char* argv[]);
 void setOpts(MyOpt::Opts &);
 void init_dump(const Mapfile &p, const MyOpt::Variables &);
 void output_stats(const Mapfile &p);
-void output_wigstats(Mapfile &p);
+void output_wigstats(const Mapfile &p);
 
 void printVersion()
 {
@@ -48,7 +48,7 @@ void calcdepth(T &obj, const int32_t flen)
 int32_t main(int32_t argc, char* argv[])
 {
   Mapfile p;
-  MyOpt::Variables values = getOpts(p, argc, argv);
+  getOpts(p, argc, argv);
 
   read_mapfile(p.genome);
   p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
@@ -72,25 +72,22 @@ int32_t main(int32_t argc, char* argv[])
   p.genome.printReadstats();
 #endif
 
-  // Genome coverage
   p.calcGenomeCoverage();
-  // GC contents
   p.normalizeByGCcontents();
-  // make and output wigdata
+
   makewig(p);
   
   p.wsGenome.estimateZINB(p.getIdLongestChr());
   
   p.printPeak();
-  
-  // output stats
+
   output_wigstats(p);
   output_stats(p);
 
   return 0;
 }
 
-MyOpt::Variables getOpts(Mapfile &p, int32_t argc, char* argv[])
+void getOpts(Mapfile &p, int32_t argc, char* argv[])
 {
   DEBUGprint("setOpts...");
 
@@ -136,7 +133,7 @@ MyOpt::Variables getOpts(Mapfile &p, int32_t argc, char* argv[])
   }
   
   DEBUGprint("getOpts done.");
-  return values;
+  return;
 }
 
 void setOpts(MyOpt::Opts &allopts)
@@ -153,8 +150,8 @@ void setOpts(MyOpt::Opts &allopts)
   return;
 }
 
-void init_dump(const Mapfile &p, const MyOpt::Variables &values){
- 
+void init_dump(const Mapfile &p, const MyOpt::Variables &values)
+{
   std::cout << boost::format("\n======================================\n");
   std::cout << boost::format("parse2wig version %1%\n\n") % VERSION;
 
@@ -258,7 +255,7 @@ void output_stats(const Mapfile &p)
   return;
 }
 
-void output_wigstats(Mapfile &p)
+void output_wigstats(const Mapfile &p)
 {
   std::string filename = p.getbinprefix() + ".binarray_dist.csv";
   std::ofstream out(filename);
@@ -289,7 +286,8 @@ void output_wigstats(Mapfile &p)
   return;
 }
 
-void Mapfile::setValues(const MyOpt::Variables &values) {
+void Mapfile::setValues(const MyOpt::Variables &values)
+{
   DEBUGprint("Mapfile setValues...");
 
   on_bed = values.count("bed");
