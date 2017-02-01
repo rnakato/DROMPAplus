@@ -138,14 +138,8 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
 
 void setOpts(MyOpt::Opts &allopts)
 {
-  using namespace boost::program_options;
-
   MyOpt::setOptIO(allopts, "parse2wigdir+");
   MyOpt::setOptPair(allopts);
-  MyOpt::Opts optgc("GC bias normalization\n   (require large time and memory)",100);
-  optgc.add_options()
-    ;
-  allopts.add(optgc);
   MyOpt::setOptOther(allopts);
   return;
 }
