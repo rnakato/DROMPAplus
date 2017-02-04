@@ -416,16 +416,16 @@ void Command::InitDump()
 	std::cout << boost::format("\nAnnotations:\n");
 	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
 			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
-	printOpt<std::string>(values, "ars",    "   ARS file");
-	printOpt<std::string>(values, "ter",    "   TER file");
-	printOpt<std::string>(values, "repeat", "   Repeat file");
-	printOpt<std::string>(values, "gc", "   GCcontents file");
-	printOpt<std::string>(values, "gd", "   Gene density file");
+	MyOpt::printOpt<std::string>(values, "ars",    "   ARS file");
+	MyOpt::printOpt<std::string>(values, "ter",    "   TER file");
+	MyOpt::printOpt<std::string>(values, "repeat", "   Repeat file");
+	MyOpt::printOpt<std::string>(values, "gc", "   GCcontents file");
+	MyOpt::printOpt<std::string>(values, "gd", "   Gene density file");
 	/*	if(d->arsfile)     std::cout << boost::format("   ARS file: %1%\n")          % values["ars"].as<std::string>();
 	if(d->terfile)     std::cout << boost::format("   TER file: %1%\n")          % values["ter"].as<std::string>();
 	if(d->repeat.argv) std::cout << boost::format("   Repeat file: %1%\n")       % values["repeat"].as<std::string>();*/
-	printOpt<std::string>(values, "region", "   Region file");
-	printVOpt<std::string>(values, "bed", "   Bed file");
+	MyOpt::printOpt<std::string>(values, "region", "   Region file");
+	MyOpt::printVOpt<std::string>(values, "bed", "   Bed file");
 	//	if(name != "PROFILE" || name != "HEATMAP") std::cout << boost::format("   name: %1%\n") % d->bed[i]->name;
 	break;
       }
@@ -434,12 +434,12 @@ void Command::InitDump()
 	std::cout << boost::format("\nAnnotations:\n");
 	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
 			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
-	printOpt<std::string>(values, "gc", "   GCcontents file");
-	printOpt<std::string>(values, "gd", "   Gene density file");
+	MyOpt::printOpt<std::string>(values, "gc", "   GCcontents file");
+	MyOpt::printOpt<std::string>(values, "gd", "   Gene density file");
 	/*	
 	if(d->GC.argv)     std::cout << boost::format("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
 	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
-	printVOpt<std::string>(values, "inter", "   Interaction file");
+	MyOpt::printVOpt<std::string>(values, "inter", "   Interaction file");
 	if (values.count("mp")) {
 	  std::cout << boost::format("Mappability file directory: %1%\n") % values["mp"].as<std::string>();
 	  std::cout << boost::format("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();

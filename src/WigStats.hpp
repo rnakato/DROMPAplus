@@ -191,9 +191,9 @@ public:
     allopts.add(opt);
   }
   void setValues(const MyOpt::Variables &values) {
-    binsize = values["binsize"].as<int32_t>();
-    rcenter = values["rcenter"].as<int32_t>();
-    type    = static_cast<WigType>(values["wigformat"].as<int32_t>());
+    binsize = MyOpt::getVal<int32_t>(values, "binsize");
+    rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
+    type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "wigformat"));
   }
   void dump() const {
     std::cout << "\tOutput format: " << strType[static_cast<int32_t>(type)] << std::endl;

@@ -102,32 +102,37 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
   try {
     boost::program_options::parsed_options parsed = parse_command_line(argc, argv, allopts);
     store(parsed, values);
-    
-    if (values.count("version")) printVersion();
+  }
+  catch(const boost::program_options::error_with_option_name& e) {
+    std::cout << e.what() << std::endl;
+    exit(0);
+  }
+  if (values.count("version")) printVersion();
+  if (argc ==1) {
+    help_global();
+    std::cerr << "Use --help option for more information on the other options\n\n";
+    exit(0);
+  }
+  if (values.count("help")) {
+    help_global();
+    std::cout << "\n" << allopts << std::endl;
+    exit(0);
+  }
+  std::vector<std::string> opts = {"input", "output", "gt"};
+  for (auto x: opts) {
+    if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+  }
 
-    if (argc ==1) {
-      help_global();
-      std::cerr << "Use --help option for more information on the other options\n\n";
-      exit(0);
-    }
-    if (values.count("help")) {
-      help_global();
-      std::cout << "\n" << allopts << std::endl;
-      exit(0);
-    }
-    std::vector<std::string> opts = {"input", "output", "gt"};
-    for (auto x: opts) {
-      if (!values.count(x)) PRINTERR("specify --" << x << " option.");
-    }
-
+  try {
     notify(values);
+    p.setValues(values);
 
-    boost::filesystem::path dir(values["odir"].as<std::string>());
+    boost::filesystem::path dir(MyOpt::getVal<std::string>(values, "odir"));
     boost::filesystem::create_directory(dir);
 
-    p.setValues(values);
     init_dump(p, values);
-  } catch (std::exception &e) {
+  } catch(const boost::bad_any_cast& e) {
+    //  } catch (std::exception &e) {
     std::cout << e.what() << std::endl;
     exit(0);
   }
@@ -286,13 +291,13 @@ void Mapfile::setValues(const MyOpt::Variables &values)
 
   on_bed = values.count("bed");
   if(on_bed) {
-    bedfilename = values["bed"].as<std::string>();
+    bedfilename = MyOpt::getVal<std::string>(values, "bed");
     isFile(bedfilename);
     vbed = parseBed<bed>(bedfilename);
   }
 
-  if (values.count("mp")) mpdir = values["mp"].as<std::string>();
-  mpthre = values["mpthre"].as<double>();
+  if (values.count("mp")) mpdir = MyOpt::getVal<std::string>(values, "mp");
+  mpthre = MyOpt::getVal<double>(values, "mpthre");
 
   genome.setValues(values);
   wsGenome.setValues(values);
@@ -306,10 +311,10 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   sspst.setValues(values);
   gc.setValues(values);
   
-  samplename = values["output"].as<std::string>();
+  samplename = MyOpt::getVal<std::string>(values, "output");
   id_longestChr = setIdLongestChr(genome);
-  oprefix = values["odir"].as<std::string>() + "/" + values["output"].as<std::string>();
-  obinprefix = oprefix + "." + IntToString(values["binsize"].as<int32_t>());
+  oprefix = MyOpt::getVal<std::string>(values, "odir") + "/" + MyOpt::getVal<std::string>(values, "output");
+  obinprefix = oprefix + "." + std::to_string(MyOpt::getVal<int32_t>(values, "binsize"));
 
   DEBUGprint("Mapfile setValues done.");
 }

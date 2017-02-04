@@ -42,8 +42,8 @@ public:
   }
   void setValues(const MyOpt::Variables &values) {
     on_GCnorm  = values.count("chrdir");
-    if(on_GCnorm) GCdir = values["chrdir"].as<std::string>();
-    flen4gc    = values["flen4gc"].as<int32_t>();
+    if(on_GCnorm) GCdir = MyOpt::getVal<std::string>(values, "chrdir");
+    flen4gc    = MyOpt::getVal<int32_t>(values, "flen4gc");
     gcdepthoff = values.count("gcdepthoff");
   }
   

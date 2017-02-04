@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
     // check command and param
     int on(0);
-    std::string cmd = values["command"].as<std::string>();
+    std::string cmd = MyOpt::getVal<std::string>(values, "command");
     for(size_t i=0; i<cmds.size(); ++i) {
       if(cmd == cmds[i].name) {
 	cmds[i].execute(argc-1, argv+1);
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     }
 
     if (!on) {
-      std::cerr << "  Invalid command: " << values["command"].as<std::string>() << std::endl;
+      std::cerr << "  Invalid command: " << MyOpt::getVal<std::string>(values, "command") << std::endl;
       help_global(cmds);
       exit(0);
     }
