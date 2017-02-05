@@ -79,7 +79,7 @@ void peakcall(Mapfile &p, const int32_t id, const WigArray &wigarray)
   double pthre(3);
 
   for(int i=0; i<size; ++i) {
-    double val(wigarray.getval(i));
+    double val(wigarray[i]);
     double pZINB(getlogpZINB(val, p.wsGenome.chr[id].nb_p, p.wsGenome.chr[id].nb_n));
 
     if(!ext) {

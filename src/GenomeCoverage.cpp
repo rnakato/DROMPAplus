@@ -9,11 +9,9 @@
 namespace GenomeCov {
   std::vector<BpStatus> makeGcovArray(const Mapfile &p, const SeqStats &chr, const double r4cmp)
   {
-    std::vector<BpStatus> array;
     int32_t chrlen(chr.getlen());
     
-    if(p.getMpDir() != "") array = readMpbl_binary(p.getMpDir(), ("chr" + chr.getname()), chr.getlen());
-    else array = readMpbl_binary(chr.getlen());
+    std::vector<BpStatus> array = readMpbl_binary(p.getMpDir(), ("chr" + chr.getname()), chrlen);
     if(p.isBedOn()) OverrideBedToArray(array, chr.getname(), p.getvbedref());
 
     for (auto strand: {Strand::FWD, Strand::REV}) {

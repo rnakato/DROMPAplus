@@ -103,9 +103,7 @@ namespace {
   
   void GCdist::calcGCdist(const SeqStats &chr, const GCnorm &gc, const std::string &mpdir, const int32_t isBedOn, const std::vector<bed> &vbed)
   {
-    std::vector<BpStatus> mparray; 
-    if(mpdir != "") mparray = readMpbl_binary(mpdir, ("chr" + chr.getname()), chr.getlen());
-    else            mparray = readMpbl_binary(chr.getlen());
+    std::vector<BpStatus> mparray = readMpbl_binary(mpdir, ("chr" + chr.getname()), chr.getlen());
     if(isBedOn) OverrideBedToArray(mparray, chr.getname(), vbed);
   
     std::string fastaname= gc.getGCdir() + "/chr" + chr.getname() + ".fa";

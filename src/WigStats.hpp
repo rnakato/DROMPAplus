@@ -31,10 +31,11 @@ class WigArray {
   ~WigArray(){}
 
   size_t size() const { return array.size(); }
-  double getval(const size_t i) const {
+  double operator[] (const size_t i) const {
     checki(i);
     return rmGeta(array[i]);
   }
+
   void setval(const size_t i, const double val) {
     checki(i);
     array[i] = addGeta(val);
@@ -106,7 +107,8 @@ class WigStats {
     int32_t size = wigDist.size();
     std::vector<int32_t> ar;
     for(size_t i=0; i<wigarray.size(); ++i) {
-      int32_t v(wigarray.getval(i));
+      //int32_t v(wigarray.getval(i));
+      int32_t v(wigarray[i]);
       if(v<0) std::cout << sum << "xxx" << v << std::endl;
       ++sum;
       if(v < size) ++wigDist[v];
