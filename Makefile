@@ -29,7 +29,7 @@ CFLAGS += -DPRINTREAD
 endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
-OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(OBJDIR)/pw_makefile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(SSPOBJDIR)/ssp_shiftprofile.o $(SSPCMNOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
+OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(OBJDIR)/pw_makefile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o $(SSPCMNOBJDIR)/ReadAnnotation.o
 
 .PHONY: all clean
@@ -64,5 +64,5 @@ $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/ReadBpStatus.o: $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
-$(OBJS_PW): Makefile $(SRCDIR)/pw_gv.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL)
+$(OBJS_PW): Makefile $(SRCDIR)/pw_gv.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile.hpp
 $(OBJS_DD): Makefile $(SRCDIR)/dd_gv.hpp $(SRCDIR)/dd_readfile.hpp $(HEADS_UTIL)

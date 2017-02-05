@@ -12,7 +12,6 @@
 #include "pw_makefile.hpp"
 #include "version.hpp"
 #include "pw_gv.hpp"
-#include "SSP/src/ssp_shiftprofile.hpp"
 
 void getOpts(Mapfile &p, int32_t argc, char* argv[]);
 void setOpts(MyOpt::Opts &);
@@ -132,7 +131,6 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
 
     init_dump(p, values);
   } catch(const boost::bad_any_cast& e) {
-    //  } catch (std::exception &e) {
     std::cout << e.what() << std::endl;
     exit(0);
   }

@@ -12,7 +12,7 @@
 #include "SSP/src/MThread.hpp"
 #include "SSP/src/LibraryComplexity.hpp"
 #include "SSP/src/Mapfile.hpp"
-#include "SSP/src/ssp_shiftprofile.hpp"
+#include "SSP/src/ShiftProfile.hpp"
 
 namespace RPM {
   class Pnorm {
