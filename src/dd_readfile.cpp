@@ -26,12 +26,8 @@ std::vector<std::string> v;
     if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1]);
     if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
-    
-  SamplePair p(v);
-#ifdef DEBUG
-  p.print();
-#endif
-  samplepair.push_back(p);
+
+  samplepair.emplace_back(v);
   
   return;
 }

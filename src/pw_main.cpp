@@ -301,7 +301,7 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   wsGenome.setValues(values);
   
   for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
-    wsGenome.chr.push_back(WigStats(itr->getlen(), wsGenome.getbinsize()));
+    wsGenome.chr.emplace_back(itr->getlen(), wsGenome.getbinsize());
   }
   
   rpm.setValues(values);

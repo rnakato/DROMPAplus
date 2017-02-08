@@ -347,7 +347,7 @@ void Command::checkParam() {
 	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 	
 	std::vector<std::string> v(values["pd"].as<std::vector<std::string>>());
-	for(auto x:v) p.pd.push_back(scan_pdstr(x));
+	for(auto &x: v) p.pd.push_back(scan_pdstr(x));
 	break;
       }
     case DrompaOpt::PROF:

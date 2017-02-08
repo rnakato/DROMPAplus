@@ -157,8 +157,7 @@ class Mapfile: private Uncopyable {
 
     for(size_t i=0; i<genome.chr.size(); i++) {
       auto array = GenomeCov::makeGcovArray(*this, genome.chr[i], gcov.getr4cmp());
-      GenomeCov::Chr chr(array, gcov.getlackOfRead());
-      gcov.chr.push_back(chr);
+      gcov.chr.emplace_back(array, gcov.getlackOfRead());
     }
     std::cout << "done." << std::endl;
   }
