@@ -84,7 +84,7 @@ void peakcall(Mapfile &p, const int32_t id, const WigArray &wigarray)
 
     if(!ext) {
       if(pZINB > pthre) {
-	p.addPeak(Peak(i, i, p.genome.chr[id].getname(), val, pZINB));
+	p.addPeak(Peak(p.genome.chr[id].getname(), i, i, val, pZINB));
 	ext=1;
       }
     } else {
