@@ -4,6 +4,7 @@
 #ifndef _GCNORMALIZATION_HPP_
 #define _GCNORMALIZATION_HPP_
 
+#include <numeric>
 #include <boost/bind.hpp>
 #include "SSP/common/BoostOptions.hpp"
 #include "SSP/common/util.hpp"
