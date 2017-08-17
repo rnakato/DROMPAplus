@@ -30,7 +30,7 @@ void help_global()
   auto helpmsg = R"(
 ===============
 
-Usage: parse2wig+ [option] -i <inputfile> -o <output> -gt <genome_table>)";
+Usage: parse2wig+ [option] -i <inputfile> -o <output> --gt <genome_table>)";
   
   std::cerr << "\nparse2wig v" << VERSION << helpmsg << std::endl;
   return;
