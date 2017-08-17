@@ -58,7 +58,7 @@ class Command {
 	printhelp();
 	exit(0);
       }
-      
+
       notify(values);
       checkParam();
       InitDump();

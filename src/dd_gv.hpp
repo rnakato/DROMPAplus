@@ -37,8 +37,7 @@ class SampleFile {
    }catch (...) {
      binsize = 0;
    }
-   if(binsize <= 0) PRINTERR("invalid binsize: " << str);
-   //   cout << iftype << "\t" << binsize << endl;
+   if(binsize <= 0) PRINTERR("invalid binsize: " << v[last-1]);
  }
  int getbinsize()    const { return binsize; }
  WigType getiftype() const { return iftype; }
