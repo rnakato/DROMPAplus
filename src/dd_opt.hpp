@@ -41,7 +41,7 @@ class Command {
   }
   void printhelp() const {
     std::cout << boost::format("%1%:  %2%\n") % name % desc;
-    std::cout << boost::format("Usage: drompa %1% [options] -o <output> -gt <genometable> %2%\n\n") % name % requiredstr;
+    std::cout << boost::format("Usage: drompa %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
     std::cout << opts.opts << std::endl;
   }
   void checkParam();
