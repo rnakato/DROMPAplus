@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 {
   auto cmds = generateCommands();
 
-  if (argc ==1) {
+  if (argc == 1) {
     help_global(cmds);
     exit(0);
   }
