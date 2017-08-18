@@ -7,16 +7,30 @@
 #include <boost/algorithm/string.hpp>
 #include "WigStats.hpp"
 
+class chrsize;
+
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;
   WigType iftype;
-  int binsize;
+  int32_t binsize;
  public:
-    // *genome, *chr;
   std::vector<int> data;
+
+  void setbinsize(std::string &v, const int32_t b) {
+    if(b>0) binsize = b;
+    else {
+      try {
+	binsize = stoi(v);
+      }catch (...) {
+	binsize = 0;
+      }
+    }
+    if(binsize <= 0) PRINTERR("invalid binsize: " << v);
+  }
+  
  SampleFile() {}
- SampleFile(std::string &str) {
+  SampleFile(const std::string &str, const int32_t b=0) {
    std::vector<std::string> v;
    boost::split(v, str, boost::algorithm::is_any_of("."));
    int last(v.size()-1);
@@ -25,14 +39,11 @@ class SampleFile {
      iftype = WigType::COMPRESSWIG;
      --last;
    } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
+   else if(v[last] == "bw")         iftype = WigType::BIGWIG;
    else if(v[last] == "bin")        iftype = WigType::BINARY;
    else PRINTERR("invalid postfix: " << str);
-   try {
-     binsize = stoi(v[last-1]);
-   }catch (...) {
-     binsize = 0;
-   }
-   if(binsize <= 0) PRINTERR("invalid binsize: " << v[last-1]);
+
+   setbinsize(v[last-1], b);
  }
  int getbinsize()    const { return binsize; }
  WigType getiftype() const { return iftype; }
@@ -49,7 +60,6 @@ class yScale {
 
 class SamplePair {
   int overlay;
-  std::string argvChIP, argvInput;
   //  double fc; //comp
 
   std::string peak_argv;
@@ -60,10 +70,11 @@ class SamplePair {
   int *binnum;*/
   
  public:
+  std::string argvChIP, argvInput;
   std::string name;
   yScale scale;
 
- SamplePair(std::vector<std::string> v): argvInput(""), peak_argv(""), name("") {
+ SamplePair(std::vector<std::string> v): peak_argv(""), argvInput(""), name("") {
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") name      = v[2];
@@ -83,12 +94,25 @@ class SamplePair {
   }
 };
 
-
 class pdSample {
  public:
   std::string argv;
   std::string name;
   pdSample(){}
 };
+
+
+namespace DROMPA {
+  class Global {
+  public:
+  std::vector<chrsize> gt;
+  std::unordered_map<std::string, SampleFile> sample;
+  std::vector<SamplePair> samplepair;
+  std::vector<pdSample> pd;
+    
+    Global() {}
+  };
+}
+
 
 #endif /* _DD_CLASS_H_ */

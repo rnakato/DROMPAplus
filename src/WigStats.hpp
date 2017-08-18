@@ -16,8 +16,6 @@ class WigArray {
   std::vector<int32_t> array;
   double geta;
   
-  WigArray(){}
-
   template <class T>
     double rmGeta(T val) const { return val/geta; } 
   template <class T>
@@ -27,7 +25,8 @@ class WigArray {
   }
 
  public:
- WigArray(const size_t num, const int32_t val): array(num, val), geta(1000.0) {}
+  WigArray(){}
+  WigArray(const size_t num, const int32_t val): array(num, val), geta(1000.0) {}
   ~WigArray(){}
 
   size_t size() const { return array.size(); }

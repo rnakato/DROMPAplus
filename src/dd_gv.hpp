@@ -23,65 +23,65 @@ public:
   void add(std::vector<DrompaCommand> st);
 };
 
-  class Command {
-    opt opts;
-    std::string desc;
-    std::string requiredstr;
-    std::vector<DrompaCommand> vopts;
-    boost::program_options::variables_map values;
-    //    std::function<void(boost::program_options::variables_map &, Param &)> func;
-  
-    std::vector<chrsize> gt;
-    std::unordered_map<std::string, SampleFile> sample;
-    std::vector<SamplePair> samplepair;
-    std::vector<pdSample> pd;
+class Command {
+  opt opts;
+  std::string desc;
+  std::string requiredstr;
+  std::vector<DrompaCommand> vopts;
+  boost::program_options::variables_map values;
+  //    std::function<void(Param &)> func;
+  std::function<void(DROMPA::Global &p)> func;
 
-  public:
-    std::string name;
+  DROMPA::Global p;
 
-    Command(std::string n, std::string d, std::string r,
-	    //	    std::function<void(boost::program_options::variables_map &, Param &)> _func,
-	    std::vector<DrompaCommand> v): opts("Options"), desc(d), requiredstr(r), vopts(v),
-					   //func(_func),
-					   name(n) {
-      opts.add(v);
-    };
-    void print() const {
-      std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
-		<< std::left << std::setw(40) << desc << std::endl;
+public:
+  std::string name;
+
+  Command(std::string n, std::string d, std::string r,
+	  //	    std::function<void(boost::program_options::variables_map &, Param &)> _func,
+	  std::function<void(DROMPA::Global &p)> _func,
+	  std::vector<DrompaCommand> v): opts("Options"), desc(d), requiredstr(r), vopts(v),
+					 func(_func),
+					 name(n) {
+    opts.add(v);
+  };
+  void printCommandName() const {
+    std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
+	      << std::left << std::setw(40) << desc << std::endl;
+  }
+  void printhelp() const {
+    std::cout << boost::format("%1%:  %2%\n") % name % desc;
+    std::cout << boost::format("Usage: drompa %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
+    std::cout << opts.opts << std::endl;
+  }
+  void checkParam();
+  void InitDump();
+  void SetValue(int argc, char* argv[]) {
+    if (argc ==1) {
+      printhelp();
+      exit(0);
     }
-    void printhelp() const {
-      std::cout << boost::format("%1%:  %2%\n") % name % desc;
-      std::cout << boost::format("Usage: drompa %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
-      std::cout << opts.opts << std::endl;
-    }
-    void checkParam();
-    void InitDump();
-    void SetValue(int argc, char* argv[]) {
-      if (argc ==1) {
+    try {
+      store(parse_command_line(argc, argv, opts.opts), values);
+      
+      if (values.count("help")) {
 	printhelp();
 	exit(0);
       }
-      try {
-	store(parse_command_line(argc, argv, opts.opts), values);
-      
-	if (values.count("help")) {
-	  printhelp();
-	  exit(0);
-	}
 
-	notify(values);
-	checkParam();
-	InitDump();
+      notify(values);
+      checkParam();
+      InitDump();
 
-      } catch (std::exception &e) {
-	std::cout << e.what() << std::endl;
-      }
+    } catch (std::exception &e) {
+      std::cout << e.what() << std::endl;
     }
-    void execute() {
-      //      func(values, p);
-    }
-  };
+  }
+
+  void execute() {
+    func(p);
+  }
+};
 
 
 #endif /* _DD_GV_H_ */

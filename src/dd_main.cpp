@@ -7,7 +7,6 @@
 #include <fstream>
 #include <unordered_map>
 #include <boost/format.hpp>
-#include <ext/stdio_filebuf.h>
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
 #include "WigStats.hpp"
@@ -20,7 +19,8 @@
 //             FRIP        accumulate read counts in bed regions specified
 //             3DMAP       accumulate read counts in bed regions specified
 
-//void drompa(MyOpt::Variables &, Param &);
+void exec_PCSHARP(DROMPA::Global &p);
+
 
 void help_global(std::vector<Command> &cmds) {
     auto helpmsg = R"(
@@ -33,7 +33,7 @@ void help_global(std::vector<Command> &cmds) {
     Command:)";
 
     std::cerr << "\n    DROMPA v" << VERSION << helpmsg << std::endl;
-    for(size_t i=0; i<cmds.size(); ++i) cmds[i].print();
+    for(size_t i=0; i<cmds.size(); ++i) cmds[i].printCommandName();
       std::cerr << std::endl;
     return;
 }
@@ -51,43 +51,45 @@ namespace {
     std::vector<Command> cmds;
     cmds.push_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			   //			   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::SCALE, DrompaCommand::OVERLAY, DrompaCommand::OTHER}));
     cmds.push_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			   //		   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::SCALE, DrompaCommand::OTHER}));
     cmds.push_back(Command("GV", "global-view visualization",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			   //	   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::SCALE, DrompaCommand::OTHER}));
     cmds.push_back(Command("PD", "peak density",
 			   "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			   //	   dd_pd,
+			   exec_PCSHARP,
 			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::SCALE, DrompaCommand::OTHER}));
     cmds.push_back(Command("CI", "compare peak-intensity between two samples",
 			   "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
-			   //	   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::OTHER}));
     cmds.push_back(Command("PROFILE", "make R script of averaged read density",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			   //		   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER}));
     cmds.push_back(Command("HEATMAP", "make heatmap of multiple samples",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			   //	   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER}));
     cmds.push_back(Command("CG", "output ChIP-reads in each gene body",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
-			   //	   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::CG, DrompaCommand::OTHER}));
     cmds.push_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
-			   //	   drompa,
+			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::PROF, DrompaCommand::OTHER}));
     cmds.push_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			   "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
-			   //	   dd_overlook,
+			   //dd_overlook,
+			   exec_PCSHARP,
 			   {DrompaCommand::OTHER}));
     return cmds;
   }
@@ -160,170 +162,103 @@ int main(int argc, char* argv[])
   int32_t cmdid = getOpts(cmds, argc, argv);
 
   cmds[cmdid].execute();
-  
+
   return 0;
 }
 
-template <class T>
-void readWig(T &in, WigArray &array, std::string chrname, int binsize)
-{
-  std::string head("chrom="+ chrname +"\tspan=");
-  int on(0);
 
-  std::string lineStr;
-  while (!in.eof()) {
-    getline(in, lineStr);
-    if(lineStr.empty() || !lineStr.find("track")) continue;
-    if(on && isStr(lineStr, "chrom=")) break;
-    if(isStr(lineStr, head)) {
-      on=1;
-      continue;
+namespace ChrData {
+  
+  class Array {
+  public:
+    int32_t binsize;
+    int32_t nbin;
+    WigArray array;
+    
+    Array(){}
+    /*    Array(const std::string &filename, const int32_t b, const WigType &iftype, const chrsize &chr):
+	  binsize(b), nbin(chr.getlen()/binsize +1),
+	  array(readInputData(filename, binsize, nbin, iftype, chr))
+	  {}*/
+    void setValue(const std::string &filename, const int32_t b, const WigType &iftype, const chrsize &chr) {
+      binsize = b;
+      nbin = chr.getlen()/binsize +1;
+      array = readInputData(filename, binsize, nbin, iftype, chr);
     }
-    if(!on) continue;
-    std::vector<std::string> v;
-    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    int i = (stoi(v[0])-1)/binsize;
-    array.setval(i, stol(v[1]));
-  }
-
-  // array.printArray();
-  return;
-}
-
-void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
-{
-  static int nbinsum(0);
-  std::ifstream in(filename, std::ios::in | std::ios::binary);
-  if (!in) PRINTERR("cannot open " << filename);
-
-  in.seekg(nbinsum * sizeof(int32_t));
-
-  array.readBinary(in, nbin);
-  // array.printArray();
-
-  nbinsum += nbin;
-  return;
-}
-
-
-
-
-class ChrWigArrays {
-  int32_t lenF3;
-  double r;
-  double bk;
-  int32_t bk_from;
-
- protected:
-  double nsc;
-  double rsc;
-  double rlsc;
-  int32_t nsci;
-  uint64_t len;
-  uint64_t nread;
-  uint32_t num4ssp;
-  double backgroundUniformity;
+    
+  };
   
- public:
-  std::map<int32_t, double> mp;
-  std::map<int32_t, double> nc;
-  int32_t start;
-  int32_t end;
-  int32_t width;
+  class Pair {
+    
+  public:
+    std::string argvChIP;
+    std::string argvInput;
+    int32_t binsize;
+    
+    Pair(const std::string &argvChIP, const std::string &argvInput, const int32_t &b):
+      argvChIP(argvChIP), argvInput(argvInput), binsize(b) {}
+  };
 
-  double rchr;
-
- ChrWigArrays(){}
-
-		/*
-  void setmp(const int32_t i, const double val, boost::mutex &mtx) {
-    boost::mutex::scoped_lock lock(mtx);
-    mp[i] = val;
-  }
-
-  double getbackgroundUniformity() const { return backgroundUniformity; }
-  void setrchr(const uint64_t n) { rchr = n ? getratio(nread, n): 0; }
-  int32_t getlenF3() const { return lenF3; }
-  double getnsc()    const { return nsc; }
-  double getrlsc()    const { return rlsc; }
-  double getrsc()    const { return rsc; }
-  int32_t getnsci()  const { return nsci; }
-  uint64_t getnread() const { return nread; }
-  uint64_t getlen()  const { return len; }
-  double getmpsum()  const {
-    double sum(0);
-    for(auto pair: mp) sum += pair.second;
-    return sum;
-  }
-		*/
-};
-
-
-WigArray readInputData(std::unordered_map<std::string, SampleFile>::iterator itr, chrsize &chr)
-{
-  std::cout << chr.getname() << std::endl;
-  int binsize(itr->second.getbinsize());
-  int nbin(chr.getlen()/binsize +1);
-  std::string filename = itr->first;
-  
-  WigArray array(nbin, 0);
-  WigType iftype(itr->second.getiftype());
-
-  if (iftype == WigType::UNCOMPRESSWIG) {
-    std::ifstream in(filename);
-    if (!in) PRINTERR("cannot open " << filename);
-    readWig(in, array, chr.getname(), binsize);
-  } else if (iftype == WigType::COMPRESSWIG) {
-    std::string command = "zcat " + filename;
-    FILE *fp = popen(command.c_str(), "r");
-    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
-    std::istream in(static_cast<std::streambuf *>(p_fb));
-    readWig(in, array, chr.getname(), binsize);
-  } else if (iftype == WigType::BEDGRAPH) {
-    //    readBedGraph(in, array, filename, chr.getname(), binsize);
-  } else if (iftype == WigType::BINARY) {
-    readBinary(array, filename, nbin);
-  }
-
-  //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
-
-  return array;
+  class SamplePairs {
+    std::unordered_map<std::string, Array> arrays;
+    std::vector<Pair> pairs;
+    int32_t binsize;
+    
+  public:
+    SamplePairs(DROMPA::Global &p, chrsize &chr){
+      for(auto x: p.sample) {
+	arrays[x.first] = Array();
+	arrays[x.first].setValue(x.first, x.second.getbinsize(), x.second.getiftype(), chr);
+      }
+      for(auto itr = p.samplepair.begin(); itr != p.samplepair.end(); ++itr) {
+	pairs.emplace_back(itr->argvChIP, itr->argvInput, arrays[itr->argvChIP].binsize);
+      }
+      
+      
+#ifdef DEBUG
+      std::cout << "all WigArray:" << std::endl;
+      for(auto x: arrays) {
+	std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
+      }
+      std::cout << "all SamplePair:" << std::endl;
+      for(auto itr = pairs.begin(); itr != pairs.end(); ++itr) {
+	std::cout << itr->argvChIP << "," << itr->argvInput << ", binsize " << itr->binsize << std::endl;
+      }
+#endif
+    }
+  };
 }
 
-/*void drompa(Param &p)
+
+void exec_PCSHARP(DROMPA::Global &p)
 {
   printf("drompa\n");
 
   for(auto chr:p.gt) {
+    //    if(!p->includeYM && (!strcmp(g->chr[chr].name, "chrY") || !strcmp(g->chr[chr].name, "chrM") || !strcmp(g->chr[chr].name, "chrMT"))) return;
+    //if(d->chronly && d->chronly != chr) return;
+    //if(d->drawregion_argv && !d->drawregion->chr[chr].num) return;
+
+    std::cout << "chr" << chr.getname() <<": " << std::flush;
 
     // 染色体ごとの構造体をつくる
-    for(auto itr = p.sample.begin(); itr != p.sample.end(); ++itr) {
-      auto wigarray = readInputData(itr, chr);
-    }
+    // 全サンプルのwigを格納する
 
+    ChrData::SamplePairs splpairs(p, chr);
+    // readAnnotation();
+    // drawData();
     
   }
 
   return;
-  }*/
-
-/*void dd_pd(Param &p)
-{
-  printf("dd_pd\n");
-  return;
 }
 
-void dd_overlook(Param &p)
-{
-  printf("dd_overlook\n");
-  return;
-}
-*/
+
 
 void Command::checkParam() {
   for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 
-  gt = read_genometable(values["gt"].as<std::string>());
+  p.gt = read_genometable(values["gt"].as<std::string>());
 	
   for(auto op: vopts) {
     switch(op) {
@@ -334,7 +269,7 @@ void Command::checkParam() {
 	//	chkminus<int>(values, "binsize", 0);
 
 	std::vector<std::string> v(values["input"].as<std::vector<std::string>>());
-	for(auto x:v) scan_samplestr(x, sample, samplepair);
+	for(auto x:v) scan_samplestr(x, p.sample, p.samplepair);
 	
 	break;
       }
@@ -399,7 +334,7 @@ void Command::checkParam() {
 	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 	
 	std::vector<std::string> v(values["pd"].as<std::vector<std::string>>());
-	for(auto &x: v) pd.push_back(scan_pdstr(x));
+	for(auto &x: v) p.pd.push_back(scan_pdstr(x));
 	break;
       }
     case DrompaCommand::PROF:
@@ -442,9 +377,9 @@ void Command::InitDump()
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CHIP");
 	std::cout << boost::format("\nSamples\n");
-	for(uint i=0; i<samplepair.size(); ++i) {
+	for(uint i=0; i<p.samplepair.size(); ++i) {
 	  std::cout << (i+1) << ": ";
-	  samplepair[i].print();
+	  p.samplepair[i].print();
 	}
 	//	std::cout << boost::format("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
 	break;
@@ -533,9 +468,9 @@ void Command::InitDump()
 	DEBUGprint("INITDUMP:DrompaCommand::OVERLAY");
 	if(values.count("ioverlay")) { 
 	  std::cout << boost::format("\nOverlayed samples\n");
-	  for(uint i=0; i<samplepair.size(); ++i) {
+	  for(uint i=0; i<p.samplepair.size(); ++i) {
 	    std::cout << (i+1) << ": ";
-	    samplepair[i].print();
+	    p.samplepair[i].print();
 	  }
 	}
 	break;
@@ -556,8 +491,8 @@ void Command::InitDump()
       {
 	DEBUGprint("INITDUMP:DrompaCommand::PD");
 	std::cout << boost::format("\nSamples\n");
-	for(uint i=0; i<pd.size(); ++i) {
-	  std::cout << boost::format("   IP%1%: %2%\tname: %3%\n") % (i+1) % pd[i].argv % pd[i].name;
+	for(uint i=0; i<p.pd.size(); ++i) {
+	  std::cout << boost::format("   IP%1%: %2%\tname: %3%\n") % (i+1) % p.pd[i].argv % p.pd[i].name;
 	}
 	break;
       }

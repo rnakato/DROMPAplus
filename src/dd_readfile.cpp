@@ -2,6 +2,7 @@
  * All rights reserved.
  */
 #include <unordered_map>
+#include <ext/stdio_filebuf.h>
 #include "dd_readfile.hpp"
 #include "dd_gv.hpp"
 
@@ -12,19 +13,30 @@ void scan_samplestr(const std::string &str, std::unordered_map<std::string, Samp
 std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
 
+  int32_t binsize(0);
+
   if(v.size() >8) {
     std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
     exit(1);
+  }
+  if(v.size() >4) {
+    binsize = stoi(v[0]);
   }
   
   if(v[0] == "") {
       std::cerr << "please specify ChIP sample: " << str << std::endl;
       exit(1);
   } else {
-    if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0]);
+    if(sample.find(v[0]) == sample.end()) {
+      if(binsize>0) sample[v[0]] = SampleFile(v[0], binsize);
+      else sample[v[0]] = SampleFile(v[0]);
+    }
   }
   if(v.size() >=2 && v[1] != "") {
-    if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1]);
+    if(sample.find(v[1]) == sample.end()) {
+      if(binsize>0) sample[v[1]] = SampleFile(v[1], binsize);
+      else sample[v[1]] = SampleFile(v[1]);
+    }
     if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
 
@@ -54,4 +66,73 @@ pdSample scan_pdstr(const std::string &str)
   else pd.name = v[0];
 
   return pd;
+}
+
+
+template <class T>
+void readWig(T &in, WigArray &array, std::string chrname, int binsize)
+{
+  std::string head("chrom="+ chrname +"\tspan=");
+  int on(0);
+
+  std::string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty() || !lineStr.find("track")) continue;
+    if(on && isStr(lineStr, "chrom=")) break;
+    if(isStr(lineStr, head)) {
+      on=1;
+      continue;
+    }
+    if(!on) continue;
+    std::vector<std::string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    int i = (stoi(v[0])-1)/binsize;
+    array.setval(i, stol(v[1]));
+  }
+
+  // array.printArray();
+  return;
+}
+
+void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
+{
+  static int nbinsum(0);
+  std::ifstream in(filename, std::ios::in | std::ios::binary);
+  if (!in) PRINTERR("cannot open " << filename);
+
+  in.seekg(nbinsum * sizeof(int32_t));
+
+  array.readBinary(in, nbin);
+  // array.printArray();
+
+  nbinsum += nbin;
+  return;
+}
+
+WigArray readInputData(const std::string &filename, const int32_t binsize, const int32_t nbin, const WigType &iftype, const chrsize &chr)
+{
+  std::cout << chr.getname() << std::endl;
+
+  WigArray array(nbin, 0);
+
+  if (iftype == WigType::UNCOMPRESSWIG) {
+    std::ifstream in(filename);
+    if (!in) PRINTERR("cannot open " << filename);
+    readWig(in, array, chr.getname(), binsize);
+  } else if (iftype == WigType::COMPRESSWIG) {
+    std::string command = "zcat " + filename;
+    FILE *fp = popen(command.c_str(), "r");
+    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
+    std::istream in(static_cast<std::streambuf *>(p_fb));
+    readWig(in, array, chr.getname(), binsize);
+  } else if (iftype == WigType::BEDGRAPH) {
+    //    readBedGraph(in, array, filename, chr.getname(), binsize);
+  } else if (iftype == WigType::BINARY) {
+    readBinary(array, filename, nbin);
+  }
+
+  //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
+
+  return array;
 }
