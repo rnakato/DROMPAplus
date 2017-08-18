@@ -62,11 +62,10 @@ clean:
 
 HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp
 
-$(OBJDIR)/dd_main.o: $(SRCDIR)/dd_gv.hpp $(SRCDIR)/dd_class.hpp
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp $(SRCDIR)/GenomeCoverage.hpp
 $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/ReadBpStatus.o: $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
 $(OBJS_PW): Makefile $(SRCDIR)/pw_gv.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile.hpp
-$(OBJS_DD): Makefile $(SRCDIR)/dd_gv.hpp $(SRCDIR)/dd_readfile.hpp $(HEADS_UTIL)
+$(OBJS_DD): Makefile $(SRCDIR)/dd_gv.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_class.hpp $(HEADS_UTIL)

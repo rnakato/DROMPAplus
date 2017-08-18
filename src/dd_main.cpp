@@ -253,12 +253,10 @@ void exec_PCSHARP(DROMPA::Global &p)
   return;
 }
 
-
-
 void Command::checkParam() {
   for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 
-  p.gt = read_genometable(values["gt"].as<std::string>());
+  p.gt = read_genometable(MyOpt::getVal<std::string>(values, "gt"));
 	
   for(auto op: vopts) {
     switch(op) {
@@ -266,11 +264,10 @@ void Command::checkParam() {
       {
 	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 
-	//	chkminus<int>(values, "binsize", 0);
+	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "input"));
+	for(auto x:v) scan_samplestr(x, p);
 
-	std::vector<std::string> v(values["input"].as<std::vector<std::string>>());
-	for(auto x:v) scan_samplestr(x, p.sample, p.samplepair);
-	
+	if (values.count("if")) p.getWigType(MyOpt::getVal<int32_t>(values, "if")); 
 	break;
       }
     case DrompaCommand::NORM:
@@ -288,7 +285,7 @@ void Command::checkParam() {
     case DrompaCommand::ANNO_PC:
       {
 	chkrange<int>(values, "gftype", 0, 3);
-	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(values[x].as<std::string>());
+	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
 	break;
       }
     case DrompaCommand::ANNO_GV:
@@ -304,7 +301,7 @@ void Command::checkParam() {
       }
     case DrompaCommand::REGION:
       {
-	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(values[x].as<std::string>());
+	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
 	chkminus<int>(values, "len_genefile", -1);
 	break;
       }
@@ -333,7 +330,7 @@ void Command::checkParam() {
 	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
 	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 	
-	std::vector<std::string> v(values["pd"].as<std::vector<std::string>>());
+	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "pd"));
 	for(auto &x: v) p.pd.push_back(scan_pdstr(x));
 	break;
       }
@@ -348,7 +345,7 @@ void Command::checkParam() {
       
     case DrompaCommand::OTHER:
       {
-	for (auto x: {"threads"}) chkminus<int>(values, x, 0);
+	if (values.count("includeYM")) p.includeYM = true;
 	break;
       }
     }
@@ -360,7 +357,7 @@ void Command::InitDump()
 {
   std::vector<std::string> str_bool = {"ON", "OFF"};
   std::vector<std::string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
-  //  std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+  std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
   std::vector<std::string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
   std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
   std::vector<std::string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
@@ -368,8 +365,8 @@ void Command::InitDump()
 
   std::cout << boost::format("\n======================================\n");
   std::cout << boost::format("drompa version %1%: %2%\n\n") % VERSION % name;
-  std::cout << boost::format("output prefix: %1%\n")     % values["output"].as<std::string>();
-  std::cout << boost::format("Genome-table file: %1%\n") % values["gt"].as<std::string>();
+  std::cout << boost::format("output prefix: %1%\n")     % MyOpt::getVal<std::string>(values, "output");
+  std::cout << boost::format("Genome-table file: %1%\n") % MyOpt::getVal<std::string>(values, "gt");
 
   for(auto x: vopts) {
     switch(x) {
@@ -381,14 +378,14 @@ void Command::InitDump()
 	  std::cout << (i+1) << ": ";
 	  p.samplepair[i].print();
 	}
-	//	std::cout << boost::format("   Input format: %1%\n")    % str_wigfiletype[values["if"].as<int>()];
+	if (values.count("if")) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[MyOpt::getVal<int32_t>(values, "if")];
 	break;
       }
     case DrompaCommand::NORM:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::NORM");
-	std::cout << boost::format("   ChIP/Input normalization: %s\n") % str_norm[values["norm"].as<int>()];
-	if(values["sm"].as<int>()) std::cout << boost::format("   smoothing width: %1% bp\n") % values["sm"].as<int>();
+	std::cout << boost::format("   ChIP/Input normalization: %s\n") % str_norm[MyOpt::getVal<int32_t>(values, "norm")];
+	if(MyOpt::getVal<int32_t>(values, "sm")) std::cout << boost::format("   smoothing width: %1% bp\n") % MyOpt::getVal<int32_t>(values, "sm");
 	break;
       }
     case DrompaCommand::THRE: 
@@ -406,7 +403,8 @@ void Command::InitDump()
 	DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
 	std::cout << boost::format("\nAnnotations:\n");
 	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
-			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
+				   % MyOpt::getVal<std::string>(values, "gene")
+				   % str_gftype[MyOpt::getVal<int32_t>(values, "gftype")];
 	MyOpt::printOpt<std::string>(values, "ars",    "   ARS file");
 	MyOpt::printOpt<std::string>(values, "ter",    "   TER file");
 	MyOpt::printOpt<std::string>(values, "repeat", "   Repeat file");
@@ -424,8 +422,6 @@ void Command::InitDump()
       {
 	DEBUGprint("INITDUMP:DrompaCommand::ANNO_GV");
 	std::cout << boost::format("\nAnnotations:\n");
-	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
-			     % values["gene"].as<std::string>() % str_gftype[values["gftype"].as<int>()];
 	MyOpt::printOpt<std::string>(values, "gc", "   GCcontents file");
 	MyOpt::printOpt<std::string>(values, "gd", "   Gene density file");
 	/*	
@@ -433,8 +429,8 @@ void Command::InitDump()
 	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
 	MyOpt::printVOpt<std::string>(values, "inter", "   Interaction file");
 	if (values.count("mp")) {
-	  std::cout << boost::format("Mappability file directory: %1%\n") % values["mp"].as<std::string>();
-	  std::cout << boost::format("\tLow mappablitiy threshold: %1%\n") % values["mpthre"].as<double>();
+	  std::cout << boost::format("Mappability file directory: %1%\n") % MyOpt::getVal<std::string>(values, "mp");
+	  std::cout << boost::format("\tLow mappablitiy threshold: %1%\n") % MyOpt::getVal<double>(values, "mpthre");
 	}
 	break;
       }
@@ -442,13 +438,13 @@ void Command::InitDump()
       {
 	DEBUGprint("INITDUMP:DrompaCommand::DRAW");
 	std::cout << boost::format("\nFigure parameter:\n");
-	std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[values["showctag"].as<int>()] % str_bool[values["showitag"].as<int>()];
-	std::cout << boost::format("   Display enrichment: %1%\n")           % str_bool[values["showratio"].as<int>()];
-	std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[values["showpinter"].as<int>()];
-	std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[values["showpenrich"].as<int>()];
-	std::cout << boost::format("   Background color: %1%\n")             % str_bool[!values["offbg"].as<int>()];
-	std::cout << boost::format("   Y label: %1%\n")                      % str_bool[!values["offylab"].as<int>()];
-	std::cout << boost::format("   Y memory: %1%\n")                     % str_bool[!values["offymem"].as<int>()];
+	std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[MyOpt::getVal<int32_t>(values, "showctag")] % str_bool[MyOpt::getVal<int32_t>(values, "showitag")];
+	std::cout << boost::format("   Display enrichment: %1%\n")           % str_bool[MyOpt::getVal<int32_t>(values, "showratio")];
+	std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[MyOpt::getVal<int32_t>(values, "showpinter")];
+	std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[MyOpt::getVal<int32_t>(values, "showpenrich")];
+	std::cout << boost::format("   Background color: %1%\n")             % str_bool[!MyOpt::getVal<int32_t>(values, "offbg")];
+	std::cout << boost::format("   Y label: %1%\n")                      % str_bool[!MyOpt::getVal<int32_t>(values, "offylab")];
+	std::cout << boost::format("   Y memory: %1%\n")                     % str_bool[!MyOpt::getVal<int32_t>(values, "offymem")];
 	break;
       }
     
@@ -478,13 +474,13 @@ void Command::InitDump()
     case DrompaCommand::CG: 
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CG");
-	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
+	for (auto x: {"cgthre"}) chkminus<int32_t>(values, x, -1);
 	break;
       }
     case DrompaCommand::TR: 
       {
 	DEBUGprint("INITDUMP:DrompaCommand::TR");
-	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
+	for (auto x: {"tssthre"}) chkminus<int32_t>(values, x, -1);
 	break;
       }
     case DrompaCommand::PD:
@@ -499,22 +495,21 @@ void Command::InitDump()
     case DrompaCommand::PROF:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::PROF");
-	std::cout << boost::format("   show type: %1$\n")             % str_stype[values["stype"].as<int>()];
-	std::cout << boost::format("   profile type: %1$\n")          % str_ptype[values["ptype"].as<int>()];
-	std::cout << boost::format("   profile normalization: %1$\n") % str_ntype[values["ntype"].as<int>()];
+	std::cout << boost::format("   show type: %1$\n")             % str_stype[MyOpt::getVal<int32_t>(values, "stype")];
+	std::cout << boost::format("   profile type: %1$\n")          % str_ptype[MyOpt::getVal<int32_t>(values, "ptype")];
+	std::cout << boost::format("   profile normalization: %1$\n") % str_ntype[MyOpt::getVal<int32_t>(values, "ntype")];
 	break;
       }
       
     case DrompaCommand::OTHER:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::OTHER");
-	for (auto x: {"threads"}) chkminus<int>(values, x, 0);
 	break;
       }
     }
   }
   
-  if(values.count("chr")) std::cout << boost::format("output %1% only.\n") % values["chr"].as<int>();
+  if(values.count("chr")) std::cout << boost::format("output %1% only.\n") % MyOpt::getVal<int32_t>(values, "chr");
 
   printf("======================================\n");
   return;
@@ -537,7 +532,8 @@ void opt::add(std::vector<DrompaCommand> st)
 	boost::program_options::options_description o("Input",100);
 	o.add_options()
 	  ("input,i",   boost::program_options::value<std::vector<std::string>>(), "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
-	  //	  ("binsize,b", boost::program_options::value<int>()->default_value(binsize), "Bin size")
+	("if", boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--if")),
+	 "Input file format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
 	  ;
 	opts.add(o);
 	break;
@@ -546,8 +542,8 @@ void opt::add(std::vector<DrompaCommand> st)
       {
 	boost::program_options::options_description o("",100);
 	o.add_options()
-	  ("norm",      boost::program_options::value<int>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
-	  ("sm",        boost::program_options::value<int>()->default_value(0),      "Smoothing width") // gausian ??
+	  ("norm",      boost::program_options::value<int32_t>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
+	  ("sm",        boost::program_options::value<int32_t>()->default_value(0),      "Smoothing width") // gausian ??
 	  ;
 	opts.add(o);
 	break;
@@ -562,7 +558,7 @@ void opt::add(std::vector<DrompaCommand> st)
 	  ("ethre,e",        boost::program_options::value<double>()->default_value(2),    "IP/Input fold enrichment")
 	  ("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")
 	  ("nosig", "Omit highlighting peak regions")
-	  ("width4lmd", boost::program_options::value<int>()->default_value(100000), "Width for calculating local lambda")
+	  ("width4lmd", boost::program_options::value<int32_t>()->default_value(100000), "Width for calculating local lambda")
 	  ;
 	opts.add(o);
 	break;
@@ -572,7 +568,7 @@ void opt::add(std::vector<DrompaCommand> st)
 	boost::program_options::options_description o("Annotation",100);
 	o.add_options()
 	  ("gene,g", boost::program_options::value<std::string>(),	  "Gene annotation file")
-	  ("gftype", boost::program_options::value<int>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
+	  ("gftype", boost::program_options::value<int32_t>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
 	  ("ars",    boost::program_options::value<std::string>(),	  "ARS list (for yeast)")
 	  ("ter",    boost::program_options::value<std::string>(),	  "TER list (for S.cerevisiae)")  
 	  ("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
@@ -590,9 +586,9 @@ void opt::add(std::vector<DrompaCommand> st)
 	  ("gap",    boost::program_options::value<std::string>(),	  "Specify gapped regions to be shaded")
 	  ("inter",  boost::program_options::value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
 	  ("gc",     boost::program_options::value<std::string>(), 	  "Visualize GC contents graph")
-	  ("gcsize", boost::program_options::value<int>()->default_value(100000), "Window size for GC contents")
+	  ("gcsize", boost::program_options::value<int32_t>()->default_value(100000), "Window size for GC contents")
 	  ("gd",     boost::program_options::value<std::string>(), 	  "Visualize gene density (number of genes for each window)")
-	  ("gdsize", boost::program_options::value<int>()->default_value(100000), "Window size for gene density")
+	  ("gdsize", boost::program_options::value<int32_t>()->default_value(100000), "Window size for gene density")
 	  ;
 	opts.add(o);
 	break;
@@ -601,18 +597,18 @@ void opt::add(std::vector<DrompaCommand> st)
       {
 	boost::program_options::options_description o("Drawing",100);
 	o.add_options()
-	  ("showctag",     boost::program_options::value<int>(),    "Display ChIP read lines")
-	  ("showitag",     boost::program_options::value<int>(),    "Display Input read lines (0:off 1:all 2:first one)")
-	  ("showratio",    boost::program_options::value<int>(),    "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
-	  ("showpinter",   boost::program_options::value<int>(),    "Display -log10(p) lines for ChIP internal")
-	  ("showpenrich",  boost::program_options::value<int>(),    "Display -log10(p) lines for ChIP/Input enrichment")
-	  ("showars",     boost::program_options::value<int>(),     "Display ARS only (do not display genes)")
-	  ("ls",          boost::program_options::value<int>()->default_value(1000), "Width for each line (kb)")
-	  ("lpp",         boost::program_options::value<int>()->default_value(1),    "Line number per page")
-	  ("offbg",       boost::program_options::value<int>(),     "Omit background color of read lines")
-	  ("offymem",     boost::program_options::value<int>(),     "Omit Y memory")
-	  ("offylab",     boost::program_options::value<int>(),     "Omit Y label")
-	  ("viz",         boost::program_options::value<int>()->default_value(0), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
+	  ("showctag",     boost::program_options::value<int32_t>()->default_value(1),    "Display ChIP read lines")
+	  ("showitag",     boost::program_options::value<int32_t>()->default_value(0),    "Display Input read lines (0:off 1:all 2:first one)")
+	  ("showratio",    boost::program_options::value<int32_t>()->default_value(0),    "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
+	  ("showpinter",   boost::program_options::value<int32_t>()->default_value(0),    "Display -log10(p) lines for ChIP internal")
+	  ("showpenrich",  boost::program_options::value<int32_t>()->default_value(0),    "Display -log10(p) lines for ChIP/Input enrichment")
+	  ("showars",     boost::program_options::value<int32_t>()->default_value(0),     "Display ARS only (do not display genes)")
+	  ("ls",          boost::program_options::value<int32_t>()->default_value(1000), "Width for each line (kb)")
+	  ("lpp",         boost::program_options::value<int32_t>()->default_value(1),    "Line number per page")
+	  ("offbg",       boost::program_options::value<int32_t>()->default_value(0),     "Omit background color of read lines")
+	  ("offymem",     boost::program_options::value<int32_t>()->default_value(0),     "Omit Y memory")
+	  ("offylab",     boost::program_options::value<int32_t>()->default_value(0),     "Omit Y label")
+	  ("viz",         boost::program_options::value<int32_t>()->default_value(0), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
 	  ;
 	opts.add(o);
 	break;
@@ -621,10 +617,10 @@ void opt::add(std::vector<DrompaCommand> st)
       {
 	boost::program_options::options_description o("Region to draw",100);
 	o.add_options()
-	  ("chr",         boost::program_options::value<int>(),     "Output the specified chromosome only")
+	  ("chr",         boost::program_options::value<int32_t>(),     "Output the specified chromosome only")
 	  ("region,r",    boost::program_options::value<std::string>(),  "Specify genomic regions for drawing")
 	  ("genefile",    boost::program_options::value<std::string>(),  "Specify gene loci to visualize")  
-	  ("len_genefile",boost::program_options::value<int>()->default_value(50000), "extended length for each gene locus")
+	  ("len_genefile",boost::program_options::value<int32_t>()->default_value(50000), "extended length for each gene locus")
 	  ;
 	opts.add(o);
 	break;
@@ -637,7 +633,7 @@ void opt::add(std::vector<DrompaCommand> st)
 	  ("scale_tag",    boost::program_options::value<double>(), "Scale for read line")
 	  ("scale_ratio",  boost::program_options::value<double>(), "Scale for fold enrichment")
 	  ("scale_pvalue", boost::program_options::value<double>(), "Scale for -log10(p)")
-	  ("bn",           boost::program_options::value<int>()->default_value(2),     "Number of memories of y-axis")
+	  ("bn",           boost::program_options::value<int32_t>()->default_value(2),     "Number of memories of y-axis")
 	  ("ystep",        boost::program_options::value<double>()->default_value(20), "Height of read line")
 	  ;
 	opts.add(o);
@@ -647,8 +643,7 @@ void opt::add(std::vector<DrompaCommand> st)
       {
 	boost::program_options::options_description o("For overlay",100);
 	o.add_options()
-	  ("ioverlay",  boost::program_options::value<std::vector<std::string>>(),	  "Input file")
-	  //	  ("binsize2",  boost::program_options::value<int>()->default_value(binsize), "Bin size")
+	  ("ioverlay",  boost::program_options::value<std::vector<std::string>>(), "Input file")
 	  ("scale_tag2",   boost::program_options::value<double>(), "Scale for read line")
 	  ("scale_ratio2", boost::program_options::value<double>(), "Scale for fold enrichment")
 	  ("scale_pvalue2",boost::program_options::value<double>(), "Scale for -log10(p)")
@@ -680,7 +675,7 @@ void opt::add(std::vector<DrompaCommand> st)
 	o.add_options()
 	  ("pd",   boost::program_options::value<std::vector<std::string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
 	  ("prop",   boost::program_options::value<double>(),  "scale_tag")
-	  ("pdsize", boost::program_options::value<int>()->default_value(100000), "windowsize for peak density")
+	  ("pdsize", boost::program_options::value<int32_t>()->default_value(100000), "windowsize for peak density")
 	  ;
 	opts.add(o);
 	break;
@@ -689,13 +684,13 @@ void opt::add(std::vector<DrompaCommand> st)
       {
 	boost::program_options::options_description o("PROFILE AND HEATMAP",100);
 	o.add_options()
-	  ("ptype",   boost::program_options::value<int>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
-	  ("stype",   boost::program_options::value<int>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
-	  ("ntype",   boost::program_options::value<int>(),  "Normalization type: 0; total read 1; target regions only")
+	  ("ptype",   boost::program_options::value<int32_t>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
+	  ("stype",   boost::program_options::value<int32_t>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
+	  ("ntype",   boost::program_options::value<int32_t>(),  "Normalization type: 0; total read 1; target regions only")
 	  ("cw",      boost::program_options::value<double>()->default_value(2500), "width from the center")
 	  ("maxval",   boost::program_options::value<double>(),  "Upper limit for heatmap")
 	  ("offse",  "Omit the standard error in profile")
-	  ("hmsort",   boost::program_options::value<int>()->default_value(1),  "Column number for sorting sites")
+	  ("hmsort",   boost::program_options::value<int32_t>()->default_value(1),  "Column number for sorting sites")
 	  ("sortgbody",  "Sort sites by read number of gene body (default: TSS)")
 	  ("pdetail",  "")
 	  ;
@@ -707,9 +702,12 @@ void opt::add(std::vector<DrompaCommand> st)
       {
 	boost::program_options::options_description o("Others",100);
 	o.add_options()
+	  ("includeYM", "output peaks of chromosome Y and M")
 	  ("rmchr",   "Remove chromosome-separated pdf files")
 	  ("png",     "Output with png format (Note: output each page separately)")
-	  ("threads,p", boost::program_options::value<int>()->default_value(1), "number of threads to launch")
+	  ("threads,p",
+	   boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--thread")),
+	   "number of threads to launch")
 	  ("help,h", "show help message")
 	  ;
 	opts.add(o);

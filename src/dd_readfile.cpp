@@ -8,39 +8,32 @@
 
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */
-void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
+//void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
+void scan_samplestr(const std::string &str, DROMPA::Global &p)
 {
 std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
-
   int32_t binsize(0);
 
   if(v.size() >8) {
     std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
     exit(1);
   }
-  if(v.size() >4) {
-    binsize = stoi(v[0]);
-  }
-  
   if(v[0] == "") {
       std::cerr << "please specify ChIP sample: " << str << std::endl;
       exit(1);
-  } else {
-    if(sample.find(v[0]) == sample.end()) {
-      if(binsize>0) sample[v[0]] = SampleFile(v[0], binsize);
-      else sample[v[0]] = SampleFile(v[0]);
-    }
   }
+  
+  if(v.size() >4) binsize = stoi(v[4]);
+  
+  if(p.sample.find(v[0]) == p.sample.end()) p.sample[v[0]] = SampleFile(v[0], binsize, p.getIfType());
+  
   if(v.size() >=2 && v[1] != "") {
-    if(sample.find(v[1]) == sample.end()) {
-      if(binsize>0) sample[v[1]] = SampleFile(v[1], binsize);
-      else sample[v[1]] = SampleFile(v[1]);
-    }
-    if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
+    if(p.sample.find(v[1]) == p.sample.end()) p.sample[v[1]] = SampleFile(v[1], binsize, p.getIfType());
+    if(p.sample[v[0]].getbinsize() != p.sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
 
-  samplepair.emplace_back(v);
+  p.samplepair.emplace_back(v, p.sample[v[0]].getbinsize());
   
   return;
 }

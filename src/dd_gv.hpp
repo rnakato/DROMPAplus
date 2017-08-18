@@ -29,7 +29,6 @@ class Command {
   std::string requiredstr;
   std::vector<DrompaCommand> vopts;
   boost::program_options::variables_map values;
-  //    std::function<void(Param &)> func;
   std::function<void(DROMPA::Global &p)> func;
 
   DROMPA::Global p;
@@ -38,7 +37,6 @@ public:
   std::string name;
 
   Command(std::string n, std::string d, std::string r,
-	  //	    std::function<void(boost::program_options::variables_map &, Param &)> _func,
 	  std::function<void(DROMPA::Global &p)> _func,
 	  std::vector<DrompaCommand> v): opts("Options"), desc(d), requiredstr(r), vopts(v),
 					 func(_func),

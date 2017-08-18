@@ -10,7 +10,7 @@
 #include "dd_class.hpp"
 #include "SSP/common/seq.hpp"
 
-void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair);
+void scan_samplestr(const std::string &str, DROMPA::Global &p);
 pdSample scan_pdstr(const std::string &str);
 WigArray readInputData(const std::string &filename, const int32_t binsize, const int32_t nbin, const WigType &iftype, const chrsize &chr);
 
