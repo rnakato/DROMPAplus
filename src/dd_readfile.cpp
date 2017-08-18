@@ -3,10 +3,11 @@
  */
 #include <unordered_map>
 #include "dd_readfile.hpp"
+#include "dd_gv.hpp"
 
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */
-void scan_samplestr(std::string str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
+void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
 {
 std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
@@ -32,7 +33,7 @@ std::vector<std::string> v;
   return;
 }
 
-pdSample scan_pdstr(std::string str)
+pdSample scan_pdstr(const std::string &str)
 {
   std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));

@@ -4,9 +4,11 @@
 #ifndef _DD_READFILE_H_
 #define _DD_READFILE_H_
 
-#include "dd_gv.hpp"
+#include <unordered_map>
+#include <string>
+#include <vector>
+#include "dd_class.hpp"
 
-void scan_samplestr(std::string str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair);
-pdSample scan_pdstr(std::string str);
-  
+void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair);
+pdSample scan_pdstr(const std::string &str);
 #endif /* _DD_READFILE_H_ */

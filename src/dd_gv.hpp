@@ -5,103 +5,83 @@
 #define _DD_GV_H_
 
 #include <iostream>
+#include <iomanip>
 #include <unordered_map>
 #include <boost/format.hpp>
-#include <boost/algorithm/string.hpp>
 #include "SSP/common/inline.hpp"
 #include "SSP/common/seq.hpp"
-#include "WigStats.hpp"
+#include "SSP/common/util.hpp"
+#include "dd_class.hpp"
+#include "version.hpp"
 
-class SampleFile {
-  double lambda;
-  double nb_p, nb_n, nb_p0;
-  WigType iftype;
-  int binsize;
- public:
-    // *genome, *chr;
-  std::vector<int> data;
- SampleFile() {}
- SampleFile(std::string &str) {
-   std::vector<std::string> v;
-   boost::split(v, str, boost::algorithm::is_any_of("."));
-   int last(v.size()-1);
-   if(v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;    
-   else if(v[last] == "gz" && v[last-1] == "wig") {
-     iftype = WigType::COMPRESSWIG;
-     --last;
-   } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
-   else if(v[last] == "bin")        iftype = WigType::BINARY;
-   else PRINTERR("invalid postfix: " << str);
-   try {
-     binsize = stoi(v[last-1]);
-   }catch (...) {
-     binsize = 0;
-   }
-   if(binsize <= 0) PRINTERR("invalid binsize: " << v[last-1]);
- }
- int getbinsize()    const { return binsize; }
- WigType getiftype() const { return iftype; }
+enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
+
+class opt {
+public:
+  boost::program_options::options_description opts;
+  opt(const std::string str): opts(str) {}
+  void add(std::vector<DrompaCommand> st);
 };
 
-class yScale {
-  enum {TAG_DEFAULT=30, RATIO_DEFAULT=3, P_DEFAULT=5};
- public:
-  double tag;
-  double ratio;
-  double pvalue;
- yScale(): tag(TAG_DEFAULT), ratio(RATIO_DEFAULT), pvalue(P_DEFAULT) {}
-};
-
-class SamplePair {
-  int overlay;
-  std::string argvChIP, argvInput;
-  //  double fc; //comp
-
-  std::string peak_argv;
-  /*  Peak *peak;
-  char *peak_argv;
-  char *peakarray;
-  char *linename;
-  int *binnum;*/
+  class Command {
+    opt opts;
+    std::string desc;
+    std::string requiredstr;
+    std::vector<DrompaCommand> vopts;
+    boost::program_options::variables_map values;
+    //    std::function<void(boost::program_options::variables_map &, Param &)> func;
   
- public:
-  std::string name;
-  yScale scale;
+    std::vector<chrsize> gt;
+    std::unordered_map<std::string, SampleFile> sample;
+    std::vector<SamplePair> samplepair;
+    std::vector<pdSample> pd;
 
- SamplePair(std::vector<std::string> v): argvInput(""), peak_argv(""), name("") {
-    if(v[0] != "") argvChIP  = v[0];
-    if(v.size() >=2 && v[1] != "") argvInput = v[1];
-    if(v.size() >=3 && v[2] != "") name      = v[2];
-    if(v.size() >=4 && v[3] != "") peak_argv = v[3];
-    //    if(v.size() >=5 && v[4] != "") binsize   = stoi(v[4]);
-    if(v.size() >=6 && v[5] != "") scale.tag = stof(v[5]);
-    if(v.size() >=7 && v[6] != "") scale.ratio  = stof(v[6]);
-    if(v.size() >=8 && v[7] != "") scale.pvalue = stof(v[7]);
-  }
-  void print() {
-    std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % name % peak_argv;
-    std::cout << boost::format("   Input: %1%\n") % argvInput;
-  }
-  void printall() {
-    std::cout << boost::format("ChIP:%1% Input:%2% name:%3% peak:%4% scale_tag %5% scale_ratio %6% scale_pvalue %7%\n")
-      % argvChIP % argvInput % name % peak_argv % scale.tag % scale.ratio % scale.pvalue;
-  }
-};
+  public:
+    std::string name;
 
-class pdSample {
- public:
-  std::string argv;
-  std::string name;
-  pdSample(){}
-};
+    Command(std::string n, std::string d, std::string r,
+	    //	    std::function<void(boost::program_options::variables_map &, Param &)> _func,
+	    std::vector<DrompaCommand> v): opts("Options"), desc(d), requiredstr(r), vopts(v),
+					   //func(_func),
+					   name(n) {
+      opts.add(v);
+    };
+    void print() const {
+      std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
+		<< std::left << std::setw(40) << desc << std::endl;
+    }
+    void printhelp() const {
+      std::cout << boost::format("%1%:  %2%\n") % name % desc;
+      std::cout << boost::format("Usage: drompa %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
+      std::cout << opts.opts << std::endl;
+    }
+    void checkParam();
+    void InitDump();
+    void SetValue(int argc, char* argv[]) {
+      if (argc ==1) {
+	printhelp();
+	exit(0);
+      }
+      try {
+	store(parse_command_line(argc, argv, opts.opts), values);
+      
+	if (values.count("help")) {
+	  printhelp();
+	  exit(0);
+	}
 
-class Param {
- public:
-  std::vector<chrsize> gt;
-  std::unordered_map<std::string, SampleFile> sample;
-  std::vector<SamplePair> samplepair;
-  std::vector<pdSample> pd;
-  Param(){}
-};
+	notify(values);
+	checkParam();
+	InitDump();
+
+      } catch (std::exception &e) {
+	std::cout << e.what() << std::endl;
+      }
+    }
+    void execute() {
+      //      func(values, p);
+    }
+  };
+
 
 #endif /* _DD_GV_H_ */

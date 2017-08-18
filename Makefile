@@ -32,22 +32,25 @@ OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(OBJDIR)/pw_makefile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o $(SSPCMNOBJDIR)/ReadAnnotation.o
 
-.PHONY: all clean
+.PHONY: all clean $(SSPDIR)
 
-all: $(TARGET)
+all: $(TARGET) $(SSPDIR)
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
 $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
 
-$(ALGLIBDIR)/libalglib.a:
-	make -C $(ALGLIBDIR)
-$(SSPOBJDIR)/%.o: $(SSPSRCDIR)/%.cpp
-	make -C $(SSPDIR) $(OBJDIR)/$(@F)
-$(CMNOBJDIR)/%.o: $(CMNDIR)/%.cpp
-	make -C $(SSPDIR) $(OBJDIR)/$(@F)
+$(SSPDIR):
+	make -C $@
+#$(ALGLIBDIR)/libalglib.a:
+#	make -C $(ALGLIBDIR)
+#$(SSPOBJDIR)/%.o: $(SSPSRCDIR)/%.cpp
+#	make -C $(SSPDIR) $(OBJDIR)/$(@F)
+#$(CMNOBJDIR)/%.o: $(CMNDIR)/%.cpp
+#	make -C $(SSPDIR) $(OBJDIR)/$(@F)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
@@ -55,10 +58,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 clean:
 	rm -rf bin obj
+	make -C $(SSPDIR) clean
 
 HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp
 
-$(OBJDIR)/dd_main.o: $(SRCDIR)/dd_opt.hpp
+$(OBJDIR)/dd_main.o: $(SRCDIR)/dd_gv.hpp $(SRCDIR)/dd_class.hpp
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp $(SRCDIR)/GenomeCoverage.hpp
 $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
