@@ -8,23 +8,14 @@
 #include <iomanip>
 #include <unordered_map>
 #include <boost/format.hpp>
+#include "dd_class.hpp"
+#include "version.hpp"
 #include "SSP/common/inline.hpp"
 #include "SSP/common/seq.hpp"
 #include "SSP/common/util.hpp"
-#include "dd_class.hpp"
-#include "version.hpp"
-
-enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
-
-class opt {
-public:
-  boost::program_options::options_description opts;
-  opt(const std::string str): opts(str) {}
-  void add(std::vector<DrompaCommand> st);
-};
+#include "SSP/common/BoostOptions.hpp"
 
 class Command {
-  opt opts;
   std::string desc;
   std::string requiredstr;
   std::vector<DrompaCommand> vopts;
@@ -38,10 +29,10 @@ public:
 
   Command(std::string n, std::string d, std::string r,
 	  std::function<void(DROMPA::Global &p)> _func,
-	  std::vector<DrompaCommand> v): opts("Options"), desc(d), requiredstr(r), vopts(v),
-					 func(_func),
-					 name(n) {
-    opts.add(v);
+	  std::vector<DrompaCommand> v): desc(d), requiredstr(r), vopts(v),
+					 func(_func), name(n)
+  {
+    p.setOpts(v);
   };
   void printCommandName() const {
     std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
@@ -50,9 +41,8 @@ public:
   void printhelp() const {
     std::cout << boost::format("%1%:  %2%\n") % name % desc;
     std::cout << boost::format("Usage: drompa %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
-    std::cout << opts.opts << std::endl;
+    std::cout << p.opts << std::endl;
   }
-  void checkParam();
   void InitDump();
   void SetValue(int argc, char* argv[]) {
     if (argc ==1) {
@@ -60,7 +50,7 @@ public:
       exit(0);
     }
     try {
-      store(parse_command_line(argc, argv, opts.opts), values);
+      store(parse_command_line(argc, argv, p.opts), values);
       
       if (values.count("help")) {
 	printhelp();
@@ -68,7 +58,7 @@ public:
       }
 
       notify(values);
-      checkParam();
+      p.setValues(vopts, values);
       InitDump();
 
     } catch (std::exception &e) {

@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
+#include "dd_draw.hpp"
 #include "WigStats.hpp"
 #include "SSP/common/BoostOptions.hpp"
 #include "SSP/common/ReadAnnotation.hpp"
@@ -49,44 +50,44 @@ namespace {
   std::vector<Command> generateCommands()
   {
     std::vector<Command> cmds;
-    cmds.push_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
+    cmds.emplace_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::SCALE, DrompaCommand::OVERLAY, DrompaCommand::OTHER}));
-    cmds.push_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
+    cmds.emplace_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::SCALE, DrompaCommand::OTHER}));
-    cmds.push_back(Command("GV", "global-view visualization",
+    cmds.emplace_back(Command("GV", "global-view visualization",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::SCALE, DrompaCommand::OTHER}));
-    cmds.push_back(Command("PD", "peak density",
+    cmds.emplace_back(Command("PD", "peak density",
 			   "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			   //	   dd_pd,
 			   exec_PCSHARP,
 			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::SCALE, DrompaCommand::OTHER}));
-    cmds.push_back(Command("CI", "compare peak-intensity between two samples",
+    cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			   "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::OTHER}));
-    cmds.push_back(Command("PROFILE", "make R script of averaged read density",
+    cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER}));
-    cmds.push_back(Command("HEATMAP", "make heatmap of multiple samples",
+    cmds.emplace_back(Command("HEATMAP", "make heatmap of multiple samples",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER}));
-    cmds.push_back(Command("CG", "output ChIP-reads in each gene body",
+    cmds.emplace_back(Command("CG", "output ChIP-reads in each gene body",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::CG, DrompaCommand::OTHER}));
-    cmds.push_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
+    cmds.emplace_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::PROF, DrompaCommand::OTHER}));
-    cmds.push_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
+    cmds.emplace_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			   "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
 			   //dd_overlook,
 			   exec_PCSHARP,
@@ -107,7 +108,7 @@ namespace {
       ("command", boost::program_options::value<std::string>(), "command to run");
     genopts.add_options()
       ("version,v", "print version");
-    
+
     boost::program_options::positional_options_description pd;
     pd.add("command", 1);
     
@@ -167,190 +168,25 @@ int main(int argc, char* argv[])
 }
 
 
-namespace ChrData {
-  
-  class Array {
-  public:
-    int32_t binsize;
-    int32_t nbin;
-    WigArray array;
-    
-    Array(){}
-    /*    Array(const std::string &filename, const int32_t b, const WigType &iftype, const chrsize &chr):
-	  binsize(b), nbin(chr.getlen()/binsize +1),
-	  array(readInputData(filename, binsize, nbin, iftype, chr))
-	  {}*/
-    void setValue(const std::string &filename, const int32_t b, const WigType &iftype, const chrsize &chr) {
-      binsize = b;
-      nbin = chr.getlen()/binsize +1;
-      array = readInputData(filename, binsize, nbin, iftype, chr);
-    }
-    
-  };
-  
-  class Pair {
-    
-  public:
-    std::string argvChIP;
-    std::string argvInput;
-    int32_t binsize;
-    
-    Pair(const std::string &argvChIP, const std::string &argvInput, const int32_t &b):
-      argvChIP(argvChIP), argvInput(argvInput), binsize(b) {}
-  };
-
-  class SamplePairs {
-    std::unordered_map<std::string, Array> arrays;
-    std::vector<Pair> pairs;
-    int32_t binsize;
-    
-  public:
-    SamplePairs(DROMPA::Global &p, chrsize &chr){
-      for(auto x: p.sample) {
-	arrays[x.first] = Array();
-	arrays[x.first].setValue(x.first, x.second.getbinsize(), x.second.getiftype(), chr);
-      }
-      for(auto itr = p.samplepair.begin(); itr != p.samplepair.end(); ++itr) {
-	pairs.emplace_back(itr->argvChIP, itr->argvInput, arrays[itr->argvChIP].binsize);
-      }
-      
-      
-#ifdef DEBUG
-      std::cout << "all WigArray:" << std::endl;
-      for(auto x: arrays) {
-	std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
-      }
-      std::cout << "all SamplePair:" << std::endl;
-      for(auto itr = pairs.begin(); itr != pairs.end(); ++itr) {
-	std::cout << itr->argvChIP << "," << itr->argvInput << ", binsize " << itr->binsize << std::endl;
-      }
-#endif
-    }
-  };
-}
-
-
 void exec_PCSHARP(DROMPA::Global &p)
 {
   printf("drompa\n");
 
-  for(auto chr:p.gt) {
-    //    if(!p->includeYM && (!strcmp(g->chr[chr].name, "chrY") || !strcmp(g->chr[chr].name, "chrM") || !strcmp(g->chr[chr].name, "chrMT"))) return;
-    //if(d->chronly && d->chronly != chr) return;
+  for(auto chr: p.gt) {
+    if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
+    if(p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
     //if(d->drawregion_argv && !d->drawregion->chr[chr].num) return;
 
-    std::cout << "chr" << chr.getname() <<": " << std::flush;
+    std::cout << "chr" << chr.getname() <<": " << p.drawregion.getchr() << std::flush;
 
-    // 染色体ごとの構造体をつくる
-    // 全サンプルのwigを格納する
-
-    ChrData::SamplePairs splpairs(p, chr);
+    Figure fig(p, chr);
     // readAnnotation();
-    // drawData();
-    
+    printf("drawing...\n");
+    fig.DrawData(p);
+    //    sprintf(d->command_mergepdf, "%s%s.pdf ", d->command_mergepdf, prefix);
   }
 
   return;
-}
-
-void Command::checkParam() {
-  for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
-
-  p.gt = read_genometable(MyOpt::getVal<std::string>(values, "gt"));
-	
-  for(auto op: vopts) {
-    switch(op) {
-    case DrompaCommand::CHIP:
-      {
-	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
-
-	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "input"));
-	for(auto x:v) scan_samplestr(x, p);
-
-	if (values.count("if")) p.getWigType(MyOpt::getVal<int32_t>(values, "if")); 
-	break;
-      }
-    case DrompaCommand::NORM:
-      {
-	chkminus<int>(values, "sm", 0);
-	chkrange<int>(values, "norm", 0, 1);
-	break;
-      }
-    case DrompaCommand::THRE: 
-      {
-	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
-	chkminus<int>(values, "width4lmd", 0);
-	break;
-      }
-    case DrompaCommand::ANNO_PC:
-      {
-	chkrange<int>(values, "gftype", 0, 3);
-	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
-	break;
-      }
-    case DrompaCommand::ANNO_GV:
-      {
-	chkminus<int>(values, "mpthre", -1);
-	for (auto x: {"gcsize", "gdsize"}) chkminus<int>(values, x, 0);
-	break;
-      }
-    case DrompaCommand::DRAW:
-      {
-	for (auto x: {"ls", "lpp"}) chkminus<int>(values, x, 0);
-	break;
-      }
-    case DrompaCommand::REGION:
-      {
-	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
-	chkminus<int>(values, "len_genefile", -1);
-	break;
-      }
-    case DrompaCommand::SCALE:
-      {
-	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","bn","ystep"}) chkminus<int>(values, x, 0);
-	break;
-      }
-    case DrompaCommand::OVERLAY:
-      {
-	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2"}) chkminus<int>(values, x, 0);
-	break;
-      }
-    case DrompaCommand::CG: 
-      {
-	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
-	break;
-      }
-    case DrompaCommand::TR: 
-      {
-	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
-	break;
-      }
-    case DrompaCommand::PD:
-      {
-	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
-	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
-	
-	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "pd"));
-	for(auto &x: v) p.pd.push_back(scan_pdstr(x));
-	break;
-      }
-    case DrompaCommand::PROF:
-      {
-	chkrange<int>(values, "ptype", 0, 4);
-	chkrange<int>(values, "stype", 0, 1);
-	chkrange<int>(values, "ntype", 0, 1);
-	for (auto x: {"cw", "maxval", "hmsort"}) chkminus<int>(values, x, 0);
-	break;
-      }
-      
-    case DrompaCommand::OTHER:
-      {
-	if (values.count("includeYM")) p.includeYM = true;
-	break;
-      }
-    }
-    return;
-  }
 }
 
 void Command::InitDump()
@@ -442,9 +278,8 @@ void Command::InitDump()
 	std::cout << boost::format("   Display enrichment: %1%\n")           % str_bool[MyOpt::getVal<int32_t>(values, "showratio")];
 	std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[MyOpt::getVal<int32_t>(values, "showpinter")];
 	std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[MyOpt::getVal<int32_t>(values, "showpenrich")];
-	std::cout << boost::format("   Background color: %1%\n")             % str_bool[!MyOpt::getVal<int32_t>(values, "offbg")];
-	std::cout << boost::format("   Y label: %1%\n")                      % str_bool[!MyOpt::getVal<int32_t>(values, "offylab")];
-	std::cout << boost::format("   Y memory: %1%\n")                     % str_bool[!MyOpt::getVal<int32_t>(values, "offymem")];
+	std::cout << boost::format("   Y label: %1%\n")                      % str_bool[!values.count("offylabel")];
+	std::cout << boost::format("   Y memory: %1%\n")                     % str_bool[!values.count("offymem")];
 	break;
       }
     
@@ -516,6 +351,285 @@ void Command::InitDump()
 }
 
 
+void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const MyOpt::Variables &values)
+{
+  for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+
+  oprefix = MyOpt::getVal<std::string>(values, "output");
+  gt = read_genometable(MyOpt::getVal<std::string>(values, "gt"));
+	
+  for(auto op: vopts) {
+    switch(op) {
+    case DrompaCommand::CHIP:
+      {
+	DEBUGprint("Global::setValues::ChIP");
+	if (!values.count("input")) PRINTERR("specify --input option.");
+	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "input"));
+	for(auto x:v) scan_samplestr(x, sample, samplepair, iftype);
+
+	if (values.count("if")) iftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "if")); 
+	break;
+      }
+    case DrompaCommand::NORM:
+      {
+	DEBUGprint("Global::setValues::NORM");
+	chkrange<int>(values, "norm", 0, 1);
+	break;
+      }
+    case DrompaCommand::THRE: 
+      {
+	DEBUGprint("Global::setValues::THRE");
+	/*	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
+		chkminus<int>(values, "width4lmd", 0);*/
+	break;
+      }
+    case DrompaCommand::ANNO_PC:
+      {
+	DEBUGprint("Global::setValues::ANNO_PC");
+	chkrange<int>(values, "gftype", 0, 3);
+	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+	break;
+      }
+    case DrompaCommand::ANNO_GV:
+      {
+	DEBUGprint("Global::setValues::ANNO_GV");
+	/*	chkminus<int>(values, "mpthre", -1);
+		for (auto x: {"gcsize", "gdsize"}) chkminus<int>(values, x, 0);*/
+	break;
+      }
+    case DrompaCommand::DRAW:
+      {
+	DEBUGprint("Global::setValues::DRAW");
+	drawparam.setValues(values, scale.getlineheight(), samplepair.size());
+	break;
+      }  
+    case DrompaCommand::REGION:
+      {
+	DEBUGprint("Global::setValues::REGION");
+	drawregion.setValues(values);
+	break;
+      }
+    case DrompaCommand::SCALE:
+      {
+	DEBUGprint("Global::setValues::SCALE");
+	scale.setValues(values);
+	break;
+      }
+    case DrompaCommand::OVERLAY:
+      {
+	DEBUGprint("Global::setValues::OVERLAY");
+	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case DrompaCommand::CG: 
+      {
+	DEBUGprint("Global::setValues::CG");
+	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
+	break;
+      }
+    case DrompaCommand::TR: 
+      {
+	DEBUGprint("Global::setValues::TR");
+	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
+	break;
+      }
+    case DrompaCommand::PD:
+      {
+	DEBUGprint("Global::setValues::PD");
+	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
+	
+	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "pd"));
+	for(auto &x: v) pd.emplace_back(scan_pdstr(x));
+	break;
+      }
+    case DrompaCommand::PROF:
+      {
+	DEBUGprint("Global::setValues::PROF");
+	chkrange<int>(values, "ptype", 0, 4);
+	chkrange<int>(values, "stype", 0, 1);
+	chkrange<int>(values, "ntype", 0, 1);
+	for (auto x: {"cw", "maxval", "hmsort"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case DrompaCommand::OTHER:
+      {
+	DEBUGprint("Global::setValues::OTHER");
+	if (values.count("includeYM")) includeYM = true;
+	if (values.count("png"))       ispng = true;
+	break;
+      }
+    }
+  }
+  return;
+}
+
+
+
+void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
+{
+
+  MyOpt::Opts o("Required",100);
+  o.add_options()
+    ("output,o",  boost::program_options::value<std::string>(), "Output prefix")
+    ("gt",        boost::program_options::value<std::string>(), "Genome table")
+    ;
+  opts.add(o);
+  for(auto x: st) {
+    switch(x) {
+    case DrompaCommand::CHIP:
+      {
+	boost::program_options::options_description o("Input",100);
+	o.add_options()
+	  ("input,i",
+	   boost::program_options::value<std::vector<std::string>>(),
+	   "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
+	  ("if",
+	   boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--if")),
+	   "Input file format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::NORM:
+      {
+	boost::program_options::options_description o("",100);
+	o.add_options()
+	  ("norm",      boost::program_options::value<int32_t>()->default_value(1),	     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
+	  ("sm",        boost::program_options::value<int32_t>()->default_value(0),      "Smoothing width") // gausian ??
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::THRE: 
+      {
+	boost::program_options::options_description o("Threshold",100);
+	o.add_options()
+	  ("pthre_internal", boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP internal")
+	  ("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
+	  ("qthre",          boost::program_options::value<double>()->default_value(1),    "FDR")
+	  ("ethre,e",        boost::program_options::value<double>()->default_value(2),    "IP/Input fold enrichment")
+	  ("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")
+	  ("nosig", "Omit highlighting peak regions")
+	  ("width4lmd", boost::program_options::value<int32_t>()->default_value(100000), "Width for calculating local lambda")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::ANNO_PC:
+      {
+	boost::program_options::options_description o("Annotation",100);
+	o.add_options()
+	  ("gene,g", boost::program_options::value<std::string>(),	  "Gene annotation file")
+	  ("gftype", boost::program_options::value<int32_t>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
+	  ("ars",    boost::program_options::value<std::string>(),	  "ARS list (for yeast)")
+	  ("ter",    boost::program_options::value<std::string>(),	  "TER list (for S.cerevisiae)")  
+	  ("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
+	  ("repeat", boost::program_options::value<std::string>(),	  "Display repeat annotation (RepeatMasker format)") 
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::ANNO_GV:
+      {
+	boost::program_options::options_description o("Optional data",100);
+	o.add_options()
+	  ("mp",     boost::program_options::value<std::string>(),  	  "Mappability file")
+	  ("mpthre", boost::program_options::value<double>()->default_value(0.3), "Low mappability threshold")
+	  ("gap",    boost::program_options::value<std::string>(),	  "Specify gapped regions to be shaded")
+	  ("inter",  boost::program_options::value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
+	  ("gc",     boost::program_options::value<std::string>(), 	  "Visualize GC contents graph")
+	  ("gcsize", boost::program_options::value<int32_t>()->default_value(100000), "Window size for GC contents")
+	  ("gd",     boost::program_options::value<std::string>(), 	  "Visualize gene density (number of genes for each window)")
+	  ("gdsize", boost::program_options::value<int32_t>()->default_value(100000), "Window size for gene density")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::DRAW:   drawparam.setOpts(opts); break;
+    case DrompaCommand::REGION: drawregion.setOpts(opts); break;
+    case DrompaCommand::SCALE:  scale.setOpts(opts); break;
+    case DrompaCommand::OVERLAY:
+      {
+	boost::program_options::options_description o("For overlay",100);
+	o.add_options()
+	  ("ioverlay",  boost::program_options::value<std::vector<std::string>>(), "Input file")
+	  ("scale_tag2",   boost::program_options::value<double>(), "Scale for read line")
+	  ("scale_ratio2", boost::program_options::value<double>(), "Scale for fold enrichment")
+	  ("scale_pvalue2",boost::program_options::value<double>(), "Scale for -log10(p)")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::CG: 
+      {
+	boost::program_options::options_description o("CG",100);
+	o.add_options()
+	  ("cgthre",    boost::program_options::value<double>(), "Minimum threshold per kbp")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::TR: 
+      {
+	boost::program_options::options_description o("TR",100);
+	o.add_options()
+	  ("tssthre",    boost::program_options::value<double>(), "")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::PD:
+      {
+	boost::program_options::options_description o("PD",100);
+	o.add_options()
+	  ("pd",   boost::program_options::value<std::vector<std::string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
+	  ("prop",   boost::program_options::value<double>(),  "scale_tag")
+	  ("pdsize", boost::program_options::value<int32_t>()->default_value(100000), "windowsize for peak density")
+	  ;
+	opts.add(o);
+	break;
+      }
+    case DrompaCommand::PROF:
+      {
+	boost::program_options::options_description o("PROFILE AND HEATMAP",100);
+	o.add_options()
+	  ("ptype",   boost::program_options::value<int32_t>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
+	  ("stype",   boost::program_options::value<int32_t>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
+	  ("ntype",   boost::program_options::value<int32_t>(),  "Normalization type: 0; total read 1; target regions only")
+	  ("cw",      boost::program_options::value<double>()->default_value(2500), "width from the center")
+	  ("maxval",   boost::program_options::value<double>(),  "Upper limit for heatmap")
+	  ("offse",  "Omit the standard error in profile")
+	  ("hmsort",   boost::program_options::value<int32_t>()->default_value(1),  "Column number for sorting sites")
+	  ("sortgbody",  "Sort sites by read number of gene body (default: TSS)")
+	  ("pdetail",  "")
+	  ;
+	opts.add(o);
+	break;
+      }
+      
+    case DrompaCommand::OTHER:
+      {
+	boost::program_options::options_description o("Others",100);
+	o.add_options()
+	  ("includeYM", "output peaks of chromosome Y and M")
+	  ("rmchr",   "Remove chromosome-separated pdf files")
+	  ("png",     "Output with png format (Note: output each page separately)")
+	  ("threads,p",
+	   boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--thread")),
+	   "number of threads to launch")
+	  ("help,h", "show help message")
+	  ;
+	opts.add(o);
+	break;
+      }
+    }
+  }
+
+}
+
+
+/*
 void opt::add(std::vector<DrompaCommand> st)
 {
   boost::program_options::options_description o("Required",100);
@@ -595,7 +709,8 @@ void opt::add(std::vector<DrompaCommand> st)
       }
     case DrompaCommand::DRAW:
       {
-	boost::program_options::options_description o("Drawing",100);
+	opts.add();
+	/*	boost::program_options::options_description o("Drawing",100);
 	o.add_options()
 	  ("showctag",     boost::program_options::value<int32_t>()->default_value(1),    "Display ChIP read lines")
 	  ("showitag",     boost::program_options::value<int32_t>()->default_value(0),    "Display Input read lines (0:off 1:all 2:first one)")
@@ -605,14 +720,14 @@ void opt::add(std::vector<DrompaCommand> st)
 	  ("showars",     boost::program_options::value<int32_t>()->default_value(0),     "Display ARS only (do not display genes)")
 	  ("ls",          boost::program_options::value<int32_t>()->default_value(1000), "Width for each line (kb)")
 	  ("lpp",         boost::program_options::value<int32_t>()->default_value(1),    "Line number per page")
-	  ("offbg",       boost::program_options::value<int32_t>()->default_value(0),     "Omit background color of read lines")
 	  ("offymem",     boost::program_options::value<int32_t>()->default_value(0),     "Omit Y memory")
 	  ("offylab",     boost::program_options::value<int32_t>()->default_value(0),     "Omit Y label")
 	  ("viz",         boost::program_options::value<int32_t>()->default_value(0), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
 	  ;
-	opts.add(o);
-	break;
-      }
+	  opts.add(o);*/
+	
+/*	break;
+	}
     case DrompaCommand::REGION:
       {
 	boost::program_options::options_description o("Region to draw",100);
@@ -715,4 +830,111 @@ void opt::add(std::vector<DrompaCommand> st)
       }
     }
   }
+  }*/
+
+
+/*
+
+void Command::checkParam() {
+  for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+
+  p.getoprefix(MyOpt::getVal<std::string>(values, "output"));
+  p.gt = read_genometable(MyOpt::getVal<std::string>(values, "gt"));
+	
+  for(auto op: vopts) {
+    switch(op) {
+    case DrompaCommand::CHIP:
+      {
+	for (auto x: {"input"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+
+	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "input"));
+	for(auto x:v) scan_samplestr(x, p);
+
+	if (values.count("if")) p.getWigType(MyOpt::getVal<int32_t>(values, "if")); 
+	break;
+      }
+    case DrompaCommand::NORM:
+      {
+	chkminus<int>(values, "sm", 0);
+	chkrange<int>(values, "norm", 0, 1);
+	break;
+      }
+    case DrompaCommand::THRE: 
+      {
+	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
+	chkminus<int>(values, "width4lmd", 0);
+	break;
+      }
+    case DrompaCommand::ANNO_PC:
+      {
+	chkrange<int>(values, "gftype", 0, 3);
+	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+	break;
+      }
+    case DrompaCommand::ANNO_GV:
+      {
+	chkminus<int>(values, "mpthre", -1);
+	for (auto x: {"gcsize", "gdsize"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case DrompaCommand::DRAW:
+      {
+	for (auto x: {"ls", "lpp"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case DrompaCommand::REGION:
+      {
+	for (auto x: {"region", "genefile"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+	chkminus<int>(values, "len_genefile", -1);
+	break;
+      }
+    case DrompaCommand::SCALE:
+      {
+	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","bn","ystep"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case DrompaCommand::OVERLAY:
+      {
+	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2"}) chkminus<int>(values, x, 0);
+	break;
+      }
+    case DrompaCommand::CG: 
+      {
+	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
+	break;
+      }
+    case DrompaCommand::TR: 
+      {
+	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
+	break;
+      }
+    case DrompaCommand::PD:
+      {
+	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
+	
+	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "pd"));
+	for(auto &x: v) p.pd.emplace_back(scan_pdstr(x));
+	break;
+      }
+    case DrompaCommand::PROF:
+      {
+	chkrange<int>(values, "ptype", 0, 4);
+	chkrange<int>(values, "stype", 0, 1);
+	chkrange<int>(values, "ntype", 0, 1);
+	for (auto x: {"cw", "maxval", "hmsort"}) chkminus<int>(values, x, 0);
+	break;
+      }
+      
+    case DrompaCommand::OTHER:
+      {
+	if (values.count("includeYM")) p.includeYM = true;
+	if (values.count("png"))       p.setpng();
+	break;
+      }
+    }
+    return;
+  }
 }
+
+*/

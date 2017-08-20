@@ -9,7 +9,10 @@
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */
 //void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
-void scan_samplestr(const std::string &str, DROMPA::Global &p)
+void scan_samplestr(const std::string &str,
+		    std::unordered_map<std::string, SampleFile> &sample,
+		    std::vector<SamplePair> &samplepair,
+		    WigType iftype)
 {
 std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
@@ -26,14 +29,14 @@ std::vector<std::string> v;
   
   if(v.size() >4) binsize = stoi(v[4]);
   
-  if(p.sample.find(v[0]) == p.sample.end()) p.sample[v[0]] = SampleFile(v[0], binsize, p.getIfType());
+  if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], binsize, iftype);
   
   if(v.size() >=2 && v[1] != "") {
-    if(p.sample.find(v[1]) == p.sample.end()) p.sample[v[1]] = SampleFile(v[1], binsize, p.getIfType());
-    if(p.sample[v[0]].getbinsize() != p.sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
+    if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1], binsize, iftype);
+    if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
 
-  p.samplepair.emplace_back(v, p.sample[v[0]].getbinsize());
+  samplepair.emplace_back(v, sample[v[0]].getbinsize());
   
   return;
 }
@@ -63,10 +66,10 @@ pdSample scan_pdstr(const std::string &str)
 
 
 template <class T>
-void readWig(T &in, WigArray &array, std::string chrname, int binsize)
+void readWig(T &in, WigArray &array, const std::string &chrname, const int binsize)
 {
   std::string head("chrom="+ chrname +"\tspan=");
-  int on(0);
+  int32_t on(0);
 
   std::string lineStr;
   while (!in.eof()) {
@@ -80,14 +83,37 @@ void readWig(T &in, WigArray &array, std::string chrname, int binsize)
     if(!on) continue;
     std::vector<std::string> v;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-    int i = (stoi(v[0])-1)/binsize;
-    array.setval(i, stol(v[1]));
+    array.setval((stoi(v[0])-1)/binsize, stol(v[1]));
   }
 
   // array.printArray();
   return;
 }
 
+void readBedGraph(WigArray &array, const std::string &filename, const std::string &chrname, const int32_t binsize)
+{
+  std::ifstream in(filename);
+  if (!in) PRINTERR("cannot open " << filename);
+
+  int32_t on(0);
+  std::string lineStr;
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if (lineStr.empty()) continue;
+    std::vector<std::string> v;
+    boost::split(v, lineStr, boost::algorithm::is_any_of(" "));
+    if (v[0] != chrname) {
+      if (!on) continue;
+      else break;
+    }
+    if (!on) on=1;
+    int32_t start(stoi(v[1]));
+    if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
+	
+    array.setval(start/binsize, stol(v[3]));
+  }
+}
+    
 void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
 {
   static int nbinsum(0);
@@ -110,18 +136,22 @@ WigArray readInputData(const std::string &filename, const int32_t binsize, const
   WigArray array(nbin, 0);
 
   if (iftype == WigType::UNCOMPRESSWIG) {
+    DEBUGprint("WigType::UNCOMPRESSWIG");
     std::ifstream in(filename);
     if (!in) PRINTERR("cannot open " << filename);
     readWig(in, array, chr.getname(), binsize);
   } else if (iftype == WigType::COMPRESSWIG) {
+    DEBUGprint("WigType::COMPRESSWIG");
     std::string command = "zcat " + filename;
     FILE *fp = popen(command.c_str(), "r");
     __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
     std::istream in(static_cast<std::streambuf *>(p_fb));
     readWig(in, array, chr.getname(), binsize);
   } else if (iftype == WigType::BEDGRAPH) {
-    //    readBedGraph(in, array, filename, chr.getname(), binsize);
+    DEBUGprint("WigType::BEDGRAPH");
+    readBedGraph(array, filename, chr.getname(), binsize);
   } else if (iftype == WigType::BINARY) {
+    DEBUGprint("WigType::BINARY");
     readBinary(array, filename, nbin);
   }
 
