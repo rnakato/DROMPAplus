@@ -181,6 +181,65 @@ void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair,
 }
 
 
+/*void Page::draw_graph(DDParam *d, cairo_t *cr, Graph *graph, gint memnum, gint boxheight, bool color, bool xaxis)
+{
+  gint i;
+  gchar str[16];
+  gint s = xstart/graph->wsize, e = xend/graph->wsize +1;
+  gdouble xcen, xpre, ycen, ypre;
+  gdouble width = (xend-xstart+1) * dot_per_bp;
+  gdouble diff = graph->wsize * dot_per_bp;
+
+  yaxis_now += boxheight/2;
+
+  // graph line
+  if(color==false) cairo_set_source_rgba(cr, CLR_GREEN, 1); else cairo_set_source_rgba(cr, CLR_BLUE, 1);
+  cairo_set_line_width(cr, 0.6);
+  xpre = BP2XAXIS(0);
+  xcen = BP2XAXIS(0.5*graph->wsize);
+  ypre = defy_graph(graph->array[s], boxheight, graph->mmin, graph->mmax);
+  for(i=s; i<e; i++, xcen += diff){
+    ycen = defy_graph(graph->array[i], boxheight, graph->mmin, graph->mmax);
+    check_bottom(cr, xpre, ypre, xcen, ycen, yaxis_now + boxheight/2 + 10);
+    xpre = xcen;
+    ypre = ycen;
+  }
+  // keys
+  cairo_set_source_rgba(cr, CLR_BLACK, 1);
+  showtext_cr(cr, OFFSET_X - 5*strlen(graph->name)-55, yaxis_now, graph->name, 13);
+
+  yaxis_now += boxheight/2;
+
+  // axis
+  cairo_set_source_rgba(cr, CLR_BLACK, 1);
+  cairo_set_line_width(cr, 0.4);
+  rel_yline(cr, OFFSET_X, yaxis_now - boxheight, boxheight);
+  cairo_stroke(cr);
+  cairo_set_line_width(cr, 1.5);
+  rel_xline(cr, OFFSET_X, yaxis_now, width);
+  cairo_stroke(cr);
+  stroke_xaxis(d, cr, xstart, xend);
+  
+  // memory 
+  gdouble x, y;
+  gdouble mem = (graph->mmax - graph->mmin)/memnum;
+  //  gdouble memnum = (graph->mmax - graph->mmin)/graph->mem;
+  cairo_set_source_rgba(cr, CLR_BLACK, 1);
+  cairo_set_line_width(cr, 0.5);
+  for(i=0; i<=memnum; i++){
+    if(mem <1) sprintf(str, "%.2f", graph->mmin + i*mem);
+    else       sprintf(str, "%d", (int)(graph->mmin + i*mem));
+    x = OFFSET_X - 5*strlen(str) - 7;
+    y = yaxis_now - i*boxheight/memnum;
+    showtext_cr(cr, x, y+2, str, 9);
+    rel_xline(cr, OFFSET_X-2, y, 2);
+    cairo_stroke(cr);
+  }
+  if(xaxis==true) stroke_xaxis_num(d, cr, xstart, xend, yaxis_now, 9);
+
+  return;
+  }*/
+
 void Page::draw(const DROMPA::Global &p, const int32_t page_curr, const std::string &chrname, const int32_t region_no)
 {
   int32_t line_start, line_end;
