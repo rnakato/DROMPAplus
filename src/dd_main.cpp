@@ -191,7 +191,8 @@ void exec_PCSHARP(DROMPA::Global &p)
 
 void Command::InitDump()
 {
-  std::vector<std::string> str_bool = {"ON", "OFF"};
+  std::vector<std::string> str_bool = {"OFF", "ON"};
+  std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
   std::vector<std::string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
   std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
   std::vector<std::string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
@@ -275,7 +276,7 @@ void Command::InitDump()
 	DEBUGprint("INITDUMP:DrompaCommand::DRAW");
 	std::cout << boost::format("\nFigure parameter:\n");
 	std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[MyOpt::getVal<int32_t>(values, "showctag")] % str_bool[MyOpt::getVal<int32_t>(values, "showitag")];
-	std::cout << boost::format("   Display enrichment: %1%\n")           % str_bool[MyOpt::getVal<int32_t>(values, "showratio")];
+	std::cout << boost::format("   Display enrichment: %1%\n")           % str_ratio[MyOpt::getVal<int32_t>(values, "showratio")];
 	std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[MyOpt::getVal<int32_t>(values, "showpinter")];
 	std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[MyOpt::getVal<int32_t>(values, "showpenrich")];
 	std::cout << boost::format("   Y label: %1%\n")                      % str_bool[!values.count("offylabel")];
@@ -400,7 +401,7 @@ void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const My
     case DrompaCommand::DRAW:
       {
 	DEBUGprint("Global::setValues::DRAW");
-	drawparam.setValues(values, scale.getlineheight(), samplepair.size());
+	drawparam.setValues(values, samplepair.size());
 	break;
       }  
     case DrompaCommand::REGION:
@@ -413,6 +414,7 @@ void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const My
       {
 	DEBUGprint("Global::setValues::SCALE");
 	scale.setValues(values);
+	drawparam.setlineheight(scale.getlineheight());
 	break;
       }
     case DrompaCommand::OVERLAY:

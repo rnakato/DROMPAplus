@@ -30,22 +30,24 @@ CFLAGS += -DPRINTREAD
 endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
-OBJS_PW = $(OBJDIR)/pw_main.o $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(OBJDIR)/pw_makefile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(ALGLIBDIR)/libalglib.a
+OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o 
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(SSPCMNOBJDIR)/ReadAnnotation.o
+OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/ReadAnnotation.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(ALGLIBDIR)/libalglib.a
 
-.PHONY: all clean $(SSPDIR)
+.PHONY: all clean
 
-all: $(TARGET) $(SSPDIR)
+all: $(TARGET)
 
-$(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL)
+$(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
-$(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL)
+
+$(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO)
 
-$(SSPDIR):
-	make -C $@
+$(ALGLIBDIR)/libalglib.a:
+	$(MAKE) -C $(ALGLIBDIR) libalglib.a
 
 $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
@@ -53,6 +55,12 @@ $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ -c $< $(CFLAGS) $(WFLAGS)
+
+$(SSPOBJDIR)/%.o: $(SSPSRCDIR)/%.cpp
+	$(MAKE) -C $(SSPDIR) $(OBJDIR)/$(notdir $@)
+
+$(SSPCMNOBJDIR)/%.o: $(SSPCMNDIR)/%.cpp
+	$(MAKE) -C $(SSPDIR) cobj/$(notdir $@)
 
 clean:
 	rm -rf bin obj

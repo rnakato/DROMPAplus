@@ -10,6 +10,7 @@
 #include "SSP/common/BoostOptions.hpp"
 
 class chrsize;
+class SamplePairChr;
 
 enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
 
@@ -201,7 +202,6 @@ namespace DROMPA {
     int32_t linenum_per_page;
     bool showymem;
     bool showylab;
-    int32_t viz;
 
     int32_t lineheight;
     int32_t samplenum;
@@ -213,6 +213,7 @@ namespace DROMPA {
     int32_t showratio;
     int32_t showpinter;
     int32_t showpenrich;
+    int32_t viz;
     
     DrawParam():
       opt("Drawing",100),
@@ -254,14 +255,14 @@ namespace DROMPA {
       allopts.add(opt);
     }
   
-    void setValues(const MyOpt::Variables &values, const int32_t l, const int32_t n) {
+    void setValues(const MyOpt::Variables &values, const int32_t n) {
       DEBUGprint("DrawParam setValues...");
 
       showctag = MyOpt::getVal<int32_t>(values, "showctag");
-      showitag = MyOpt::getVal<int32_t>(values, "showctag");
-      showratio = MyOpt::getVal<int32_t>(values, "showctag");
-      showpinter = MyOpt::getVal<int32_t>(values, "showctag");
-      showpenrich = MyOpt::getVal<int32_t>(values, "showctag");
+      showitag = MyOpt::getVal<int32_t>(values, "showitag");
+      showratio = MyOpt::getVal<int32_t>(values, "showratio");
+      showpinter = MyOpt::getVal<int32_t>(values, "showpinter");
+      showpenrich = MyOpt::getVal<int32_t>(values, "showpenrich");
       showars  = values.count("showars");
       width_per_line = 1000 * MyOpt::getVal<int32_t>(values, "ls");
       linenum_per_page = MyOpt::getVal<int32_t>(values, "lpp");
@@ -269,12 +270,12 @@ namespace DROMPA {
       showylab = !values.count("offylabel");
       viz      = MyOpt::getVal<int32_t>(values, "viz");
 
-      lineheight = l;
       samplenum = n;
       
       DEBUGprint("DrawParam setValues done.");
     }
 
+    void setlineheight(const int32_t l) { lineheight = l; }
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
     int32_t getNumLine(const int32_t s, const int32_t e) const{
@@ -285,9 +286,9 @@ namespace DROMPA {
     }
 
     int32_t getlpp() const { return linenum_per_page; }
-    int32_t getHeightEachSample() const;
-    int32_t getHeightAllSample() const;
-    int32_t getPageHeight() const;
+    int32_t getHeightEachSample(const SamplePairChr &pair) const;
+    int32_t getHeightAllSample(const std::vector<SamplePairChr> &pairs) const;
+    int32_t getPageHeight(const std::vector<SamplePairChr> &pairs) const;
   };
   
   class Global {

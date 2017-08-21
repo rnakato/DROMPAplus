@@ -62,7 +62,7 @@ public:
     }
     std::cout << "all SamplePair:" << std::endl;
     for(auto itr = pairs.begin(); itr != pairs.end(); ++itr) {
-      std::cout << itr->argvChIP << "," << itr->argvInput << ", binsize " << itr->binsize << std::endl;
+      std::cout << itr->argvChIP << "," << itr->argvInput << ", binsize " << itr->getbinsize() << std::endl;
     }
 #endif
   }
