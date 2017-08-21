@@ -380,22 +380,19 @@ void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const My
     case DrompaCommand::THRE: 
       {
 	DEBUGprint("Global::setValues::THRE");
-	/*	for (auto x: {"pthre_internal", "pthre_enrich", "qthre", "ipm", "ethre"}) chkminus<int>(values, x, -1);
-		chkminus<int>(values, "width4lmd", 0);*/
+	thre.setValues(values);
 	break;
       }
     case DrompaCommand::ANNO_PC:
       {
 	DEBUGprint("Global::setValues::ANNO_PC");
-	chkrange<int>(values, "gftype", 0, 3);
-	for (auto x: {"gene", "ars", "ter"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+	anno.setValuesPC(values);
 	break;
       }
     case DrompaCommand::ANNO_GV:
       {
 	DEBUGprint("Global::setValues::ANNO_GV");
-	/*	chkminus<int>(values, "mpthre", -1);
-		for (auto x: {"gcsize", "gdsize"}) chkminus<int>(values, x, 0);*/
+	anno.setValuesGV(values);
 	break;
       }
     case DrompaCommand::DRAW:
@@ -503,51 +500,9 @@ void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
 	opts.add(o);
 	break;
       }
-    case DrompaCommand::THRE: 
-      {
-	boost::program_options::options_description o("Threshold",100);
-	o.add_options()
-	  ("pthre_internal", boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP internal")
-	  ("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
-	  ("qthre",          boost::program_options::value<double>()->default_value(1),    "FDR")
-	  ("ethre,e",        boost::program_options::value<double>()->default_value(2),    "IP/Input fold enrichment")
-	  ("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")
-	  ("nosig", "Omit highlighting peak regions")
-	  ("width4lmd", boost::program_options::value<int32_t>()->default_value(100000), "Width for calculating local lambda")
-	  ;
-	opts.add(o);
-	break;
-      }
-    case DrompaCommand::ANNO_PC:
-      {
-	boost::program_options::options_description o("Annotation",100);
-	o.add_options()
-	  ("gene,g", boost::program_options::value<std::string>(),	  "Gene annotation file")
-	  ("gftype", boost::program_options::value<int32_t>()->default_value(1), "Format of gene annotation\n     0: RefFlat (default)\n     1: Ensembl\n     2: GTF (for S. pombe)\n     3: SGD (for S. cerevisiae)\n")
-	  ("ars",    boost::program_options::value<std::string>(),	  "ARS list (for yeast)")
-	  ("ter",    boost::program_options::value<std::string>(),	  "TER list (for S.cerevisiae)")  
-	  ("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
-	  ("repeat", boost::program_options::value<std::string>(),	  "Display repeat annotation (RepeatMasker format)") 
-	  ;
-	opts.add(o);
-	break;
-      }
-    case DrompaCommand::ANNO_GV:
-      {
-	boost::program_options::options_description o("Optional data",100);
-	o.add_options()
-	  ("mp",     boost::program_options::value<std::string>(),  	  "Mappability file")
-	  ("mpthre", boost::program_options::value<double>()->default_value(0.3), "Low mappability threshold")
-	  ("gap",    boost::program_options::value<std::string>(),	  "Specify gapped regions to be shaded")
-	  ("inter",  boost::program_options::value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDRde iro kaeru
-	  ("gc",     boost::program_options::value<std::string>(), 	  "Visualize GC contents graph")
-	  ("gcsize", boost::program_options::value<int32_t>()->default_value(100000), "Window size for GC contents")
-	  ("gd",     boost::program_options::value<std::string>(), 	  "Visualize gene density (number of genes for each window)")
-	  ("gdsize", boost::program_options::value<int32_t>()->default_value(100000), "Window size for gene density")
-	  ;
-	opts.add(o);
-	break;
-      }
+    case DrompaCommand::THRE: thre.setOpts(opts); break;
+    case DrompaCommand::ANNO_PC: anno.setOptsPC(opts); break;
+    case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
     case DrompaCommand::DRAW:   drawparam.setOpts(opts); break;
     case DrompaCommand::REGION: drawregion.setOpts(opts); break;
     case DrompaCommand::SCALE:  scale.setOpts(opts); break;

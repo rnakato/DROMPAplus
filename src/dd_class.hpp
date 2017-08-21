@@ -8,9 +8,12 @@
 #include <boost/algorithm/string.hpp>
 #include "WigStats.hpp"
 #include "SSP/common/BoostOptions.hpp"
+#include "SSP/common/BedFormat.hpp"
+#include "SSP/common/ReadAnnotation.hpp"
 
 class chrsize;
 class SamplePairChr;
+void isFile(const std::string &);
 
 enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
 
@@ -114,9 +117,172 @@ class pdSample {
   pdSample(){}
 };
 
+class GraphData {
+  std::string filename;
+  int32_t size;
+public:
+  GraphData(): filename(""), size(0) {}
 
+  void setValue(const std::string &f, const int32_t s) {
+    filename = f;
+    size = s;
+  }
+};
+  
 namespace DROMPA {
+  
+  class Annotation {
+    MyOpt::Opts optPC;
+    MyOpt::Opts optGV;
 
+    std::string genefile;
+    int32_t gftype;
+    bool showgene;
+    HashOfGeneDataMap tmp; // hash for transcripts
+    HashOfGeneDataMap gmp; // hash for genes
+    std::string arsfile;
+    std::string terfile;
+    std::vector<std::vector <bed>> vbedlist;
+    std::string repeatfile;
+    std::string interfile;
+    std::string mpfile;
+    double mpthre;
+    std::string gapfile;
+    GraphData GC;
+    GraphData GD;
+
+  public:
+    
+    Annotation(): optPC("Annotation",100), optGV("Optional data",100),
+		  genefile(""), arsfile(""), terfile(""), repeatfile(""),
+		  interfile(""), mpfile(""), gapfile("")
+    {
+      optPC.add_options()
+	("genefile,g", boost::program_options::value<std::string>(), "Gene annotation file")
+	("gftype",
+	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--gftype")),
+	 "Format of gene annotation\n     0: RefFlat\n     1: GTF\n     2: SGD (for S. cerevisiae)\n")
+	("gene", "Show one representative for each gene (default: all isoforms)")
+	("ars",    boost::program_options::value<std::string>(), "ARS list (for yeast)")
+	("ter",    boost::program_options::value<std::string>(), "TER list (for S.cerevisiae)")  
+	("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
+	("repeat", boost::program_options::value<std::string>(), "Display repeat annotation (RepeatMasker format)")
+	;
+      optGV.add_options()
+	("inter",  boost::program_options::value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDR de iro kaery
+	("mp",     boost::program_options::value<std::string>(), "Mappability file")
+	("mpthre", boost::program_options::value<double>()->default_value(0.3), "Low mappability threshold")
+	("gap",    boost::program_options::value<std::string>(), "Specify gapped regions to be shaded")
+	("GC",     boost::program_options::value<std::string>(), "Visualize GC contents graph")
+	("gcsize",
+	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--gcsize")),
+	 "Window size for GC contents")
+	("GD",     boost::program_options::value<std::string>(), "Visualize gene density (number of genes for each window)")
+	("gdsize",
+	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--gdsize")),
+	 "Window size for gene density")
+	;
+    }
+
+    void setOptsPC(MyOpt::Opts &allopts) { allopts.add(optPC); }
+    void setOptsGV(MyOpt::Opts &allopts) { allopts.add(optGV); }
+  
+    void setValuesPC(const MyOpt::Variables &values) {
+      DEBUGprint("AnnoPC setValues...");
+
+      for (auto x: {"genefile", "ars", "ter", "repeat"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+      if (values.count("genefile")) {
+	genefile = MyOpt::getVal<std::string>(values, "genefile");
+	gftype   = MyOpt::getVal<int32_t>(values, "gftype");
+	showgene = values.count("gene");
+	if(!gftype)        tmp = parseRefFlat(genefile);
+	else if(gftype==1) tmp = parseGtf(genefile);
+	else if(gftype==2) ;// tmp = parseSGD(genefile);
+	else PRINTERR("invalid gtype: " << gftype);
+
+	//printMap(tmp);
+	if(showgene) gmp = construct_gmp(tmp); 
+      }
+      
+      if (values.count("ars")) arsfile = MyOpt::getVal<std::string>(values, "ars");
+      if (values.count("ter")) arsfile = MyOpt::getVal<std::string>(values, "ter");
+      if (values.count("repeat")) arsfile = MyOpt::getVal<std::string>(values, "repeat");
+
+      if (values.count("bed")) { 
+	for(auto x: MyOpt::getVal<std::vector<std::string>>(values, "bed")) {
+	  //    std::cout << x << std::endl;
+	  auto vbed = parseBed<bed>(x);
+	  //    printBed(vbed);
+	  vbedlist.emplace_back(vbed);
+	}
+      }
+
+      DEBUGprint("AnnoPC setValues done.");
+    }
+    void setValuesGV(const MyOpt::Variables &values) {
+      DEBUGprint("AnnoGV setValues...");
+      
+      if (values.count("inter")) {
+	interfile = MyOpt::getVal<std::string>(values, "inter");
+	isFile(interfile);
+      }
+      if (values.count("mp")) mpfile = MyOpt::getVal<std::string>(values, "mp");
+      mpthre = MyOpt::getVal<double>(values, "mpthre");
+      if (values.count("gap")) gapfile = MyOpt::getVal<std::string>(values, "gap");
+      if (values.count("GC")) GC.setValue(MyOpt::getVal<std::string>(values, "GC"), MyOpt::getVal<int32_t>(values, "gcsize"));
+      if (values.count("GD")) GD.setValue(MyOpt::getVal<std::string>(values, "GD"), MyOpt::getVal<int32_t>(values, "gdsize"));
+
+      DEBUGprint("AnnoGV setValues done.");
+    }
+    
+  };
+  
+  class Threshold {
+    MyOpt::Opts opt;
+    
+  public:
+    double pthre_inter;
+    double pthre_enrich;
+    double qthre;
+    double ethre;
+    double ipm;
+    bool sigtest;
+    int32_t width4lmd;
+    
+    Threshold(): opt("Threshold",100)
+    {
+      opt.add_options()
+	("pthre_internal", boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP internal")
+	("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
+	("qthre",          boost::program_options::value<double>()->default_value(1),    "FDR")
+	("ethre",          boost::program_options::value<double>()->default_value(2),    "IP/Input fold enrichment")
+	("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")
+	("nosig", "Omit highlighting peak regions")
+	("width4lmd",
+	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--width4lmd")),
+	 "Width for calculating local lambda")
+	;
+    }
+
+    void setOpts(MyOpt::Opts &allopts) {
+      allopts.add(opt);
+    }
+  
+    void setValues(const MyOpt::Variables &values) {
+      DEBUGprint("Threshold setValues...");
+
+      pthre_inter  = MyOpt::getVal<double>(values, "pthre_internal");
+      pthre_enrich = MyOpt::getVal<double>(values, "pthre_enrich");
+      qthre        = MyOpt::getVal<double>(values, "qthre");
+      ethre        = MyOpt::getVal<double>(values, "ethre");
+      ipm          = MyOpt::getVal<double>(values, "ipm");
+      sigtest      = !values.count("nosig");
+      width4lmd    = MyOpt::getVal<int32_t>(values, "width4lmd");
+
+      DEBUGprint("Threshold setValues done.");
+    }
+  };
+  
   class Scale {
     MyOpt::Opts opt;
     int32_t barnum;
@@ -129,11 +295,21 @@ namespace DROMPA {
     Scale(): opt("Scale for Y axis",100)
     {
       opt.add_options()
-	("scale_tag",    boost::program_options::value<double>()->default_value(30), "Scale for read line")
-	("scale_ratio",  boost::program_options::value<double>()->default_value(5),  "Scale for fold enrichment")
-	("scale_pvalue", boost::program_options::value<double>()->default_value(5),  "Scale for -log10(p)")
-	("bn",           boost::program_options::value<int32_t>()->default_value(2), "Number of memories of y-axis")
-	("ystep",        boost::program_options::value<double>()->default_value(15), "Height of read line")
+	("scale_tag",
+	 boost::program_options::value<double>()->default_value(30)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_tag")),
+	 "Scale for read line")
+	("scale_ratio",
+	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "scale_ratio")),
+	 "Scale for fold enrichment")
+	("scale_pvalue",
+	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_pvalue")),
+	 "Scale for -log10(p)")
+	("bn",
+	 boost::program_options::value<int32_t>()->default_value(2)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--bn")),
+	 "Number of memories of y-axis")
+	("ystep",
+	 boost::program_options::value<double>()->default_value(15)->notifier(boost::bind(&MyOpt::over<double>, _1, 1, "--ystep")),
+	 "Height of read line")
 	;
     }
 
@@ -170,10 +346,18 @@ namespace DROMPA {
       generegion(""), len_genefile(0)
     {
       opt.add_options()
-	("chr",         boost::program_options::value<std::string>(), "Output the specified chromosome only")
-	("region,r",    boost::program_options::value<std::string>(), "Specify genomic regions for drawing")
-	("genefile",    boost::program_options::value<std::string>(), "Specify gene loci to visualize")  
-	("len_genefile",boost::program_options::value<int32_t>()->default_value(50000), "extended length for each gene locus")
+	("chr",
+         boost::program_options::value<std::string>(),
+	 "Output the specified chromosome only")
+	("region,r",
+	 boost::program_options::value<std::string>(),
+	 "Specify genomic regions for drawing")
+	("genefile",
+	 boost::program_options::value<std::string>(),
+	 "Specify gene loci to visualize")  
+	("len_genefile",
+	 boost::program_options::value<int32_t>()->default_value(50000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--len_genefile")),
+	 "extended length for each gene locus")
 	;
     }
 
@@ -303,6 +487,8 @@ namespace DROMPA {
     DrawParam drawparam;
     DrawRegion drawregion;
     Scale scale;
+    Threshold thre;
+    Annotation anno;
 
     std::vector<chrsize> gt;
     std::unordered_map<std::string, SampleFile> sample;
