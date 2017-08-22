@@ -209,7 +209,6 @@ void Command::InitDump()
 {
   std::vector<std::string> str_bool = {"OFF", "ON"};
   std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
-  std::vector<std::string> str_gftype = {"refFlat", "Ensembl", "gtf", "SGD"};
   std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
   std::vector<std::string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
   std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
@@ -241,64 +240,16 @@ void Command::InitDump()
 	if(MyOpt::getVal<int32_t>(values, "sm")) std::cout << boost::format("   smoothing width: %1% bp\n") % MyOpt::getVal<int32_t>(values, "sm");
 	break;
       }
-    case DrompaCommand::THRE: 
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::THRE");
-	/*	std::cout << boost::format("   Peak intensity threshold: %1$.2f\n")               % values["IPmaxthre"].as<double>();
-	std::cout << boost::format("   Enrichment threshold: %1$.2f\n")                   % values["enrichthre"].as<double>();
-	std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % values["pthre_internal"].as<double>();
-	std::cout << boost::format("   p-value threshold (enrichment, -log10): %1$.2e\n") % values["pthre_enrich"].as<double>();
-	std::cout << boost::format("   FDR threshold: %1$.2e\n")                          % values["FDR"].as<double>();*/
-  	break;
-      }
-    case DrompaCommand::ANNO_PC:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
-	std::cout << boost::format("\nAnnotations:\n");
-	if(values.count("gene")) std::cout << boost::format("   Gene file: %1%, Format: %2%\n")
-				   % MyOpt::getVal<std::string>(values, "gene")
-				   % str_gftype[MyOpt::getVal<int32_t>(values, "gftype")];
-	MyOpt::printOpt<std::string>(values, "ars",    "   ARS file");
-	MyOpt::printOpt<std::string>(values, "ter",    "   TER file");
-	MyOpt::printOpt<std::string>(values, "repeat", "   Repeat file");
-	MyOpt::printOpt<std::string>(values, "gc", "   GCcontents file");
-	MyOpt::printOpt<std::string>(values, "gd", "   Gene density file");
-	/*	if(d->arsfile)     std::cout << boost::format("   ARS file: %1%\n")          % values["ars"].as<std::string>();
-	if(d->terfile)     std::cout << boost::format("   TER file: %1%\n")          % values["ter"].as<std::string>();
-	if(d->repeat.argv) std::cout << boost::format("   Repeat file: %1%\n")       % values["repeat"].as<std::string>();*/
-	MyOpt::printOpt<std::string>(values, "region", "   Region file");
-	MyOpt::printVOpt<std::string>(values, "bed", "   Bed file");
-	//	if(name != "PROFILE" || name != "HEATMAP") std::cout << boost::format("   name: %1%\n") % d->bed[i]->name;
-	break;
-      }
-    case DrompaCommand::ANNO_GV:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::ANNO_GV");
-	std::cout << boost::format("\nAnnotations:\n");
-	MyOpt::printOpt<std::string>(values, "gc", "   GCcontents file");
-	MyOpt::printOpt<std::string>(values, "gd", "   Gene density file");
-	/*	
-	if(d->GC.argv)     std::cout << boost::format("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
-	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
-	MyOpt::printVOpt<std::string>(values, "inter", "   Interaction file");
-	if (values.count("mp")) {
-	  std::cout << boost::format("Mappability file directory: %1%\n") % MyOpt::getVal<std::string>(values, "mp");
-	  std::cout << boost::format("\tLow mappablitiy threshold: %1%\n") % MyOpt::getVal<double>(values, "mpthre");
-	}
-	break;
-      }
+    case DrompaCommand::THRE: p.thre.InitDump(); break;
+    case DrompaCommand::ANNO_PC: p.anno.InitDumpPC(values); break;
+    case DrompaCommand::ANNO_GV: p.anno.InitDumpGV(values); break;
     case DrompaCommand::DRAW: p.drawparam.InitDump(); break;
     case DrompaCommand::REGION:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::REGION");
 	break;
       }
-    case DrompaCommand::SCALE:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::SCALE");
-	for (auto x: {"scale_tag","scale_ratio","scale_pvalue","scale_tag2","scale_ratio2","scale_pvalue2","bn","ystep"}) chkminus<int>(values, x, 0);
-	break;
-      }
+    case DrompaCommand::SCALE: p.scale.InitDump(); break;
     case DrompaCommand::OVERLAY:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::OVERLAY");

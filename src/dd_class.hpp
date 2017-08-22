@@ -205,8 +205,8 @@ namespace DROMPA {
       }
       
       if (values.count("ars")) arsfile = MyOpt::getVal<std::string>(values, "ars");
-      if (values.count("ter")) arsfile = MyOpt::getVal<std::string>(values, "ter");
-      if (values.count("repeat")) arsfile = MyOpt::getVal<std::string>(values, "repeat");
+      if (values.count("ter")) terfile = MyOpt::getVal<std::string>(values, "ter");
+      if (values.count("repeat")) repeatfile = MyOpt::getVal<std::string>(values, "repeat");
 
       if (values.count("bed")) { 
 	for(auto x: MyOpt::getVal<std::vector<std::string>>(values, "bed")) {
@@ -233,6 +233,35 @@ namespace DROMPA {
       if (values.count("GD")) GD.setValue(MyOpt::getVal<std::string>(values, "GD"), MyOpt::getVal<int32_t>(values, "gdsize"));
 
       DEBUGprint("AnnoGV setValues done.");
+    }
+
+    void InitDumpPC(const MyOpt::Variables &values) const {
+      std::vector<std::string> str_gftype = {"refFlat", "GTF", "SGD"};
+      std::vector<std::string> str_gtype = {"Transcript", "Gene"};
+      DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
+      std::cout << boost::format("\nAnnotations:\n");
+      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%, Type\n") % genefile % str_gftype[gftype] % str_gtype[showgene];
+      //      if(arsfile != "")  std::cout << boost::format("   ARS file: %1%\n") % arsfile;
+      //if(terfile != "")  std::cout << boost::format("   TER file: %1%\n") % terfile;
+      //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
+      MyOpt::printOpt<std::string>(values, "ars",    "   ARS file");
+      MyOpt::printOpt<std::string>(values, "ter",    "   TER file");
+      MyOpt::printOpt<std::string>(values, "repeat", "   Repeat file");
+      MyOpt::printOpt<std::string>(values, "region", "   Region file");
+      MyOpt::printVOpt<std::string>(values, "bed", "   Bed file");
+    }
+    void InitDumpGV(const MyOpt::Variables &values) const {
+      DEBUGprint("INITDUMP:DrompaCommand::ANNO_GV");
+      std::cout << boost::format("\nAnnotations:\n");
+      MyOpt::printVOpt<std::string>(values, "inter", "   Interaction file");
+      if (mpfile != "") {
+	std::cout << boost::format("Mappability file directory: %1%\n") % mpfile;
+	std::cout << boost::format("\tLow mappablitiy threshold: %1$2f\n") % mpthre;
+      }
+      MyOpt::printOpt<std::string>(values, "gc", "   GCcontents file");
+      MyOpt::printOpt<std::string>(values, "gd", "   Gene density file");
+      /*	if(d->GC.argv)     std::cout << boost::format("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
+		if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
     }
     
   };
@@ -267,7 +296,6 @@ namespace DROMPA {
     void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
-  
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("Threshold setValues...");
 
@@ -280,6 +308,20 @@ namespace DROMPA {
       width4lmd    = MyOpt::getVal<int32_t>(values, "width4lmd");
 
       DEBUGprint("Threshold setValues done.");
+    }
+    void InitDump() const {
+      std::vector<std::string> str_bool = {"OFF", "ON"};
+      DEBUGprint("INITDUMP:DrompaCommand::THRE");
+      
+      std::cout << boost::format("   significance test: %1%\n") % str_bool[sigtest];
+      if (sigtest) {
+	std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
+	std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
+	std::cout << boost::format("   p-value threshold (enrichment, -log10): %1$.2e\n") % pthre_enrich;
+	std::cout << boost::format("   FDR threshold: %1$.2e\n")                          % qthre;
+	std::cout << boost::format("   Peak intensity threshold: %1$.2f\n")               % ipm;
+	std::cout << boost::format("   Enrichment threshold: %1$.2f\n")                   % ethre;
+      }
     }
   };
   
@@ -316,7 +358,6 @@ namespace DROMPA {
     void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
-  
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("Scale setValues...");
 
@@ -328,6 +369,13 @@ namespace DROMPA {
 
       DEBUGprint("Scale setValues done.");
     }
+    void InitDump() const {
+      DEBUGprint("INITDUMP:DrompaCommand::SCALE");
+      std::cout << boost::format("   scale_tag: %1$.1f\n")    % scale_tag;
+      std::cout << boost::format("   scale_ratio: %1$.1f\n")  % scale_ratio;
+      std::cout << boost::format("   scale_pvalue: %1$.1f\n") % scale_pvalue;
+    }
+    
     double getlineheight() const { return ystep * barnum; }
   };
   
@@ -474,7 +522,7 @@ namespace DROMPA {
       DEBUGprint("DrawParam setValues done.");
     }
 
-    void InitDump() {
+    void InitDump() const {
       std::vector<std::string> str_bool = {"OFF", "ON"};
       std::vector<std::string> str_input = {"OFF", "ALL", "FIRST"};
       std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
