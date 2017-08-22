@@ -259,7 +259,7 @@ namespace DROMPA {
 	("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")
 	("nosig", "Omit highlighting peak regions")
 	("width4lmd",
-	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--width4lmd")),
+	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--width4lmd")),
 	 "Width for calculating local lambda")
 	;
     }
@@ -333,17 +333,18 @@ namespace DROMPA {
   
   class DrawRegion {
     MyOpt::Opts opt;
+    bool isRegion;
+    std::vector<bed> regionBed;
 
     std::string chr;
-    std::string region;
-    std::string generegion;
-    int32_t len_genefile;
+    std::string genelocifile;
+    int32_t len_geneloci;
 
   public:
+
     DrawRegion():
       opt("Region to draw",100),
-      chr(""), region(""),
-      generegion(""), len_genefile(0)
+      isRegion(false), chr(""), genelocifile(""), len_geneloci(0)
     {
       opt.add_options()
 	("chr",
@@ -352,11 +353,11 @@ namespace DROMPA {
 	("region,r",
 	 boost::program_options::value<std::string>(),
 	 "Specify genomic regions for drawing")
-	("genefile",
+	("genelocifile",
 	 boost::program_options::value<std::string>(),
-	 "Specify gene loci to visualize")  
-	("len_genefile",
-	 boost::program_options::value<int32_t>()->default_value(50000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--len_genefile")),
+	 "Specify of a file gene namaes to visualize")  
+	("len_geneloci",
+	 boost::program_options::value<int32_t>()->default_value(50000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--len_geneloci")),
 	 "extended length for each gene locus")
 	;
     }
@@ -368,15 +369,29 @@ namespace DROMPA {
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("DrawRegion setValues...");
 
-      if(values.count("chr"))          chr          = MyOpt::getVal<std::string>(values, "chr");
-      if(values.count("region"))       region       = MyOpt::getVal<std::string>(values, "region");
-      if(values.count("genefile"))     generegion   = MyOpt::getVal<std::string>(values, "genefile");
-      if(values.count("len_genefile")) len_genefile = MyOpt::getVal<int32_t>(values, "len_genefile");
+      for (auto x: {"region", "genelocifile"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+      if (values.count("chr")) chr = MyOpt::getVal<std::string>(values, "chr");
+      if (values.count("region")) {
+	isRegion = true;
+	regionBed = parseBed<bed>(MyOpt::getVal<std::string>(values, "region"));
+	if(!regionBed.size()) PRINTERR("Error no bed regions in " << MyOpt::getVal<std::string>(values, "region"));
+	printBed(regionBed);
+      }
+      if (values.count("genelocifile")) genelocifile = MyOpt::getVal<std::string>(values, "genelocifile");
+      len_geneloci = MyOpt::getVal<int32_t>(values, "len_geneloci");
       
       DEBUGprint("DrawRegion setValues done.");
     }
 
-    std::string getchr() const { return chr; } 
+    std::vector<bed> getRegionBedChr(const std::string &chrname) {
+      std::vector<bed> vbed;
+      for(auto &x: regionBed) {
+	if (x.chr == chrname || x.chr == "chr" + chrname) vbed.emplace_back(x);
+      }
+      return vbed;
+    }
+    std::string getchr() const { return chr; }
+    bool isRegionBed() const { return isRegion; }
   };
   
   class DrawParam {
@@ -459,6 +474,22 @@ namespace DROMPA {
       DEBUGprint("DrawParam setValues done.");
     }
 
+    void InitDump() {
+      std::vector<std::string> str_bool = {"OFF", "ON"};
+      std::vector<std::string> str_input = {"OFF", "ALL", "FIRST"};
+      std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
+      
+      DEBUGprint("INITDUMP:DrompaCommand::DRAW");
+      std::cout << boost::format("\nFigure parameter:\n");
+      std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[showctag] % str_input[showitag];
+      std::cout << boost::format("   Display enrichment: %1%\n")           % str_ratio[showratio];
+      std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[showpinter];
+      std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[showpenrich];
+      std::cout << boost::format("   Width per line: %1% kbp\n")           % (width_per_line/1000);
+      std::cout << boost::format("   Y-axis label: %1%\n")                 % str_bool[showylab];
+      std::cout << boost::format("   Y-axis memory: %1%\n")                % str_bool[showymem];
+    }
+    
     void setlineheight(const int32_t l) { lineheight = l; }
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
@@ -477,9 +508,12 @@ namespace DROMPA {
   
   class Global {
     bool ispng;
+    bool rmchr;
     WigType iftype;
     std::string oprefix;
     bool includeYM;
+    int32_t norm;
+    int32_t sm;
 
     // smoothing
   public:
@@ -495,18 +529,70 @@ namespace DROMPA {
     std::vector<SamplePair> samplepair;
     std::vector<pdSample> pd;
     
-    Global(): ispng(false), iftype(WigType::NONE), oprefix(""), includeYM(false), opts("Options") {}
-    
+    Global():
+      ispng(false), rmchr(false), iftype(WigType::NONE),
+      oprefix(""), includeYM(false),
+      opts("Options")
+    {}
+
     void setOpts(std::vector<DrompaCommand> &st);
     void setValues(const std::vector<DrompaCommand> &vopts, const MyOpt::Variables &values);
+    
+    void setOptsNorm(MyOpt::Opts &allopts) {
+      MyOpt::Opts o("Normalization",100);
+      o.add_options()
+	("norm",
+	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--norm")),
+	 "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
+	("sm",
+	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
+	 "Smoothing width") // gausian ??
+	;
+      allopts.add(o);
+    }  
+    void setValuesNorm(const MyOpt::Variables &values) {
+      DEBUGprint("Norm setValues...");
+
+      norm = MyOpt::getVal<int32_t>(values, "norm");
+      sm   = MyOpt::getVal<int32_t>(values, "sm");
+
+      DEBUGprint("Norm setValues done.");
+    }
+    void setOptsOther(MyOpt::Opts &allopts) {
+      MyOpt::Opts o("Others",100);
+      o.add_options()
+	("includeYM", "output peaks of chromosome Y and M")
+	("rmchr",   "Remove chromosome-separated pdf files")
+	("png",     "Output with png format (Note: output each page separately)")
+	("threads,p",
+	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--thread")),
+	 "number of threads to launch")
+	("help,h", "show help message")
+	;
+      allopts.add(o);
+    }  
+    void setValuesOther(const MyOpt::Variables &values) {
+      DEBUGprint("Other setValues...");
+
+      includeYM = values.count("includeYM");
+      ispng = values.count("png");
+      rmchr = values.count("rmchr");
+
+      DEBUGprint("Other setValues done.");
+    }
 
     WigType getIfType() const {return iftype;}
 
+    const std::string getFigFileName() const
+    {
+      return oprefix + ".pdf";
+    }
     const std::string getFigFileNameChr(const std::string &chr) const
     {
       return oprefix + "_chr" + chr + ".pdf";
     }
     bool isincludeYM() const { return includeYM; }
+    bool isrmchr() const { return rmchr; }
   };
 
 }

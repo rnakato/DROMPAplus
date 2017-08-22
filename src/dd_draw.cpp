@@ -286,8 +286,8 @@ void Page::draw(const DROMPA::Global &p, const int32_t page_curr, const std::str
 
   // page titile
   std::string title;
-  if(par.num_page>1) title = chrname + "_" + std::to_string(region_no+1) + "_" + std::to_string(page_curr+1);
-  else               title = chrname + "_" + std::to_string(region_no+1);
+  if(par.num_page>1) title = chrname + "_" + std::to_string(region_no) + "_" + std::to_string(page_curr+1);
+  else               title = chrname + "_" + std::to_string(region_no);
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, 50, 30, title, 16);
   
@@ -295,32 +295,42 @@ void Page::draw(const DROMPA::Global &p, const int32_t page_curr, const std::str
   return;
 }
 
-void Figure::DrawData(DROMPA::Global &p)
+void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 {
   int32_t width(pagewidth);
   int32_t height(p.drawparam.getPageHeight(pairs));
-
+  std::cout << "chr" << chr.getname() << std::endl;
+    
 #ifdef CAIRO_HAS_PDF_SURFACE
-  const auto surface = Cairo::PdfSurface::create(p.getFigFileNameChr(chrname), width, height);
+  const auto surface = Cairo::PdfSurface::create(p.getFigFileNameChr(chr.getname()), width, height);
 
-  std::cout << "Wrote PDF file \"" << p.getFigFileNameChr(chrname) << "\"" << std::endl;
+  if(!p.drawregion.isRegionBed()){  // whole chromosome
+    int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
+    for(int32_t i=0; i<num_page; ++i) {
+      std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page << std::flush;
+      Page page(p, arrays, pairs, surface, 0, chr.getlen());
+      page.draw(p, i, "chr" + chr.getname(), 1);
+    }
+  }else{
+    int32_t region_no(1);
+    for (auto &x: regionBed) {
+      //    for (size_t region_no=0; region_no < regionBed.size(); ++region_no) {
+      int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
+      for(int32_t i=0; i<num_page; ++i) {
+	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
+	Page page(p, arrays, pairs, surface, x.start, x.end);
+	page.draw(p, i, "chr" + chr.getname(), region_no);
+      }
+      ++region_no;
+    }
+  } 
+  std::cout << "Wrote PDF file \"" << p.getFigFileNameChr(chr.getname()) << "\"" << std::endl;
 
-  int32_t start(0);
-  int32_t end(chrlen);
-  
-  int32_t num_page(p.drawparam.getNumPage(start, end));
-  int32_t region_no(0);
-  for(int32_t i=0; i<num_page; ++i) {
-    std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % (region_no+1) << std::flush;
-    Page page(p, arrays, pairs, surface, start, end);
-    page.draw(p, i, "chr" + chrname, region_no);
-  }
 #else
   std::cout << "You must compile cairo with PDF support for DROMPA." << std::endl;
   return;
 #endif
 }
-
 
 int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairChr &pair) const {
   int32_t height(0);

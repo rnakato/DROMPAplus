@@ -40,13 +40,9 @@ public:
 class Figure {
   std::unordered_map<std::string, ChrArray> arrays;
   std::vector<SamplePairChr> pairs;
-  std::string chrname;
-  int32_t chrlen;
+  std::vector<bed> regionBed;
   
-public:
-  Figure(DROMPA::Global &p, const chrsize &chr):
-    chrname(chr.getname()), chrlen(chr.getlen())
-  {
+  void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
     for(auto x: p.sample) {
       arrays[x.first] = ChrArray();
       arrays[x.first].setValue(x.first, x.second.getbinsize(), x.second.getiftype(), chr);
@@ -67,9 +63,20 @@ public:
 #endif
   }
 
-  void DrawData(DROMPA::Global &p);
+public:
+  Figure(DROMPA::Global &p, const chrsize &chr):
+    regionBed(p.drawregion.getRegionBedChr(chr.getname()))
+  {}
+  
+  void DrawData(DROMPA::Global &p, const chrsize &chr);
+  int32_t Draw(DROMPA::Global &p, const chrsize &chr) {
+    if(p.drawregion.isRegionBed() && !regionBed.size()) return 0;
+    loadSampleData(p, chr);
+    DrawData(p, chr);
+    return 1;
+  }
+  
 };
-
 
 
 #endif /* _DD_READFILE_H_ */
