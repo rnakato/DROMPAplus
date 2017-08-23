@@ -47,7 +47,7 @@ inline void showtext_cr(Cairo::RefPtr<Cairo::Context> cr, const double x, const 
   return;
 }
 
-inline std::string float2string(const double f, const int32_t digits)
+inline const std::string & float2string(const double f, const int32_t digits)
 {
   std::ostringstream oss;
   oss << std::setprecision(digits) << std::setiosflags(std::ios::fixed) << f;
@@ -268,7 +268,7 @@ class ChIPDataFrame : public DataFrame {
  public:
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, pair.label, p.scale.scale_tag, refparam, wdf, hdf)
+    DataFrame(cr_, pair.label, p.drawparam.scale_tag, refparam, wdf, hdf)
   {}
 
   void stroke_bin(const SamplePairChr &pair,
@@ -281,7 +281,7 @@ class InputDataFrame : public DataFrame {
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, "Input", p.scale.scale_tag, refparam, wdf, hdf)
+    DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf)
   {}
 
   void stroke_bin(const SamplePairChr &pair,
@@ -293,7 +293,7 @@ class RatioDataFrame : public DataFrame {
  public:
   RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.scale.scale_ratio, refparam, wdf, hdf)
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -312,11 +312,11 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
  public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.scale.scale_ratio, refparam, wdf, hdf),
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf),
     barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
   {}
 
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+  const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag) return "IP/Input";
     else return pair.label;
   }
@@ -346,10 +346,10 @@ class PinterDataFrame : public DataFrame {
  public:
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.scale.scale_ratio, refparam, wdf, hdf)
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
   {}
 
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+  const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag || p.drawparam.showratio) return "pval (ChIP internal)";
     else return pair.label;
   }
@@ -363,10 +363,10 @@ class PenrichDataFrame : public DataFrame {
  public:
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		   const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.scale.scale_ratio, refparam, wdf, hdf)
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
   {}
 
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+  const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag || p.drawparam.showratio) return "pval (IP/Input)";
     else return pair.label;
   }

@@ -39,7 +39,7 @@ void makewig(Mapfile &p)
     outputBedGraph(p, filename);
     if(oftype==WigType::BIGWIG) {
       printf("Convert to bigWig...\n");
-      std::string command = "bedGraphToBigWig " + filename + " " + p.genome.getGenomeTable() + " " + p.getprefix() + ".bw";
+      std::string command = "bedGraphToBigWig " + filename + " " + p.genome.getGenomeTable() + " " + p.getbinprefix() + ".bw";
       if(system(command.c_str())) PRINTERR("conversion failed.");
       remove(filename.c_str()); 
     }
@@ -177,7 +177,7 @@ void outputWig(Mapfile &p, const std::string &filename)
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     WigArray array = makeWigarray(p, i);
-    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % p.genome.chr[i].getname() % binsize;
+    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % p.genome.chr[i].getrefname() % binsize;
     array.outputAsWig(out, binsize);
   }
   
@@ -189,7 +189,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
   int32_t binsize(p.wsGenome.getbinsize());
   
   std::ofstream out(filename);
-  out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getname() % 0 % (p.genome.chr[1].getlen()/100);
+  out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getrefname() % 0 % (p.genome.chr[1].getlen()/100);
   out << "browser hide all" << std::endl;
   out << "browser pack refGene encodeRegions" << std::endl;
   out << "browser full altGraph" << std::endl;
@@ -202,7 +202,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
   
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     WigArray array = makeWigarray(p, i);
-    array.outputAsBedGraph(out2, binsize, p.genome.chr[i].getname(), p.genome.chr[i].getlen() -1);
+    array.outputAsBedGraph(out2, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1);
   }
   out2.close();
   

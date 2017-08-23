@@ -53,20 +53,20 @@ namespace {
     cmds.emplace_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::SCALE, DrompaCommand::OVERLAY, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER}));
     cmds.emplace_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::SCALE, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER}));
     cmds.emplace_back(Command("GV", "global-view visualization",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::SCALE, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER}));
     cmds.emplace_back(Command("PD", "peak density",
 			   "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			   //	   dd_pd,
 			   exec_PCSHARP,
-			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::SCALE, DrompaCommand::OTHER}));
+			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER}));
     cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			   "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			   exec_PCSHARP,
@@ -208,9 +208,6 @@ void exec_PCSHARP(DROMPA::Global &p)
 void Command::InitDump()
 {
   std::vector<std::string> str_bool = {"OFF", "ON"};
-  std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
-  std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
-  std::vector<std::string> str_norm  = { "OFF", "TOTALREAD", "NCIS" };
   std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
   std::vector<std::string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
   std::vector<std::string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
@@ -224,6 +221,7 @@ void Command::InitDump()
     switch(x) {
     case DrompaCommand::CHIP:
       {
+	std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
 	DEBUGprint("INITDUMP:DrompaCommand::CHIP");
 	std::cout << boost::format("\nSamples\n");
 	for(uint i=0; i<p.samplepair.size(); ++i) {
@@ -233,23 +231,12 @@ void Command::InitDump()
 	if (values.count("if")) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[MyOpt::getVal<int32_t>(values, "if")];
 	break;
       }
-    case DrompaCommand::NORM:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::NORM");
-	std::cout << boost::format("   ChIP/Input normalization: %s\n") % str_norm[MyOpt::getVal<int32_t>(values, "norm")];
-	if(MyOpt::getVal<int32_t>(values, "sm")) std::cout << boost::format("   smoothing width: %1% bp\n") % MyOpt::getVal<int32_t>(values, "sm");
-	break;
-      }
+    case DrompaCommand::NORM: p.InitDumpNorm(); break;
     case DrompaCommand::THRE: p.thre.InitDump(); break;
     case DrompaCommand::ANNO_PC: p.anno.InitDumpPC(values); break;
     case DrompaCommand::ANNO_GV: p.anno.InitDumpGV(values); break;
     case DrompaCommand::DRAW: p.drawparam.InitDump(); break;
-    case DrompaCommand::REGION:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::REGION");
-	break;
-      }
-    case DrompaCommand::SCALE: p.scale.InitDump(); break;
+    case DrompaCommand::REGION: p.drawregion.InitDump(values); break;
     case DrompaCommand::OVERLAY:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::OVERLAY");
@@ -292,16 +279,10 @@ void Command::InitDump()
 	break;
       }
       
-    case DrompaCommand::OTHER:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::OTHER");
-	break;
-      }
+    case DrompaCommand::OTHER: p.InitDumpOther(); break;
     }
   }
   
-  if(values.count("chr")) std::cout << boost::format("output %1% only.\n") % MyOpt::getVal<int32_t>(values, "chr");
-
   printf("======================================\n");
   return;
 }
@@ -332,12 +313,6 @@ void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const My
     case DrompaCommand::ANNO_GV: anno.setValuesGV(values); break;
     case DrompaCommand::DRAW: drawparam.setValues(values, samplepair.size()); break;
     case DrompaCommand::REGION: drawregion.setValues(values); break;
-    case DrompaCommand::SCALE:
-      {
-	scale.setValues(values);
-	drawparam.setlineheight(scale.getlineheight());
-	break;
-      }
     case DrompaCommand::OVERLAY:
       {
 	DEBUGprint("Global::setValues::OVERLAY");
@@ -413,7 +388,6 @@ void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts); break;
     case DrompaCommand::REGION:  drawregion.setOpts(opts); break;
-    case DrompaCommand::SCALE:   scale.setOpts(opts); break;
     case DrompaCommand::OVERLAY:
       {
 	boost::program_options::options_description o("For overlay",100);

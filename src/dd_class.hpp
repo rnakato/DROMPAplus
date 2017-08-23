@@ -15,7 +15,7 @@ class chrsize;
 class SamplePairChr;
 void isFile(const std::string &);
 
-enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, SCALE, CG, PD, TR, PROF, OVERLAY, OTHER};
+enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OVERLAY, OTHER};
 
 class SampleFile {
   double lambda;
@@ -138,9 +138,9 @@ namespace DROMPA {
     std::string genefile;
     int32_t gftype;
     bool showgene;
-    HashOfGeneDataMap tmp; // hash for transcripts
     HashOfGeneDataMap gmp; // hash for genes
     std::string arsfile;
+    bool showars;
     std::string terfile;
     std::vector<std::vector <bed>> vbedlist;
     std::string repeatfile;
@@ -164,7 +164,8 @@ namespace DROMPA {
 	 "Format of gene annotation\n     0: RefFlat\n     1: GTF\n     2: SGD (for S. cerevisiae)\n")
 	("gene", "Show one representative for each gene (default: all isoforms)")
 	("ars",    boost::program_options::value<std::string>(), "ARS list (for yeast)")
-	("ter",    boost::program_options::value<std::string>(), "TER list (for S.cerevisiae)")  
+	("ter",    boost::program_options::value<std::string>(), "TER list (for S.cerevisiae)")
+	("showars", "Display ARS and TER and do not display genes")
 	("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
 	("repeat", boost::program_options::value<std::string>(), "Display repeat annotation (RepeatMasker format)")
 	;
@@ -186,7 +187,20 @@ namespace DROMPA {
 
     void setOptsPC(MyOpt::Opts &allopts) { allopts.add(optPC); }
     void setOptsGV(MyOpt::Opts &allopts) { allopts.add(optGV); }
-  
+
+    HashOfGeneDataMap getGMP() {
+      HashOfGeneDataMap tmp;
+      if(!gftype)        tmp = parseRefFlat(genefile);
+      else if(gftype==1) tmp = parseGtf(genefile);
+      else if(gftype==2) ;// tmp = parseSGD(genefile);
+      else PRINTERR("invalid --gftype: " << gftype);
+      
+      //printMap(tmp);
+      
+      if(showgene) return construct_gmp(tmp); // hash for genes
+      else         return tmp; // hash for transcripts
+    }
+    
     void setValuesPC(const MyOpt::Variables &values) {
       DEBUGprint("AnnoPC setValues...");
 
@@ -195,16 +209,11 @@ namespace DROMPA {
 	genefile = MyOpt::getVal<std::string>(values, "genefile");
 	gftype   = MyOpt::getVal<int32_t>(values, "gftype");
 	showgene = values.count("gene");
-	if(!gftype)        tmp = parseRefFlat(genefile);
-	else if(gftype==1) tmp = parseGtf(genefile);
-	else if(gftype==2) ;// tmp = parseSGD(genefile);
-	else PRINTERR("invalid gtype: " << gftype);
-
-	//printMap(tmp);
-	if(showgene) gmp = construct_gmp(tmp); 
+	gmp = getGMP();
       }
       
       if (values.count("ars")) arsfile = MyOpt::getVal<std::string>(values, "ars");
+      showars = values.count("showars");
       if (values.count("ter")) terfile = MyOpt::getVal<std::string>(values, "ter");
       if (values.count("repeat")) repeatfile = MyOpt::getVal<std::string>(values, "repeat");
 
@@ -246,6 +255,7 @@ namespace DROMPA {
       //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
       MyOpt::printOpt<std::string>(values, "ars",    "   ARS file");
       MyOpt::printOpt<std::string>(values, "ter",    "   TER file");
+      if(showars) std::cout << "Display ARS and TER only." << std::endl;
       MyOpt::printOpt<std::string>(values, "repeat", "   Repeat file");
       MyOpt::printOpt<std::string>(values, "region", "   Region file");
       MyOpt::printVOpt<std::string>(values, "bed", "   Bed file");
@@ -325,60 +335,6 @@ namespace DROMPA {
     }
   };
   
-  class Scale {
-    MyOpt::Opts opt;
-    int32_t barnum;
-    double ystep;
-    
-  public:
-    double scale_tag;
-    double scale_ratio;
-    double scale_pvalue;
-    Scale(): opt("Scale for Y axis",100)
-    {
-      opt.add_options()
-	("scale_tag",
-	 boost::program_options::value<double>()->default_value(30)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_tag")),
-	 "Scale for read line")
-	("scale_ratio",
-	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "scale_ratio")),
-	 "Scale for fold enrichment")
-	("scale_pvalue",
-	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_pvalue")),
-	 "Scale for -log10(p)")
-	("bn",
-	 boost::program_options::value<int32_t>()->default_value(2)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--bn")),
-	 "Number of memories of y-axis")
-	("ystep",
-	 boost::program_options::value<double>()->default_value(15)->notifier(boost::bind(&MyOpt::over<double>, _1, 1, "--ystep")),
-	 "Height of read line")
-	;
-    }
-
-    void setOpts(MyOpt::Opts &allopts) {
-      allopts.add(opt);
-    }
-    void setValues(const MyOpt::Variables &values) {
-      DEBUGprint("Scale setValues...");
-
-      scale_tag    = MyOpt::getVal<double>(values, "scale_tag");
-      scale_ratio  = MyOpt::getVal<double>(values, "scale_ratio");
-      scale_pvalue = MyOpt::getVal<double>(values, "scale_pvalue");
-      barnum = MyOpt::getVal<int32_t>(values, "bn");
-      ystep  = MyOpt::getVal<double>(values, "ystep");
-
-      DEBUGprint("Scale setValues done.");
-    }
-    void InitDump() const {
-      DEBUGprint("INITDUMP:DrompaCommand::SCALE");
-      std::cout << boost::format("   scale_tag: %1$.1f\n")    % scale_tag;
-      std::cout << boost::format("   scale_ratio: %1$.1f\n")  % scale_ratio;
-      std::cout << boost::format("   scale_pvalue: %1$.1f\n") % scale_pvalue;
-    }
-    
-    double getlineheight() const { return ystep * barnum; }
-  };
-  
   class DrawRegion {
     MyOpt::Opts opt;
     bool isRegion;
@@ -389,7 +345,6 @@ namespace DROMPA {
     int32_t len_geneloci;
 
   public:
-
     DrawRegion():
       opt("Region to draw",100),
       isRegion(false), chr(""), genelocifile(""), len_geneloci(0)
@@ -413,7 +368,6 @@ namespace DROMPA {
     void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
-  
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("DrawRegion setValues...");
 
@@ -430,7 +384,17 @@ namespace DROMPA {
       
       DEBUGprint("DrawRegion setValues done.");
     }
-
+    void InitDump(const MyOpt::Variables &values) const {
+      std::vector<std::string> str_bool = {"OFF", "ON"};
+      
+      DEBUGprint("INITDUMP:DrompaCommand::DRAWREGION");
+      MyOpt::printOpt<std::string>(values, "region",    "   Region file");
+      if (chr != "") std::cout << boost::format("    output chr%1% only.\n") % chr;
+      if (genelocifile != "") {
+	std::cout << boost::format("    Geneloci file: %1%, around %2% bp\n") % genelocifile % len_geneloci;
+      }
+    }
+    
     std::vector<bed> getRegionBedChr(const std::string &chrname) {
       std::vector<bed> vbed;
       for(auto &x: regionBed) {
@@ -438,19 +402,17 @@ namespace DROMPA {
       }
       return vbed;
     }
-    std::string getchr() const { return chr; }
+    const std::string & getchr() const { return chr; }
     bool isRegionBed() const { return isRegion; }
   };
   
   class DrawParam {
-    
-    MyOpt::Opts opt;
-    bool showars;
     int32_t linenum_per_page;
+    int32_t barnum;
+    double ystep;
     bool showymem;
     bool showylab;
 
-    int32_t lineheight;
     int32_t samplenum;
 
   public:
@@ -461,12 +423,15 @@ namespace DROMPA {
     int32_t showpinter;
     int32_t showpenrich;
     int32_t viz;
+    double scale_tag;
+    double scale_ratio;
+    double scale_pvalue;
+
     
-    DrawParam():
-      opt("Drawing",100),
-      showars(false), showymem(true), showylab(true),
-      lineheight(0)
-    {
+    DrawParam(): showymem(true), showylab(true) {}
+
+    void setOpts(MyOpt::Opts &allopts) {
+      MyOpt::Opts opt("Drawing",100);
       opt.add_options()
 	("showctag",
 	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 1, "--showctag")),
@@ -483,22 +448,33 @@ namespace DROMPA {
 	("showpenrich",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 1, "--showpenrich")),
 	 "Display -log10(p) lines for ChIP/Input enrichment")
-	("showars", "(For S.servisiae) Display ARS and do not display genes)")
+	("scale_tag",
+	 boost::program_options::value<double>()->default_value(30)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_tag")),
+	 "Scale for read line")
+	("scale_ratio",
+	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_ratio")),
+	 "Scale for fold enrichment")
+	("scale_pvalue",
+	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_pvalue")),
+	 "Scale for -log10(p)")
 	("ls",
 	 boost::program_options::value<int32_t>()->default_value(1000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--ls")),
 	 "Width for each line (kp)")
 	("lpp",
 	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--lpp")),
 	 "Line number per page")
+	("bn",
+	 boost::program_options::value<int32_t>()->default_value(2)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--bn")),
+	 "Number of memories of y-axis")
+	("ystep",
+	 boost::program_options::value<double>()->default_value(15)->notifier(boost::bind(&MyOpt::over<double>, _1, 1, "--ystep")),
+	 "Height of read line")
 	("offymem", "Omit Y memory")
 	("offylabel", "Omit Y label")
 	("viz",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--viz")),
 	 "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
 	;
-    }
-
-    void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
   
@@ -510,18 +486,22 @@ namespace DROMPA {
       showratio = MyOpt::getVal<int32_t>(values, "showratio");
       showpinter = MyOpt::getVal<int32_t>(values, "showpinter");
       showpenrich = MyOpt::getVal<int32_t>(values, "showpenrich");
-      showars  = values.count("showars");
       width_per_line = 1000 * MyOpt::getVal<int32_t>(values, "ls");
       linenum_per_page = MyOpt::getVal<int32_t>(values, "lpp");
+      barnum = MyOpt::getVal<int32_t>(values, "bn");
+      ystep  = MyOpt::getVal<double>(values, "ystep");
       showymem = !values.count("offymem");
       showylab = !values.count("offylabel");
       viz      = MyOpt::getVal<int32_t>(values, "viz");
 
+      scale_tag    = MyOpt::getVal<double>(values, "scale_tag");
+      scale_ratio  = MyOpt::getVal<double>(values, "scale_ratio");
+      scale_pvalue = MyOpt::getVal<double>(values, "scale_pvalue");
+      
       samplenum = n;
       
       DEBUGprint("DrawParam setValues done.");
     }
-
     void InitDump() const {
       std::vector<std::string> str_bool = {"OFF", "ON"};
       std::vector<std::string> str_input = {"OFF", "ALL", "FIRST"};
@@ -529,18 +509,19 @@ namespace DROMPA {
       
       DEBUGprint("INITDUMP:DrompaCommand::DRAW");
       std::cout << boost::format("\nFigure parameter:\n");
-      std::cout << boost::format("   Display read: ChIP %1%, Input %2%\n") % str_bool[showctag] % str_input[showitag];
-      std::cout << boost::format("   Display enrichment: %1%\n")           % str_ratio[showratio];
-      std::cout << boost::format("   Display pvalue (internal): %1%\n")    % str_bool[showpinter];
-      std::cout << boost::format("   Display pvalue (ChIP/Input): %1%\n")  % str_bool[showpenrich];
+      std::cout << boost::format("   Display read: ChIP %1%, Input %2%, y-axis scale: %3%\n") % str_bool[showctag] % str_input[showitag] % scale_tag; 
+      std::cout << boost::format("   Display enrichment: %1%, y-axis scale: %2%\n")           % str_ratio[showratio] % scale_ratio;
+      std::cout << boost::format("   Display pvalue (internal): %1%, y-axis scale: %2%\n")    % str_bool[showpinter] % scale_pvalue;
+      std::cout << boost::format("   Display pvalue (ChIP/Input): %1%, y-axis scale: %2%\n")  % str_bool[showpenrich] % scale_pvalue;
       std::cout << boost::format("   Width per line: %1% kbp\n")           % (width_per_line/1000);
       std::cout << boost::format("   Y-axis label: %1%\n")                 % str_bool[showylab];
       std::cout << boost::format("   Y-axis memory: %1%\n")                % str_bool[showymem];
     }
-    
-    void setlineheight(const int32_t l) { lineheight = l; }
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
+
+    double getlineheight() const { return ystep * barnum; }
+
     int32_t getNumLine(const int32_t s, const int32_t e) const{
       return (e-s)/width_per_line +1;
     }
@@ -563,12 +544,10 @@ namespace DROMPA {
     int32_t norm;
     int32_t sm;
 
-    // smoothing
   public:
     MyOpt::Opts opts;
     DrawParam drawparam;
     DrawRegion drawregion;
-    Scale scale;
     Threshold thre;
     Annotation anno;
 
@@ -627,6 +606,22 @@ namespace DROMPA {
       rmchr = values.count("rmchr");
 
       DEBUGprint("Other setValues done.");
+    }
+    void InitDumpNorm() const {
+      std::vector<std::string> str_norm = { "OFF", "TOTALREAD", "NCIS" };
+      
+      DEBUGprint("INITDUMP:DrompaCommand::NORM");
+      std::cout << boost::format("   ChIP/Input normalization: %1%\n") % str_norm[norm];
+      if (sm) std::cout << boost::format("   smoothing width: %1% bp\n") % sm;
+    }
+    void InitDumpOther() const {
+      std::vector<std::string> str_bool = {"OFF", "ON"};
+      std::vector<std::string> str_format = {"PDF", "PNG"};
+      
+      DEBUGprint("INITDUMP:DrompaCommand::OTHER");
+      std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
+      std::cout << boost::format("   include chromosome Y and M: %1%\n") % str_bool[includeYM];
+      std::cout << boost::format("   remove chr pdfs: %1%\n") % str_bool[rmchr];
     }
 
     WigType getIfType() const {return iftype;}

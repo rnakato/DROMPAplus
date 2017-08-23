@@ -312,14 +312,17 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
       page.draw(p, i, "chr" + chr.getname(), 1);
     }
   }else{
+    std::cout << "test" << std::endl;
     int32_t region_no(1);
     for (auto &x: regionBed) {
-      //    for (size_t region_no=0; region_no < regionBed.size(); ++region_no) {
+    std::cout << "test2" << std::endl;
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
+    std::cout << "test3" << std::endl;
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
 	Page page(p, arrays, pairs, surface, x.start, x.end);
 	page.draw(p, i, "chr" + chr.getname(), region_no);
+    std::cout << "test4" << std::endl;
       }
       ++region_no;
     }
@@ -335,15 +338,15 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairChr &pair) const {
   int32_t height(0);
   int32_t n(0);
-  if (showctag)                            { height += lineheight; ++n; }
-  if (showitag==1 && pair.argvInput != "") { height += lineheight; ++n; }
-  if (showratio   && pair.argvInput != "") { height += lineheight; ++n; }
-  if (showpinter)                          { height += lineheight; ++n; }
-  if (showpenrich && pair.argvInput != "") { height += lineheight; ++n; }
+  if (showctag)                            { height += getlineheight(); ++n; }
+  if (showitag==1 && pair.argvInput != "") { height += getlineheight(); ++n; }
+  if (showratio   && pair.argvInput != "") { height += getlineheight(); ++n; }
+  if (showpinter)                          { height += getlineheight(); ++n; }
+  if (showpenrich && pair.argvInput != "") { height += getlineheight(); ++n; }
   height += MERGIN_BETWEEN_DATA * (n-1);
   
 #ifdef DEBUG
-  std::cout << "LineHeight: " << lineheight << ",n: " << n << std::endl;
+  std::cout << "LineHeight: " << getlineheight() << ",n: " << n << std::endl;
   std::cout << "HeightEachSample: " << height << std::endl;
 #endif
   return height;
@@ -353,7 +356,7 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const std::vector<SamplePairChr> &
   int32_t height(0);
   for(auto x: pairs) height += getHeightEachSample(x);
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
-  if(showitag==2) height += lineheight + MERGIN_BETWEEN_DATA;
+  if(showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
 
 #ifdef DEBUG
   std::cout << "HeightAllSample; " << height << std::endl;
