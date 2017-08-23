@@ -71,6 +71,9 @@ class WigArray {
   void readBinary(std::ifstream &in, const int32_t nbin) const {
     for(int32_t i=0; i<nbin; ++i) in.read((char *)&array[i], sizeof(int32_t));
   }
+  void dump() const {
+    for (auto x: array) std::cout << x << std::endl;
+  }
 };
 
 class WigStats {

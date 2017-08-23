@@ -14,7 +14,7 @@ void scan_samplestr(const std::string &str,
 		    std::vector<SamplePair> &samplepair,
 		    WigType iftype)
 {
-std::vector<std::string> v;
+  std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
   int32_t binsize(0);
 
@@ -68,7 +68,7 @@ pdSample scan_pdstr(const std::string &str)
 template <class T>
 void readWig(T &in, WigArray &array, const std::string &chrname, const int binsize)
 {
-  std::string head("chrom="+ chrname +"\tspan=");
+  std::string head("chrom="+ chrname);
   int32_t on(0);
 
   std::string lineStr;
@@ -82,11 +82,10 @@ void readWig(T &in, WigArray &array, const std::string &chrname, const int binsi
     }
     if(!on) continue;
     std::vector<std::string> v;
-    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
     array.setval((stoi(v[0])-1)/binsize, stol(v[1]));
   }
 
-  // array.printArray();
   return;
 }
 
@@ -101,15 +100,15 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     getline(in, lineStr);
     if (lineStr.empty()) continue;
     std::vector<std::string> v;
-    boost::split(v, lineStr, boost::algorithm::is_any_of(" "));
+    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
     if (v[0] != chrname) {
       if (!on) continue;
       else break;
     }
     if (!on) on=1;
+    
     int32_t start(stoi(v[1]));
     if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
-	
     array.setval(start/binsize, stol(v[3]));
   }
 }
@@ -129,25 +128,25 @@ void readBinary(WigArray &array, const std::string &filename, const int32_t nbin
   return;
 }
 
-void funcWig(WigArray &array, const std::string &filename, const int32_t binsize, const chrsize &chr)
+void funcWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
   DEBUGprint("WigType::UNCOMPRESSWIG");
   std::ifstream in(filename);
   if (!in) PRINTERR("cannot open " << filename);
-  readWig(in, array, chr.getname(), binsize);
+  readWig(in, array, chrname, binsize);
 }
 
-void funcCompressWig(WigArray &array, const std::string &filename, const int32_t binsize, const chrsize &chr)
+void funcCompressWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
   DEBUGprint("WigType::COMPRESSWIG");
   std::string command = "zcat " + filename;
   FILE *fp = popen(command.c_str(), "r");
   __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
   std::istream in(static_cast<std::streambuf *>(p_fb));
-  readWig(in, array, chr.getname(), binsize);
+  readWig(in, array, chrname, binsize);
 }
 
-void funcBigWig(WigArray &array, const std::string &filename, const int32_t binsize, const chrsize &chr)
+void funcBigWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
   DEBUGprint("WigType::BIGWIG");
   int32_t fd(0);
@@ -156,15 +155,20 @@ void funcBigWig(WigArray &array, const std::string &filename, const int32_t bins
     perror("mkstemp");
     //      fd = EXIT_FAILURE;
   }
-  std::string command = "bigWigToBedGraph -chrom=" + chr.getname() + " " + filename + " " + std::string(tmpfile);
-  readBedGraph(array, std::string(tmpfile), chr.getname(), binsize);
+  std::string command = "bigWigToBedGraph -chrom=chr" + rmchr(chrname) + " " + filename + " " + std::string(tmpfile);
+  int32_t return_code = system(command.c_str());
+  if(WEXITSTATUS(return_code)) {
+    std::cerr << "Warning: command " << command << "return nonzero status." << std::endl;
+  }
+  readBedGraph(array, std::string(tmpfile), chrname, binsize);
   unlink(tmpfile);
 }
-void funcBedGraph(WigArray &array, const std::string &filename, const int32_t binsize, const chrsize &chr)
+void funcBedGraph(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
   DEBUGprint("WigType::BEDGRAPH");
-  readBedGraph(array, filename, chr.getname(), binsize);
+  readBedGraph(array, filename, chrname, binsize);
 }
+
 void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin)
 {
   DEBUGprint("WigType::BINARY");
@@ -177,21 +181,22 @@ WigArray readInputData(const std::string &filename, const int32_t binsize, const
   std::cout << chr.getname() << std::endl;
 
   WigArray array(nbin, 0);
+  std::string chrname(chr.getrefname());
 
   if (iftype == WigType::NONE) {
-
-    if (isStr(filename, ".bin")) funcBinary(array, filename, nbin);
-    else if (isStr(filename, ".bedGraph")) funcBedGraph(array, filename, binsize, chr);
-    else if (isStr(filename, ".bw")) funcBigWig(array, filename, binsize, chr);
-    else if (isStr(filename, ".wig.gz")) funcCompressWig(array, filename, binsize, chr);
-    else if (isStr(filename, ".gz")) funcWig(array, filename, binsize, chr);
+    if (isStr(filename, ".bin"))           funcBinary(array, filename, nbin);
+    else if (isStr(filename, ".bedGraph")) funcBedGraph(array, filename, binsize, chrname);
+    else if (isStr(filename, ".bw"))       funcBigWig(array, filename, binsize, chrname);
+    else if (isStr(filename, ".wig.gz"))   funcCompressWig(array, filename, binsize, chrname);
+    else if (isStr(filename, ".wig"))      funcWig(array, filename, binsize, chrname);
     else PRINTERR("Suffix error of "<< filename <<". please specify --iftype option.");
-  } else if (iftype == WigType::UNCOMPRESSWIG) funcWig(array, filename, binsize, chr);
-  else if (iftype == WigType::COMPRESSWIG)     funcCompressWig(array, filename, binsize, chr);
-  else if (iftype == WigType::BIGWIG)          funcBigWig(array, filename, binsize, chr);
-  else if (iftype == WigType::BEDGRAPH)        funcBedGraph(array, filename, binsize, chr);
+  } else if (iftype == WigType::UNCOMPRESSWIG) funcWig(array, filename, binsize, chrname);
+  else if (iftype == WigType::COMPRESSWIG)     funcCompressWig(array, filename, binsize, chrname);
+  else if (iftype == WigType::BIGWIG)          funcBigWig(array, filename, binsize, chrname);
+  else if (iftype == WigType::BEDGRAPH)        funcBedGraph(array, filename, binsize, chrname);
   else if (iftype == WigType::BINARY)          funcBinary(array, filename, nbin);
 
+  //array.dump();
   //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
 
   return array;

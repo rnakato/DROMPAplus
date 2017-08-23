@@ -123,11 +123,8 @@ class Page {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
 
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
-    printf("test\n");
     df.stroke_bindata(p, pair, arrays, nlayer);
-    printf("test2\n");
     df.stroke_dataframe(p, nlayer);
-    printf("test34\n");
     if(!nlayer) stroke_xaxis();
     return;
   }

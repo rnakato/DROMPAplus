@@ -26,7 +26,7 @@ void makewig(Mapfile &p)
   printf("Convert read data to array: \n");
   WigType oftype(p.wsGenome.getWigType());
   std::string filename(p.getbinprefix());
-
+  
   if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
     filename += ".wig";
     outputWig(p, filename);
@@ -34,15 +34,25 @@ void makewig(Mapfile &p)
       std::string command = "gzip -f " + filename;
       if(system(command.c_str())) PRINTERR("gzip .wig failed.");
     }
-  } else if (oftype==WigType::BEDGRAPH || oftype==WigType::BIGWIG) {
+  } else if (oftype==WigType::BEDGRAPH) {
     filename += ".bedGraph";
     outputBedGraph(p, filename);
-    if(oftype==WigType::BIGWIG) {
-      printf("Convert to bigWig...\n");
-      std::string command = "bedGraphToBigWig " + filename + " " + p.genome.getGenomeTable() + " " + p.getbinprefix() + ".bw";
-      if(system(command.c_str())) PRINTERR("conversion failed.");
-      remove(filename.c_str()); 
+  } else if (oftype==WigType::BIGWIG) {
+    int32_t fd(0);
+    char tmpfile[] = "/tmp/parse2wig+_bedGraph_XXXXXX";
+    if ((fd = mkstemp(tmpfile)) < 0){
+      perror("mkstemp");
+      //      fd = EXIT_FAILURE;
     }
+    //    std::cout << "Temporal bedGraph file: " << std::string(tmpfile) << std::endl;
+    outputBedGraph(p, std::string(tmpfile));
+    printf("Convert to bigWig...\n");
+    std::string command = "bedGraphToBigWig " + std::string(tmpfile) + " " + p.genome.getGenomeTable() + " " + p.getbinprefix() + ".bw";
+    if(system(command.c_str())) {
+      unlink(tmpfile);
+      PRINTERR("conversion failed.");
+    }
+    unlink(tmpfile);
   } else if (oftype==WigType::BINARY) {
     filename += ".bin";
     outputBinary(p, filename);
