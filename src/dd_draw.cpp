@@ -129,10 +129,12 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer) 
   /* y memory */
   cr->set_line_width(0.4);
   cr->set_source_rgba(CLR_BLACK, 0.5);
+  
   for(int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, width_df);
   cr->stroke();
 
   if (p.drawparam.isshowymem()) stroke_ymem(nlayer);
+
   if (!nlayer && p.drawparam.isshowylab()) {
     cr->set_source_rgba(CLR_BLACK, 1);
     showtext_cr(cr, 50, par.yaxis_now - height_df/2, label, 12);
@@ -166,7 +168,6 @@ void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pai
 
 void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer)
 {
-  
   if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair, nlayer);
   if (p.drawparam.showpenrich && pair.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
   if (p.drawparam.showratio && pair.argvInput!="") {
@@ -312,17 +313,13 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
       page.draw(p, i, "chr" + chr.getname(), 1);
     }
   }else{
-    std::cout << "test" << std::endl;
     int32_t region_no(1);
     for (auto &x: regionBed) {
-    std::cout << "test2" << std::endl;
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
-    std::cout << "test3" << std::endl;
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
 	Page page(p, arrays, pairs, surface, x.start, x.end);
 	page.draw(p, i, "chr" + chr.getname(), region_no);
-    std::cout << "test4" << std::endl;
       }
       ++region_no;
     }

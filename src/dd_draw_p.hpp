@@ -47,7 +47,7 @@ inline void showtext_cr(Cairo::RefPtr<Cairo::Context> cr, const double x, const 
   return;
 }
 
-inline const std::string & float2string(const double f, const int32_t digits)
+inline const std::string float2string(const double f, const int32_t digits)
 {
   std::ostringstream oss;
   oss << std::setprecision(digits) << std::setiosflags(std::ios::fixed) << f;
@@ -123,8 +123,11 @@ class Page {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
 
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
+    printf("test\n");
     df.stroke_bindata(p, pair, arrays, nlayer);
+    printf("test2\n");
     df.stroke_dataframe(p, nlayer);
+    printf("test34\n");
     if(!nlayer) stroke_xaxis();
     return;
   }
@@ -246,8 +249,12 @@ protected:
   
     double x(0);
     if (!nlayer) x = OFFSET_X + width_df + 7; else x = OFFSET_X - 20;
+
     for(int32_t i=1; i<=par.barnum; ++i) {
+
+      std::cout << i*scale << std::endl;
       std::string str(float2string(i*scale, 1));
+
       showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), str, 9);
     }
     return;
