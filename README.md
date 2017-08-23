@@ -16,12 +16,12 @@ DROMPAplus is written in C++ and requires the following programs and libraries:
 #### 2.1. Install required libraries
 for Ubuntu:
 
-    sudo apt-get install git build-essential libgtkmm-3.0-dev libgtk2.0-dev libboost-all-dev \
+    sudo apt-get install git build-essential libgtkmm-3.0-dev libboost-all-dev \
     libgsl-dev libz-dev samtools r-base
 
 for CentOS:
 
-    sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtk2-devel
+    sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
 and install samtools from [the website](http://samtools.sourceforge.net/).
 
 #### 2.2. Install cpdf
