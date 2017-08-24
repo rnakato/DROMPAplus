@@ -197,8 +197,7 @@ void exec_PCSHARP(DROMPA::Global &p)
     if(p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
 
     Figure fig(p, chr);
-    // readAnnotation();
-    if (fig.Draw(p, chr)) StrAllPdf += p.getFigFileNameChr(chr.getname()) + " ";
+    if (fig.Draw(p, chr)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }
 
   MergePdf(p, StrAllPdf);

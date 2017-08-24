@@ -7,6 +7,7 @@
 #include "dd_draw.hpp"
 #include "dd_draw_p.hpp"
 #include "SSP/common/inline.hpp"
+#include "SSP/common/util.hpp"
 
       /*    if (p->gapfile && d->gaparray[i] >= GAP_THRE){
 	    cr->set_source_rgba(CLR_BLACK, 0.3);
@@ -27,7 +28,6 @@ void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
   if (!value) return;
 
   int32_t len(getbinlen(value));
-
   cr->set_source_rgba(CLR_GREEN3, 1);
   if (!viz) {
     rel_yline(cr, xcen, yaxis, len);
@@ -241,7 +241,133 @@ void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair,
   return;
   }*/
 
-void Page::draw(const DROMPA::Global &p, const int32_t page_curr, const std::string &chrname, const int32_t region_no)
+class GeneElement{
+  int32_t dif;
+  int32_t cnt;
+  int32_t on_plus;
+  int32_t on_minus;
+  
+ public:
+  double x1, x2, xcen, xwid;
+  double x_name;
+  int32_t y_name, ylen;
+  int32_t ybar;
+
+  GeneElement(const int32_t start, const int32_t end, const std::string &strand,
+	      const std::string &name, const DParam &par):
+    dif(6), cnt(1), on_plus(0), on_minus(0),
+    x1(par.bp2xaxis(start - par.xstart +1)),
+    x2(par.bp2xaxis(end   - par.xstart +1)),
+    xcen((x1+x2)/2), xwid(x2 - x1),
+    ybar(0)
+  {
+    x_name = xcen - 3.25*name.length() + 6;
+    if (x_name < 0) x_name = 10;
+    else if (x_name > pagewidth) x_name = pagewidth - 50;
+
+    if (strand == "+") {
+      ybar = par.yaxis_now - dif;
+      y_name = ybar -5 - on_minus*6;
+      if(on_minus == cnt) on_minus=0; else ++on_minus;
+    } else if (strand == "-") {
+      ybar = par.yaxis_now + dif;
+      y_name = ybar +9 + on_plus*6;
+      if (on_plus == cnt) on_plus=0; else ++on_plus;
+    } else y_name = par.yaxis_now -22;
+    ylen = y_name - par.yaxis_now;
+  }
+};
+
+void Page::strokeGeneSGD(const DROMPA::Global &p)
+{
+  //  show_geneanno(d, cr);
+
+  cr->set_line_width(1.5);
+
+  for(auto &m: p.anno.gmp.at(rmchr(chrname))) {
+    int32_t s(m.second.txStart);
+    int32_t e(m.second.txEnd);
+    
+    if(!my_overlap(s, e, par.xstart, par.xend)) continue;
+
+    GeneElement g(s, e, m.second.strand, m.second.tname, par);
+
+    rel_xline(cr, g.x1, g.ybar, g.xwid);
+    cr->stroke();
+
+    if (m.second.gtype=="centromere" || m.second.gtype=="teromere") {
+      cr->set_source_rgba(CLR_GREEN, 1);
+      rel_yline(cr, g.xcen, par.yaxis_now -2, g.ylen);
+      showtext_cr(cr, g.x_name, g.y_name-6, m.second.gname, 8);
+    }
+    else if (m.second.gtype=="ARS") {
+      cr->set_source_rgba(CLR_RED, 1);
+      rel_yline(cr, g.xcen, par.yaxis_now -2, g.ylen +2);
+      showtext_cr(cr, g.x_name, g.y_name-4, m.second.gname, 7);
+    }
+    else if (m.second.gtype=="TER") {
+      cr->set_source_rgba(CLR_OLIVE, 1);
+      rel_yline(cr, g.xcen, par.yaxis_now -2, g.ylen -5);
+      showtext_cr(cr, g.x_name, g.y_name-11, m.second.gname, 7);
+    }
+    else if (m.second.gtype=="rRNA" || m.second.gtype=="snoRNA") {
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+    }
+    else if (m.second.gtype=="LTR" || m.second.gtype=="retrotransposon" || isStr(m.second.gtype, "repeat")) {
+      cr->set_source_rgba(CLR_PURPLE, 1);
+      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+    }
+    else if (m.second.gtype=="tRNA") {
+      cr->set_source_rgba(CLR_GREEN, 1);
+      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+    }
+    else {
+      cr->set_source_rgba(CLR_BLUE, 1);
+      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+    }
+  }
+  
+  return;
+}
+
+enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
+void Page::DrawAnnotation(const DROMPA::Global &p)
+  {
+  int32_t boxheight;
+  if(p.anno.getgftype() == GFTYPE_SGD) boxheight = BOXHEIGHT_GENEBOX_NOEXON;
+  else boxheight = BOXHEIGHT_GENEBOX_EXON;
+
+  double ytop(par.yaxis_now);
+  double ycenter(ytop + boxheight/2);
+
+  if (p.anno.showars) {
+    //stroke_ARS(d, cr, xstart, xend);
+    showtext_cr(cr, 70, ycenter, "ARS", 12);
+  } else {
+    if(p.anno.arsfile != "") ;//stroke_ARS(d, cr, xstart, xend);
+    if(p.anno.getgftype() == GFTYPE_SGD) strokeGeneSGD(p);
+    else ;//strokeGene(d, cr, xstart, xend);
+  }
+  /* frame */
+  cr->rectangle(par.xstart, par.xend, ytop, boxheight);
+  //  if(d->backcolors) cr->fill(); // fill_rectangle(cr, xstart, xend, ytop, boxheight, CLR_YELLOW2, 0.1);
+
+  /* genome line */
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->set_line_width(1.5);
+  rel_xline(cr, OFFSET_X, ycenter, par.getXaxisLen());
+  cr->stroke();
+
+  /* memory */
+  stroke_xaxis(ycenter);
+  stroke_xaxis_num(ycenter, 9);
+
+  par.yaxis_now += boxheight + MERGIN_BETWEEN_DATA;
+  return;
+}
+
+void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no)
 {
   int32_t line_start, line_end;
   std::tie(line_start, line_end) = get_start_end_linenum(page_curr, p.drawparam.getlpp());
@@ -263,14 +389,14 @@ void Page::draw(const DROMPA::Global &p, const int32_t page_curr, const std::str
 	    yaxis_now += mergin_between_graph_data;
 	    }*/
 
-    /*    if(d->gene.argv || d->arsfile || d->terfile) draw_annotation(d, cr, xstart, xend);
-    if(d->internum){
+    if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawAnnotation(p);
+     /*   if(d->internum){
       for(j=0; j<d->internum; ++j) draw_interaction(cr, &(d->inter[j]), xstart, xend, chr);
       }*/
     //    double ytemp = par.yaxis_now;
     int32_t nlayer = 0;
     for(size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j], nlayer);
-    stroke_xaxis_num(9);
+    stroke_xaxis_num(par.yaxis_now, 9);
 
     //    if(d->bednum) draw_bedfile(d, cr, xstart, xend, chr);
     //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);
@@ -299,18 +425,19 @@ void Page::draw(const DROMPA::Global &p, const int32_t page_curr, const std::str
 void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 {
   int32_t width(pagewidth);
-  int32_t height(p.drawparam.getPageHeight(pairs));
-  std::cout << "chr" << chr.getname() << std::endl;
+  int32_t height(p.drawparam.getPageHeight(p, pairs));
+  std::string pdffile(p.getFigFileNameChr(chr.getrefname()));
+  std::cout << chr.getrefname() << std::endl;
     
 #ifdef CAIRO_HAS_PDF_SURFACE
-  const auto surface = Cairo::PdfSurface::create(p.getFigFileNameChr(chr.getname()), width, height);
+  const auto surface = Cairo::PdfSurface::create(pdffile, width, height);
 
   if(!p.drawregion.isRegionBed()){  // whole chromosome
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
     for(int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page << std::flush;
-      Page page(p, arrays, pairs, surface, 0, chr.getlen());
-      page.draw(p, i, "chr" + chr.getname(), 1);
+      Page page(p, arrays, pairs, surface, chr.getrefname(), 0, chr.getlen());
+      page.Draw(p, i, 1);
     }
   }else{
     int32_t region_no(1);
@@ -318,13 +445,13 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
-	Page page(p, arrays, pairs, surface, x.start, x.end);
-	page.draw(p, i, "chr" + chr.getname(), region_no);
+	Page page(p, arrays, pairs, surface, chr.getrefname(), x.start, x.end);
+	page.Draw(p, i, region_no);
       }
       ++region_no;
     }
   } 
-  std::cout << "Wrote PDF file \"" << p.getFigFileNameChr(chr.getname()) << "\"" << std::endl;
+  std::cout << "Wrote PDF file \"" << pdffile << "\"" << std::endl;
 
 #else
   std::cout << "You must compile cairo with PDF support for DROMPA." << std::endl;
@@ -349,11 +476,18 @@ int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairChr &pair) const 
   return height;
 }
     
-int32_t DROMPA::DrawParam::getHeightAllSample(const std::vector<SamplePairChr> &pairs) const {
+int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std::vector<SamplePairChr> &pairs) const {
   int32_t height(0);
   for(auto x: pairs) height += getHeightEachSample(x);
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
   if(showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
+
+  if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
+    if(p.anno.getgftype() == GFTYPE_SGD) height += BOXHEIGHT_GENEBOX_NOEXON;
+    else height += BOXHEIGHT_GENEBOX_EXON;
+    height += MERGIN_BETWEEN_DATA;
+  }
+  //  height_lpp += BOXHEIGHT_INTERACTION * d->internum;
 
 #ifdef DEBUG
   std::cout << "HeightAllSample; " << height << std::endl;
@@ -362,9 +496,9 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const std::vector<SamplePairChr> &
 }
     
 
-int32_t DROMPA::DrawParam::getPageHeight(const std::vector<SamplePairChr> &pairs) const {
+int32_t DROMPA::DrawParam::getPageHeight(const DROMPA::Global &p, const std::vector<SamplePairChr> &pairs) const {
   int32_t height(OFFSET_Y*2);
-  height += getHeightAllSample(pairs) * linenum_per_page;
+  height += getHeightAllSample(p, pairs) * linenum_per_page;
   height += MERGIN_BETWEEN_LINE * (linenum_per_page-1);
 
 #ifdef DEBUG

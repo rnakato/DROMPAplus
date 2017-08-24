@@ -72,7 +72,7 @@ class yScale {
 };
 
 class SamplePair {
-  int overlay;
+  int32_t overlay;
   //  double fc; //comp
 
   std::string peak_argv;
@@ -80,8 +80,8 @@ class SamplePair {
   char *peak_argv;
   char *peakarray;
   char *linename;
-  int *binnum;*/
-  int binsize;
+  int32_t *binnum;*/
+  int32_t binsize;
   
   yScale scale;
   
@@ -131,10 +131,14 @@ public:
   
 namespace DROMPA {
   
+  class Global;
+  
   class Annotation {
+
     MyOpt::Opts optPC;
     MyOpt::Opts optGV;
 
+  public:
     std::string genefile;
     int32_t gftype;
     bool showgene;
@@ -150,8 +154,6 @@ namespace DROMPA {
     std::string gapfile;
     GraphData GC;
     GraphData GD;
-
-  public:
     
     Annotation(): optPC("Annotation",100), optGV("Optional data",100),
 		  genefile(""), arsfile(""), terfile(""), repeatfile(""),
@@ -192,13 +194,13 @@ namespace DROMPA {
       HashOfGeneDataMap tmp;
       if(!gftype)        tmp = parseRefFlat(genefile);
       else if(gftype==1) tmp = parseGtf(genefile);
-      else if(gftype==2) ;// tmp = parseSGD(genefile);
+      else if(gftype==2) tmp = parseSGD(genefile);
       else PRINTERR("invalid --gftype: " << gftype);
       
-      //printMap(tmp);
+      //      printMap(tmp);
       
-      if(showgene) return construct_gmp(tmp); // hash for genes
-      else         return tmp; // hash for transcripts
+      if(showgene && gftype!=2) return construct_gmp(tmp); // hash for genes
+      else return tmp; // hash for transcripts
     }
     
     void setValuesPC(const MyOpt::Variables &values) {
@@ -249,7 +251,7 @@ namespace DROMPA {
       std::vector<std::string> str_gtype = {"Transcript", "Gene"};
       DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
       std::cout << boost::format("\nAnnotations:\n");
-      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%, Type\n") % genefile % str_gftype[gftype] % str_gtype[showgene];
+      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%, Type: %3%\n") % genefile % str_gftype[gftype] % str_gtype[showgene];
       //      if(arsfile != "")  std::cout << boost::format("   ARS file: %1%\n") % arsfile;
       //if(terfile != "")  std::cout << boost::format("   TER file: %1%\n") % terfile;
       //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
@@ -274,6 +276,7 @@ namespace DROMPA {
 		if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
     }
     
+    int32_t getgftype() const { return gftype; }
   };
   
   class Threshold {
@@ -531,8 +534,8 @@ namespace DROMPA {
 
     int32_t getlpp() const { return linenum_per_page; }
     int32_t getHeightEachSample(const SamplePairChr &pair) const;
-    int32_t getHeightAllSample(const std::vector<SamplePairChr> &pairs) const;
-    int32_t getPageHeight(const std::vector<SamplePairChr> &pairs) const;
+    int32_t getHeightAllSample(const Global &p, const std::vector<SamplePairChr> &pairs) const;
+    int32_t getPageHeight(const Global &p, const std::vector<SamplePairChr> &pairs) const;
   };
   
   class Global {
@@ -632,7 +635,7 @@ namespace DROMPA {
     }
     const std::string getFigFileNameChr(const std::string &chr) const
     {
-      return oprefix + "_chr" + chr + ".pdf";
+      return oprefix + "_" + chr + ".pdf";
     }
     bool isincludeYM() const { return includeYM; }
     bool isrmchr() const { return rmchr; }

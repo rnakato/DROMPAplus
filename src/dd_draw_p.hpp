@@ -24,6 +24,7 @@ namespace {
   enum class LineType { CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
 
   enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=6, MERGIN_BETWEEN_LINE=30};
+  enum {BOXHEIGHT_GENEBOX_EXON=130, BOXHEIGHT_GENEBOX_NOEXON=80};
   int32_t pagewidth(1088);
   int32_t width_draw(820);
   int32_t mergin_between_graph_data(15);
@@ -90,6 +91,7 @@ public:
   }
   
   double bp2xaxis(const int32_t bp) const { return bp * dot_per_bp + OFFSET_X; }
+  double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
 };
 
 class Page {
@@ -98,16 +100,19 @@ class Page {
 
   DParam par;
   Cairo::RefPtr<Cairo::Context> cr;
+
+  std::string chrname;
   
   public:
   
   Page(const DROMPA::Global &p,
        const std::unordered_map<std::string, ChrArray> &refarrays,
        const std::vector<SamplePairChr> &refpairs,
-       Cairo::RefPtr<Cairo::PdfSurface> surface, const int32_t s, const int32_t e):
+       const Cairo::RefPtr<Cairo::PdfSurface> surface,
+       const std::string &c, const int32_t s, const int32_t e):
     arrays(refarrays), pairs(refpairs),
-    par(s, e, p),
-    cr(Cairo::Context::create(surface))
+    par(s, e, p), cr(Cairo::Context::create(surface)),
+    chrname(c)
   {
     cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL );
   }
@@ -128,8 +133,10 @@ class Page {
     if(!nlayer) stroke_xaxis();
     return;
   }
+  void DrawAnnotation(const DROMPA::Global &p);
+  void strokeGeneSGD(const DROMPA::Global &p);
 
-  void draw(const DROMPA::Global &p, const int32_t page_curr, const std::string &chrname, const int32_t region_no);
+  void Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no);
 
   void set_xstart_xend(const int32_t i) {
     par.set_xstart_xend(i);
@@ -146,8 +153,28 @@ class Page {
     }
     return interval;
     }*/
+  
+  void stroke_xaxis(const double y) {
+    double x;
+    int32_t interval_large(par.width_per_line/10); //set_interval_large(d);
+    int32_t interval = interval_large/10;
+    
+    cr->set_source_rgba(CLR_BLACK, 1);
+    for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
+      x = par.bp2xaxis(i - par.xstart);
+      if (!(i%interval_large)) {
+	cr->set_line_width(1);
+	rel_yline(cr, x, y-4, 8);
+      } else {
+	cr->set_line_width(0.5);
+	rel_yline(cr, x, y-1.5, 3);
+      }
+      cr->stroke();
+    }
+    return;
+  }
 
-  void stroke_xaxis_num(const int32_t fontsize) {
+  void stroke_xaxis_num(const double y, const int32_t fontsize) {
     int32_t mega, kilo;
     double x;
     int32_t interval(par.width_per_line/10);
@@ -159,7 +186,7 @@ class Page {
       /*  if(d->gw==true){
 	if(d->large_genome==false) sprintf(str, "%dk", i/NUM_1K);
 	else sprintf(str, "%dM", i/NUM_1M);
-	showtext_cr(cr, x - 3*strlen(str), par.yaxis_now +10, str, fontsize);
+	showtext_cr(cr, x - 3*strlen(str), y+10, str, fontsize);
 	}else{*/
 	mega = i/NUM_1M;
 	kilo = (i%NUM_1M)/NUM_1K;
@@ -172,37 +199,34 @@ class Page {
 	  else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
 	  else str = std::to_string(i%NUM_1K);
 	}
-	showtext_cr(cr, x - 3*str.length(), par.yaxis_now +10, str, fontsize);
+	showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
 	//      }
     }
     return;
   }
 
-  
-void stroke_xaxis(){
-  double x;
-  //  int32_t interval_large = set_interval_large(d);
-  int32_t interval_large(par.width_per_line/10);
-  int32_t interval(interval_large/10);
+  void stroke_xaxis(){
+    double x;
+    //  int32_t interval_large = set_interval_large(d);
+    int32_t interval_large(par.width_per_line/10);
+    int32_t interval(interval_large/10);
 
-  cr->set_source_rgba(CLR_BLACK, 1);
-  for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-    x = par.bp2xaxis(i-par.xstart);
+    cr->set_source_rgba(CLR_BLACK, 1);
+    for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
+      x = par.bp2xaxis(i-par.xstart);
     
-    if (!(i%interval_large)) {
-      cr->set_line_width(1);
-      rel_yline(cr, x, par.yaxis_now-4, 8);
-    } else {
-      cr->set_line_width(0.5);
-      rel_yline(cr, x, par.yaxis_now-1.5, 3);
+      if (!(i%interval_large)) {
+	cr->set_line_width(1);
+	rel_yline(cr, x, par.yaxis_now-4, 8);
+      } else {
+	cr->set_line_width(0.5);
+	rel_yline(cr, x, par.yaxis_now-1.5, 3);
+      }
+      cr->stroke();
     }
-    cr->stroke();
+    return;
   }
-  return;
-}
 
-  
-  
   std::tuple<int32_t, int32_t> get_start_end_linenum(const int32_t page, const int32_t linenum_per_page) const {
     int32_t start(0), end(0);
     start = page * linenum_per_page;
@@ -354,8 +378,10 @@ class PinterDataFrame : public DataFrame {
   {}
 
   const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "pval (ChIP internal)";
-    else return pair.label;
+    std::string str;
+    if(p.drawparam.showctag || p.drawparam.showratio) str = "pval (ChIP internal)";
+    else str = pair.label;
+    return str;
   }
 
   void stroke_bin(const SamplePairChr &pair,
@@ -371,8 +397,10 @@ class PenrichDataFrame : public DataFrame {
   {}
 
   const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "pval (IP/Input)";
-    else return pair.label;
+    std::string str;
+    if(p.drawparam.showctag || p.drawparam.showratio) str = "pval (IP/Input)";
+    else str = pair.label;
+    return str;
   }
 
   void stroke_bin(const SamplePairChr &pair,
