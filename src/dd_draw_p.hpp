@@ -25,12 +25,11 @@ namespace {
 
   enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=6, MERGIN_BETWEEN_LINE=30};
   enum {BOXHEIGHT_GENEBOX_EXON=130, BOXHEIGHT_GENEBOX_NOEXON=80};
+  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10};
   int32_t pagewidth(1088);
   int32_t width_draw(820);
   double dot_per_bp(0);
   int32_t mergin_between_graph_data(15);
-  int32_t memnum_GC(10);
-  int32_t boxheight_graph(80);
 }
 
 inline double bp2xaxis(const int32_t bp) { return bp * dot_per_bp + OFFSET_X; }
@@ -96,9 +95,86 @@ public:
   double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
 };
 
+
+class GraphData {
+  enum {MEM_MAX_DEFAULT=20};
+public:
+  int32_t binsize;
+  std::vector<double> array;
+  std::string label;
+  int32_t memnum;
+  int32_t boxheight;
+  
+  double mmin;
+  double mmax;
+  double mwid;
+  GraphData(){}
+
+  void setValue(const GraphFile &g, const std::string &chr, const int32_t chrlen, const std::string &l,
+		const double ymin, const double ymax,
+		const int32_t m, const int32_t bh)
+  {
+    binsize = g.getbinsize();
+    label = l;
+    memnum = m;
+    boxheight = bh;
+    std::string filename(g.getfilename() + "/" + chr + "-bs" + std::to_string(binsize));
+    setArray(filename, chrlen, ymin, ymax);
+  }
+  void setArray(const std::string &filename, const int32_t chrlen, const double ymin, const double ymax) {
+    std::ifstream in(filename);
+    if (!in) PRINTERR("cannot open " << filename);
+
+    array = std::vector<double>(chrlen/binsize +1);
+    
+    double maxtemp(0);
+    std::string lineStr;
+    while (!in.eof()) {
+      getline(in, lineStr);
+      if (lineStr.empty()) continue;
+      
+      std::vector<std::string> v;
+      boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
+
+      int32_t start(stoi(v[0]));
+      if(start % binsize){
+	printf("%d %d\n", start, binsize);
+	PRINTERR("[E]graph: invalid start position or binsize:  " << filename);
+      }
+      double val(stof(v[1]));
+      array[start/binsize] = val;
+      if(maxtemp < val) maxtemp = val;
+    }
+    if (ymax) {
+      mmin = ymin;
+      mmax = ymax;
+    } else {
+      mmin = 0;
+      if(MEM_MAX_DEFAULT > maxtemp) mmax = MEM_MAX_DEFAULT;
+      else mmax = maxtemp;
+    }
+    mwid = mmax - mmin;
+  }
+  double getylen(const int32_t i) const {
+    return boxheight * (array[i] - mmin)/mwid;
+  }
+  double getBoxHeight4mem() const {
+    return boxheight/memnum;
+  }
+  const std::string getmemory(const int32_t i) const {
+    std::string str;
+    double mem(mwid/memnum);
+    if (mem <1) str = float2string(mmin + i*mem, 2);
+    else        str = float2string(mmin + i*mem, 1);
+    return str;
+  }
+};
+
 class Page {
   const std::unordered_map<std::string, ChrArray> &arrays;
   const std::vector<SamplePairChr> &pairs;
+  GraphData GC;
+  GraphData GD;
 
   DParam par;
   Cairo::RefPtr<Cairo::Context> cr;
@@ -111,12 +187,14 @@ class Page {
        const std::unordered_map<std::string, ChrArray> &refarrays,
        const std::vector<SamplePairChr> &refpairs,
        const Cairo::RefPtr<Cairo::PdfSurface> surface,
-       const std::string &c, const int32_t s, const int32_t e):
+       const chrsize &chr, const int32_t s, const int32_t e):
     arrays(refarrays), pairs(refpairs),
     par(s, e, p), cr(Cairo::Context::create(surface)),
-    chrname(c)
+    chrname(chr.getrefname())
   {
-    cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL );
+    cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
+    if(p.anno.GC.isOn()) GC.setValue(p.anno.GC, chrname, chr.getlen(), "GC%",         20, 70, MEMNUM_GC, BOXHEIGHT_GRAPH);
+    if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, chr.getlen(), "Num of genes", 0, 40, MEMNUM_GC, BOXHEIGHT_GRAPH);
   }
 
   void stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer);
@@ -135,6 +213,7 @@ class Page {
   void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
   void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
   void strokeGene(const DROMPA::Global &p, const double ycenter);
+  void drawGraph(const GraphData &graph);
 
   void Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no);
 
@@ -272,10 +351,7 @@ protected:
     if (!nlayer) x = OFFSET_X + width_df + 7; else x = OFFSET_X - 20;
 
     for(int32_t i=1; i<=par.barnum; ++i) {
-
-      std::cout << i*scale << std::endl;
       std::string str(float2string(i*scale, 1));
-
       showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), str, 9);
     }
     return;
@@ -377,11 +453,9 @@ class PinterDataFrame : public DataFrame {
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
   {}
 
-  const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    std::string str;
-    if(p.drawparam.showctag || p.drawparam.showratio) str = "pval (ChIP internal)";
-    else str = pair.label;
-    return str;
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "pval (ChIP internal)";
+    else return pair.label;
   }
 
   void stroke_bin(const SamplePairChr &pair,
@@ -396,11 +470,9 @@ class PenrichDataFrame : public DataFrame {
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
   {}
 
-  const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    std::string str;
-    if(p.drawparam.showctag || p.drawparam.showratio) str = "pval (IP/Input)";
-    else str = pair.label;
-    return str;
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "pval (IP/Input)";
+    else return pair.label;
   }
 
   void stroke_bin(const SamplePairChr &pair,

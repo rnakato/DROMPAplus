@@ -185,66 +185,6 @@ void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair,
   return;
 }
 
-
-/*void Page::draw_graph(DDParam *d, cairo_t *cr, Graph *graph, gint memnum, gint boxheight, bool color, bool xaxis)
-{
-  gint i;
-  gchar str[16];
-  gint s = xstart/graph->wsize, e = xend/graph->wsize +1;
-  gdouble xcen, xpre, ycen, ypre;
-  gdouble width = (xend-xstart+1) * dot_per_bp;
-  gdouble diff = graph->wsize * dot_per_bp;
-
-  yaxis_now += boxheight/2;
-
-  // graph line
-  if(color==false) cairo_set_source_rgba(cr, CLR_GREEN, 1); else cairo_set_source_rgba(cr, CLR_BLUE, 1);
-  cairo_set_line_width(cr, 0.6);
-  xpre = BP2XAXIS(0);
-  xcen = BP2XAXIS(0.5*graph->wsize);
-  ypre = defy_graph(graph->array[s], boxheight, graph->mmin, graph->mmax);
-  for(i=s; i<e; i++, xcen += diff){
-    ycen = defy_graph(graph->array[i], boxheight, graph->mmin, graph->mmax);
-    check_bottom(cr, xpre, ypre, xcen, ycen, yaxis_now + boxheight/2 + 10);
-    xpre = xcen;
-    ypre = ycen;
-  }
-  // keys
-  cairo_set_source_rgba(cr, CLR_BLACK, 1);
-  showtext_cr(cr, OFFSET_X - 5*strlen(graph->name)-55, yaxis_now, graph->name, 13);
-
-  yaxis_now += boxheight/2;
-
-  // axis
-  cairo_set_source_rgba(cr, CLR_BLACK, 1);
-  cairo_set_line_width(cr, 0.4);
-  rel_yline(cr, OFFSET_X, yaxis_now - boxheight, boxheight);
-  cairo_stroke(cr);
-  cairo_set_line_width(cr, 1.5);
-  rel_xline(cr, OFFSET_X, yaxis_now, width);
-  cairo_stroke(cr);
-  stroke_xaxis(d, cr, xstart, xend);
-  
-  // memory 
-  gdouble x, y;
-  gdouble mem = (graph->mmax - graph->mmin)/memnum;
-  //  gdouble memnum = (graph->mmax - graph->mmin)/graph->mem;
-  cairo_set_source_rgba(cr, CLR_BLACK, 1);
-  cairo_set_line_width(cr, 0.5);
-  for(i=0; i<=memnum; i++){
-    if(mem <1) sprintf(str, "%.2f", graph->mmin + i*mem);
-    else       sprintf(str, "%d", (int)(graph->mmin + i*mem));
-    x = OFFSET_X - 5*strlen(str) - 7;
-    y = yaxis_now - i*boxheight/memnum;
-    showtext_cr(cr, x, y+2, str, 9);
-    rel_xline(cr, OFFSET_X-2, y, 2);
-    cairo_stroke(cr);
-  }
-  if(xaxis==true) stroke_xaxis_num(d, cr, xstart, xend, yaxis_now, 9);
-
-  return;
-  }*/
-
 void show_colors(const Cairo::RefPtr<Cairo::Context> cr, const int32_t x, int32_t &ycen,
 		 const std::string &label, const double r, const double g, const double b)
 {
@@ -257,31 +197,16 @@ void show_colors(const Cairo::RefPtr<Cairo::Context> cr, const int32_t x, int32_
   return;
 }
 
-void ShowGeneAnnotation(const Cairo::RefPtr<Cairo::Context> cr, const double yaxis, const int32_t gftype)
-{
-  int32_t x(50);
-  int32_t y(yaxis-20);
-
-  cr->set_line_width(2.5);
-  show_colors(cr, x, y, "Coding", CLR_BLUE);
-  show_colors(cr, x, y, "Noncoding", CLR_GREEN);
-  if (gftype == GFTYPE_SGD) {
-    show_colors(cr, x, y, "rRNA", CLR_BLACK);
-    show_colors(cr, x, y, "LTR", CLR_PURPLE);
-  } else {
-    show_colors(cr, x, y, "Processed transcript", CLR_ORANGE);
-    show_colors(cr, x, y, "MicroRNA", CLR_PINK);
-    show_colors(cr, x, y, "Pseudo", CLR_GRAY2);
-    show_colors(cr, x, y, "Others", CLR_BLACK);
-  }
-  return;
-}
-
 void Page::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
 {
   DEBUGprint("strokeGeneSGD");
-  
-  ShowGeneAnnotation(cr, ycenter, p.anno.getgftype());
+
+  cr->set_line_width(2.5);
+  int32_t ycen(ycenter-30);
+  show_colors(cr, 50, ycen, "Coding",    CLR_BLUE);
+  show_colors(cr, 50, ycen, "Noncoding", CLR_GREEN);
+  show_colors(cr, 50, ycen, "rRNA",      CLR_BLACK);
+  show_colors(cr, 50, ycen, "LTR",       CLR_PURPLE);
 
   try {
     int32_t ars_on(0);
@@ -386,7 +311,14 @@ void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
 {
   DEBUGprint("strokeGene");
   
-  ShowGeneAnnotation(cr, ycenter, p.anno.getgftype());
+  cr->set_line_width(2.5);
+  int32_t ycen(ycenter-20);
+  show_colors(cr, 50, ycen, "Coding", CLR_BLUE);
+  show_colors(cr, 50, ycen, "Noncoding", CLR_GREEN);
+  show_colors(cr, 50, ycen, "Processed transcript", CLR_ORANGE);
+  show_colors(cr, 50, ycen, "lincRNA", CLR_PINK);
+  show_colors(cr, 50, ycen, "Pseudo", CLR_GRAY2);
+  show_colors(cr, 50, ycen, "Others", CLR_BLACK);
 
   try {
     int32_t on_plus(0);
@@ -397,10 +329,10 @@ void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
 
       GeneElement g(m, par.xstart, ycenter, 1, on_plus, on_minus);
 
-      if(isStr(m.second.gtype, "coding"))         cr->set_source_rgba(CLR_BLUE, 1);  
-      else if(isStr(m.second.gtype, "noncoding")) cr->set_source_rgba(CLR_GREEN, 1);
-      else if(isStr(m.second.gtype, "miRNA"))     cr->set_source_rgba(CLR_PINK, 1);
-      else if(isStr(m.second.gtype, "process"))   cr->set_source_rgba(CLR_ORANGE, 1);
+      if(isStr(m.second.gtype, "protein_coding")) cr->set_source_rgba(CLR_BLUE, 1);  
+      else if(isStr(m.second.gtype, "lincRNA"))   cr->set_source_rgba(CLR_PINK, 1);
+      else if(isStr(m.second.gtype, "RNA"))       cr->set_source_rgba(CLR_GREEN, 1);
+      else if(isStr(m.second.gtype, "processed")) cr->set_source_rgba(CLR_ORANGE, 1);
       else if(isStr(m.second.gtype, "pseudo"))    cr->set_source_rgba(CLR_GRAY2, 1);
       else                                        cr->set_source_rgba(CLR_BLACK, 1);
 
@@ -466,6 +398,89 @@ void Page::DrawAnnotation(const DROMPA::Global &p)
   return;
 }
 
+void strokeGraph4EachWindow(const Cairo::RefPtr<Cairo::Context> cr,
+		  double x_pre, double y_pre, double x_cen, double y_cen, int32_t bottom)
+{
+  if(y_pre > bottom && y_cen > bottom) return;
+
+  double x1(x_pre);
+  double x2(x_cen);
+  double y1(y_pre);
+  double y2(y_cen);
+  if (y_pre > bottom || y_cen > bottom) {
+    double xlen = abs(x2 - x1);
+    double ylen = abs(y2 - y1);
+    if (y_pre > bottom) {
+      double ydiff(abs(y_cen - bottom));
+      x1 = x2 - xlen*(ydiff/ylen);
+      y1 = bottom;
+    } else {
+      double ydiff(abs(y_pre - bottom));
+      x2 = x1 - xlen*(ydiff/ylen);
+      y2 = bottom;
+    }
+  }
+
+  cr->move_to(x1, y1);
+  cr->line_to(x2, y2);
+  cr->stroke();
+  return;
+}
+
+void Page::drawGraph(const GraphData &graph)
+{
+  DEBUGprint("Page::DrawGraph");
+  int32_t s(par.xstart/graph.binsize);
+  int32_t e(par.xend/graph.binsize +1);
+  double diff = graph.binsize * dot_per_bp;
+
+  double ytop(par.yaxis_now);
+  double ycenter(par.yaxis_now + graph.boxheight/2);
+  double ybottom(par.yaxis_now + graph.boxheight);
+
+  // graph line
+  cr->set_line_width(0.6);
+  cr->set_source_rgba(CLR_GREEN, 1);
+  double xpre(OFFSET_X);
+  double xcen(bp2xaxis(0.5*graph.binsize));
+  double ypre(ybottom - graph.getylen(s));
+  for (int32_t i=s; i<e; ++i, xcen += diff) {
+    double ycen(ybottom - graph.getylen(i));
+    strokeGraph4EachWindow(cr, xpre, ypre, xcen, ycen, ybottom + 10);
+    xpre = xcen;
+    ypre = ycen;
+  }
+  // label
+  cr->set_source_rgba(CLR_BLACK, 1);
+  showtext_cr(cr, OFFSET_X - 5*graph.label.length() -55, ycenter, graph.label, 13);
+
+  // y-axis
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->set_line_width(0.4);
+  rel_yline(cr, OFFSET_X, ytop, graph.boxheight);
+  cr->stroke();
+  cr->set_line_width(1.5);
+  rel_xline(cr, OFFSET_X, ybottom, (par.xend - par.xstart+1) * dot_per_bp);
+  cr->stroke();
+  // x-axis
+  stroke_xaxis(ybottom);
+  
+  // y memory 
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->set_line_width(0.5);
+  for (int32_t i=0; i<=graph.memnum; ++i) {
+    std::string str(graph.getmemory(i));
+    double x(OFFSET_X - 5*str.length() - 7);
+    double y(ybottom - i*graph.getBoxHeight4mem());
+    showtext_cr(cr, x, y+2, str, 9);
+    rel_xline(cr, OFFSET_X-2, y, 2);
+    cr->stroke();
+  }
+  //  if(xaxis==true) stroke_xaxis_num(d, cr, xstart, xend, yaxis_now, 9);
+
+  return;
+}
+
 void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no)
 {
   DEBUGprint("Page::Draw");
@@ -479,14 +494,15 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
   for(int i=line_start; i<line_end; ++i) {
     set_xstart_xend(i);
     if(par.xstart >= par.xend) continue;
-      /*   if(d->GC.argv){
-	    draw_graph(d, cr, &(d->GC), xstart, xend, memnum_GC, boxheight_graph, false, true);
-	    yaxis_now += mergin_between_graph_data;
-	    }
-	    if(d->GD.argv){
-	    draw_graph(d, cr, &(d->GD), xstart, xend, memnum_GC, boxheight_graph, false, true);
-	    yaxis_now += mergin_between_graph_data;
-	    }*/
+
+    if(p.anno.GC.isOn()){
+      drawGraph(GC);
+      par.yaxis_now += GC.boxheight + mergin_between_graph_data;
+    }
+    if(p.anno.GD.isOn()){
+      drawGraph(GD);
+      par.yaxis_now += GD.boxheight + mergin_between_graph_data;
+    }
 
     if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawAnnotation(p);
      /*   if(d->internum){
@@ -536,7 +552,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
     for(int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
-      Page page(p, arrays, pairs, surface, chr.getrefname(), 0, chr.getlen());
+      Page page(p, arrays, pairs, surface, chr, 0, chr.getlen());
       page.Draw(p, i, 1);
     }
   }else{
@@ -545,7 +561,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
-	Page page(p, arrays, pairs, surface, chr.getrefname(), x.start, x.end);
+	Page page(p, arrays, pairs, surface, chr, x.start, x.end);
 	page.Draw(p, i, region_no);
       }
       ++region_no;
@@ -582,6 +598,9 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
   if(showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
 
+  if(p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + mergin_between_graph_data;
+  if(p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + mergin_between_graph_data;
+  
   if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
     if(p.anno.getgftype() == GFTYPE_SGD) height += BOXHEIGHT_GENEBOX_NOEXON;
     else height += BOXHEIGHT_GENEBOX_EXON;

@@ -117,15 +117,22 @@ class pdSample {
   pdSample(){}
 };
 
-class GraphData {
+class GraphFile {
   std::string filename;
-  int32_t size;
+  int32_t binsize;
+
 public:
-  GraphData(): filename(""), size(0) {}
+  GraphFile(): filename(""), binsize(0) {}
 
   void setValue(const std::string &f, const int32_t s) {
     filename = f;
-    size = s;
+    binsize = s;
+  }
+  const std::string & getfilename() const { return filename; }
+  int32_t getbinsize() const { return binsize; }
+  bool isOn() const {
+    if(filename != "") return true;
+    else return false;
   }
 };
 
@@ -151,8 +158,8 @@ namespace DROMPA {
     std::string mpfile;
     double mpthre;
     std::string gapfile;
-    GraphData GC;
-    GraphData GD;
+    GraphFile GC;
+    GraphFile GD;
     
     Annotation(): optPC("Annotation",100), optGV("Optional data",100),
 		  genefile(""), arsfile(""), terfile(""), repeatfile(""),
