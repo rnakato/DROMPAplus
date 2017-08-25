@@ -170,7 +170,7 @@ namespace DROMPA {
 	("gftype",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--gftype")),
 	 "Format of gene annotation\n     0: RefFlat\n     1: GTF\n     2: SGD (for S. cerevisiae)\n")
-	("gene", "Show one representative for each gene (default: all isoforms)")
+	("showasgene", "Show one representative for each gene (default: all isoforms)")
 	("ars",    boost::program_options::value<std::string>(), "ARS list (for yeast)")
 	("ter",    boost::program_options::value<std::string>(), "TER list (for S.cerevisiae)")
 	("showars", "Display ARS and TER and do not display genes")
@@ -217,7 +217,7 @@ namespace DROMPA {
 	if (values.count("genefile")) {
 	  genefile = MyOpt::getVal<std::string>(values, "genefile");
 	  gftype   = MyOpt::getVal<int32_t>(values, "gftype");
-	  showgene = values.count("gene");
+	  showgene = values.count("showasgene");
 	  gmp = getGMP();
 	}
 	if (values.count("ars")) {
@@ -421,7 +421,7 @@ namespace DROMPA {
       
       DEBUGprint("INITDUMP:DrompaCommand::DRAWREGION");
       MyOpt::printOpt<std::string>(values, "region",    "   Region file");
-      if (chr != "") std::cout << boost::format("    output chr%1% only.\n") % chr;
+      if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
       if (genelocifile != "") {
 	std::cout << boost::format("    Geneloci file: %1%, around %2% bp\n") % genelocifile % len_geneloci;
       }
@@ -661,8 +661,8 @@ namespace DROMPA {
       
       DEBUGprint("INITDUMP:DrompaCommand::OTHER");
       std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
-      std::cout << boost::format("   include chromosome Y and M: %1%\n") % str_bool[includeYM];
-      std::cout << boost::format("   remove chr pdfs: %1%\n") % str_bool[rmchr];
+      if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
+      if(rmchr) std::cout << boost::format("   remove chr pdfs\n");
     }
 
     WigType getIfType() const {return iftype;}
