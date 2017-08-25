@@ -27,19 +27,22 @@ namespace {
   enum {BOXHEIGHT_GENEBOX_EXON=130, BOXHEIGHT_GENEBOX_NOEXON=80};
   int32_t pagewidth(1088);
   int32_t width_draw(820);
+  double dot_per_bp(0);
   int32_t mergin_between_graph_data(15);
   int32_t memnum_GC(10);
   int32_t boxheight_graph(80);
 }
 
-inline int32_t setline(int32_t start, int32_t interval)
+inline double bp2xaxis(const int32_t bp) { return bp * dot_per_bp + OFFSET_X; }
+
+inline int32_t setline(const int32_t start, const int32_t interval)
 {
   int32_t posi(start-1);
   if(!posi%interval) return posi;
   else return (posi/interval +1) * interval;
 }
 
-inline void showtext_cr(Cairo::RefPtr<Cairo::Context> cr, const double x, const double y, const std::string &str, const int32_t fontsize)
+inline void showtext_cr(const Cairo::RefPtr<Cairo::Context> cr, const double x, const double y, const std::string &str, const int32_t fontsize)
 {
   cr->move_to(x, y);
   cr->set_font_size(fontsize);
@@ -67,7 +70,6 @@ public:
   int32_t num_page;
   int32_t width_per_line;
 
-  double dot_per_bp;
   double yaxis_now;
   int32_t xstart;
   int32_t xend;
@@ -80,9 +82,10 @@ public:
     num_line(p.drawparam.getNumLine(start, end)),
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
-    dot_per_bp(getratio(width_draw, width_per_line)),
     yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2)
-  {}
+  {
+    dot_per_bp = getratio(width_draw, width_per_line);
+  }
 
   void set_xstart_xend(const int32_t i) {
     xstart = start + i * width_per_line;
@@ -90,7 +93,6 @@ public:
     else xend = start + (i+1) * width_per_line -1;
   }
   
-  double bp2xaxis(const int32_t bp) const { return bp * dot_per_bp + OFFSET_X; }
   double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
 };
 
@@ -116,17 +118,13 @@ class Page {
   {
     cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL );
   }
-  
-  //  void stroke_keys_dataframe(const DROMPA::Global &p, const SamplePairChr &pair, const LineType type);
-  // void stroke_frame_dataframe();
-  //void stroke_ymem_dataframe(const DROMPA::Global &p, const LineType type, const int32_t nlayer);
+
   void stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer);
 
   template <class T>
   void stroke_readdist(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer)
   {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
-
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
     df.stroke_bindata(p, pair, arrays, nlayer);
     df.stroke_dataframe(p, nlayer);
@@ -134,7 +132,9 @@ class Page {
     return;
   }
   void DrawAnnotation(const DROMPA::Global &p);
-  void strokeGeneSGD(const DROMPA::Global &p);
+  void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
+  void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
+  void strokeGene(const DROMPA::Global &p, const double ycenter);
 
   void Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no);
 
@@ -161,7 +161,7 @@ class Page {
     
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-      x = par.bp2xaxis(i - par.xstart);
+      x = bp2xaxis(i - par.xstart);
       if (!(i%interval_large)) {
 	cr->set_line_width(1);
 	rel_yline(cr, x, y-4, 8);
@@ -182,7 +182,7 @@ class Page {
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
       std::string str;
-      x = par.bp2xaxis(i - par.xstart);
+      x = bp2xaxis(i - par.xstart);
       /*  if(d->gw==true){
 	if(d->large_genome==false) sprintf(str, "%dk", i/NUM_1K);
 	else sprintf(str, "%dM", i/NUM_1M);
@@ -213,7 +213,7 @@ class Page {
 
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-      x = par.bp2xaxis(i-par.xstart);
+      x = bp2xaxis(i-par.xstart);
     
       if (!(i%interval_large)) {
 	cr->set_line_width(1);
@@ -235,7 +235,7 @@ class Page {
     return std::forward_as_tuple(start, end);
   }
 
-  double getWidthDf() const { return (par.xend - par.xstart +1) * par.dot_per_bp; }
+  double getWidthDf() const { return (par.xend - par.xstart +1) * dot_per_bp; }
   double getHeightDf() const { return par.ystep * par.barnum; }
 };
 
@@ -344,7 +344,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
   {}
 
-  const std::string & getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag) return "IP/Input";
     else return pair.label;
   }
@@ -408,5 +408,57 @@ class PenrichDataFrame : public DataFrame {
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
 
+
+class GeneElement{
+  int32_t dif;
+  int32_t cnt;
+  
+ public:
+  double x1, x2, xcen, xwid;
+  double x_name;
+  int32_t y_name, ylen;
+  int32_t ybar;
+
+  GeneElement(const std::pair<const std::string, genedata> &m,
+	      const int32_t xstart, const double ycenter,
+	      const int32_t ty,
+	      int32_t &on_plus, int32_t &on_minus):
+    dif(6), cnt(1),
+    x1(bp2xaxis(m.second.txStart - xstart +1)),
+    x2(bp2xaxis(m.second.txEnd   - xstart +1)),
+    xcen((x1+x2)/2), xwid(x2 - x1),
+    ybar(0)
+  {
+    x_name = xcen - 3.25 * m.second.gname.length() + 6;
+    if (x_name < 0) x_name = 10;
+    else if (x_name > pagewidth) x_name = pagewidth - 50;
+
+    if(!ty) { // SGD
+      if (m.second.strand == "+") {
+	ybar   = ycenter - dif;
+	y_name = ybar -5 - on_minus*6;
+	if(on_minus == cnt) on_minus=0; else ++on_minus;
+      }
+      else if (m.second.strand == "-") {
+	ybar   = ycenter + dif;
+	y_name = ybar +9 + on_plus*6;
+	if (on_plus == cnt) on_plus=0; else ++on_plus;
+      }
+      else y_name = ycenter -22;
+      ylen = y_name - ycenter;
+    } else {  // Others
+      if (m.second.strand == "+") {
+	ybar = ycenter -6 - on_minus * 13;
+	y_name = ybar -6;
+	if(on_minus==3) on_minus=0; else ++on_minus;
+      } else{
+	ybar = ycenter +12 + on_plus * 13;
+	y_name = ybar +11;
+	if(on_plus==3) on_plus=0; else ++on_plus;
+      }
+    }
+    
+  }
+};
 
 #endif /* _DD_READFILE_P_H_ */

@@ -19,6 +19,7 @@
 	    cr->stroke();
 	    }*/
 
+enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
 void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
 			       const std::unordered_map<std::string, ChrArray> &arrays,
@@ -125,6 +126,7 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
 
 
 void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer) {
+  DEBUGprint("stroke_dataframe");
   stroke_frame();
   /* y memory */
   cr->set_line_width(0.4);
@@ -145,16 +147,17 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer) 
 void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pair,
 			       const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer)
 {
+  DEBUGprint("stroke_bindata");
   int32_t binsize(pair.getbinsize());
   int32_t sbin(par.xstart/binsize);
   int32_t ebin(par.xend/binsize);
-  double dot_per_bin(binsize * par.dot_per_bp);
+  double dot_per_bin(binsize * dot_per_bp);
   int32_t yaxis(par.yaxis_now);  // intに変換
 
   int32_t thin(std::min(par.width_per_line/(1000*binsize), 20));
 
   // peak region 色を変えるのではなく、その領域のバックを光らせる
-  double xcen(par.bp2xaxis(binsize/2)); // initial position
+  double xcen(bp2xaxis(binsize/2)); // initial position
   if(thin > 1) cr->set_line_width(dot_per_bin*thin);
   else cr->set_line_width(dot_per_bin);
 
@@ -168,6 +171,7 @@ void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pai
 
 void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer)
 {
+  DEBUGprint("stroke_each_layer");
   if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair, nlayer);
   if (p.drawparam.showpenrich && pair.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
   if (p.drawparam.showratio && pair.argvInput!="") {
@@ -241,99 +245,195 @@ void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair,
   return;
   }*/
 
-class GeneElement{
-  int32_t dif;
-  int32_t cnt;
-  int32_t on_plus;
-  int32_t on_minus;
-  
- public:
-  double x1, x2, xcen, xwid;
-  double x_name;
-  int32_t y_name, ylen;
-  int32_t ybar;
-
-  GeneElement(const int32_t start, const int32_t end, const std::string &strand,
-	      const std::string &name, const DParam &par):
-    dif(6), cnt(1), on_plus(0), on_minus(0),
-    x1(par.bp2xaxis(start - par.xstart +1)),
-    x2(par.bp2xaxis(end   - par.xstart +1)),
-    xcen((x1+x2)/2), xwid(x2 - x1),
-    ybar(0)
-  {
-    x_name = xcen - 3.25*name.length() + 6;
-    if (x_name < 0) x_name = 10;
-    else if (x_name > pagewidth) x_name = pagewidth - 50;
-
-    if (strand == "+") {
-      ybar = par.yaxis_now - dif;
-      y_name = ybar -5 - on_minus*6;
-      if(on_minus == cnt) on_minus=0; else ++on_minus;
-    } else if (strand == "-") {
-      ybar = par.yaxis_now + dif;
-      y_name = ybar +9 + on_plus*6;
-      if (on_plus == cnt) on_plus=0; else ++on_plus;
-    } else y_name = par.yaxis_now -22;
-    ylen = y_name - par.yaxis_now;
-  }
-};
-
-void Page::strokeGeneSGD(const DROMPA::Global &p)
+void show_colors(const Cairo::RefPtr<Cairo::Context> cr, const int32_t x, int32_t &ycen,
+		 const std::string &label, const double r, const double g, const double b)
 {
-  //  show_geneanno(d, cr);
+  cr->set_source_rgba(r,g,b, 1);
+  rel_xline(cr, x, ycen, 20);
+  cr->stroke();
+  cr->set_source_rgba(CLR_BLACK, 1);
+  showtext_cr(cr, x+24, ycen+4, label, 10);
+  ycen += 15;
+  return;
+}
 
-  cr->set_line_width(1.5);
+void ShowGeneAnnotation(const Cairo::RefPtr<Cairo::Context> cr, const double yaxis, const int32_t gftype)
+{
+  int32_t x(50);
+  int32_t y(yaxis-20);
 
-  for(auto &m: p.anno.gmp.at(rmchr(chrname))) {
-    int32_t s(m.second.txStart);
-    int32_t e(m.second.txEnd);
-    
-    if(!my_overlap(s, e, par.xstart, par.xend)) continue;
+  cr->set_line_width(2.5);
+  show_colors(cr, x, y, "Coding", CLR_BLUE);
+  show_colors(cr, x, y, "Noncoding", CLR_GREEN);
+  if (gftype == GFTYPE_SGD) {
+    show_colors(cr, x, y, "rRNA", CLR_BLACK);
+    show_colors(cr, x, y, "LTR", CLR_PURPLE);
+  } else {
+    show_colors(cr, x, y, "Processed transcript", CLR_ORANGE);
+    show_colors(cr, x, y, "MicroRNA", CLR_PINK);
+    show_colors(cr, x, y, "Pseudo", CLR_GRAY2);
+    show_colors(cr, x, y, "Others", CLR_BLACK);
+  }
+  return;
+}
 
-    GeneElement g(s, e, m.second.strand, m.second.tname, par);
+void Page::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
+{
+  DEBUGprint("strokeGeneSGD");
+  
+  ShowGeneAnnotation(cr, ycenter, p.anno.getgftype());
 
-    rel_xline(cr, g.x1, g.ybar, g.xwid);
-    cr->stroke();
+  try {
+    int32_t ars_on(0);
+    int32_t on_plus(0);
+    int32_t on_minus(0);
+    for(auto &m: p.anno.gmp.at(rmchr(chrname))) {
+      if(!my_overlap(m.second.txStart, m.second.txEnd, par.xstart, par.xend)) continue;
 
-    if (m.second.gtype=="centromere" || m.second.gtype=="teromere") {
-      cr->set_source_rgba(CLR_GREEN, 1);
-      rel_yline(cr, g.xcen, par.yaxis_now -2, g.ylen);
-      showtext_cr(cr, g.x_name, g.y_name-6, m.second.gname, 8);
+      cr->set_line_width(0.3);
+      GeneElement g(m, par.xstart, ycenter, 0, on_plus, on_minus);
+
+      if (m.second.gtype=="centromere" || m.second.gtype=="teromere") {
+	cr->set_source_rgba(CLR_GREEN, 1);
+	rel_yline(cr, g.xcen, ycenter -2, g.ylen);
+	showtext_cr(cr, g.x_name, g.y_name-6, m.second.gname, 8);
+      }
+      else if (m.second.gtype=="ARS") {
+	cr->set_source_rgba(CLR_RED, 1);
+	rel_yline(cr, g.xcen, ycenter -2, g.ylen +10 - ars_on*8);
+	showtext_cr(cr, g.x_name, g.y_name +4 - ars_on*8, m.second.gname, 7);
+	if(ars_on==2) ars_on=0; else ++ars_on;
+      }
+      else if (m.second.gtype=="TER") {
+	cr->set_source_rgba(CLR_OLIVE, 1);
+	rel_yline(cr, g.xcen, ycenter -2, g.ylen -5);
+	showtext_cr(cr, g.x_name, g.y_name-11, m.second.gname, 7);
+      }
+      else if (m.second.gtype=="rRNA" || m.second.gtype=="snoRNA") {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+	cr->set_line_width(1.5);
+	rel_xline(cr, g.x1, g.ybar, g.xwid);
+	cr->stroke();
+      }
+      else if (m.second.gtype=="LTR" || m.second.gtype=="retrotransposon" || isStr(m.second.gtype, "repeat")) {
+	cr->set_source_rgba(CLR_PURPLE, 1);
+	showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+	cr->set_line_width(1.5);
+	rel_xline(cr, g.x1, g.ybar, g.xwid);
+	cr->stroke();
+      }
+      else if (m.second.gtype=="tRNA") {
+	cr->set_source_rgba(CLR_GREEN, 1);
+	showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+	cr->set_line_width(1.5);
+	rel_xline(cr, g.x1, g.ybar, g.xwid);
+	cr->stroke();
+      }
+      else {
+	cr->set_source_rgba(CLR_BLUE, 1);
+	showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
+	cr->set_line_width(1.5);
+	rel_xline(cr, g.x1, g.ybar, g.xwid);
+	cr->stroke();
+      }
     }
-    else if (m.second.gtype=="ARS") {
-      cr->set_source_rgba(CLR_RED, 1);
-      rel_yline(cr, g.xcen, par.yaxis_now -2, g.ylen +2);
-      showtext_cr(cr, g.x_name, g.y_name-4, m.second.gname, 7);
-    }
-    else if (m.second.gtype=="TER") {
-      cr->set_source_rgba(CLR_OLIVE, 1);
-      rel_yline(cr, g.xcen, par.yaxis_now -2, g.ylen -5);
-      showtext_cr(cr, g.x_name, g.y_name-11, m.second.gname, 7);
-    }
-    else if (m.second.gtype=="rRNA" || m.second.gtype=="snoRNA") {
-      cr->set_source_rgba(CLR_BLACK, 1);
-      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
-    }
-    else if (m.second.gtype=="LTR" || m.second.gtype=="retrotransposon" || isStr(m.second.gtype, "repeat")) {
-      cr->set_source_rgba(CLR_PURPLE, 1);
-      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
-    }
-    else if (m.second.gtype=="tRNA") {
-      cr->set_source_rgba(CLR_GREEN, 1);
-      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
-    }
-    else {
-      cr->set_source_rgba(CLR_BLUE, 1);
-      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 6);
-    }
+  } catch (...) {
+    std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
   }
   
   return;
 }
 
-enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
+void Page::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
+{
+  int32_t ars_on(0);
+  cr->set_line_width(0.3);
+  int32_t on_plus(0);
+  int32_t on_minus(0);
+
+  try {
+    for(auto &m: mp.at(rmchr(chrname))) {
+      if(!my_overlap(m.second.txStart, m.second.txEnd, par.xstart, par.xend)) continue;
+
+      GeneElement g(m, par.xstart, ycenter, 0, on_plus, on_minus);
+
+      if (m.second.gtype=="ARS") {
+	cr->set_source_rgba(CLR_RED, 1);
+	rel_yline(cr, g.xcen, ycenter -2, g.ylen +14 - 8 * ars_on);
+	showtext_cr(cr, g.x_name, g.y_name +8 - ars_on*8, m.second.gname, 8);
+	if(ars_on==2) ars_on=0; else ++ars_on;
+      }
+      else if (m.second.gtype=="centromere") {
+	cr->set_source_rgba(CLR_GREEN, 1);
+	rel_yline(cr, g.xcen, ycenter -2, g.ylen -2);
+	showtext_cr(cr, g.x_name, g.y_name -8, m.second.gname, 8);
+      }
+      else if (m.second.gtype=="teromere") {
+	cr->set_source_rgba(CLR_OLIVE, 1);
+	rel_yline(cr, g.xcen, ycenter -2, g.ylen -5);
+	showtext_cr(cr, g.x_name, g.y_name -11, m.second.gname, 7);
+      }else continue;
+    }
+  } catch (...) {
+    std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+  }
+  
+  return;
+}
+
+void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
+{
+  DEBUGprint("strokeGene");
+  
+  ShowGeneAnnotation(cr, ycenter, p.anno.getgftype());
+
+  try {
+    int32_t on_plus(0);
+    int32_t on_minus(0);
+    
+    for(auto &m: p.anno.gmp.at(rmchr(chrname))) {
+      if(!my_overlap(m.second.txStart, m.second.txEnd, par.xstart, par.xend)) continue;
+
+      GeneElement g(m, par.xstart, ycenter, 1, on_plus, on_minus);
+
+      if(isStr(m.second.gtype, "coding"))         cr->set_source_rgba(CLR_BLUE, 1);  
+      else if(isStr(m.second.gtype, "noncoding")) cr->set_source_rgba(CLR_GREEN, 1);
+      else if(isStr(m.second.gtype, "miRNA"))     cr->set_source_rgba(CLR_PINK, 1);
+      else if(isStr(m.second.gtype, "process"))   cr->set_source_rgba(CLR_ORANGE, 1);
+      else if(isStr(m.second.gtype, "pseudo"))    cr->set_source_rgba(CLR_GRAY2, 1);
+      else                                        cr->set_source_rgba(CLR_BLACK, 1);
+
+      // gene body 
+      cr->set_line_width(1.5);
+      rel_yline(cr, g.x1, g.ybar-4, 8);
+      rel_yline(cr, g.x2, g.ybar-4, 8);
+      cr->stroke();
+      cr->set_line_width(3);
+      rel_xline(cr, g.x1, g.ybar, g.xwid);
+      cr->stroke();
+      // exon
+      cr->set_line_width(6);
+      for (int32_t i=0; i<m.second.exonCount; ++i) {
+	double x(bp2xaxis(m.second.exon[i].start - par.xstart +1));
+	double xlen(m.second.exon[i].getlen() * dot_per_bp);
+	rel_xline(cr, x, g.ybar, xlen);
+	cr->stroke();
+      }
+      // name
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, g.x_name, g.y_name, m.second.gname, 10);
+
+    }
+  } catch (...) {
+    std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+  }
+  return;
+}
+
 void Page::DrawAnnotation(const DROMPA::Global &p)
-  {
+{
+  DEBUGprint("DrawAnnotation");
   int32_t boxheight;
   if(p.anno.getgftype() == GFTYPE_SGD) boxheight = BOXHEIGHT_GENEBOX_NOEXON;
   else boxheight = BOXHEIGHT_GENEBOX_EXON;
@@ -342,12 +442,11 @@ void Page::DrawAnnotation(const DROMPA::Global &p)
   double ycenter(ytop + boxheight/2);
 
   if (p.anno.showars) {
-    //stroke_ARS(d, cr, xstart, xend);
+    strokeARS(p.anno.gmp, ycenter);
     showtext_cr(cr, 70, ycenter, "ARS", 12);
   } else {
-    if(p.anno.arsfile != "") ;//stroke_ARS(d, cr, xstart, xend);
-    if(p.anno.getgftype() == GFTYPE_SGD) strokeGeneSGD(p);
-    else ;//strokeGene(d, cr, xstart, xend);
+    if(p.anno.getgftype() == GFTYPE_SGD) strokeGeneSGD(p, ycenter);
+    else strokeGene(p, ycenter);
   }
   /* frame */
   cr->rectangle(par.xstart, par.xend, ytop, boxheight);
@@ -369,6 +468,7 @@ void Page::DrawAnnotation(const DROMPA::Global &p)
 
 void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no)
 {
+  DEBUGprint("Page::Draw");
   int32_t line_start, line_end;
   std::tie(line_start, line_end) = get_start_end_linenum(page_curr, p.drawparam.getlpp());
  
@@ -379,7 +479,6 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
   for(int i=line_start; i<line_end; ++i) {
     set_xstart_xend(i);
     if(par.xstart >= par.xend) continue;
-    
       /*   if(d->GC.argv){
 	    draw_graph(d, cr, &(d->GC), xstart, xend, memnum_GC, boxheight_graph, false, true);
 	    yaxis_now += mergin_between_graph_data;
@@ -424,6 +523,7 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
 
 void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 {
+  DEBUGprint("Figure::DrawData");
   int32_t width(pagewidth);
   int32_t height(p.drawparam.getPageHeight(p, pairs));
   std::string pdffile(p.getFigFileNameChr(chr.getrefname()));
@@ -435,7 +535,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
   if(!p.drawregion.isRegionBed()){  // whole chromosome
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
     for(int32_t i=0; i<num_page; ++i) {
-      std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page << std::flush;
+      std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
       Page page(p, arrays, pairs, surface, chr.getrefname(), 0, chr.getlen());
       page.Draw(p, i, 1);
     }

@@ -128,9 +128,8 @@ public:
     size = s;
   }
 };
-  
+
 namespace DROMPA {
-  
   class Global;
   
   class Annotation {
@@ -206,26 +205,37 @@ namespace DROMPA {
     void setValuesPC(const MyOpt::Variables &values) {
       DEBUGprint("AnnoPC setValues...");
 
-      for (auto x: {"genefile", "ars", "ter", "repeat"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
-      if (values.count("genefile")) {
-	genefile = MyOpt::getVal<std::string>(values, "genefile");
-	gftype   = MyOpt::getVal<int32_t>(values, "gftype");
-	showgene = values.count("gene");
-	gmp = getGMP();
-      }
-      
-      if (values.count("ars")) arsfile = MyOpt::getVal<std::string>(values, "ars");
-      showars = values.count("showars");
-      if (values.count("ter")) terfile = MyOpt::getVal<std::string>(values, "ter");
-      if (values.count("repeat")) repeatfile = MyOpt::getVal<std::string>(values, "repeat");
-
-      if (values.count("bed")) { 
-	for(auto x: MyOpt::getVal<std::vector<std::string>>(values, "bed")) {
-	  //    std::cout << x << std::endl;
-	  auto vbed = parseBed<bed>(x);
-	  //    printBed(vbed);
-	  vbedlist.emplace_back(vbed);
+      try {
+	for (auto x: {"genefile", "ars", "ter", "repeat"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+	if (values.count("genefile")) {
+	  genefile = MyOpt::getVal<std::string>(values, "genefile");
+	  gftype   = MyOpt::getVal<int32_t>(values, "gftype");
+	  showgene = values.count("gene");
+	  gmp = getGMP();
 	}
+	if (values.count("ars")) {
+	  arsfile = MyOpt::getVal<std::string>(values, "ars");
+	  parseARSOriDB(arsfile, gmp);
+	}
+	showars = values.count("showars");
+	if (values.count("ter")) {
+	  terfile = MyOpt::getVal<std::string>(values, "ter");
+	  parseTER(terfile, gmp);
+	}
+	//	printMap(gmp);
+	if (values.count("repeat")) repeatfile = MyOpt::getVal<std::string>(values, "repeat");
+
+	if (values.count("bed")) { 
+	  for(auto x: MyOpt::getVal<std::vector<std::string>>(values, "bed")) {
+	    //    std::cout << x << std::endl;
+	    auto vbed = parseBed<bed>(x);
+	    //    printBed(vbed);
+	    vbedlist.emplace_back(vbed);
+	  }
+	}
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
       }
 
       DEBUGprint("AnnoPC setValues done.");
@@ -233,16 +243,21 @@ namespace DROMPA {
     void setValuesGV(const MyOpt::Variables &values) {
       DEBUGprint("AnnoGV setValues...");
       
-      if (values.count("inter")) {
-	interfile = MyOpt::getVal<std::string>(values, "inter");
-	isFile(interfile);
-      }
-      if (values.count("mp")) mpfile = MyOpt::getVal<std::string>(values, "mp");
-      mpthre = MyOpt::getVal<double>(values, "mpthre");
-      if (values.count("gap")) gapfile = MyOpt::getVal<std::string>(values, "gap");
-      if (values.count("GC")) GC.setValue(MyOpt::getVal<std::string>(values, "GC"), MyOpt::getVal<int32_t>(values, "gcsize"));
-      if (values.count("GD")) GD.setValue(MyOpt::getVal<std::string>(values, "GD"), MyOpt::getVal<int32_t>(values, "gdsize"));
+      try {
+	if (values.count("inter")) {
+	  interfile = MyOpt::getVal<std::string>(values, "inter");
+	  isFile(interfile);
+	}
+	if (values.count("mp")) mpfile = MyOpt::getVal<std::string>(values, "mp");
+	mpthre = MyOpt::getVal<double>(values, "mpthre");
+	if (values.count("gap")) gapfile = MyOpt::getVal<std::string>(values, "gap");
+	if (values.count("GC")) GC.setValue(MyOpt::getVal<std::string>(values, "GC"), MyOpt::getVal<int32_t>(values, "gcsize"));
+	if (values.count("GD")) GD.setValue(MyOpt::getVal<std::string>(values, "GD"), MyOpt::getVal<int32_t>(values, "gdsize"));
 
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
+      }
       DEBUGprint("AnnoGV setValues done.");
     }
 
@@ -311,15 +326,18 @@ namespace DROMPA {
     }
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("Threshold setValues...");
-
-      pthre_inter  = MyOpt::getVal<double>(values, "pthre_internal");
-      pthre_enrich = MyOpt::getVal<double>(values, "pthre_enrich");
-      qthre        = MyOpt::getVal<double>(values, "qthre");
-      ethre        = MyOpt::getVal<double>(values, "ethre");
-      ipm          = MyOpt::getVal<double>(values, "ipm");
-      sigtest      = !values.count("nosig");
-      width4lmd    = MyOpt::getVal<int32_t>(values, "width4lmd");
-
+      try {
+	pthre_inter  = MyOpt::getVal<double>(values, "pthre_internal");
+	pthre_enrich = MyOpt::getVal<double>(values, "pthre_enrich");
+	qthre        = MyOpt::getVal<double>(values, "qthre");
+	ethre        = MyOpt::getVal<double>(values, "ethre");
+	ipm          = MyOpt::getVal<double>(values, "ipm");
+	sigtest      = !values.count("nosig");
+	width4lmd    = MyOpt::getVal<int32_t>(values, "width4lmd");
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
+      }
       DEBUGprint("Threshold setValues done.");
     }
     void InitDump() const {
@@ -373,18 +391,22 @@ namespace DROMPA {
     }
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("DrawRegion setValues...");
-
-      for (auto x: {"region", "genelocifile"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
-      if (values.count("chr")) chr = MyOpt::getVal<std::string>(values, "chr");
-      if (values.count("region")) {
-	isRegion = true;
-	regionBed = parseBed<bed>(MyOpt::getVal<std::string>(values, "region"));
-	if(!regionBed.size()) PRINTERR("Error no bed regions in " << MyOpt::getVal<std::string>(values, "region"));
-	printBed(regionBed);
-      }
-      if (values.count("genelocifile")) genelocifile = MyOpt::getVal<std::string>(values, "genelocifile");
-      len_geneloci = MyOpt::getVal<int32_t>(values, "len_geneloci");
+      try {
+	for (auto x: {"region", "genelocifile"}) if (values.count(x)) isFile(MyOpt::getVal<std::string>(values, x));
+	if (values.count("chr")) chr = MyOpt::getVal<std::string>(values, "chr");
+	if (values.count("region")) {
+	  isRegion = true;
+	  regionBed = parseBed<bed>(MyOpt::getVal<std::string>(values, "region"));
+	  if(!regionBed.size()) PRINTERR("Error no bed regions in " << MyOpt::getVal<std::string>(values, "region"));
+	  printBed(regionBed);
+	}
+	if (values.count("genelocifile")) genelocifile = MyOpt::getVal<std::string>(values, "genelocifile");
+	len_geneloci = MyOpt::getVal<int32_t>(values, "len_geneloci");
       
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
+      }
       DEBUGprint("DrawRegion setValues done.");
     }
     void InitDump(const MyOpt::Variables &values) const {
@@ -483,26 +505,29 @@ namespace DROMPA {
   
     void setValues(const MyOpt::Variables &values, const int32_t n) {
       DEBUGprint("DrawParam setValues...");
+      try {
+	showctag = MyOpt::getVal<int32_t>(values, "showctag");
+	showitag = MyOpt::getVal<int32_t>(values, "showitag");
+	showratio = MyOpt::getVal<int32_t>(values, "showratio");
+	showpinter = MyOpt::getVal<int32_t>(values, "showpinter");
+	showpenrich = MyOpt::getVal<int32_t>(values, "showpenrich");
+	width_per_line = 1000 * MyOpt::getVal<int32_t>(values, "ls");
+	linenum_per_page = MyOpt::getVal<int32_t>(values, "lpp");
+	barnum = MyOpt::getVal<int32_t>(values, "bn");
+	ystep  = MyOpt::getVal<double>(values, "ystep");
+	showymem = !values.count("offymem");
+	showylab = !values.count("offylabel");
+	viz      = MyOpt::getVal<int32_t>(values, "viz");
 
-      showctag = MyOpt::getVal<int32_t>(values, "showctag");
-      showitag = MyOpt::getVal<int32_t>(values, "showitag");
-      showratio = MyOpt::getVal<int32_t>(values, "showratio");
-      showpinter = MyOpt::getVal<int32_t>(values, "showpinter");
-      showpenrich = MyOpt::getVal<int32_t>(values, "showpenrich");
-      width_per_line = 1000 * MyOpt::getVal<int32_t>(values, "ls");
-      linenum_per_page = MyOpt::getVal<int32_t>(values, "lpp");
-      barnum = MyOpt::getVal<int32_t>(values, "bn");
-      ystep  = MyOpt::getVal<double>(values, "ystep");
-      showymem = !values.count("offymem");
-      showylab = !values.count("offylabel");
-      viz      = MyOpt::getVal<int32_t>(values, "viz");
-
-      scale_tag    = MyOpt::getVal<double>(values, "scale_tag");
-      scale_ratio  = MyOpt::getVal<double>(values, "scale_ratio");
-      scale_pvalue = MyOpt::getVal<double>(values, "scale_pvalue");
+	scale_tag    = MyOpt::getVal<double>(values, "scale_tag");
+	scale_ratio  = MyOpt::getVal<double>(values, "scale_ratio");
+	scale_pvalue = MyOpt::getVal<double>(values, "scale_pvalue");
       
-      samplenum = n;
-      
+	samplenum = n;
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
+      }
       DEBUGprint("DrawParam setValues done.");
     }
     void InitDump() const {
@@ -582,10 +607,13 @@ namespace DROMPA {
     }  
     void setValuesNorm(const MyOpt::Variables &values) {
       DEBUGprint("Norm setValues...");
-
-      norm = MyOpt::getVal<int32_t>(values, "norm");
-      sm   = MyOpt::getVal<int32_t>(values, "sm");
-
+      try {
+	norm = MyOpt::getVal<int32_t>(values, "norm");
+	sm   = MyOpt::getVal<int32_t>(values, "sm");
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
+      }
       DEBUGprint("Norm setValues done.");
     }
     void setOptsOther(MyOpt::Opts &allopts) {
@@ -603,11 +631,14 @@ namespace DROMPA {
     }  
     void setValuesOther(const MyOpt::Variables &values) {
       DEBUGprint("Other setValues...");
-
-      includeYM = values.count("includeYM");
-      ispng = values.count("png");
-      rmchr = values.count("rmchr");
-
+      try {
+	includeYM = values.count("includeYM");
+	ispng = values.count("png");
+	rmchr = values.count("rmchr");
+      } catch(const boost::bad_any_cast& e) {
+	std::cout << e.what() << std::endl;
+	exit(0);
+      }
       DEBUGprint("Other setValues done.");
     }
     void InitDumpNorm() const {

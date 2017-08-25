@@ -97,8 +97,7 @@ class Mapfile: private Uncopyable {
 
   // for SSP
   SSPstats sspst;
-
-  class LibComp complexity;
+  LibComp complexity;
   
   Mapfile():
     opt("Fragment",100),
@@ -106,6 +105,7 @@ class Mapfile: private Uncopyable {
     Greekchr(false), 
     id_longestChr(0),
     maxGC(0), genome(),
+    sspst(5000, 6000, 100),
     complexity()
   {
     opt.add_options()
