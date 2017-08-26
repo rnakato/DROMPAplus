@@ -24,10 +24,10 @@ namespace {
   enum class LineType { CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
 
   enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=6, MERGIN_BETWEEN_LINE=30};
-  enum {BOXHEIGHT_GENEBOX_EXON=130, BOXHEIGHT_GENEBOX_NOEXON=80};
+  enum {BOXHEIGHT_GENEBOX_EXON=130, BOXHEIGHT_GENEBOX_NOEXON=60};
   enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10};
   int32_t pagewidth(1088);
-  int32_t width_draw(820);
+  int32_t width_draw(750);
   double dot_per_bp(0);
   int32_t mergin_between_graph_data(15);
 }
@@ -480,6 +480,21 @@ class PenrichDataFrame : public DataFrame {
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
 
+/*class HashElementOfGene {
+public:
+  int32_t start;
+  int32_t end;
+  std::string strand;
+  std::string name;
+  std::string gtype;
+  HashElementOfGene(const std::pair<const std::string, genedata> &m):
+    start(m.second.txStart), end(m.second.txEnd),
+    strand(m.second.strand), name(m.second.gname),
+    gtype(m.second.gtype)
+  {}
+  void sort() {
+  }
+  };*/
 
 class GeneElement{
   int32_t dif;
@@ -491,27 +506,24 @@ class GeneElement{
   int32_t y_name, ylen;
   int32_t ybar;
 
-  GeneElement(const std::pair<const std::string, genedata> &m,
-	      const int32_t xstart, const double ycenter,
-	      const int32_t ty,
+  GeneElement(const genedata &m, const int32_t xstart,
+	      const double ycenter, const int32_t ty,
 	      int32_t &on_plus, int32_t &on_minus):
     dif(6), cnt(1),
-    x1(bp2xaxis(m.second.txStart - xstart +1)),
-    x2(bp2xaxis(m.second.txEnd   - xstart +1)),
+    x1(bp2xaxis(m.txStart - xstart +1)),
+    x2(bp2xaxis(m.txEnd   - xstart +1)),
     xcen((x1+x2)/2), xwid(x2 - x1),
-    ybar(0)
+    ylen(0), ybar(0)
   {
-    x_name = xcen - 3.25 * m.second.gname.length() + 6;
-    if (x_name < 0) x_name = 10;
-    else if (x_name > pagewidth) x_name = pagewidth - 50;
 
     if(!ty) { // SGD
-      if (m.second.strand == "+") {
+      x_name = xcen - 3.25 * m.gname.length() + 6;
+      if (m.strand == "+") {
 	ybar   = ycenter - dif;
 	y_name = ybar -5 - on_minus*6;
 	if(on_minus == cnt) on_minus=0; else ++on_minus;
       }
-      else if (m.second.strand == "-") {
+      else if (m.strand == "-") {
 	ybar   = ycenter + dif;
 	y_name = ybar +9 + on_plus*6;
 	if (on_plus == cnt) on_plus=0; else ++on_plus;
@@ -519,15 +531,19 @@ class GeneElement{
       else y_name = ycenter -22;
       ylen = y_name - ycenter;
     } else {  // Others
-      if (m.second.strand == "+") {
-	ybar = ycenter -6 - on_minus * 13;
-	y_name = ybar -6;
-	if(on_minus==3) on_minus=0; else ++on_minus;
+      if (m.strand == "+") {
+	ybar = ycenter - 8 - on_minus * 8;
+	//	y_name = ybar -6;
+	if(on_minus==7) on_minus=0; else ++on_minus;
       } else{
-	ybar = ycenter +12 + on_plus * 13;
-	y_name = ybar +11;
-	if(on_plus==3) on_plus=0; else ++on_plus;
+	ybar = ycenter + 8 + on_plus * 8;
+	//	y_name = ybar +11;
+	if(on_plus==7) on_plus=0; else ++on_plus;
       }
+      x_name = x2 + 1;
+      if (x_name < 150) x_name = 150;
+      else if (x_name > OFFSET_X + width_draw + 60) x_name = OFFSET_X + width_draw + 60;
+      y_name = ybar +3;
     }
     
   }

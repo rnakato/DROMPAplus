@@ -147,8 +147,9 @@ namespace DROMPA {
   public:
     std::string genefile;
     int32_t gftype;
-    bool showgene;
-    HashOfGeneDataMap gmp; // hash for genes
+    //    bool showgene;
+    HashOfGeneDataMap gmp;
+    bool showtranscriptname;
     std::string arsfile;
     bool showars;
     std::string terfile;
@@ -170,7 +171,8 @@ namespace DROMPA {
 	("gftype",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--gftype")),
 	 "Format of gene annotation\n     0: RefFlat\n     1: GTF\n     2: SGD (for S. cerevisiae)\n")
-	("showasgene", "Show one representative for each gene (default: all isoforms)")
+	//	("showasgene", "Show one representative for each gene (default: all isoforms)")
+	("showtranscriptname", "Show transcript name (default: gene name)")
 	("ars",    boost::program_options::value<std::string>(), "ARS list (for yeast)")
 	("ter",    boost::program_options::value<std::string>(), "TER list (for S.cerevisiae)")
 	("showars", "Display ARS and TER and do not display genes")
@@ -205,8 +207,8 @@ namespace DROMPA {
       
       //      printMap(tmp);
       
-      if(showgene && gftype!=2) return construct_gmp(tmp); // hash for genes
-      else return tmp; // hash for transcripts
+      //      if(showgene && gftype!=2) return construct_gmp(tmp); // hash for genes
+	return tmp; // hash for transcripts
     }
     
     void setValuesPC(const MyOpt::Variables &values) {
@@ -217,7 +219,7 @@ namespace DROMPA {
 	if (values.count("genefile")) {
 	  genefile = MyOpt::getVal<std::string>(values, "genefile");
 	  gftype   = MyOpt::getVal<int32_t>(values, "gftype");
-	  showgene = values.count("showasgene");
+	  //	  showgene = values.count("showasgene");
 	  gmp = getGMP();
 	}
 	if (values.count("ars")) {
@@ -229,6 +231,7 @@ namespace DROMPA {
 	  terfile = MyOpt::getVal<std::string>(values, "ter");
 	  parseTER(terfile, gmp);
 	}
+	showtranscriptname = values.count("showtranscriptname");
 	//	printMap(gmp);
 	if (values.count("repeat")) repeatfile = MyOpt::getVal<std::string>(values, "repeat");
 
@@ -273,7 +276,7 @@ namespace DROMPA {
       std::vector<std::string> str_gtype = {"Transcript", "Gene"};
       DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
       std::cout << boost::format("\nAnnotations:\n");
-      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%, Type: %3%\n") % genefile % str_gftype[gftype] % str_gtype[showgene];
+      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype]; //% str_gtype[showgene];
       //      if(arsfile != "")  std::cout << boost::format("   ARS file: %1%\n") % arsfile;
       //if(terfile != "")  std::cout << boost::format("   TER file: %1%\n") % terfile;
       //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
