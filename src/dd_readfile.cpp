@@ -9,7 +9,7 @@
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */
 //void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
-void scan_samplestr(const std::string &str,
+void scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
 		    std::unordered_map<std::string, SampleFile> &sample,
 		    std::vector<SamplePair> &samplepair,
 		    WigType iftype)
@@ -29,10 +29,10 @@ void scan_samplestr(const std::string &str,
   
   if(v.size() >4) binsize = stoi(v[4]);
   
-  if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], binsize, iftype);
+  if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], gt, binsize, iftype);
   
   if(v.size() >=2 && v[1] != "") {
-    if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1], binsize, iftype);
+    if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1], gt, binsize, iftype);
     if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
 
@@ -176,14 +176,26 @@ void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin
 }
 
 
-WigArray readInputData(const std::string &filename, const int32_t binsize, const int32_t nbin, const WigType &iftype, const chrsize &chr)
+WigArray loadWigData(const std::string &filename, const SampleFile &x, const chrsize &chr)
 {
   std::cout << chr.getname() << std::endl;
 
-  WigArray array(nbin, 0);
-  std::string chrname(chr.getrefname());
+  int32_t binsize(x.getbinsize());
+  int32_t nbin(chr.getlen()/binsize +1);
 
-  if (iftype == WigType::NONE) {
+  WigArray array(nbin, 0);
+  //  std::string filename(x.first);
+  std::string chrname(chr.getrefname());
+  WigType iftype(x.getiftype());
+
+  if (iftype == WigType::NONE) PRINTERR("Suffix error of "<< filename <<". please specify --iftype option.");
+  else if (iftype == WigType::UNCOMPRESSWIG) funcWig(array, filename, binsize, chrname);
+  else if (iftype == WigType::COMPRESSWIG)   funcCompressWig(array, filename, binsize, chrname);
+  else if (iftype == WigType::BIGWIG)        funcBigWig(array, filename, binsize, chrname);
+  else if (iftype == WigType::BEDGRAPH)      funcBedGraph(array, filename, binsize, chrname);
+  else if (iftype == WigType::BINARY)        funcBinary(array, filename, nbin);
+  
+  /*  if (iftype == WigType::NONE) {
     if (isStr(filename, ".bin"))           funcBinary(array, filename, nbin);
     else if (isStr(filename, ".bedGraph")) funcBedGraph(array, filename, binsize, chrname);
     else if (isStr(filename, ".bw"))       funcBigWig(array, filename, binsize, chrname);
@@ -195,9 +207,83 @@ WigArray readInputData(const std::string &filename, const int32_t binsize, const
   else if (iftype == WigType::BIGWIG)          funcBigWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BEDGRAPH)        funcBedGraph(array, filename, binsize, chrname);
   else if (iftype == WigType::BINARY)          funcBinary(array, filename, nbin);
-
+  */
   //array.dump();
+  
   //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
+  // NCIS hakokode
 
+  
+  
   return array;
+}
+
+
+int32_t getNcolReadNum(std::string &lineStr)
+{
+  int32_t ncol_readnum(0);
+  std::vector<std::string> v;
+  boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+  for (size_t i=0; i<v.size(); ++i) {
+    if(isStr(v[i], "normalized read number")) {
+      ncol_readnum = i;
+      std::cout << ncol_readnum << std::endl;
+      break;
+    }
+  }
+  return ncol_readnum;
+}
+
+void SampleFile::scanStatsFile(const std::string &filename)
+{
+  DEBUGprint("scanStatsFile...");
+   
+  std::ifstream in(filename);
+  if (!in) PRINTERR("cannot open " << filename);
+    
+  std::string lineStr;
+  int32_t on(0);
+  int32_t ncol_readnum(0);
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if(lineStr.empty() || isStr(lineStr, "% genome")) continue;
+
+    if(!on){
+      if(isStr(lineStr, "normalized read number")) ncol_readnum = getNcolReadNum(lineStr);
+      else if(isStr(lineStr, "Genome")) {
+	std::vector<std::string> v;
+	boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+	//	std::cout << "tttttt "<<v[ncol_readnum] << std::endl;
+	totalreadnum = stoi(v[ncol_readnum]);
+	on=1;
+      }
+    } else {
+      std::vector<std::string> v;
+      boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+      totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
+      //      std::cout << "tttsssttt " << v[ncol_readnum] << std::endl;
+    }
+  }
+}
+
+void SampleFile::gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt)
+{
+  std::string statsfile(prefix + "csv");
+  if (checkFile(statsfile)) scanStatsFile(statsfile);
+  else {
+    DEBUGprint("loadWigData: noStatsFile...");
+    for(auto &chr: gt) {
+      WigArray array(loadWigData(filename, *this, chr));
+      totalreadnum_chr[chr.getname()] = array.getArraySum();
+      totalreadnum += totalreadnum_chr[chr.getname()];
+    }
+  }
+  
+#ifdef DEBUG
+    std::cout << "Total read number:" << std::endl;
+    std::cout << "Whole genome: " << totalreadnum << std::endl;
+    for(auto &chr: gt) {
+      std::cout << chr.getname() << ": " << totalreadnum_chr[chr.getname()] << std::endl;
+    }
+#endif
 }

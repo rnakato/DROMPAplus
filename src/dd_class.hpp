@@ -10,10 +10,10 @@
 #include "SSP/common/BoostOptions.hpp"
 #include "SSP/common/BedFormat.hpp"
 #include "SSP/common/ReadAnnotation.hpp"
+#include "SSP/common/util.hpp"
 
 class chrsize;
 class SamplePairChr;
-void isFile(const std::string &);
 
 enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OVERLAY, OTHER};
 
@@ -22,7 +22,10 @@ class SampleFile {
   double nb_p, nb_n, nb_p0;
   WigType iftype;
   int32_t binsize;
- public:
+  int32_t totalreadnum;
+  std::unordered_map<std::string, int32_t> totalreadnum_chr;
+  std::string prefix;
+public:
   std::vector<int> data;
 
   void setbinsize(std::string &v, const int32_t b) {
@@ -38,15 +41,16 @@ class SampleFile {
   }
   
  SampleFile() {}
-  SampleFile(const std::string &str, const int32_t b, const WigType &type): binsize(0) {
+  SampleFile(const std::string &filename, const std::vector<chrsize> gt,
+	     const int32_t b, const WigType &type):
+    binsize(0), totalreadnum(0), prefix("")
+  {
    std::vector<std::string> v;
-   boost::split(v, str, boost::algorithm::is_any_of("."));
+   boost::split(v, filename, boost::algorithm::is_any_of("."));
    int last(v.size()-1);
 
-   if(type != WigType::NONE) {
-     iftype = type;
-     binsize = b;
-   } else {
+   if (type != WigType::NONE) iftype = type;
+   else {
      if(v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;    
      else if(v[last] == "gz" && v[last-1] == "wig") {
        iftype = WigType::COMPRESSWIG;
@@ -54,12 +58,21 @@ class SampleFile {
      } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
      else if(v[last] == "bw")         iftype = WigType::BIGWIG;
      else if(v[last] == "bin")        iftype = WigType::BINARY;
-     else PRINTERR("invalid postfix: " << str);
+     else PRINTERR("invalid postfix: " << filename);
    }
    setbinsize(v[last-1], b);
+   for (int32_t i=0; i<last; ++i) prefix += v[i] + ".";
+   gettotalreadnum(filename, gt);
   }
- int getbinsize()    const { return binsize; }
- WigType getiftype() const { return iftype; }
+  
+  void scanStatsFile(const std::string &filename);
+  void gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt);
+  int32_t getbinsize() const { return binsize; }
+  WigType getiftype() const { return iftype; }
+
+  int32_t gettotalreadnum() const { return totalreadnum; }
+  const std::unordered_map<std::string, int32_t> & gettotalreadnum_chr() const { return totalreadnum_chr;}
+  
 };
 
 class yScale {
@@ -608,13 +621,13 @@ namespace DROMPA {
       o.add_options()
 	("norm",
 	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--norm")),
-	 "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number\n      2: with NCIS method\n")
+	 "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n      3: with NCIS method\n")
 	("sm",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
 	 "Smoothing width") // gausian ??
 	;
       allopts.add(o);
-    }  
+    }
     void setValuesNorm(const MyOpt::Variables &values) {
       DEBUGprint("Norm setValues...");
       try {
@@ -652,7 +665,7 @@ namespace DROMPA {
       DEBUGprint("Other setValues done.");
     }
     void InitDumpNorm() const {
-      std::vector<std::string> str_norm = { "OFF", "TOTALREAD", "NCIS" };
+      std::vector<std::string> str_norm = { "OFF", "TOTALREAD GENOME", "TOTALREAD CHR", "NCIS" };
       
       DEBUGprint("INITDUMP:DrompaCommand::NORM");
       std::cout << boost::format("   ChIP/Input normalization: %1%\n") % str_norm[norm];
@@ -668,8 +681,9 @@ namespace DROMPA {
       if(rmchr) std::cout << boost::format("   remove chr pdfs\n");
     }
 
-    WigType getIfType() const {return iftype;}
+    WigType getIfType() const { return iftype; }
 
+    int32_t getNorm() const { return norm; }
     const std::string getFigFileName() const
     {
       return oprefix + ".pdf";

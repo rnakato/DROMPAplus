@@ -192,7 +192,7 @@ void exec_PCSHARP(DROMPA::Global &p)
   printf("Drawing...\n");
 
   std::string StrAllPdf("");
-  for(auto chr: p.gt) {
+  for(auto &chr: p.gt) {
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
     if(p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
 
@@ -227,7 +227,7 @@ void Command::InitDump()
 	  std::cout << (i+1) << ": ";
 	  p.samplepair[i].print();
 	}
-	if (values.count("if")) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[MyOpt::getVal<int32_t>(values, "if")];
+	if (MyOpt::getVal<int32_t>(values, "if") < static_cast<int32_t>(WigType::NONE)) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[MyOpt::getVal<int32_t>(values, "if")];
 	break;
       }
     case DrompaCommand::NORM: p.InitDumpNorm(); break;
@@ -298,12 +298,19 @@ void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const My
     switch(op) {
     case DrompaCommand::CHIP:
       {
-	DEBUGprint("Global::setValues::ChIP");
-	if (!values.count("input")) PRINTERR("specify --input option.");
-	std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "input"));
-	for(auto x:v) scan_samplestr(x, sample, samplepair, iftype);
+	DEBUGprint("ChIP setValues...");
+	try {
+	  if (!values.count("input")) PRINTERR("specify --input option.");
+	  if (values.count("if")) iftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "if"));
+	  std::vector<std::string> v(MyOpt::getVal<std::vector<std::string>>(values, "input"));
+	  for(auto x:v) scan_samplestr(x, gt, sample, samplepair, iftype);
 
-	if (values.count("if")) iftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "if")); 
+	} catch(const boost::bad_any_cast& e) {
+	  std::cout << e.what() << std::endl;
+	  exit(0);
+	}
+	DEBUGprint("ChIP setValues done.");
+  
 	break;
       }
     case DrompaCommand::NORM: setValuesNorm(values); break;
@@ -375,7 +382,7 @@ void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
 	   boost::program_options::value<std::vector<std::string>>(),
 	   "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
 	  ("if",
-	   boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--if")),
+	   boost::program_options::value<int32_t>()->default_value(static_cast<int32_t>(WigType::NONE))->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int32_t>(WigType::WIGTYPENUM) -1, "--if")),
 	   "Input file format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
 	  ;
 	opts.add(o);

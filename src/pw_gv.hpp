@@ -183,10 +183,10 @@ class Mapfile: private Uncopyable {
     vPeak[vPeak.size()-1].renew(i, val, p);
   }
   void setFRiP() {
-    if(isBedOn()) { 
-    std::cout << "calculate FRiP score.." << std::flush;
-    for(auto &x: genome.chr) x.setFRiP(vbed);
-    std::cout << "done." << std::endl;
+    if (isBedOn()) { 
+      std::cout << "calculate FRiP score.." << std::flush;
+      for(auto &x: genome.chr) x.setFRiP(vbed);
+      std::cout << "done." << std::endl;
     }
   }
 

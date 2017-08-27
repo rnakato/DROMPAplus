@@ -48,6 +48,11 @@ class WigArray {
     array[i] *= val;
   }
 
+  int64_t getArraySum() const {
+    int64_t sum(0);
+    for(auto x: array) sum += x;
+    return rmGeta(sum);
+  }
   double getPercentile(double per) const {
     int32_t v95(MyStatistics::getPercentile(array, per));
     return rmGeta(v95);

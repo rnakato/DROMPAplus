@@ -60,7 +60,7 @@ void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
 				const std::unordered_map<std::string, ChrArray> &arrays,
 				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
 {
-  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], 1) / scale);  // TOTAL READ 正規化入れる
+  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);  // TOTAL READ 正規化入れる
   if (!value) return;
  
   int32_t len(getbinlen(value));
@@ -74,7 +74,7 @@ void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
 				   const std::unordered_map<std::string, ChrArray> &arrays,
 				   const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
 {
-  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], 1));  // TOTAL READ 正規化入れる
+  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));  // TOTAL READ 正規化入れる
   if (!data) return;
 
   double value(log10(data)/scale);
@@ -126,7 +126,7 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
 
 
 void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer) {
-  DEBUGprint("stroke_dataframe");
+  //  DEBUGprint("stroke_dataframe");
   stroke_frame();
   /* y memory */
   cr->set_line_width(0.4);
@@ -147,7 +147,7 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer) 
 void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pair,
 			       const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer)
 {
-  DEBUGprint("stroke_bindata");
+  //  DEBUGprint("stroke_bindata");
   int32_t binsize(pair.getbinsize());
   int32_t sbin(par.xstart/binsize);
   int32_t ebin(par.xend/binsize);
@@ -171,7 +171,7 @@ void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pai
 
 void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer)
 {
-  DEBUGprint("stroke_each_layer");
+  //  DEBUGprint("stroke_each_layer");
   if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair, nlayer);
   if (p.drawparam.showpenrich && pair.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
   if (p.drawparam.showratio && pair.argvInput!="") {

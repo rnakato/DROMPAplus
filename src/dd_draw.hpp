@@ -12,17 +12,16 @@ public:
   int32_t binsize;
   int32_t nbin;
   WigArray array;
-    
+  int32_t totalreadnum;
+  std::unordered_map<std::string, int32_t> totalreadnum_chr;
+
   ChrArray(){}
-  /*    Array(const std::string &filename, const int32_t b, const WigType &iftype, const chrsize &chr):
-	binsize(b), nbin(chr.getlen()/binsize +1),
-	array(readInputData(filename, binsize, nbin, iftype, chr))
-	{}*/
-  void setValue(const std::string &filename, const int32_t b, const WigType &iftype, const chrsize &chr) {
-    binsize = b;
-    nbin = chr.getlen()/binsize +1;
-    array = readInputData(filename, binsize, nbin, iftype, chr);
-  }
+  ChrArray(const std::pair<const std::string, SampleFile> &x, const chrsize &chr):
+	binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
+	array(loadWigData(x.first, x.second, chr)),
+	totalreadnum(x.second.gettotalreadnum()),
+	totalreadnum_chr(x.second.gettotalreadnum_chr())
+  {}
 };
   
 class SamplePairChr {
@@ -31,9 +30,39 @@ public:
   std::string argvChIP;
   std::string argvInput;
   std::string label;
+  double ratio;
 
-  SamplePairChr(const std::string &argvChIP, const std::string &argvInput, const std::string &label, const int32_t &b):
-    binsize(b), argvChIP(argvChIP), argvInput(argvInput), label(label) {}
+  SamplePairChr(DROMPA::Global &p, const std::string &argvChIP, const std::string &argvInput,
+		const std::string &label, const std::unordered_map<std::string, ChrArray> &arrays,
+		const std::string &chrname):
+    binsize(arrays.at(argvChIP).binsize),
+    argvChIP(argvChIP), argvInput(argvInput),
+    label(label), ratio(0)
+  {
+    if(argvInput != "") setRatio(p, arrays, chrname);
+  }
+  
+  void setRatio (DROMPA::Global &p, const std::unordered_map<std::string, ChrArray> &arrays, const std::string &chrname) {
+    DEBUGprint("setRatio");
+    switch(p.getNorm()) {
+    case 0:
+      ratio = 1;
+      break;
+    case 1:
+      ratio = getratio(arrays.at(argvChIP).totalreadnum, arrays.at(argvInput).totalreadnum);
+      break;
+    case 2:
+      ratio = getratio(arrays.at(argvChIP).totalreadnum_chr.at(chrname), arrays.at(argvInput).totalreadnum_chr.at(chrname));
+      break;
+    case 3:
+      ratio = 1; // NCIS
+      break;
+    }
+#ifdef DEBUG
+    std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << ratio << std::endl;
+#endif
+  }
+  
   int32_t getbinsize() const { return binsize; }
 };
 
@@ -44,11 +73,13 @@ class Figure {
   
   void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
     for(auto x: p.sample) {
-      arrays[x.first] = ChrArray();
-      arrays[x.first].setValue(x.first, x.second.getbinsize(), x.second.getiftype(), chr);
+      arrays[x.first] = ChrArray(x, chr);
     }
-    for(auto itr = p.samplepair.begin(); itr != p.samplepair.end(); ++itr) {
-      pairs.emplace_back(itr->argvChIP, itr->argvInput, itr->label, arrays[itr->argvChIP].binsize);
+    for(auto &x: p.samplepair) {
+#ifdef DEBUG
+  std::cout << "Samplepairchr " << x.argvChIP << ", " << x.argvInput << std::endl;
+#endif
+      pairs.emplace_back(p, x.argvChIP, x.argvInput, x.label, arrays, chr.getname());
     }
 
 #ifdef DEBUG
@@ -57,8 +88,8 @@ class Figure {
       std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
     }
     std::cout << "all SamplePair:" << std::endl;
-    for(auto itr = pairs.begin(); itr != pairs.end(); ++itr) {
-      std::cout << itr->argvChIP << "," << itr->argvInput << ", binsize " << itr->getbinsize() << std::endl;
+    for(auto &x: pairs) {
+      std::cout << x.argvChIP << "," << x.argvInput << ", binsize " << x.getbinsize() << std::endl;
     }
 #endif
   }

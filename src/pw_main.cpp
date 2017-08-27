@@ -37,9 +37,9 @@ Usage: parse2wig+ [option] -i <inputfile> -o <output> --gt <genome_table>)";
 }
 
 template <class T>
-void calcdepth(T &obj, const int32_t flen)
+void CalcDepth(T &obj, const int32_t flen)
 {
-  uint64_t lenmpbl = obj.getlenmpbl();
+  uint64_t lenmpbl(obj.getlenmpbl());
   double d = lenmpbl ? getratio(obj.getnread_nonred(Strand::BOTH) * flen, lenmpbl): 0;
   obj.setdepth(d);
 }
@@ -62,8 +62,8 @@ int32_t main(int32_t argc, char* argv[])
     }
   }
 
-  for (auto &x: p.genome.chr) calcdepth(x, p.genome.dflen.getflen());
-  calcdepth(p.genome, p.genome.dflen.getflen());
+  for (auto &x: p.genome.chr) CalcDepth(x, p.genome.dflen.getflen());
+  CalcDepth(p.genome, p.genome.dflen.getflen());
 
   p.setFRiP();
 
