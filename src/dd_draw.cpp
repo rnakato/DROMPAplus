@@ -124,15 +124,32 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
+// peak region 色を変えるのではなく、その領域のバックを光らせる
+void DataFrame::stroke_peakregion(const SamplePairChr &pair)
+{
+  //  DEBUGprint("stroke_peakregion");
+  cr->set_source_rgba(CLR_OLIVE, 0.3);
 
-void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer) {
+  for (auto &bed: pair.peaks) {
+    if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
+    cr->set_line_width(bed.length() * dot_per_bp);
+    double x(bp2xaxis(bed.summit - par.xstart));
+    rel_yline(cr, x, par.yaxis_now - height_df, height_df);
+  }
+  cr->stroke();
+  return;
+}
+
+void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer)
+{
   //  DEBUGprint("stroke_dataframe");
   stroke_frame();
+  
   /* y memory */
   cr->set_line_width(0.4);
   cr->set_source_rgba(CLR_BLACK, 0.5);
   
-  for(int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, width_df);
+  for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, width_df);
   cr->stroke();
 
   if (p.drawparam.isshowymem()) stroke_ymem(nlayer);
@@ -156,9 +173,8 @@ void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pai
 
   int32_t thin(std::min(par.width_per_line/(1000*binsize), 20));
 
-  // peak region 色を変えるのではなく、その領域のバックを光らせる
   double xcen(bp2xaxis(binsize/2)); // initial position
-  if(thin > 1) cr->set_line_width(dot_per_bin*thin);
+  if (thin > 1) cr->set_line_width(dot_per_bin*thin);
   else cr->set_line_width(dot_per_bin);
 
   for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {

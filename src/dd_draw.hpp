@@ -31,13 +31,15 @@ public:
   std::string argvInput;
   std::string label;
   double ratio;
+  const std::vector<bed> &peaks;
 
-  SamplePairChr(DROMPA::Global &p, const std::string &argvChIP, const std::string &argvInput,
-		const std::string &label, const std::unordered_map<std::string, ChrArray> &arrays,
+  
+  SamplePairChr(DROMPA::Global &p, const SamplePair &x,
+		const std::unordered_map<std::string, ChrArray> &arrays,
 		const std::string &chrname):
-    binsize(arrays.at(argvChIP).binsize),
-    argvChIP(argvChIP), argvInput(argvInput),
-    label(label), ratio(0)
+    binsize(arrays.at(x.argvChIP).binsize),
+    argvChIP(x.argvChIP), argvInput(x.argvInput),
+    label(x.label), ratio(0), peaks(x.getpeaksChr(chrname))
   {
     if(argvInput != "") setRatio(p, arrays, chrname);
   }
@@ -77,9 +79,9 @@ class Figure {
     }
     for(auto &x: p.samplepair) {
 #ifdef DEBUG
-  std::cout << "Samplepairchr " << x.argvChIP << ", " << x.argvInput << std::endl;
+      std::cout << "Samplepairchr " << x.argvChIP << ", " << x.argvInput << std::endl;
 #endif
-      pairs.emplace_back(p, x.argvChIP, x.argvInput, x.label, arrays, chr.getname());
+      pairs.emplace_back(p, x, arrays, chr.getname());
     }
 
 #ifdef DEBUG

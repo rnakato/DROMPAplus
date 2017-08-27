@@ -206,6 +206,7 @@ class Page {
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
     df.stroke_bindata(p, pair, arrays, nlayer);
     df.stroke_dataframe(p, nlayer);
+    df.stroke_peakregion(pair);
     if(!nlayer) stroke_xaxis();
     return;
   }
@@ -356,6 +357,7 @@ protected:
     }
     return;
   }
+  void stroke_peakregion(const SamplePairChr &pair);
   void stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer);
   void stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pair,
 		      const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);

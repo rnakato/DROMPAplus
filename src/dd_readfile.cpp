@@ -46,7 +46,7 @@ pdSample scan_pdstr(const std::string &str)
   std::vector<std::string> v;
   boost::split(v, str, boost::algorithm::is_any_of(","));
 
-  if(v.size() >2) {
+  if(v.size() > 2) {
     std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
     exit(1);
   }

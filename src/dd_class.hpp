@@ -86,14 +86,9 @@ class yScale {
 
 class SamplePair {
   int32_t overlay;
-  //  double fc; //comp
 
   std::string peak_argv;
-  /*  Peak *peak;
-  char *peak_argv;
-  char *peakarray;
-  char *linename;
-  int32_t *binnum;*/
+  std::unordered_map<std::string, std::vector<bed>> peaks;
   int32_t binsize;
   
   yScale scale;
@@ -102,15 +97,20 @@ class SamplePair {
   std::string argvChIP, argvInput;
   std::string label;
 
-  SamplePair(const std::vector<std::string> &v, const int32_t b): peak_argv(""), argvInput(""), label("") {
+  SamplePair(const std::vector<std::string> &v, const int32_t b):
+    peak_argv(""), argvInput(""), label("")
+  {
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") label     = v[2];
     if(v.size() >=4 && v[3] != "") peak_argv = v[3];
+    peaks = parseBed_Hash<bed>(peak_argv);
     binsize = b;
     if(v.size() >=6 && v[5] != "") scale.tag = stof(v[5]);
     if(v.size() >=7 && v[6] != "") scale.ratio  = stof(v[6]);
     if(v.size() >=8 && v[7] != "") scale.pvalue = stof(v[7]);
+
+    printBed_Hash(peaks);
   }
   void print() {
     std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % label % peak_argv;
@@ -121,6 +121,7 @@ class SamplePair {
     std::cout << boost::format("ChIP:%1% Input:%2% name:%3% peak:%4% scale_tag %5% scale_ratio %6% scale_pvalue %7%\n")
       % argvChIP % argvInput % label % peak_argv % scale.tag % scale.ratio % scale.pvalue;
   }
+  const std::vector<bed> & getpeaksChr(const std::string &chrname) const { return peaks.at(rmchr(chrname)); }
 };
 
 class pdSample {
