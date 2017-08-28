@@ -31,7 +31,8 @@ public:
   std::string argvInput;
   std::string label;
   double ratio;
-  const std::vector<bed> &peaks;
+  bool isPeaks;
+  std::vector<bed> peaks;
 
   
   SamplePairChr(DROMPA::Global &p, const SamplePair &x,
@@ -39,9 +40,13 @@ public:
 		const std::string &chrname):
     binsize(arrays.at(x.argvChIP).binsize),
     argvChIP(x.argvChIP), argvInput(x.argvInput),
-    label(x.label), ratio(0), peaks(x.getpeaksChr(chrname))
+    label(x.label), ratio(0), isPeaks(false)
   {
-    if(argvInput != "") setRatio(p, arrays, chrname);
+    if (argvInput != "") setRatio(p, arrays, chrname);
+    if (x.peak_argv != "") {
+      isPeaks = true;
+      peaks = x.getpeaksChr(chrname);
+    }
   }
   
   void setRatio (DROMPA::Global &p, const std::unordered_map<std::string, ChrArray> &arrays, const std::string &chrname) {

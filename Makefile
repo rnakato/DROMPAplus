@@ -40,11 +40,11 @@ all: $(TARGET)
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)
+	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)  $(CFLAGS)
 
 $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO)
+	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO)  $(CFLAGS)
 
 $(ALGLIBDIR)/libalglib.a:
 	$(MAKE) -C $(ALGLIBDIR) libalglib.a

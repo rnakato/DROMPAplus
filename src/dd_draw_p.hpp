@@ -23,13 +23,12 @@
 namespace {
   enum class LineType { CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
 
-  enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=6, MERGIN_BETWEEN_LINE=30};
+  enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=10, MERGIN_BETWEEN_LINE=30};
   enum {BOXHEIGHT_GENEBOX_EXON=140, BOXHEIGHT_GENEBOX_NOEXON=60};
-  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10};
+  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15};
   int32_t pagewidth(1088);
   int32_t width_draw(750);
   double dot_per_bp(0);
-  int32_t mergin_between_graph_data(15);
 }
 
 inline double bp2xaxis(const int32_t bp) { return bp * dot_per_bp + OFFSET_X; }
@@ -380,6 +379,7 @@ class ChIPDataFrame : public DataFrame {
   void stroke_bin(const SamplePairChr &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
+  void stroke_peakregion(const SamplePairChr &pair);
 };
 
 
@@ -542,7 +542,7 @@ class GeneElement{
 	//	y_name = ybar +11;
 	if(on_plus==7) on_plus=0; else ++on_plus;
       }
-      x_name = x2 + 1;
+      x_name = x2 + 2;
       if (x_name < 150) x_name = 150;
       else if (x_name > OFFSET_X + width_draw + 60) x_name = OFFSET_X + width_draw + 60;
       y_name = ybar +3;

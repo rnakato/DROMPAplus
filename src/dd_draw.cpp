@@ -29,7 +29,7 @@ void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
   if (!value) return;
 
   int32_t len(getbinlen(value));
-  cr->set_source_rgba(CLR_GREEN3, 1);
+  cr->set_source_rgba(CLR_BLUEGRAY, 0.7);
   if (!viz) {
     rel_yline(cr, xcen, yaxis, len);
   } else {
@@ -51,7 +51,7 @@ void InputDataFrame::stroke_bin(const SamplePairChr &pair,
 
   int32_t len(getbinlen(value));
 
-  cr->set_source_rgba(CLR_BLUE, 1);
+  cr->set_source_rgba(CLR_BLUE, 0.7);
   rel_yline(cr, xcen, yaxis, len);
   return;
 }
@@ -124,19 +124,23 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
-// peak region 色を変えるのではなく、その領域のバックを光らせる
-void DataFrame::stroke_peakregion(const SamplePairChr &pair)
+void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
 {
   //  DEBUGprint("stroke_peakregion");
-  cr->set_source_rgba(CLR_OLIVE, 0.3);
+  cr->set_source_rgba(CLR_RED, 0.3);
 
   for (auto &bed: pair.peaks) {
     if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
     cr->set_line_width(bed.length() * dot_per_bp);
     double x(bp2xaxis(bed.summit - par.xstart));
-    rel_yline(cr, x, par.yaxis_now - height_df, height_df);
+    rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
   }
   cr->stroke();
+  return;
+}
+
+void DataFrame::stroke_peakregion(const SamplePairChr &pair)
+{
   return;
 }
 
@@ -390,8 +394,8 @@ void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
       
       // name
       cr->set_source_rgba(CLR_BLACK, 1);
-      if(p.anno.showtranscriptname) showtext_cr(cr, g.x_name, g.y_name, m.tname, 7);
-      else showtext_cr(cr, g.x_name, g.y_name, m.gname, 7);
+      if(p.anno.showtranscriptname) showtext_cr(cr, g.x_name, g.y_name, m.tname, 8);
+      else showtext_cr(cr, g.x_name, g.y_name, m.gname, 8);
     }
   } catch (...) {
     std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
@@ -527,26 +531,26 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
   cr->set_source_rgba(CLR_WHITE, 1);
   cr->paint();
 
-  for(int i=line_start; i<line_end; ++i) {
+  for (int i=line_start; i<line_end; ++i) {
     set_xstart_xend(i);
-    if(par.xstart >= par.xend) continue;
+    if (par.xstart >= par.xend) continue;
 
-    if(p.anno.GC.isOn()){
+    if (p.anno.GC.isOn()) {
       drawGraph(GC);
-      par.yaxis_now += GC.boxheight + mergin_between_graph_data;
+      par.yaxis_now += GC.boxheight + MERGIN_BETWEEN_GRAPH_DATA;
     }
-    if(p.anno.GD.isOn()){
+    if (p.anno.GD.isOn()) {
       drawGraph(GD);
-      par.yaxis_now += GD.boxheight + mergin_between_graph_data;
+      par.yaxis_now += GD.boxheight + MERGIN_BETWEEN_GRAPH_DATA;
     }
 
-    if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawAnnotation(p);
+    if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawAnnotation(p);
      /*   if(d->internum){
       for(j=0; j<d->internum; ++j) draw_interaction(cr, &(d->inter[j]), xstart, xend, chr);
       }*/
     //    double ytemp = par.yaxis_now;
     int32_t nlayer = 0;
-    for(size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j], nlayer);
+    for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j], nlayer);
     stroke_xaxis_num(par.yaxis_now, 9);
 
     //    if(d->bednum) draw_bedfile(d, cr, xstart, xend, chr);
@@ -634,8 +638,8 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
   if(showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
 
-  if(p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + mergin_between_graph_data;
-  if(p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + mergin_between_graph_data;
+  if(p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
+  if(p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
   
   if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
     if(p.anno.getgftype() == GFTYPE_SGD) height += BOXHEIGHT_GENEBOX_NOEXON;
