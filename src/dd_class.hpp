@@ -627,8 +627,8 @@ namespace DROMPA {
 	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--norm")),
 	 "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n      3: with NCIS method\n")
 	("sm",
-	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
-	 "# of bins for Gausian smoothing") // gausian ??
+	 boost::program_options::value<int32_t>()->default_value(5)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
+	 "# of bins for Gausian smoothing")
 	;
       allopts.add(o);
     }

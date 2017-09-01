@@ -6,6 +6,7 @@
 #include <iomanip>
 #include "dd_draw.hpp"
 #include "dd_draw_p.hpp"
+#include "dd_peakcall.hpp"
 #include "SSP/common/inline.hpp"
 #include "SSP/common/util.hpp"
 
@@ -60,7 +61,7 @@ void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
 				const std::unordered_map<std::string, ChrArray> &arrays,
 				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
 {
-  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);  // TOTAL READ 正規化入れる
+  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);
   if (!value) return;
  
   int32_t len(getbinlen(value));
@@ -74,7 +75,7 @@ void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
 				   const std::unordered_map<std::string, ChrArray> &arrays,
 				   const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
 {
-  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));  // TOTAL READ 正規化入れる
+  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
   if (!data) return;
 
   double value(log10(data)/scale);
@@ -87,6 +88,14 @@ void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
   rel_yline(cr, xcen, yaxis-height_df/2, len);
   return;
 }
+/*double zero_inflated_binomial_test(double k, double p, double n){
+  double r, pval;
+  if(!k) pval =0;
+  else pval = gsl_cdf_negative_binomial_Q(k, p, n);
+  //  printf("k=%f, p=%f, n=%f, pval=%f\n",k, p, n, pval);
+  if(!pval) r = 0; else r = -log10(pval);
+  return r;
+  }*/
 
 void PinterDataFrame::stroke_bin(const SamplePairChr &pair,
 				 const std::unordered_map<std::string, ChrArray> &arrays,
@@ -110,16 +119,13 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
 				  const std::unordered_map<std::string, ChrArray> &arrays,
 				  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
 {
-  //double data = binomial_test(WIGARRAY2VALUE(sample->ChIP->data[i]), WIGARRAY2VALUE(sample->Input->data[i]), sample->comp->genome->ratio);
-  double data = CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], 1);
-  double value(data/scale);
-  if (!value) return;
- 
-  int32_t len(getbinlen(value));
+  double data(binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
+  if (!data) return;
+  
+  int32_t len(getbinlen(data/scale));
 
-  //    if(data > p->pthre_enrich) cr->set_source_rgba(CLR_PINK, 1);
-  //else cr->set_source_rgba(CLR_CLR_GRAY, 1);
-  cr->set_source_rgba(CLR_PINK, 1);
+  if (data > threshold) cr->set_source_rgba(CLR_PINK, 1);
+  else cr->set_source_rgba(CLR_GRAY, 1);
   rel_yline(cr, xcen, yaxis, len);
   return;
 }

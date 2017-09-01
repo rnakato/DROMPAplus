@@ -328,11 +328,14 @@ protected:
   std::string label;
   double width_df;
   double height_df;
+
+  double threshold;
   
  public:
   DataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const std::string &l, const double s,
-	    const DParam &refparam, const double wdf, const double hdf):
-    cr(cr_), par(refparam), scale(s), label(l), width_df(wdf), height_df(hdf)
+	    const DParam &refparam, const double wdf, const double hdf, const double thre):
+    cr(cr_), par(refparam), scale(s), label(l), width_df(wdf), height_df(hdf),
+    threshold(thre)
   {}
 
   void stroke_frame()
@@ -373,7 +376,8 @@ class ChIPDataFrame : public DataFrame {
  public:
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, pair.label, p.drawparam.scale_tag, refparam, wdf, hdf)
+    DataFrame(cr_, pair.label, p.drawparam.scale_tag, refparam, wdf, hdf,
+	      p.thre.ipm)
   {}
 
   void stroke_bin(const SamplePairChr &pair,
@@ -387,7 +391,7 @@ class InputDataFrame : public DataFrame {
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf)
+    DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, 0)
   {}
 
   void stroke_bin(const SamplePairChr &pair,
@@ -399,7 +403,8 @@ class RatioDataFrame : public DataFrame {
  public:
   RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.ethre)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -418,7 +423,8 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
  public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf),
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.ethre),
     barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
   {}
 
@@ -452,7 +458,8 @@ class PinterDataFrame : public DataFrame {
  public:
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.pthre_inter)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -469,7 +476,8 @@ class PenrichDataFrame : public DataFrame {
  public:
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		   const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf)
+    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.pthre_enrich)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {

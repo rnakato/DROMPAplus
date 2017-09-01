@@ -118,8 +118,7 @@ class WigStats {
     
     int32_t size = wigDist.size();
     std::vector<int32_t> ar;
-    for(size_t i=0; i<wigarray.size(); ++i) {
-      //int32_t v(wigarray.getval(i));
+    for (size_t i=0; i<wigarray.size(); ++i) {
       int32_t v(wigarray[i]);
       if(v<0) std::cout << sum << "xxx" << v << std::endl;
       ++sum;
