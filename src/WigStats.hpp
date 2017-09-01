@@ -7,6 +7,7 @@
 #include <vector>
 #include <fstream>
 #include <boost/bind.hpp>
+#include "SSP/common/util.hpp"
 #include "SSP/common/inline.hpp"
 #include "SSP/common/BoostOptions.hpp"
 
@@ -48,6 +49,10 @@ class WigArray {
     array[i] *= val;
   }
 
+  void Smoothing(const int32_t nsmooth) {
+    GaussianSmoothing(array, nsmooth);
+  }
+  
   int64_t getArraySum() const {
     int64_t sum(0);
     for(auto x: array) sum += x;

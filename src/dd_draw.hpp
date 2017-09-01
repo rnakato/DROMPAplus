@@ -16,12 +16,14 @@ public:
   std::unordered_map<std::string, int32_t> totalreadnum_chr;
 
   ChrArray(){}
-  ChrArray(const std::pair<const std::string, SampleFile> &x, const chrsize &chr):
+  ChrArray(const DROMPA::Global &p, const std::pair<const std::string, SampleFile> &x, const chrsize &chr):
 	binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
 	array(loadWigData(x.first, x.second, chr)),
 	totalreadnum(x.second.gettotalreadnum()),
 	totalreadnum_chr(x.second.gettotalreadnum_chr())
-  {}
+  {
+    if(p.getSmoothing()) array.Smoothing(p.getSmoothing());
+  }
 };
   
 class SamplePairChr {
@@ -80,7 +82,7 @@ class Figure {
   
   void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
     for(auto x: p.sample) {
-      arrays[x.first] = ChrArray(x, chr);
+      arrays[x.first] = ChrArray(p, x, chr);
     }
     for(auto &x: p.samplepair) {
 #ifdef DEBUG

@@ -597,7 +597,7 @@ namespace DROMPA {
     std::string oprefix;
     bool includeYM;
     int32_t norm;
-    int32_t sm;
+    int32_t smoothing;
 
   public:
     MyOpt::Opts opts;
@@ -628,7 +628,7 @@ namespace DROMPA {
 	 "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n      3: with NCIS method\n")
 	("sm",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
-	 "Smoothing width") // gausian ??
+	 "# of bins for Gausian smoothing") // gausian ??
 	;
       allopts.add(o);
     }
@@ -636,7 +636,7 @@ namespace DROMPA {
       DEBUGprint("Norm setValues...");
       try {
 	norm = MyOpt::getVal<int32_t>(values, "norm");
-	sm   = MyOpt::getVal<int32_t>(values, "sm");
+	smoothing = MyOpt::getVal<int32_t>(values, "sm");
       } catch(const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
@@ -673,7 +673,7 @@ namespace DROMPA {
       
       DEBUGprint("INITDUMP:DrompaCommand::NORM");
       std::cout << boost::format("   ChIP/Input normalization: %1%\n") % str_norm[norm];
-      if (sm) std::cout << boost::format("   smoothing width: %1% bp\n") % sm;
+      if (smoothing) std::cout << boost::format("   smoothing width: %1% bp\n") % smoothing;
     }
     void InitDumpOther() const {
       std::vector<std::string> str_bool = {"OFF", "ON"};
@@ -687,6 +687,7 @@ namespace DROMPA {
 
     WigType getIfType() const { return iftype; }
 
+    int32_t getSmoothing() const { return smoothing; }
     int32_t getNorm() const { return norm; }
     const std::string getFigFileName() const
     {

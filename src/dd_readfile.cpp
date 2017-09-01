@@ -209,8 +209,7 @@ WigArray loadWigData(const std::string &filename, const SampleFile &x, const chr
   else if (iftype == WigType::BINARY)          funcBinary(array, filename, nbin);
   */
   //array.dump();
-  
-  //  if(p->smoothing) smooth_tags(&(s->data), p->smoothing, values["binsize"].as<int>(), chr.nbin);
+
   // NCIS hakokode
 
   
