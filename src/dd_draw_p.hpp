@@ -180,6 +180,14 @@ class Page {
 
   std::string chrname;
   
+  int32_t setInterval() const {
+    int32_t interval;
+    if (par.width_per_line > 100*NUM_1M) interval = 10*NUM_1M;       // 10Mbp
+    else if (par.width_per_line > 10*NUM_1M) interval = 100*NUM_1K;  // 100kbp
+    else interval = par.width_per_line/10;
+    return interval;
+  }
+  
   public:
   
   Page(const DROMPA::Global &p,
@@ -221,22 +229,10 @@ class Page {
     par.set_xstart_xend(i);
   }
 
-  /*  
-  int32_t set_interval_large() {
-    int32_t interval;
-    if(d->gw==true){
-      if(d->large_genome==false) interval = 100*NUM_1K;  // 100kbp
-      else interval = 10*NUM_1M;  // 10Mbp
-    }else{
-      interval = width_per_line/10;
-    }
-    return interval;
-    }*/
-  
   void stroke_xaxis(const double y) {
     double x;
-    int32_t interval_large(par.width_per_line/10); //set_interval_large(d);
-    int32_t interval = interval_large/10;
+    int32_t interval_large(setInterval());
+    int32_t interval(interval_large/10);
     
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
@@ -256,17 +252,15 @@ class Page {
   void stroke_xaxis_num(const double y, const int32_t fontsize) {
     int32_t mega, kilo;
     double x;
-    int32_t interval(par.width_per_line/10);
+    int32_t interval(setInterval());
     
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
       std::string str;
       x = bp2xaxis(i - par.xstart);
-      /*  if(d->gw==true){
-	if(d->large_genome==false) sprintf(str, "%dk", i/NUM_1K);
-	else sprintf(str, "%dM", i/NUM_1M);
-	showtext_cr(cr, x - 3*strlen(str), y+10, str, fontsize);
-	}else{*/
+      if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M"; 
+      else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k"; 
+      else {
 	mega = i/NUM_1M;
 	kilo = (i%NUM_1M)/NUM_1K;
 	if (par.width_per_line > 10*NUM_1K) str = float2string(i/static_cast<double>(NUM_1M), 3) + "M"; 
@@ -278,8 +272,8 @@ class Page {
 	  else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
 	  else str = std::to_string(i%NUM_1K);
 	}
-	showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
-	//      }
+      }
+      showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
     }
     return;
   }

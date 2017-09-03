@@ -189,8 +189,6 @@ void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair,
   if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair, nlayer);
   if (p.drawparam.showpenrich && pair.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
   if (p.drawparam.showratio && pair.argvInput!="") {
-    //    if(p->ftype==FTYPE_GV)  stroke_readdist(p, d, cr, sample, xstart, xend, LTYPE_RATIO_GV, nlayer);
-    //else
     if (p.drawparam.showratio == 1) stroke_readdist<RatioDataFrame>(p, pair, nlayer);
     else if (p.drawparam.showratio == 2) stroke_readdist<LogRatioDataFrame>(p, pair, nlayer);
   }
@@ -542,7 +540,6 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
      /*   if(d->internum){
       for(j=0; j<d->internum; ++j) draw_interaction(cr, &(d->inter[j]), xstart, xend, chr);
       }*/
-    //    double ytemp = par.yaxis_now;
     int32_t nlayer = 0;
     for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j], nlayer);
     stroke_xaxis_num(par.yaxis_now, 9);
@@ -582,14 +579,14 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 #ifdef CAIRO_HAS_PDF_SURFACE
   const auto surface = Cairo::PdfSurface::create(pdffile, width, height);
 
-  if(!p.drawregion.isRegionBed()){  // whole chromosome
+  if (!p.drawregion.isRegionBed()){  // whole chromosome
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
-    for(int32_t i=0; i<num_page; ++i) {
+    for (int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
       Page page(p, arrays, pairs, surface, chr, 0, chr.getlen());
       page.Draw(p, i, 1);
     }
-  }else{
+  } else {
     int32_t region_no(1);
     for (auto &x: regionBed) {
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
@@ -628,15 +625,15 @@ int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairChr &pair) const 
     
 int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std::vector<SamplePairChr> &pairs) const {
   int32_t height(0);
-  for(auto x: pairs) height += getHeightEachSample(x);
+  for (auto x: pairs) height += getHeightEachSample(x);
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
-  if(showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
+  if (showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
 
-  if(p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
-  if(p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
+  if (p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
+  if (p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
   
-  if(p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
-    if(p.anno.getgftype() == GFTYPE_SGD) height += BOXHEIGHT_GENEBOX_NOEXON;
+  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
+    if (p.anno.getgftype() == GFTYPE_SGD) height += BOXHEIGHT_GENEBOX_NOEXON;
     else height += BOXHEIGHT_GENEBOX_EXON;
     height += MERGIN_BETWEEN_DATA;
   }

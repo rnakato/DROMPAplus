@@ -21,6 +21,7 @@
 //             3DMAP       accumulate read counts in bed regions specified
 
 void exec_PCSHARP(DROMPA::Global &p);
+void exec_GV(DROMPA::Global &p);
 
 
 void help_global(std::vector<Command> &cmds) {
@@ -53,45 +54,55 @@ namespace {
     cmds.emplace_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER}));
+			      {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER},
+			      CommandParamSet(5, 1, 0, 30, 4, 5)));
     cmds.emplace_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
+			      CommandParamSet(5, 0, 1, 30, 4, 5)));
     cmds.emplace_back(Command("GV", "global-view visualization",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER}));
+			   exec_GV,
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 1, 2000, 2, 10)));
     cmds.emplace_back(Command("PD", "peak density",
 			   "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			   //	   dd_pd,
 			   exec_PCSHARP,
-			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER}));
+			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 0, 0, 0, 0)));
     cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			   "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 0, 0, 0, 0)));
     cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 0, 0, 0, 0)));
     cmds.emplace_back(Command("HEATMAP", "make heatmap of multiple samples",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 0, 30, 4, 5)));
     cmds.emplace_back(Command("CG", "output ChIP-reads in each gene body",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::CG, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::CG, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 0, 0, 0, 0)));
     cmds.emplace_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			   exec_PCSHARP,
-			   {DrompaCommand::CHIP, DrompaCommand::PROF, DrompaCommand::OTHER}));
+			   {DrompaCommand::CHIP, DrompaCommand::PROF, DrompaCommand::OTHER},
+			      CommandParamSet(0, 0, 0, 0, 0, 0)));
     cmds.emplace_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			   "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
 			   //dd_overlook,
 			   exec_PCSHARP,
-			   {DrompaCommand::OTHER}));
+			   {DrompaCommand::OTHER},
+			      CommandParamSet(5, 0, 0, 0, 0, 0)));
     return cmds;
   }
 
@@ -129,8 +140,8 @@ namespace {
       // check command and param
       int32_t on(0);
       std::string cmd = MyOpt::getVal<std::string>(values, "command");
-      for(size_t i=0; i<cmds.size(); ++i) {
-	if(cmd == cmds[i].name) {
+      for (size_t i=0; i<cmds.size(); ++i) {
+	if (cmd == cmds[i].getname()) {
 	  cmdid = i;
 	  cmds[i].SetValue(argc-1, argv+1);
 	  on++;
@@ -145,6 +156,7 @@ namespace {
       
     } catch (std::exception &e) {
       std::cout << e.what() << std::endl;
+      exit(0);
     }
     return cmdid;
   }
@@ -176,7 +188,7 @@ void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
   }
 
   /* rm */
-  if(p.isrmchr()){
+  if (!p.isshowchr()) {
     command = "rm " + StrAllPdf;
     return_code = system(command.c_str());
     if(WEXITSTATUS(return_code)) {
@@ -195,6 +207,30 @@ void exec_PCSHARP(DROMPA::Global &p)
   for(auto &chr: p.gt) {
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
     if(p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
+
+    Figure fig(p, chr);
+    if (fig.Draw(p, chr)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
+  }
+
+  MergePdf(p, StrAllPdf);
+  return;
+}
+
+void exec_GV(DROMPA::Global &p)
+{
+  printf("Drawing...\n");
+  int32_t lenmax(0);
+  for (auto &x: p.gt) {
+    if (lenmax < x.getlen()) lenmax = x.getlen();
+  }
+  p.drawparam.width_per_line = lenmax + 1;
+
+  p.drawregion.isRegionOff();
+  p.anno.genefile = p.anno.arsfile = p.anno.terfile = "";
+  
+  std::string StrAllPdf("");
+  for(auto &chr: p.gt) {
+    if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
 
     Figure fig(p, chr);
     if (fig.Draw(p, chr)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
@@ -363,7 +399,7 @@ void DROMPA::Global::setValues(const std::vector<DrompaCommand> &vopts, const My
 }
 
 
-void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
+void DROMPA::Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps)
 {
 
   MyOpt::Opts o("Required",100);
@@ -372,7 +408,7 @@ void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
     ("gt",        boost::program_options::value<std::string>(), "Genome table")
     ;
   opts.add(o);
-  for(auto x: st) {
+  for(auto &x: st) {
     switch(x) {
     case DrompaCommand::CHIP:
       {
@@ -388,11 +424,11 @@ void DROMPA::Global::setOpts(std::vector<DrompaCommand> &st)
 	opts.add(o);
 	break;
       }
-    case DrompaCommand::NORM:    setOptsNorm(opts); break;
+    case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm); break;
     case DrompaCommand::THRE:    thre.setOpts(opts); break;
     case DrompaCommand::ANNO_PC: anno.setOptsPC(opts); break;
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
-    case DrompaCommand::DRAW:    drawparam.setOpts(opts); break;
+    case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
     case DrompaCommand::REGION:  drawregion.setOpts(opts); break;
     case DrompaCommand::OVERLAY:
       {

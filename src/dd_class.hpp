@@ -17,6 +17,31 @@ class SamplePairChr;
 
 enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OVERLAY, OTHER};
 
+class CommandParamSet {
+public:
+  int32_t sm;
+  int32_t showctag;
+  int32_t showratio;
+  int32_t scaletag;
+  int32_t scaleratio;
+  int32_t scalepvalue;
+
+  CommandParamSet(const int32_t defsm,
+		  const int32_t defshowctag,
+		  const int32_t defshowratio,
+		  const int32_t defscaletag,
+		  const int32_t defscaleratio,
+		  const int32_t defscalepvalue):
+    sm(defsm),
+    showctag(defshowctag),
+    showratio(defshowratio),
+    scaletag(defscaletag),
+    scaleratio(defscaleratio),
+    scalepvalue(defscalepvalue)
+  {}
+};
+
+
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;
@@ -260,7 +285,7 @@ namespace DROMPA {
 	    vbedlist.emplace_back(vbed);
 	  }
 	}
-      } catch(const boost::bad_any_cast& e) {
+      } catch (const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
       }
@@ -281,7 +306,7 @@ namespace DROMPA {
 	if (values.count("GC")) GC.setValue(MyOpt::getVal<std::string>(values, "GC"), MyOpt::getVal<int32_t>(values, "gcsize"));
 	if (values.count("GD")) GD.setValue(MyOpt::getVal<std::string>(values, "GD"), MyOpt::getVal<int32_t>(values, "gdsize"));
 
-      } catch(const boost::bad_any_cast& e) {
+      } catch (const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
       }
@@ -361,7 +386,7 @@ namespace DROMPA {
 	ipm          = MyOpt::getVal<double>(values, "ipm");
 	sigtest      = !values.count("nosig");
 	width4lmd    = MyOpt::getVal<int32_t>(values, "width4lmd");
-      } catch(const boost::bad_any_cast& e) {
+      } catch (const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
       }
@@ -430,7 +455,7 @@ namespace DROMPA {
 	if (values.count("genelocifile")) genelocifile = MyOpt::getVal<std::string>(values, "genelocifile");
 	len_geneloci = MyOpt::getVal<int32_t>(values, "len_geneloci");
       
-      } catch(const boost::bad_any_cast& e) {
+      } catch (const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
       }
@@ -456,6 +481,7 @@ namespace DROMPA {
     }
     const std::string & getchr() const { return chr; }
     bool isRegionBed() const { return isRegion; }
+    void isRegionOff() { isRegion=false; }
   };
   
   class DrawParam {
@@ -482,17 +508,17 @@ namespace DROMPA {
     
     DrawParam(): showymem(true), showylab(true) {}
 
-    void setOpts(MyOpt::Opts &allopts) {
+    void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
       MyOpt::Opts opt("Drawing",100);
       opt.add_options()
 	("showctag",
-	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 1, "--showctag")),
+	 boost::program_options::value<int32_t>()->default_value(cps.showctag)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 1, "--showctag")),
 	 "Display ChIP read lines")
 	("showitag",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--showitag")),
 	 "Display Input read lines (0:off 1:all 2:first one)")
 	("showratio",
-	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--showratio")),
+	 boost::program_options::value<int32_t>()->default_value(cps.showratio)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--showratio")),
 	 "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
 	("showpinter",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 1, "--showpinter")),
@@ -501,13 +527,13 @@ namespace DROMPA {
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 1, "--showpenrich")),
 	 "Display -log10(p) lines for ChIP/Input enrichment")
 	("scale_tag",
-	 boost::program_options::value<double>()->default_value(30)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_tag")),
+	 boost::program_options::value<double>()->default_value(cps.scaletag)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_tag")),
 	 "Scale for read line")
 	("scale_ratio",
-	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_ratio")),
+	 boost::program_options::value<double>()->default_value(cps.scaleratio)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_ratio")),
 	 "Scale for fold enrichment")
 	("scale_pvalue",
-	 boost::program_options::value<double>()->default_value(5)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_pvalue")),
+	 boost::program_options::value<double>()->default_value(cps.scalepvalue)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--scale_pvalue")),
 	 "Scale for -log10(p)")
 	("ls",
 	 boost::program_options::value<int32_t>()->default_value(1000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--ls")),
@@ -551,7 +577,7 @@ namespace DROMPA {
 	scale_pvalue = MyOpt::getVal<double>(values, "scale_pvalue");
       
 	samplenum = n;
-      } catch(const boost::bad_any_cast& e) {
+      } catch (const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
       }
@@ -592,7 +618,7 @@ namespace DROMPA {
   
   class Global {
     bool ispng;
-    bool rmchr;
+    bool showchr;
     WigType iftype;
     std::string oprefix;
     bool includeYM;
@@ -612,22 +638,22 @@ namespace DROMPA {
     std::vector<pdSample> pd;
     
     Global():
-      ispng(false), rmchr(false), iftype(WigType::NONE),
+      ispng(false), showchr(false), iftype(WigType::NONE),
       oprefix(""), includeYM(false),
       opts("Options")
     {}
 
-    void setOpts(std::vector<DrompaCommand> &st);
+    void setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps);
     void setValues(const std::vector<DrompaCommand> &vopts, const MyOpt::Variables &values);
     
-    void setOptsNorm(MyOpt::Opts &allopts) {
+    void setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm) {
       MyOpt::Opts o("Normalization",100);
       o.add_options()
 	("norm",
 	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--norm")),
 	 "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n      3: with NCIS method\n")
 	("sm",
-	 boost::program_options::value<int32_t>()->default_value(5)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
+	 boost::program_options::value<int32_t>()->default_value(defsm)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--sm")),
 	 "# of bins for Gausian smoothing")
 	;
       allopts.add(o);
@@ -647,7 +673,7 @@ namespace DROMPA {
       MyOpt::Opts o("Others",100);
       o.add_options()
 	("includeYM", "output peaks of chromosome Y and M")
-	("rmchr",   "Remove chromosome-separated pdf files")
+	("showchr",   "Output chromosome-separated pdf files")
 	("png",     "Output with png format (Note: output each page separately)")
 	("threads,p",
 	 boost::program_options::value<int32_t>()->default_value(1)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--thread")),
@@ -661,7 +687,7 @@ namespace DROMPA {
       try {
 	includeYM = values.count("includeYM");
 	ispng = values.count("png");
-	rmchr = values.count("rmchr");
+	showchr = values.count("showchr");
       } catch(const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
 	exit(0);
@@ -682,7 +708,7 @@ namespace DROMPA {
       DEBUGprint("INITDUMP:DrompaCommand::OTHER");
       std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
       if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
-      if(rmchr) std::cout << boost::format("   remove chr pdfs\n");
+      if (!showchr) std::cout << boost::format("   remove chr pdfs\n");
     }
 
     WigType getIfType() const { return iftype; }
@@ -698,7 +724,7 @@ namespace DROMPA {
       return oprefix + "_" + chr + ".pdf";
     }
     bool isincludeYM() const { return includeYM; }
-    bool isrmchr() const { return rmchr; }
+    bool isshowchr() const { return showchr; }
   };
 
 }

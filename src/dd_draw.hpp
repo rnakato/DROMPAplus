@@ -88,10 +88,10 @@ class Figure {
   std::vector<bed> regionBed;
   
   void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
-    for(auto x: p.sample) {
+    for (auto x: p.sample) {
       arrays[x.first] = ChrArray(p, x, chr);
     }
-    for(auto &x: p.samplepair) {
+    for (auto &x: p.samplepair) {
 #ifdef DEBUG
       std::cout << "Samplepairchr " << x.argvChIP << ", " << x.argvInput << std::endl;
 #endif
@@ -100,11 +100,11 @@ class Figure {
 
 #ifdef DEBUG
     std::cout << "all WigArray:" << std::endl;
-    for(auto x: arrays) {
+    for (auto x: arrays) {
       std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
     }
     std::cout << "all SamplePair:" << std::endl;
-    for(auto &x: pairs) {
+    for (auto &x: pairs) {
       std::cout << x.argvChIP << "," << x.argvInput << ", binsize " << x.getbinsize() << std::endl;
     }
 #endif
@@ -117,13 +117,12 @@ public:
   
   void DrawData(DROMPA::Global &p, const chrsize &chr);
   int32_t Draw(DROMPA::Global &p, const chrsize &chr) {
-    if(p.drawregion.isRegionBed() && !regionBed.size()) return 0;
+    if (p.drawregion.isRegionBed() && !regionBed.size()) return 0;
     loadSampleData(p, chr);
     DrawData(p, chr);
     return 1;
   }
   
 };
-
 
 #endif /* _DD_READFILE_H_ */

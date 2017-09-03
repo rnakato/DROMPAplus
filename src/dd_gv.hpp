@@ -16,6 +16,7 @@
 #include "SSP/common/BoostOptions.hpp"
 
 class Command {
+  std::string name;
   std::string desc;
   std::string requiredstr;
   std::vector<DrompaCommand> vopts;
@@ -25,15 +26,19 @@ class Command {
   DROMPA::Global p;
 
 public:
-  std::string name;
 
-  Command(std::string n, std::string d, std::string r,
-	  std::function<void(DROMPA::Global &p)> _func,
-	  std::vector<DrompaCommand> v): desc(d), requiredstr(r), vopts(v),
-					 func(_func), name(n)
+  Command(const std::string &n,
+	  const std::string &d,
+	  const std::string &r,
+	  const std::function<void(DROMPA::Global &p)> _func,
+	  const std::vector<DrompaCommand> &v,
+	  const CommandParamSet &cps):
+    name(n), desc(d), requiredstr(r), vopts(v),
+    func(_func)
   {
-    p.setOpts(v);
+    p.setOpts(v, cps);
   };
+  
   void printCommandName() const {
     std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
 	      << std::left << std::setw(40) << desc << std::endl;
@@ -63,12 +68,12 @@ public:
 
     } catch (std::exception &e) {
       std::cout << e.what() << std::endl;
+      exit(0);
     }
   }
 
-  void execute() {
-    func(p);
-  }
+  const std::string & getname() const { return name; }
+  void execute(){ func(p); }
 };
 
 

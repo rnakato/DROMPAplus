@@ -30,6 +30,7 @@ void scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
   if(v.size() >4) binsize = stoi(v[4]);
   
   if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], gt, binsize, iftype);
+  if(sample[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
   
   if(v.size() >=2 && v[1] != "") {
     if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1], gt, binsize, iftype);
