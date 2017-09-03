@@ -82,32 +82,6 @@ void addReadToWigArray(const WigStatsGenome &p, WigArray &wigarray, const Read x
   return;
 }
 
-void peakcall(Mapfile &p, const int32_t id, const WigArray &wigarray)
-{
-  int size = wigarray.size();
-  int ext(0);
-  double pthre(3);
-
-  for(int i=0; i<size; ++i) {
-    double val(wigarray[i]);
-    double pZINB(getlogpZINB(val, p.wsGenome.chr[id].nb_p, p.wsGenome.chr[id].nb_n));
-
-    if(!ext) {
-      if(pZINB > pthre) {
-	p.addPeak(Peak(p.genome.chr[id].getname(), i, i, val, pZINB));
-	ext=1;
-      }
-    } else {
-      if(pZINB > pthre) {
-	p.renewPeak(i, val, pZINB);
-      } else {
-	ext=0;
-      }
-    }
-  }
-  return;
-}
-
 WigArray makeWigarray(Mapfile &p, const int32_t id)
 {
   std::cout << p.genome.chr[id].getname() << ".." << std::flush;
@@ -128,11 +102,11 @@ WigArray makeWigarray(Mapfile &p, const int32_t id)
       if(mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));
     }
   }
-  p.wsGenome.addWigArray(id, wigarray);
-
-  peakcall(p, id, wigarray);
   /* Total read normalization */
   if(p.rpm.getType() != "NONE") norm2rpm(p, p.genome.chr[id], wigarray);
+  
+  p.wsGenome.setWigStats(id, wigarray);
+  p.wsGenome.chr[id].peakcall(wigarray, p.genome.chr[id].getname());
 
   return wigarray;
 }

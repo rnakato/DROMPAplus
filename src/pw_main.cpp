@@ -75,10 +75,10 @@ int32_t main(int32_t argc, char* argv[])
   p.normalizeByGCcontents();
 
   makewig(p);
-  
+
   p.wsGenome.estimateZINB(p.getIdLongestChr());
   
-  p.printPeak();
+  p.wsGenome.printPeak(p.getbinprefix());
 
   output_wigstats(p);
   output_stats(p);
@@ -236,8 +236,8 @@ void output_stats(const Mapfile &p)
 
   // SeqStats
   print_SeqStats(out, p.genome, p.gcov, p);
-  p.wsGenome.printPoispar(out);
-  p.wsGenome.printZINBpar(out);
+  p.wsGenome.genome.printPoispar(out);
+  p.wsGenome.genome.printZINBpar(out);
   out << std::endl;
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
@@ -266,13 +266,13 @@ void output_wigstats(const Mapfile &p)
   for (size_t i=0; i<p.genome.chr.size(); ++i) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
   out << std::endl;
 
-  for(size_t i=0; i<p.wsGenome.wigDist.size(); ++i) {
+  for(int32_t i=0; i<p.wsGenome.getWigDistsize(); ++i) {
     out << i << "\t";
-    p.wsGenome.printwigDist(out, i);
-    out << p.wsGenome.getZINB(i) << "\t";
+    p.wsGenome.genome.printWigDist(out, i);
+    out << p.wsGenome.genome.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
     for (auto &x: p.wsGenome.chr) {
-      x.printwigDist(out, i);
+      x.printWigDist(out, i);
       out << x.getPoisson(i) << "\t";
       out << x.getZINB(i) << "\t";
     }
@@ -298,11 +298,9 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   mpthre = MyOpt::getVal<double>(values, "mpthre");
 
   genome.setValues(values);
-  wsGenome.setValues(values);
-  
-  for(auto itr = genome.chr.begin(); itr != genome.chr.end(); ++itr) {
-    wsGenome.chr.emplace_back(itr->getlen(), wsGenome.getbinsize());
-  }
+  wsGenome.setValues(values, genome.chr);
+
+  //  for (auto &x: genome.chr) wsGenome.chr.emplace_back(x.getlen(), wsGenome.getbinsize());
   
   rpm.setValues(values);
   complexity.setValues(values);

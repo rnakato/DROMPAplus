@@ -359,7 +359,7 @@ protected:
     }
     return;
   }
-  void stroke_peakregion(const SamplePairChr &pair);
+  void stroke_peakregion(const SamplePairChr &pair){ return; }
   void stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer);
   void stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pair,
 		      const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);

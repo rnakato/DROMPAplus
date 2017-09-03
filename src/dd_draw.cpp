@@ -73,7 +73,8 @@ void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
 
 void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
 				   const std::unordered_map<std::string, ChrArray> &arrays,
-				   const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+				   const int32_t i, const double xcen, const int32_t yaxis,
+				   const int32_t viz)
 {
   double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
   if (!data) return;
@@ -88,36 +89,28 @@ void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
   rel_yline(cr, xcen, yaxis-height_df/2, len);
   return;
 }
-/*double zero_inflated_binomial_test(double k, double p, double n){
-  double r, pval;
-  if(!k) pval =0;
-  else pval = gsl_cdf_negative_binomial_Q(k, p, n);
-  //  printf("k=%f, p=%f, n=%f, pval=%f\n",k, p, n, pval);
-  if(!pval) r = 0; else r = -log10(pval);
-  return r;
-  }*/
 
 void PinterDataFrame::stroke_bin(const SamplePairChr &pair,
 				 const std::unordered_map<std::string, ChrArray> &arrays,
-				 const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+				 const int32_t i, const double xcen, const int32_t yaxis,
+				 const int32_t viz)
 {
-  // double data = zero_inflated_binomial_test(WIGARRAY2VALUE(sample->ChIP->data[i]), sample->ChIP->nb_p, sample->ChIP->nb_n);
-  double data = CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], 1);
-  double value(data/scale);
-  if (!value) return;
- 
-  int32_t len(getbinlen(value));
+  const ChrArray &a = arrays.at(pair.argvChIP);
+  double data(a.stats.getlogp(a.array[i]));
+  if (!data) return;
+  int32_t len(getbinlen(data/scale));
 
-  //    if(data > p->pthre_internal) cr->set_source_rgba(CLR_PINK, 1);
-  //else cr->set_source_rgba(CLR_CLR_GRAY, 1);
-  cr->set_source_rgba(CLR_PINK, 1);
+  if (data > a.stats.getpthre()) cr->set_source_rgba(CLR_PINK, 1);
+  else cr->set_source_rgba(CLR_GRAY, 1);
   rel_yline(cr, xcen, yaxis, len);
+  cr->stroke();
   return;
 }
 
 void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
 				  const std::unordered_map<std::string, ChrArray> &arrays,
-				  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+				  const int32_t i, const double xcen, const int32_t yaxis,
+				  const int32_t viz)
 {
   double data(binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
   if (!data) return;
@@ -142,11 +135,6 @@ void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
     rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
   }
   cr->stroke();
-  return;
-}
-
-void DataFrame::stroke_peakregion(const SamplePairChr &pair)
-{
   return;
 }
 

@@ -336,8 +336,8 @@ namespace DROMPA {
     Threshold(): opt("Threshold",100)
     {
       opt.add_options()
-	("pthre_internal", boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP internal")
-	("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-4), "p-value for ChIP/Input enrichment")
+	("pthre_internal", boost::program_options::value<double>()->default_value(1e-3), "p-value for ChIP internal")
+	("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-3), "p-value for ChIP/Input enrichment")
 	("qthre",          boost::program_options::value<double>()->default_value(1),    "FDR")
 	("ethre",          boost::program_options::value<double>()->default_value(2),    "IP/Input fold enrichment")
 	("ipm",            boost::program_options::value<double>()->default_value(0),    "Read intensity of peak summit")

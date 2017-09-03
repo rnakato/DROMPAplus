@@ -82,7 +82,7 @@ class Mapfile: private Uncopyable {
 
   bool Greekchr;
 
-  std::vector<Peak> vPeak;
+  //  std::vector<Peak> vPeak;
   int32_t id_longestChr;
 
   // GC bias
@@ -162,7 +162,7 @@ class Mapfile: private Uncopyable {
     std::cout << "done." << std::endl;
   }
 
-  void printPeak() const {
+  /*  void printPeak() const {
     std::string filename = getbinprefix() + ".peak.xls";
     std::ofstream out(filename);
 
@@ -170,18 +170,18 @@ class Mapfile: private Uncopyable {
     for(uint32_t i=0; i<vPeak.size(); ++i) {
       vPeak[i].print(out, i, wsGenome.getbinsize());
     }
+    }*/
+  /*  void addPeak(const Peak &peak) {
+    vPeak.push_back(peak);
   }
+  void renewPeak(const int32_t i, const double val, const double p) {
+    vPeak[vPeak.size()-1].renew(i, val, p);
+    }*/
   const std::string & getprefix() const { return oprefix; }
   const std::string & getbinprefix() const { return obinprefix; }
   double getmpthre() const { return mpthre; }
   const std::vector<bed> & getvbedref() const { return vbed; }
 
-  void addPeak(const Peak &peak) {
-    vPeak.push_back(peak);
-  }
-  void renewPeak(const int32_t i, const double val, const double p) {
-    vPeak[vPeak.size()-1].renew(i, val, p);
-  }
   void setFRiP() {
     if (isBedOn()) { 
       std::cout << "calculate FRiP score.." << std::flush;

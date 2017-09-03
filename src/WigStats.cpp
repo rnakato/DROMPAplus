@@ -16,3 +16,41 @@ uint32_t getWigDistThre(const std::vector<uint64_t> &wigDist, const uint64_t sum
 #endif
   return thre;
 }
+
+
+void WigStats::setWigStats(const WigArray &wigarray)
+{
+  double num95(wigarray.getPercentile(0.95));
+  std::vector<int32_t> ar;
+  int32_t wigDistSize(wigDist.size());
+
+  for (size_t i=0; i<wigarray.size(); ++i) {
+    int32_t v(wigarray[i]);
+    if (v < wigDistSize) ++wigDist[v];
+    if (v >= num95) continue;
+    ar.emplace_back(v);
+  }
+
+  setZINBParam(ar);
+}
+
+void WigStats::peakcall(const WigArray &wigarray, const std::string chrname)
+  {
+    int32_t ext(0);
+    
+    for (size_t i=0; i<wigarray.size(); ++i) {
+      double val(wigarray[i]);
+      double logp(getlogp(val));
+      
+      if (!ext) {
+	if (logp > pthre) {
+	  vPeak.emplace_back(Peak(chrname, i, i, val, logp));
+	  ext=1;
+	}
+      } else {
+	if (logp > pthre) vPeak[vPeak.size()-1].renew(i, val,logp);
+	else ext=0;
+      }
+    }
+    return;
+  }

@@ -6,23 +6,30 @@
 
 #include "dd_class.hpp"
 #include "dd_readfile.hpp"
+#include "WigStats.hpp"
 
 class ChrArray {
 public:
   int32_t binsize;
   int32_t nbin;
   WigArray array;
+  WigStats stats;
   int32_t totalreadnum;
   std::unordered_map<std::string, int32_t> totalreadnum_chr;
 
   ChrArray(){}
-  ChrArray(const DROMPA::Global &p, const std::pair<const std::string, SampleFile> &x, const chrsize &chr):
-	binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
-	array(loadWigData(x.first, x.second, chr)),
-	totalreadnum(x.second.gettotalreadnum()),
-	totalreadnum_chr(x.second.gettotalreadnum_chr())
+  ChrArray(const DROMPA::Global &p,
+	   const std::pair<const std::string, SampleFile> &x,
+	   const chrsize &chr):
+    binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
+    array(loadWigData(x.first, x.second, chr)),
+    stats(nbin, p.thre.pthre_inter),
+    totalreadnum(x.second.gettotalreadnum()),
+    totalreadnum_chr(x.second.gettotalreadnum_chr())
   {
     if(p.getSmoothing()) array.Smoothing(p.getSmoothing());
+    stats.setWigStats(array);
+    stats.peakcall(array, chr.getname());
   }
 };
   
