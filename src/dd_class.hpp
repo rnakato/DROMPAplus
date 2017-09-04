@@ -607,7 +607,7 @@ namespace DROMPA {
       return (e-s)/width_per_line +1;
     }
     int32_t getNumPage(const int32_t s, const int32_t e) const {
-      return (getNumLine(s,e) -1) / linenum_per_page;
+      return (getNumLine(s,e) -1) / linenum_per_page +1;
     }
 
     int32_t getlpp() const { return linenum_per_page; }

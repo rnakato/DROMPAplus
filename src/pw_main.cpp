@@ -57,7 +57,7 @@ int main(int32_t argc, char* argv[])
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
     strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
     for (auto &x: p.genome.chr) {
-      std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
+      //      std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
       x.setF5ToRead(p.genome.dflen.getflen());
       x.printvRead();
     }

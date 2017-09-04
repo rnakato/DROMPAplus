@@ -226,7 +226,6 @@ void exec_GV(DROMPA::Global &p)
   p.drawparam.width_per_line = lenmax + 1;
 
   p.drawregion.isRegionOff();
-  p.anno.genefile = p.anno.arsfile = p.anno.terfile = "";
   
   std::string StrAllPdf("");
   for(auto &chr: p.gt) {
