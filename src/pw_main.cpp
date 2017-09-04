@@ -44,7 +44,7 @@ void CalcDepth(T &obj, const int32_t flen)
   obj.setdepth(d);
 }
 
-int32_t main(int32_t argc, char* argv[])
+int main(int32_t argc, char* argv[])
 {
   Mapfile p;
   getOpts(p, argc, argv);
@@ -54,9 +54,10 @@ int32_t main(int32_t argc, char* argv[])
 
   p.complexity.checkRedundantReads(p.genome);
 
-  if(!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
+  if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
     strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
     for (auto &x: p.genome.chr) {
+      std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
       x.setF5ToRead(p.genome.dflen.getflen());
       x.printvRead();
     }

@@ -17,7 +17,6 @@ uint32_t getWigDistThre(const std::vector<uint64_t> &wigDist, const uint64_t sum
   return thre;
 }
 
-
 void WigStats::setWigStats(const WigArray &wigarray)
 {
   double num95(wigarray.getPercentile(0.95));
@@ -35,22 +34,24 @@ void WigStats::setWigStats(const WigArray &wigarray)
 }
 
 void WigStats::peakcall(const WigArray &wigarray, const std::string chrname)
-  {
-    int32_t ext(0);
+{
+  if(!ave) return;
     
-    for (size_t i=0; i<wigarray.size(); ++i) {
-      double val(wigarray[i]);
-      double logp(getlogp(val));
+  int32_t ext(0);
+    
+  for (size_t i=0; i<wigarray.size(); ++i) {
+    double val(wigarray[i]);
+    double logp(getlogp(val));
       
-      if (!ext) {
-	if (logp > pthre) {
-	  vPeak.emplace_back(Peak(chrname, i, i, val, logp));
-	  ext=1;
-	}
-      } else {
-	if (logp > pthre) vPeak[vPeak.size()-1].renew(i, val,logp);
-	else ext=0;
+    if (!ext) {
+      if (logp > pthre) {
+	vPeak.emplace_back(Peak(chrname, i, i, val, logp));
+	ext=1;
       }
+    } else {
+      if (logp > pthre) vPeak[vPeak.size()-1].renew(i, val,logp);
+      else ext=0;
     }
-    return;
   }
+  return;
+}
