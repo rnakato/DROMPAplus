@@ -44,7 +44,6 @@ public:
   {}
 };
 
-
 class SampleFile {
   double lambda;
   double nb_p, nb_n, nb_p0;
@@ -186,9 +185,6 @@ namespace DROMPA {
   
   class Annotation {
 
-    MyOpt::Opts optPC;
-    MyOpt::Opts optGV;
-
   public:
     std::string genefile;
     int32_t gftype;
@@ -207,11 +203,14 @@ namespace DROMPA {
     GraphFile GC;
     GraphFile GD;
 
-    Annotation(): optPC("Annotation",100), optGV("Optional data",100),
-		  genefile(""), arsfile(""), terfile(""), repeatfile(""),
-		  interfile(""), mpfile(""), gapfile("")
-    {
-      optPC.add_options()
+    Annotation():
+      genefile(""), arsfile(""), terfile(""), repeatfile(""),
+      interfile(""), mpfile(""), gapfile("")
+    {}
+
+    void setOptsPC(MyOpt::Opts &allopts) {
+      MyOpt::Opts opt("Annotation",100);
+      opt.add_options()
 	("genefile,g", boost::program_options::value<std::string>(), "Gene annotation file")
 	("gftype",
 	 boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--gftype")),
@@ -224,7 +223,11 @@ namespace DROMPA {
 	("bed",    boost::program_options::value<std::vector<std::string>>(), "<bedfile>,<label>: Specify bed file and name (<label> can be omited)")
 	("repeat", boost::program_options::value<std::string>(), "Display repeat annotation (RepeatMasker format)")
 	;
-      optGV.add_options()
+      allopts.add(opt);
+    }
+    void setOptsGV(MyOpt::Opts &allopts) {
+      MyOpt::Opts opt("Optional data",100);
+      opt.add_options()
 	("inter",  boost::program_options::value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")  // FDR de iro kaery
 	("mp",     boost::program_options::value<std::string>(), "Mappability file")
 	("mpthre", boost::program_options::value<double>()->default_value(0.3), "Low mappability threshold")
@@ -238,10 +241,8 @@ namespace DROMPA {
 	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--gdsize")),
 	 "Window size for gene density")
 	;
+      allopts.add(opt);
     }
-
-    void setOptsPC(MyOpt::Opts &allopts) { allopts.add(optPC); }
-    void setOptsGV(MyOpt::Opts &allopts) { allopts.add(optGV); }
 
     HashOfGeneDataMap getGMP() {
       HashOfGeneDataMap tmp;
@@ -252,7 +253,6 @@ namespace DROMPA {
       
       //      printMap(tmp);
       
-      //      if(showgene && gftype!=2) return construct_gmp(tmp); // hash for genes
 	return tmp; // hash for transcripts
     }
     
@@ -294,6 +294,7 @@ namespace DROMPA {
 
       DEBUGprint("AnnoPC setValues done.");
     }
+
     void setValuesGV(const MyOpt::Variables &values) {
       DEBUGprint("AnnoGV setValues...");
       
@@ -320,7 +321,7 @@ namespace DROMPA {
       std::vector<std::string> str_gtype = {"Transcript", "Gene"};
       DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
       std::cout << boost::format("\nAnnotations:\n");
-      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype]; //% str_gtype[showgene];
+      if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype];
       //      if(arsfile != "")  std::cout << boost::format("   ARS file: %1%\n") % arsfile;
       //if(terfile != "")  std::cout << boost::format("   TER file: %1%\n") % terfile;
       //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
@@ -331,6 +332,7 @@ namespace DROMPA {
       MyOpt::printOpt<std::string>(values, "region", "   Region file");
       MyOpt::printVOpt<std::string>(values, "bed", "   Bed file");
     }
+
     void InitDumpGV(const MyOpt::Variables &values) const {
       DEBUGprint("INITDUMP:DrompaCommand::ANNO_GV");
       std::cout << boost::format("\nAnnotations:\n");
@@ -410,7 +412,6 @@ namespace DROMPA {
   };
   
   class DrawRegion {
-    MyOpt::Opts opt;
     bool isRegion;
     std::vector<bed> regionBed;
 
@@ -420,9 +421,11 @@ namespace DROMPA {
 
   public:
     DrawRegion():
-      opt("Region to draw",100),
       isRegion(false), chr(""), genelocifile(""), len_geneloci(0)
-    {
+    {}
+
+    void setOpts(MyOpt::Opts &allopts) {
+      MyOpt::Opts opt("Region to draw",100);
       opt.add_options()
 	("chr",
          boost::program_options::value<std::string>(),
@@ -437,9 +440,6 @@ namespace DROMPA {
 	 boost::program_options::value<int32_t>()->default_value(50000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--len_geneloci")),
 	 "extended length for each gene locus")
 	;
-    }
-
-    void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
     void setValues(const MyOpt::Variables &values) {
@@ -506,7 +506,6 @@ namespace DROMPA {
     double scale_ratio;
     double scale_pvalue;
 
-    
     DrawParam(): showymem(true), showylab(true) {}
 
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {

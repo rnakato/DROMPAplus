@@ -1,26 +1,23 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
-#ifndef _DD_GV_H_
-#define _DD_GV_H_
+#ifndef _DD_COMMAND_H_
+#define _DD_COMMAND_H_
 
 #include <iostream>
-#include <iomanip>
-#include <unordered_map>
-#include <boost/format.hpp>
 #include "dd_class.hpp"
 #include "version.hpp"
-#include "SSP/common/inline.hpp"
-#include "SSP/common/seq.hpp"
-#include "SSP/common/util.hpp"
 #include "SSP/common/BoostOptions.hpp"
+
+void exec_PCSHARP(DROMPA::Global &p);
+void exec_GV(DROMPA::Global &p);
 
 class Command {
   std::string name;
   std::string desc;
   std::string requiredstr;
   std::vector<DrompaCommand> vopts;
-  boost::program_options::variables_map values;
+  MyOpt::Variables values;
   std::function<void(DROMPA::Global &p)> func;
 
   DROMPA::Global p;
@@ -76,5 +73,6 @@ public:
   void execute(){ func(p); }
 };
 
+std::vector<Command> generateCommands();
 
-#endif /* _DD_GV_H_ */
+#endif /* _DD_COMMAND_H_ */
