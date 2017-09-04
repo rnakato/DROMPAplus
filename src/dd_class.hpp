@@ -203,7 +203,7 @@ namespace DROMPA {
     std::string gapfile;
     GraphFile GC;
     GraphFile GD;
-    
+
     Annotation(): optPC("Annotation",100), optGV("Optional data",100),
 		  genefile(""), arsfile(""), terfile(""), repeatfile(""),
 		  interfile(""), mpfile(""), gapfile("")
@@ -261,7 +261,6 @@ namespace DROMPA {
 	if (values.count("genefile")) {
 	  genefile = MyOpt::getVal<std::string>(values, "genefile");
 	  gftype   = MyOpt::getVal<int32_t>(values, "gftype");
-	  //	  showgene = values.count("showasgene");
 	  gmp = getGMP();
 	}
 	if (values.count("ars")) {
@@ -636,11 +635,13 @@ namespace DROMPA {
     std::unordered_map<std::string, SampleFile> sample;
     std::vector<SamplePair> samplepair;
     std::vector<pdSample> pd;
+
+    bool isGV;
     
     Global():
       ispng(false), showchr(false), iftype(WigType::NONE),
       oprefix(""), includeYM(false),
-      opts("Options")
+      opts("Options"), isGV(false)
     {}
 
     void setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps);

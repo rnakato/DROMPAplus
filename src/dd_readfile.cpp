@@ -227,7 +227,7 @@ int32_t getNcolReadNum(std::string &lineStr)
   for (size_t i=0; i<v.size(); ++i) {
     if(isStr(v[i], "normalized read number")) {
       ncol_readnum = i;
-      std::cout << ncol_readnum << std::endl;
+      //      std::cout << ncol_readnum << std::endl;
       break;
     }
   }
@@ -253,7 +253,6 @@ void SampleFile::scanStatsFile(const std::string &filename)
       else if(isStr(lineStr, "Genome")) {
 	std::vector<std::string> v;
 	boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-	//	std::cout << "tttttt "<<v[ncol_readnum] << std::endl;
 	totalreadnum = stoi(v[ncol_readnum]);
 	on=1;
       }
@@ -261,7 +260,6 @@ void SampleFile::scanStatsFile(const std::string &filename)
       std::vector<std::string> v;
       boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
       totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
-      //      std::cout << "tttsssttt " << v[ncol_readnum] << std::endl;
     }
   }
 }

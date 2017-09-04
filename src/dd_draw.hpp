@@ -43,8 +43,7 @@ public:
   bool isPeaks;
   std::vector<bed> peaks;
 
-  
-  SamplePairChr(DROMPA::Global &p, const SamplePair &x,
+  SamplePairChr(const DROMPA::Global &p, const SamplePair &x,
 		const std::unordered_map<std::string, ChrArray> &arrays,
 		const std::string &chrname):
     binsize(arrays.at(x.argvChIP).binsize),
@@ -58,7 +57,7 @@ public:
     }
   }
   
-  void setRatio (DROMPA::Global &p, const std::unordered_map<std::string, ChrArray> &arrays, const std::string &chrname) {
+  void setRatio (const DROMPA::Global &p, const std::unordered_map<std::string, ChrArray> &arrays, const std::string &chrname) {
     DEBUGprint("setRatio");
     switch(p.getNorm()) {
     case 0:

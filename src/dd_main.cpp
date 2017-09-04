@@ -51,21 +51,25 @@ namespace {
   std::vector<Command> generateCommands()
   {
     std::vector<Command> cmds;
+    // PC_SHARP
     cmds.emplace_back(Command("PC_SHARP", "peak-calling (for sharp mode)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			      {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER},
 			      CommandParamSet(5, 1, 0, 30, 4, 5)));
+    // PC_ENRICH 
     cmds.emplace_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
 			      CommandParamSet(5, 0, 1, 30, 4, 5)));
+    // GV
     cmds.emplace_back(Command("GV", "global-view visualization",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_GV,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 1, 2000, 2, 10)));
+			      CommandParamSet(0, 0, 1, 2000, 1, 10)));
+    // PD
     cmds.emplace_back(Command("PD", "peak density",
 			   "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			   //	   dd_pd,
@@ -173,7 +177,6 @@ int main(int argc, char* argv[])
   }
 
   int32_t cmdid = getOpts(cmds, argc, argv);
-
   cmds[cmdid].execute();
 
   return 0;
@@ -219,6 +222,8 @@ void exec_PCSHARP(DROMPA::Global &p)
 void exec_GV(DROMPA::Global &p)
 {
   printf("Drawing...\n");
+
+  p.isGV = true;
   int32_t lenmax(0);
   for (auto &x: p.gt) {
     if (lenmax < x.getlen()) lenmax = x.getlen();

@@ -316,20 +316,28 @@ class Page {
 class DataFrame {
 
 protected:
-  const DParam &par;
   const Cairo::RefPtr<Cairo::Context> cr;
+  const DParam &par;
   double scale;
   std::string label;
   double width_df;
   double height_df;
 
+  bool sigtest;
   double threshold;
+  
+  double getEthre(const DROMPA::Global &p) {
+    double thre(0);
+    if (p.isGV) thre = p.drawparam.scale_ratio;
+    else thre = p.thre.ethre;
+    return thre;
+  }
   
  public:
   DataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const std::string &l, const double s,
-	    const DParam &refparam, const double wdf, const double hdf, const double thre):
+	    const DParam &refparam, const double wdf, const double hdf, const bool sig, const double thre):
     cr(cr_), par(refparam), scale(s), label(l), width_df(wdf), height_df(hdf),
-    threshold(thre)
+    sigtest(sig), threshold(thre)
   {}
 
   void stroke_frame()
@@ -371,7 +379,7 @@ class ChIPDataFrame : public DataFrame {
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, pair.label, p.drawparam.scale_tag, refparam, wdf, hdf,
-	      p.thre.ipm)
+	      p.thre.sigtest, p.thre.ipm)
   {}
 
   void stroke_bin(const SamplePairChr &pair,
@@ -385,7 +393,7 @@ class InputDataFrame : public DataFrame {
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, 0)
+    DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, false, 0)
   {}
 
   void stroke_bin(const SamplePairChr &pair,
@@ -394,11 +402,14 @@ class InputDataFrame : public DataFrame {
 };
 
 class RatioDataFrame : public DataFrame {
- public:
+  bool isGV;
+  
+public:
   RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.ethre)
+	      p.thre.sigtest, getEthre(p)),
+    isGV(p.isGV)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -412,13 +423,15 @@ class RatioDataFrame : public DataFrame {
 };
 
 class LogRatioDataFrame : public DataFrame { // log10(ratio)
+  bool isGV;
   int32_t barnum_minus;
   int32_t barnum_plus;
  public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.ethre),
+	      p.thre.sigtest, getEthre(p)),
+    isGV(p.isGV),
     barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
   {}
 
@@ -453,7 +466,7 @@ class PinterDataFrame : public DataFrame {
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.pthre_inter)
+	      p.thre.sigtest, p.thre.pthre_inter)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -471,7 +484,7 @@ class PenrichDataFrame : public DataFrame {
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		   const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.pthre_enrich)
+	      p.thre.sigtest, p.thre.pthre_enrich)
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -483,22 +496,6 @@ class PenrichDataFrame : public DataFrame {
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
-
-/*class HashElementOfGene {
-public:
-  int32_t start;
-  int32_t end;
-  std::string strand;
-  std::string name;
-  std::string gtype;
-  HashElementOfGene(const std::pair<const std::string, genedata> &m):
-    start(m.second.txStart), end(m.second.txEnd),
-    strand(m.second.strand), name(m.second.gname),
-    gtype(m.second.gtype)
-  {}
-  void sort() {
-  }
-  };*/
 
 class GeneElement{
   int32_t dif;

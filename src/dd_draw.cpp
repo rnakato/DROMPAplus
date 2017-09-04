@@ -22,74 +22,6 @@
 
 enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
-void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
-			       const std::unordered_map<std::string, ChrArray> &arrays,
-			       const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
-{
-  double value((arrays.at(pair.argvChIP)).array[i] / scale);
-  if (!value) return;
-
-  int32_t len(getbinlen(value));
-  cr->set_source_rgba(CLR_BLUEGRAY, 0.7);
-  if (!viz) {
-    rel_yline(cr, xcen, yaxis, len);
-  } else {
-    if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
-    cr->stroke();
-    cr->set_source_rgba(CLR_GREEN3, 0.5);
-    rel_yline(cr, xcen, yaxis, len);     
-    cr->stroke();
-  }
-  return;
-}
-
-void InputDataFrame::stroke_bin(const SamplePairChr &pair,
-				const std::unordered_map<std::string, ChrArray> &arrays,
-				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
-{
-  double value((arrays.at(pair.argvInput)).array[i] / scale);
-  if (!value) return;
-
-  int32_t len(getbinlen(value));
-
-  cr->set_source_rgba(CLR_BLUE, 0.7);
-  rel_yline(cr, xcen, yaxis, len);
-  return;
-}
-
-void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
-				const std::unordered_map<std::string, ChrArray> &arrays,
-				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
-{
-  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);
-  if (!value) return;
- 
-  int32_t len(getbinlen(value));
-
-  cr->set_source_rgba(CLR_ORANGE, 1);
-  rel_yline(cr, xcen, yaxis, len);
-  return;
-}
-
-void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
-				   const std::unordered_map<std::string, ChrArray> &arrays,
-				   const int32_t i, const double xcen, const int32_t yaxis,
-				   const int32_t viz)
-{
-  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
-  if (!data) return;
-
-  double value(log10(data)/scale);
-  int32_t len(0);
-    
-  if(value>0) len = -std::min(par.ystep*value, height_df/2);
-  else        len = -std::max(par.ystep*value, -height_df/2);
-    
-  cr->set_source_rgba(CLR_ORANGE, 1);
-  rel_yline(cr, xcen, yaxis-height_df/2, len);
-  return;
-}
-
 void PinterDataFrame::stroke_bin(const SamplePairChr &pair,
 				 const std::unordered_map<std::string, ChrArray> &arrays,
 				 const int32_t i, const double xcen, const int32_t yaxis,
@@ -120,6 +52,81 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
   if (data > threshold) cr->set_source_rgba(CLR_PINK, 1);
   else cr->set_source_rgba(CLR_GRAY, 1);
   rel_yline(cr, xcen, yaxis, len);
+  return;
+}
+
+void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
+			       const std::unordered_map<std::string, ChrArray> &arrays,
+			       const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+{
+  double value((arrays.at(pair.argvChIP)).array[i] / scale);
+  if (!value) return;
+
+  int32_t len(getbinlen(value));
+  cr->set_source_rgba(CLR_BLUEGRAY, 0.7);
+  if (!viz) {
+    rel_yline(cr, xcen, yaxis, len);
+  } else {
+    if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
+    cr->stroke();
+    cr->set_source_rgba(CLR_GREEN3, 0.5);
+    rel_yline(cr, xcen, yaxis, len);
+    cr->stroke();
+  }
+  return;
+}
+
+void InputDataFrame::stroke_bin(const SamplePairChr &pair,
+				const std::unordered_map<std::string, ChrArray> &arrays,
+				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+{
+  double value((arrays.at(pair.argvInput)).array[i] / scale);
+  if (!value) return;
+
+  int32_t len(getbinlen(value));
+
+  cr->set_source_rgba(CLR_BLUE, 0.7);
+  rel_yline(cr, xcen, yaxis, len);
+  return;
+}
+
+void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
+				const std::unordered_map<std::string, ChrArray> &arrays,
+				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+{
+  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);
+  if (!value) return;
+ 
+  int32_t len(getbinlen(value));
+
+  if(isGV || sigtest) {
+    if (value > threshold) cr->set_source_rgba(CLR_PINK, 1);
+    else cr->set_source_rgba(CLR_GRAY, 1);
+  } else {
+    cr->set_source_rgba(CLR_ORANGE, 1);
+  }
+
+  rel_yline(cr, xcen, yaxis, len);
+  cr->stroke();
+  return;
+}
+
+void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
+				   const std::unordered_map<std::string, ChrArray> &arrays,
+				   const int32_t i, const double xcen, const int32_t yaxis,
+				   const int32_t viz)
+{
+  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
+  if (!data) return;
+
+  double value(log10(data)/scale);
+  int32_t len(0);
+    
+  if(value>0) len = -std::min(par.ystep*value, height_df/2);
+  else        len = -std::max(par.ystep*value, -height_df/2);
+
+  cr->set_source_rgba(CLR_ORANGE, 1);
+  rel_yline(cr, xcen, yaxis-height_df/2, len);
   return;
 }
 
@@ -574,7 +581,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
   int32_t width(pagewidth);
   int32_t height(p.drawparam.getPageHeight(p, pairs));
   std::string pdffile(p.getFigFileNameChr(chr.getrefname()));
-  std::cout << chr.getrefname() << std::endl;
+  //  std::cout << chr.getrefname() << std::endl;
     
 #ifdef CAIRO_HAS_PDF_SURFACE
   const auto surface = Cairo::PdfSurface::create(pdffile, width, height);
