@@ -56,57 +56,57 @@ namespace {
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			      {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER},
-			      CommandParamSet(5, 1, 0, 30, 4, 5)));
+			      CommandParamSet(5, 1, 0, 30, 4, 5, true)));
     // PC_ENRICH 
     cmds.emplace_back(Command("PC_ENRICH","peak-calling (enrichment ratio)",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			      CommandParamSet(5, 0, 1, 30, 4, 5)));
+			      CommandParamSet(5, 0, 1, 30, 4, 5, false)));
     // GV
     cmds.emplace_back(Command("GV", "global-view visualization",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_GV,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 1, 2000, 1, 10)));
+			      CommandParamSet(0, 0, 1, 2000, 1, 10, false)));
     // PD
     cmds.emplace_back(Command("PD", "peak density",
 			   "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			   //	   dd_pd,
 			   exec_PCSHARP,
 			   {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 0, 0, 0, 0)));
+			      CommandParamSet(0, 0, 0, 0, 0, 0, false)));
     cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			   "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 0, 0, 0, 0)));
+			      CommandParamSet(0, 0, 0, 0, 0, 0, false)));
     cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 0, 0, 0, 0)));
+			      CommandParamSet(0, 0, 0, 0, 0, 0, false)));
     cmds.emplace_back(Command("HEATMAP", "make heatmap of multiple samples",
 			   "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 0, 30, 4, 5)));
+			      CommandParamSet(0, 0, 0, 30, 4, 5, false)));
     cmds.emplace_back(Command("CG", "output ChIP-reads in each gene body",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::CG, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 0, 0, 0, 0)));
+			      CommandParamSet(0, 0, 0, 0, 0, 0, false)));
     cmds.emplace_back(Command("TR",      "calculate the travelling ratio (pausing index) for each gene",
 			   "-i <ChIP>,,<name> [-i <ChIP>,,<name> ...]",
 			   exec_PCSHARP,
 			   {DrompaCommand::CHIP, DrompaCommand::PROF, DrompaCommand::OTHER},
-			      CommandParamSet(0, 0, 0, 0, 0, 0)));
+			      CommandParamSet(0, 0, 0, 0, 0, 0, false)));
     cmds.emplace_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
 			   "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
 			   //dd_overlook,
 			   exec_PCSHARP,
 			   {DrompaCommand::OTHER},
-			      CommandParamSet(5, 0, 0, 0, 0, 0)));
+			      CommandParamSet(5, 0, 0, 0, 0, 0, false)));
     return cmds;
   }
 
@@ -429,7 +429,7 @@ void DROMPA::Global::setOpts(const std::vector<DrompaCommand> &st, const Command
 	break;
       }
     case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm); break;
-    case DrompaCommand::THRE:    thre.setOpts(opts); break;
+    case DrompaCommand::THRE:    thre.setOpts(opts, cps.sigtest); break;
     case DrompaCommand::ANNO_PC: anno.setOptsPC(opts); break;
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;

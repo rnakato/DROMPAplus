@@ -25,19 +25,22 @@ public:
   int32_t scaletag;
   int32_t scaleratio;
   int32_t scalepvalue;
+  bool sigtest;
 
   CommandParamSet(const int32_t defsm,
 		  const int32_t defshowctag,
 		  const int32_t defshowratio,
 		  const int32_t defscaletag,
 		  const int32_t defscaleratio,
-		  const int32_t defscalepvalue):
+		  const int32_t defscalepvalue,
+		  const bool defsigtest):
     sm(defsm),
     showctag(defshowctag),
     showratio(defshowratio),
     scaletag(defscaletag),
     scaleratio(defscaleratio),
-    scalepvalue(defscalepvalue)
+    scalepvalue(defscalepvalue),
+    sigtest(defsigtest)
   {}
 };
 
@@ -346,8 +349,6 @@ namespace DROMPA {
   };
   
   class Threshold {
-    MyOpt::Opts opt;
-    
   public:
     double pthre_inter;
     double pthre_enrich;
@@ -357,8 +358,12 @@ namespace DROMPA {
     bool sigtest;
     int32_t width4lmd;
     
-    Threshold(): opt("Threshold",100)
-    {
+    Threshold(): sigtest(false) {}
+
+    void setOpts(MyOpt::Opts &allopts, const bool sig) {
+      sigtest = sig;
+
+      MyOpt::Opts opt("Threshold",100);
       opt.add_options()
 	("pthre_internal", boost::program_options::value<double>()->default_value(1e-3), "p-value for ChIP internal")
 	("pthre_enrich",   boost::program_options::value<double>()->default_value(1e-3), "p-value for ChIP/Input enrichment")
@@ -370,9 +375,6 @@ namespace DROMPA {
 	 boost::program_options::value<int32_t>()->default_value(100000)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--width4lmd")),
 	 "Width for calculating local lambda")
 	;
-    }
-
-    void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
     void setValues(const MyOpt::Variables &values) {
@@ -383,7 +385,7 @@ namespace DROMPA {
 	qthre        = MyOpt::getVal<double>(values, "qthre");
 	ethre        = MyOpt::getVal<double>(values, "ethre");
 	ipm          = MyOpt::getVal<double>(values, "ipm");
-	sigtest      = !values.count("nosig");
+	if(values.count("nosig")) sigtest = false;
 	width4lmd    = MyOpt::getVal<int32_t>(values, "width4lmd");
       } catch (const boost::bad_any_cast& e) {
 	std::cout << e.what() << std::endl;
