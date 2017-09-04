@@ -179,7 +179,7 @@ void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin
 
 WigArray loadWigData(const std::string &filename, const SampleFile &x, const chrsize &chr)
 {
-  std::cout << chr.getname() << std::endl;
+  //  std::cout << chr.getname() << std::endl;
 
   int32_t binsize(x.getbinsize());
   int32_t nbin(chr.getlen()/binsize +1);

@@ -13,7 +13,6 @@ SSPSRCDIR = $(SSPDIR)/src
 SSPCMNDIR = $(SSPDIR)/common
 SSPOBJDIR = $(SSPDIR)/obj
 SSPCMNOBJDIR = $(SSPDIR)/cobj
-ALGLIBDIR = $(SSPDIR)/common/alglib
 
 PROGRAMS = parse2wig+ drompa+
 TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
@@ -32,7 +31,7 @@ endif
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o 
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o  $(SSPCMNOBJDIR)/ReadAnnotation.o
-OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/ReadAnnotation.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(ALGLIBDIR)/libalglib.a $(SSPCMNDIR)/BedFormat.hpp
+OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/ReadAnnotation.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(SSPCMNDIR)/BedFormat.hpp
 
 .PHONY: all clean
 
@@ -45,9 +44,6 @@ $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO)  $(CFLAGS)
-
-$(ALGLIBDIR)/libalglib.a:
-	$(MAKE) -C $(ALGLIBDIR) libalglib.a
 
 $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
