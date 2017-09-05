@@ -217,9 +217,11 @@ class Page {
       df.stroke_bindata(pair.pair.second, arrays, nlayer);
       df.stroke_ymem(nlayer);
     }
-    df.stroke_dataframe(p);
     df.stroke_peakregion(pair);
+
+    df.stroke_dataframe(p);
     stroke_xaxis();
+
     return;
   }
   void DrawAnnotation(const DROMPA::Global &p);
@@ -365,8 +367,8 @@ protected:
     }
     return;
   }
-  void stroke_peakregion(const SamplePairChr &pair){ return; }
   void stroke_dataframe(const DROMPA::Global &p);
+  void stroke_peakregion(const SamplePairChr &pair){ return; }
   void stroke_bindata(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);
 
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }

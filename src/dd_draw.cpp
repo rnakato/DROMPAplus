@@ -88,12 +88,12 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p)
   /* y memory */
   cr->set_line_width(0.4);
   cr->set_source_rgba(CLR_BLACK, 0.5);
-  
+
   for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, width_df);
   cr->stroke();
 
   if (p.drawparam.isshowymem()) stroke_ymem(0);
-
+   
   if (p.drawparam.isshowylab()) {
     cr->set_source_rgba(CLR_BLACK, 1);
     showtext_cr(cr, 50, par.yaxis_now - height_df/2, label, 12);
