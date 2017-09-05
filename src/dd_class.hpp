@@ -135,7 +135,6 @@ public:
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") label     = v[2];
     if(v.size() >=4 && v[3] != "") peak_argv = v[3];
-    std::cout << peak_argv << std::endl;
     if(peak_argv != "") peaks = parseBed_Hash<bed>(peak_argv);
     binsize = b;
     if(v.size() >=6 && v[5] != "") scale.tag = stof(v[5]);

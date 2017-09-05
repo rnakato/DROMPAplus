@@ -6,7 +6,6 @@
 #include <iomanip>
 #include "dd_draw.hpp"
 #include "dd_draw_p.hpp"
-#include "dd_peakcall.hpp"
 #include "SSP/common/inline.hpp"
 #include "SSP/common/util.hpp"
 
@@ -22,114 +21,47 @@
 
 enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
-void PinterDataFrame::stroke_bin(const SamplePairParam &pair,
-				 const std::unordered_map<std::string, ChrArray> &arrays,
-				 const int32_t i, const double xcen, const int32_t yaxis,
-				 const int32_t viz)
-{
-  const ChrArray &a = arrays.at(pair.argvChIP);
-  double data(a.stats.getlogp(a.array[i]));
-  if (!data) return;
-  int32_t len(getbinlen(data/scale));
-
-  if (data > a.stats.getpthre()) cr->set_source_rgba(CLR_PINK, 1);
-  else cr->set_source_rgba(CLR_GRAY, 1);
-  rel_yline(cr, xcen, yaxis, len);
-  cr->stroke();
-  return;
-}
-
-void PenrichDataFrame::stroke_bin(const SamplePairParam &pair,
-				  const std::unordered_map<std::string, ChrArray> &arrays,
-				  const int32_t i, const double xcen, const int32_t yaxis,
-				  const int32_t viz)
-{
-  double data(binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
-  if (!data) return;
-  
-  int32_t len(getbinlen(data/scale));
-
-  if (data > threshold) cr->set_source_rgba(CLR_PINK, 1);
-  else cr->set_source_rgba(CLR_GRAY, 1);
-  rel_yline(cr, xcen, yaxis, len);
-  return;
-}
-
-void ChIPDataFrame::stroke_bin(const SamplePairParam &pair,
+void DataFrame::stroke_bin(const SamplePairParam &pair,
 			       const std::unordered_map<std::string, ChrArray> &arrays,
 			       const int32_t i, const double xcen, const int32_t yaxis,
-			       const int32_t viz)
+			       const int32_t nlayer)
 {
-  double value((arrays.at(pair.argvChIP)).array[i] / scale);
-  if (!value) return;
-
-  int32_t len(getbinlen(value));
-  cr->set_source_rgba(CLR_BLUEGRAY, 0.7);
-  if (!viz) {
-    rel_yline(cr, xcen, yaxis, len);
-  } else {
-    if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
-    cr->stroke();
-    cr->set_source_rgba(CLR_GREEN3, 0.5);
-    rel_yline(cr, xcen, yaxis, len);
-    cr->stroke();
-  }
-  return;
-}
-
-void InputDataFrame::stroke_bin(const SamplePairParam &pair,
-				const std::unordered_map<std::string, ChrArray> &arrays,
-				const int32_t i, const double xcen, const int32_t yaxis,
-				const int32_t viz)
-{
-  double value((arrays.at(pair.argvInput)).array[i] / scale);
+  double value(getVal(pair, arrays, i) / scale);
   if (!value) return;
 
   int32_t len(getbinlen(value));
 
-  cr->set_source_rgba(CLR_BLUE, 0.7);
-  rel_yline(cr, xcen, yaxis, len);
-  return;
-}
+  setColor(value, nlayer, 1);
+  if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
+  cr->stroke();
 
-void RatioDataFrame::stroke_bin(const SamplePairParam &pair,
-				const std::unordered_map<std::string, ChrArray> &arrays,
-				const int32_t i, const double xcen, const int32_t yaxis,
-				const int32_t viz)
-{
-  double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);
-  if (!value) return;
- 
-  int32_t len(getbinlen(value));
-
-  if(isGV || sigtest) {
-    if (value > threshold) cr->set_source_rgba(CLR_PINK, 1);
-    else cr->set_source_rgba(CLR_GRAY, 1);
-  } else {
-    cr->set_source_rgba(CLR_ORANGE, 1);
-  }
-
+  setColor(value, nlayer, 0.5);
   rel_yline(cr, xcen, yaxis, len);
   cr->stroke();
+
   return;
 }
 
 void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair,
-				   const std::unordered_map<std::string, ChrArray> &arrays,
-				   const int32_t i, const double xcen, const int32_t yaxis,
-				   const int32_t viz)
+			       const std::unordered_map<std::string, ChrArray> &arrays,
+			       const int32_t i, const double xcen, const int32_t yaxis,
+			       const int32_t nlayer)
 {
-  double data(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
-  if (!data) return;
+  double value(getVal(pair, arrays, i) / scale);
+  if (!value) return;
 
-  double value(log10(data)/scale);
   int32_t len(0);
-    
   if(value>0) len = -std::min(par.ystep*value, height_df/2);
   else        len = -std::max(par.ystep*value, -height_df/2);
 
-  cr->set_source_rgba(CLR_ORANGE, 1);
+  /*  setColor(value, nlayer, 1);
+  if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
+  cr->stroke();*/
+
+  setColor(value, nlayer, 0.3);
   rel_yline(cr, xcen, yaxis-height_df/2, len);
+  cr->stroke();
+
   return;
 }
 
@@ -148,7 +80,7 @@ void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
   return;
 }
 
-void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer)
+void DataFrame::stroke_dataframe(const DROMPA::Global &p)
 {
   //  DEBUGprint("stroke_dataframe");
   stroke_frame();
@@ -160,17 +92,17 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer)
   for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, width_df);
   cr->stroke();
 
-  if (p.drawparam.isshowymem()) stroke_ymem(nlayer);
+  if (p.drawparam.isshowymem()) stroke_ymem(0);
 
-  if (!nlayer && p.drawparam.isshowylab()) {
+  if (p.drawparam.isshowylab()) {
     cr->set_source_rgba(CLR_BLACK, 1);
     showtext_cr(cr, 50, par.yaxis_now - height_df/2, label, 12);
   }
   return;
 }
 
-void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairParam &pair,
-			       const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer)
+void DataFrame::stroke_bindata(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays,
+			       const int32_t nlayer)
 {
   //  DEBUGprint("stroke_bindata");
   int32_t binsize(pair.getbinsize());
@@ -187,23 +119,23 @@ void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairParam &p
 
   for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {
     if (thin > 1 && i%thin) continue;
-    stroke_bin(pair, arrays, i, xcen, yaxis, p.drawparam.viz);
+    stroke_bin(pair, arrays, i, xcen, yaxis, nlayer);
   }
   cr->stroke();
   return;
 }
 
-void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer)
+void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair)
 {
   //  DEBUGprint("stroke_each_layer");
-  if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair, nlayer);
-  if (p.drawparam.showpenrich && pair.pair.first.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
+  if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair);
+  if (p.drawparam.showpenrich && pair.pair.first.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair);
   if (p.drawparam.showratio && pair.pair.first.argvInput!="") {
-    if (p.drawparam.showratio == 1) stroke_readdist<RatioDataFrame>(p, pair, nlayer);
-    else if (p.drawparam.showratio == 2) stroke_readdist<LogRatioDataFrame>(p, pair, nlayer);
+    if (p.drawparam.showratio == 1) stroke_readdist<RatioDataFrame>(p, pair);
+    else if (p.drawparam.showratio == 2) stroke_readdist<LogRatioDataFrame>(p, pair);
   }
-  if (p.drawparam.showctag) stroke_readdist<ChIPDataFrame>(p, pair, nlayer);
-  if (p.drawparam.showitag==1 && pair.pair.first.argvInput!="") stroke_readdist<InputDataFrame>(p, pair, nlayer);
+  if (p.drawparam.showctag) stroke_readdist<ChIPDataFrame>(p, pair);
+  if (p.drawparam.showitag==1 && pair.pair.first.argvInput!="") stroke_readdist<InputDataFrame>(p, pair);
   return;
 }
 
@@ -550,18 +482,12 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
      /*   if(d->internum){
       for(j=0; j<d->internum; ++j) draw_interaction(cr, &(d->inter[j]), xstart, xend, chr);
       }*/
-    int32_t nlayer = 0;
-    for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j], nlayer);
+    for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j]);
     stroke_xaxis_num(par.yaxis_now, 9);
 
     //    if(d->bednum) draw_bedfile(d, cr, xstart, xend, chr);
     //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);
-      
-    /*    if(p->samplenum_overlay){
-      nlayer = 1;
-      yaxis_now = ytemp;
-      for(; j<p->samplenum; ++j) stroke_each_layer(p, d, &(sample[j]), cr, xstart, xend, nlayer);
-      }*/
+
     //    if(d->visualize_itag==2) stroke_readdist(p, d, cr, &(sample[0]), xstart, xend, LTYPE_INPUT, 0);
       
     par.yaxis_now += MERGIN_BETWEEN_LINE;

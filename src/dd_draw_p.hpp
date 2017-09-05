@@ -7,8 +7,8 @@
 #include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
+#include "dd_peakcall.hpp"
 #include "color.hpp"
-
 
 #define rel_xline(cr, x1, y1, xlen) do{		\
     cr->move_to(x1,   (int32_t)y1);		\
@@ -204,18 +204,22 @@ class Page {
     if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, chr.getlen(), "Num of genes", 0, 40, MEMNUM_GC, BOXHEIGHT_GRAPH);
   }
 
-  void stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer);
+  void stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair);
 
   template <class T>
-  void stroke_readdist(const DROMPA::Global &p, const SamplePairChr &pair, const int32_t nlayer)
+  void stroke_readdist(const DROMPA::Global &p, const SamplePairChr &pair)
   {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
-    df.stroke_bindata(p, pair.pair.first, arrays, nlayer);
-    if (pair.pair.overlay) df.stroke_bindata(p, pair.pair.second, arrays, nlayer);
-    df.stroke_dataframe(p, nlayer);
+    df.stroke_bindata(pair.pair.first, arrays, 0);
+    if (pair.pair.overlay) {
+      int32_t nlayer(1);
+      df.stroke_bindata(pair.pair.second, arrays, nlayer);
+      df.stroke_ymem(nlayer);
+    }
+    df.stroke_dataframe(p);
     df.stroke_peakregion(pair);
-    if(!nlayer) stroke_xaxis();
+    stroke_xaxis();
     return;
   }
   void DrawAnnotation(const DROMPA::Global &p);
@@ -362,19 +366,28 @@ protected:
     return;
   }
   void stroke_peakregion(const SamplePairChr &pair){ return; }
-  void stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer);
-  void stroke_bindata(const DROMPA::Global &p, const SamplePairParam &pair,
-		      const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);
+  void stroke_dataframe(const DROMPA::Global &p);
+  void stroke_bindata(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);
 
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
   
-  virtual void stroke_bin(const SamplePairParam &pair,
-			  const std::unordered_map<std::string, ChrArray> &arrays,
-			  const int32_t i, const double xcen, const int32_t yaxis,  int32_t viz)=0;
+  void stroke_bin(const SamplePairParam &pair,
+		  const std::unordered_map<std::string, ChrArray> &arrays,
+		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
+  virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
+  virtual double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i)=0;
 };
 
 
 class ChIPDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha) {
+    if (!nlayer) cr->set_source_rgba(CLR_BLUEGRAY, alpha);
+    else cr->set_source_rgba(CLR_OLIVE, alpha);
+  }
+  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+    return arrays.at(pair.argvChIP).array[i];
+  }
+  
  public:
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
@@ -382,28 +395,52 @@ class ChIPDataFrame : public DataFrame {
 	      p.thre.sigtest, p.thre.ipm)
   {}
 
-  void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
   void stroke_peakregion(const SamplePairChr &pair);
 };
 
 
 class InputDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha) {
+    if (!nlayer) cr->set_source_rgba(CLR_BLUE, alpha);
+    else cr->set_source_rgba(CLR_BROWN, alpha);
+  }
+  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+    return arrays.at(pair.argvInput).array[i];
+  }
+  
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, false, 0)
   {}
 
-  void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
 
 class RatioDataFrame : public DataFrame {
   bool isGV;
-  
+
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_PINK, alpha);
+	else cr->set_source_rgba(CLR_GRAY, alpha);
+      } else {
+	cr->set_source_rgba(CLR_ORANGE, alpha);
+      }
+    } else {    // second layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+	else cr->set_source_rgba(CLR_GRAY2, alpha);
+      } else {
+	cr->set_source_rgba(CLR_PURPLE, alpha);
+      }
+    }
+  }
+  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+    return CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  }
+
 public:
   RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
@@ -416,16 +453,36 @@ public:
     if(p.drawparam.showctag) return "IP/Input";
     else return pair.pair.first.label;
   }
-
-  void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
 
 class LogRatioDataFrame : public DataFrame { // log10(ratio)
   bool isGV;
   int32_t barnum_minus;
   int32_t barnum_plus;
+
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_PINK, alpha);
+	else cr->set_source_rgba(CLR_GRAY, alpha);
+      } else {
+	cr->set_source_rgba(CLR_ORANGE, alpha);
+      }
+    } else {    // second layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+	else cr->set_source_rgba(CLR_GRAY2, alpha);
+      } else {
+	cr->set_source_rgba(CLR_PURPLE, alpha);
+      }
+    }
+  }
+  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+    double val(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
+    return val ? log10(val): 0;
+  }
+
  public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
@@ -456,13 +513,27 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     }
     return;
   }
-  void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
+  void stroke_bin(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays,
+		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
 };
 
 class PinterDataFrame : public DataFrame {
- public:
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+      else cr->set_source_rgba(CLR_GRAY, alpha);
+    } else {    // second layer
+      if (value > threshold) cr->set_source_rgba(CLR_BLUE, alpha);
+      else cr->set_source_rgba(CLR_GRAY2, alpha);
+    }
+  }
+  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+    const ChrArray &a = arrays.at(pair.argvChIP);
+    return a.stats.getlogp(a.array[i]);
+  }
+
+public:
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
@@ -473,13 +544,23 @@ class PinterDataFrame : public DataFrame {
     if(p.drawparam.showctag || p.drawparam.showratio) return "pval (ChIP internal)";
     else return pair.pair.first.label;
   }
-
-  void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
 
 class PenrichDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+      else cr->set_source_rgba(CLR_GRAY, alpha);
+    } else {    // second layer
+      if (value > threshold) cr->set_source_rgba(CLR_BLUE, alpha);
+      else cr->set_source_rgba(CLR_GRAY2, alpha);
+    }
+  }
+  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+    return binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  }
+
  public:
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		   const DParam &refparam, const double wdf, const double hdf):
@@ -491,10 +572,6 @@ class PenrichDataFrame : public DataFrame {
     if(p.drawparam.showctag || p.drawparam.showratio) return "pval (IP/Input)";
     else return pair.pair.first.label;
   }
-
-  void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
 
 class GeneElement{
