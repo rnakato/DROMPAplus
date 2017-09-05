@@ -17,8 +17,12 @@
     cr->move_to(x1, (int32_t)y1);		\
     cr->line_to(x1, (int32_t)(y1+ylen)); }while(0)
 
-#define CALCRATIO(c,i,r) ((i) ? ((c)/static_cast<double>((i)*(r))): 0)
+using ChrArrayMap = std::unordered_map<std::string, ChrArray>;
 
+inline double CalcRatio(const double c, const double i, const double r)
+{
+  return i ? c/i*r: 0;
+}
 
 namespace {
   enum class LineType { CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
@@ -170,7 +174,7 @@ public:
 };
 
 class Page {
-  const std::unordered_map<std::string, ChrArray> &arrays;
+  const ChrArrayMap &arrays;
   const std::vector<SamplePairChr> &pairs;
   GraphData GC;
   GraphData GD;
@@ -191,7 +195,7 @@ class Page {
   public:
   
   Page(const DROMPA::Global &p,
-       const std::unordered_map<std::string, ChrArray> &refarrays,
+       const ChrArrayMap &refarrays,
        const std::vector<SamplePairChr> &refpairs,
        const Cairo::RefPtr<Cairo::PdfSurface> surface,
        const chrsize &chr, const int32_t s, const int32_t e):
@@ -369,24 +373,24 @@ protected:
   }
   void stroke_dataframe(const DROMPA::Global &p);
   void stroke_peakregion(const SamplePairChr &pair){ return; }
-  void stroke_bindata(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);
+  void stroke_bindata(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer);
 
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
   
   void stroke_bin(const SamplePairParam &pair,
-		  const std::unordered_map<std::string, ChrArray> &arrays,
+		  const ChrArrayMap &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
   virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
-  virtual double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i)=0;
+  virtual double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i)=0;
 };
 
 
 class ChIPDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
     if (!nlayer) cr->set_source_rgba(CLR_BLUEGRAY, alpha);
-    else cr->set_source_rgba(CLR_OLIVE, alpha);
+    else cr->set_source_rgba(CLR_PINK2, alpha);
   }
-  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     return arrays.at(pair.argvChIP).array[i];
   }
   
@@ -404,9 +408,9 @@ class ChIPDataFrame : public DataFrame {
 class InputDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
     if (!nlayer) cr->set_source_rgba(CLR_BLUE, alpha);
-    else cr->set_source_rgba(CLR_BROWN, alpha);
+    else cr->set_source_rgba(CLR_OLIVE, alpha);
   }
-  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     return arrays.at(pair.argvInput).array[i];
   }
   
@@ -425,22 +429,22 @@ class RatioDataFrame : public DataFrame {
   {
     if (!nlayer) { // first layer
       if(isGV || sigtest) {
-	if (value > threshold) cr->set_source_rgba(CLR_PINK, alpha);
+	if (value > threshold) cr->set_source_rgba(CLR_LAKEBLUE, alpha);
 	else cr->set_source_rgba(CLR_GRAY, alpha);
       } else {
 	cr->set_source_rgba(CLR_ORANGE, alpha);
       }
     } else {    // second layer
       if(isGV || sigtest) {
-	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+	if (value > threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
 	else cr->set_source_rgba(CLR_GRAY2, alpha);
       } else {
 	cr->set_source_rgba(CLR_PURPLE, alpha);
       }
     }
   }
-  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
-    return CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    return CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
   }
 
 public:
@@ -480,8 +484,8 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
       }
     }
   }
-  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
-    double val(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    double val(CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
     return val ? log10(val): 0;
   }
 
@@ -515,7 +519,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     }
     return;
   }
-  void stroke_bin(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays,
+  void stroke_bin(const SamplePairParam &pair, const ChrArrayMap &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
 };
 
@@ -526,11 +530,11 @@ class PinterDataFrame : public DataFrame {
       if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
       else cr->set_source_rgba(CLR_GRAY, alpha);
     } else {    // second layer
-      if (value > threshold) cr->set_source_rgba(CLR_BLUE, alpha);
+      if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     }
   }
-  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     const ChrArray &a = arrays.at(pair.argvChIP);
     return a.stats.getlogp(a.array[i]);
   }
@@ -539,7 +543,7 @@ public:
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.sigtest, p.thre.pthre_inter)
+	      p.thre.sigtest, -log10(p.thre.pthre_inter))
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
@@ -555,19 +559,20 @@ class PenrichDataFrame : public DataFrame {
       if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
       else cr->set_source_rgba(CLR_GRAY, alpha);
     } else {    // second layer
-      if (value > threshold) cr->set_source_rgba(CLR_BLUE, alpha);
+      if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     }
   }
-  double getVal(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays, const int32_t i) {
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     return binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
   }
 
  public:
-  PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+  PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
+		   const DROMPA::Global &p, const SamplePairChr &pair,
 		   const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.sigtest, p.thre.pthre_enrich)
+	      p.thre.sigtest, -log10(p.thre.pthre_enrich))
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {

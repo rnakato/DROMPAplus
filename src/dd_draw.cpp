@@ -22,17 +22,17 @@
 enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
 void DataFrame::stroke_bin(const SamplePairParam &pair,
-			       const std::unordered_map<std::string, ChrArray> &arrays,
+			       const ChrArrayMap &arrays,
 			       const int32_t i, const double xcen, const int32_t yaxis,
 			       const int32_t nlayer)
 {
-  double value(getVal(pair, arrays, i) / scale);
+  double value(getVal(pair, arrays, i));
   if (!value) return;
 
-  int32_t len(getbinlen(value));
+  int32_t len(getbinlen(value / scale));
 
   setColor(value, nlayer, 1);
-  if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
+  if(len <=-1 && len >= height_df) rel_yline(cr, xcen, yaxis + len, 1);
   cr->stroke();
 
   setColor(value, nlayer, 0.5);
@@ -43,7 +43,7 @@ void DataFrame::stroke_bin(const SamplePairParam &pair,
 }
 
 void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair,
-			       const std::unordered_map<std::string, ChrArray> &arrays,
+			       const ChrArrayMap &arrays,
 			       const int32_t i, const double xcen, const int32_t yaxis,
 			       const int32_t nlayer)
 {
@@ -101,7 +101,7 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p)
   return;
 }
 
-void DataFrame::stroke_bindata(const SamplePairParam &pair, const std::unordered_map<std::string, ChrArray> &arrays,
+void DataFrame::stroke_bindata(const SamplePairParam &pair, const ChrArrayMap &arrays,
 			       const int32_t nlayer)
 {
   //  DEBUGprint("stroke_bindata");
