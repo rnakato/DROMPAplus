@@ -30,7 +30,7 @@ endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o 
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o  $(SSPCMNOBJDIR)/ReadAnnotation.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_class.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o  $(SSPCMNOBJDIR)/ReadAnnotation.o
 OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/ReadAnnotation.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(SSPCMNDIR)/BedFormat.hpp
 
 .PHONY: all clean

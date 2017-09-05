@@ -121,13 +121,13 @@ void Command::InitDump()
     case DrompaCommand::CG: 
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CG");
-	for (auto x: {"cgthre"}) chkminus<int32_t>(values, x, -1);
+	//	for (auto x: {"cgthre"}) chkminus<int32_t>(values, x, -1);
 	break;
       }
     case DrompaCommand::TR: 
       {
 	DEBUGprint("INITDUMP:DrompaCommand::TR");
-	for (auto x: {"tssthre"}) chkminus<int32_t>(values, x, -1);
+	//	for (auto x: {"tssthre"}) chkminus<int32_t>(values, x, -1);
 	break;
       }
     case DrompaCommand::PD:
