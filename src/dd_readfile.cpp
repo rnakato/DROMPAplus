@@ -8,9 +8,8 @@
 /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
    6:scale_tag   7:scale_ratio   8:scale_pvalue */
 //void scan_samplestr(const std::string &str, std::unordered_map<std::string, SampleFile> &sample, std::vector<SamplePair> &samplepair)
-void scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
+int32_t scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
 		    std::unordered_map<std::string, SampleFile> &sample,
-		    std::vector<SamplePair> &samplepair,
 		    WigType iftype)
 {
   std::vector<std::string> v;
@@ -25,7 +24,8 @@ void scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
       std::cerr << "please specify ChIP sample: " << str << std::endl;
       exit(1);
   }
-  
+  isFile(v[0]);
+
   if(v.size() >4) binsize = stoi(v[4]);
   
   if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], gt, binsize, iftype);
@@ -36,9 +36,7 @@ void scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
     if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
   }
 
-  samplepair.emplace_back(v, sample[v[0]].getbinsize());
-  
-  return;
+  return sample[v[0]].getbinsize();
 }
 
 pdSample scan_pdstr(const std::string &str)

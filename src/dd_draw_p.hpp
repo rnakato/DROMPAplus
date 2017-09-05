@@ -211,7 +211,8 @@ class Page {
   {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
-    df.stroke_bindata(p, pair, arrays, nlayer);
+    df.stroke_bindata(p, pair.pair.first, arrays, nlayer);
+    if (pair.pair.overlay) df.stroke_bindata(p, pair.pair.second, arrays, nlayer);
     df.stroke_dataframe(p, nlayer);
     df.stroke_peakregion(pair);
     if(!nlayer) stroke_xaxis();
@@ -278,9 +279,8 @@ class Page {
     return;
   }
 
-  void stroke_xaxis(){
+  void stroke_xaxis() {
     double x;
-    //  int32_t interval_large = set_interval_large(d);
     int32_t interval_large(par.width_per_line/10);
     int32_t interval(interval_large/10);
 
@@ -363,14 +363,14 @@ protected:
   }
   void stroke_peakregion(const SamplePairChr &pair){ return; }
   void stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer);
-  void stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pair,
+  void stroke_bindata(const DROMPA::Global &p, const SamplePairParam &pair,
 		      const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer);
 
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
   
-  virtual void stroke_bin(const SamplePairChr &pair,
+  virtual void stroke_bin(const SamplePairParam &pair,
 			  const std::unordered_map<std::string, ChrArray> &arrays,
-			  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)=0;
+			  const int32_t i, const double xcen, const int32_t yaxis,  int32_t viz)=0;
 };
 
 
@@ -378,11 +378,11 @@ class ChIPDataFrame : public DataFrame {
  public:
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, pair.label, p.drawparam.scale_tag, refparam, wdf, hdf,
+    DataFrame(cr_, pair.pair.first.label, p.drawparam.scale_tag, refparam, wdf, hdf,
 	      p.thre.sigtest, p.thre.ipm)
   {}
 
-  void stroke_bin(const SamplePairChr &pair,
+  void stroke_bin(const SamplePairParam &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
   void stroke_peakregion(const SamplePairChr &pair);
@@ -396,7 +396,7 @@ class InputDataFrame : public DataFrame {
     DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, false, 0)
   {}
 
-  void stroke_bin(const SamplePairChr &pair,
+  void stroke_bin(const SamplePairParam &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
@@ -414,10 +414,10 @@ public:
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag) return "IP/Input";
-    else return pair.label;
+    else return pair.pair.first.label;
   }
 
-  void stroke_bin(const SamplePairChr &pair,
+  void stroke_bin(const SamplePairParam &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
@@ -437,7 +437,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag) return "IP/Input";
-    else return pair.label;
+    else return pair.pair.first.label;
   }
 
   void stroke_ymem(const int32_t nlayer)
@@ -456,7 +456,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     }
     return;
   }
-  void stroke_bin(const SamplePairChr &pair,
+  void stroke_bin(const SamplePairParam &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
@@ -471,10 +471,10 @@ class PinterDataFrame : public DataFrame {
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag || p.drawparam.showratio) return "pval (ChIP internal)";
-    else return pair.label;
+    else return pair.pair.first.label;
   }
 
-  void stroke_bin(const SamplePairChr &pair,
+  void stroke_bin(const SamplePairParam &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };
@@ -489,10 +489,10 @@ class PenrichDataFrame : public DataFrame {
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag || p.drawparam.showratio) return "pval (IP/Input)";
-    else return pair.label;
+    else return pair.pair.first.label;
   }
 
-  void stroke_bin(const SamplePairChr &pair,
+  void stroke_bin(const SamplePairParam &pair,
 		  const std::unordered_map<std::string, ChrArray> &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz);
 };

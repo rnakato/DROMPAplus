@@ -10,10 +10,9 @@
 #include "dd_class.hpp"
 #include "SSP/common/seq.hpp"
 
-void scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
-		    std::unordered_map<std::string, SampleFile> &sample,
-		    std::vector<SamplePair> &samplepair,
-		    WigType iftype);
+int32_t scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
+		       std::unordered_map<std::string, SampleFile> &sample,
+		       WigType iftype);
 pdSample scan_pdstr(const std::string &str);
 
 WigArray loadWigData(const std::string &filename, const SampleFile &x, const chrsize &chr);

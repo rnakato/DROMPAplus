@@ -1,5 +1,5 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
 #include "dd_class.hpp"
 #include "dd_readfile.hpp"
@@ -163,7 +163,7 @@ void Threshold::setValues(const Variables &values) {
     ethre        = getVal<double>(values, "ethre");
     ipm          = getVal<double>(values, "ipm");
     if(values.count("nosig")) sigtest = false;
-    width4lmd    = getVal<int32_t>(values, "width4lmd");
+    //    width4lmd    = getVal<int32_t>(values, "width4lmd");
   } catch (const boost::bad_any_cast& e) {
     std::cout << e.what() << std::endl;
     exit(0);
@@ -311,9 +311,9 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
       {
 	options_description o("Input",100);
 	o.add_options()
-	  ("input,i",
-	   value<std::vector<std::string>>(),
-	   "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue\n")
+	  ("input,i", value<std::vector<std::string>>(),
+	   "Specify ChIP data, Input data and name of ChIP sample\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:name   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue")
+	  ("ioverlay", value<std::vector<std::string>>(), "Specify sample pairs to overlay (same manner as -i)")
 	  (SETOPT_RANGE("if", int32_t, static_cast<int32_t>(WigType::NONE), 0, static_cast<int32_t>(WigType::WIGTYPENUM) -1),
 	   "Input file format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
 	  ;
@@ -326,18 +326,6 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
     case DrompaCommand::REGION:  drawregion.setOpts(opts); break;
-    case DrompaCommand::OVERLAY:
-      {
-	options_description o("For overlay",100);
-	o.add_options()
-	  ("ioverlay",  value<std::vector<std::string>>(), "Input file")
-	  ("scale_tag2",   value<double>(), "Scale for read line")
-	  ("scale_ratio2", value<double>(), "Scale for fold enrichment")
-	  ("scale_pvalue2",value<double>(), "Scale for -log10(p)")
-	  ;
-	opts.add(o);
-	break;
-      }
     case DrompaCommand::CG: 
       {
 	options_description o("CG",100);
@@ -396,17 +384,33 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
   oprefix = getVal<std::string>(values, "output");
   gt = read_genometable(getVal<std::string>(values, "gt"));
 	
-  for(auto op: vopts) {
+  for (auto op: vopts) {
     switch(op) {
     case DrompaCommand::CHIP:
       {
 	DEBUGprint("ChIP setValues...");
 	try {
 	  if (!values.count("input")) PRINTERR("specify --input option.");
-	  if (values.count("if")) iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
+	  
 	  std::vector<std::string> v(getVal<std::vector<std::string>>(values, "input"));
-	  for(auto x:v) scan_samplestr(x, gt, sample, samplepair, iftype);
-
+	  for (auto &x:v) {
+	    int32_t bs = scan_samplestr(x, gt, sample, iftype);
+	    samplepair.emplace_back(x, bs);
+  	  }
+	  
+	  if (values.count("ioverlay")) {
+	    v = getVal<std::vector<std::string>>(values, "ioverlay");
+	    int32_t num(0);
+	    for (auto &x:v) {
+	      int32_t bs = scan_samplestr(x, gt, sample, iftype);
+	      samplepair[num].second = SamplePairParam(x, bs);
+	      samplepair[num].overlay = true;
+	      ++num;
+	    }
+	  }
+	  
+	  if (values.count("if")) iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
+	  
 	} catch(const boost::bad_any_cast& e) {
 	  std::cout << e.what() << std::endl;
 	  exit(0);
@@ -421,12 +425,6 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::ANNO_GV: anno.setValuesGV(values); break;
     case DrompaCommand::DRAW: drawparam.setValues(values, samplepair.size()); break;
     case DrompaCommand::REGION: drawregion.setValues(values); break;
-    case DrompaCommand::OVERLAY:
-      {
-	DEBUGprint("Global::setValues::OVERLAY");
-	//	for (auto x: {"scale_tag2","scale_ratio2","scale_pvalue2"}) chkminus<int>(values, x, 0);
-	break;
-      }
     case DrompaCommand::CG: 
       {
 	DEBUGprint("Global::setValues::CG");
@@ -509,6 +507,17 @@ void Global::setValuesOther(const Variables &values) {
     exit(0);
   }
   DEBUGprint("Other setValues done.");
+}
+
+void Global::InitDumpChIP() const {
+  std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+  DEBUGprint("INITDUMP:DrompaCommand::CHIP");
+  printf("\nSamples\n");
+  for (size_t i=0; i<samplepair.size(); ++i) {
+    std::cout << (i+1) << ": ";
+    samplepair[i].print();
+  }
+  if (iftype < WigType::NONE) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[static_cast<int32_t>(iftype)];
 }
 
 void Global::InitDumpNorm() const {

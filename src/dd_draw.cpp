@@ -22,7 +22,7 @@
 
 enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
-void PinterDataFrame::stroke_bin(const SamplePairChr &pair,
+void PinterDataFrame::stroke_bin(const SamplePairParam &pair,
 				 const std::unordered_map<std::string, ChrArray> &arrays,
 				 const int32_t i, const double xcen, const int32_t yaxis,
 				 const int32_t viz)
@@ -39,7 +39,7 @@ void PinterDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
-void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
+void PenrichDataFrame::stroke_bin(const SamplePairParam &pair,
 				  const std::unordered_map<std::string, ChrArray> &arrays,
 				  const int32_t i, const double xcen, const int32_t yaxis,
 				  const int32_t viz)
@@ -55,9 +55,10 @@ void PenrichDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
-void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
+void ChIPDataFrame::stroke_bin(const SamplePairParam &pair,
 			       const std::unordered_map<std::string, ChrArray> &arrays,
-			       const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+			       const int32_t i, const double xcen, const int32_t yaxis,
+			       const int32_t viz)
 {
   double value((arrays.at(pair.argvChIP)).array[i] / scale);
   if (!value) return;
@@ -76,9 +77,10 @@ void ChIPDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
-void InputDataFrame::stroke_bin(const SamplePairChr &pair,
+void InputDataFrame::stroke_bin(const SamplePairParam &pair,
 				const std::unordered_map<std::string, ChrArray> &arrays,
-				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+				const int32_t i, const double xcen, const int32_t yaxis,
+				const int32_t viz)
 {
   double value((arrays.at(pair.argvInput)).array[i] / scale);
   if (!value) return;
@@ -90,9 +92,10 @@ void InputDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
-void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
+void RatioDataFrame::stroke_bin(const SamplePairParam &pair,
 				const std::unordered_map<std::string, ChrArray> &arrays,
-				const int32_t i, const double xcen, const int32_t yaxis, const int32_t viz)
+				const int32_t i, const double xcen, const int32_t yaxis,
+				const int32_t viz)
 {
   double value(CALCRATIO(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio) / scale);
   if (!value) return;
@@ -111,7 +114,7 @@ void RatioDataFrame::stroke_bin(const SamplePairChr &pair,
   return;
 }
 
-void LogRatioDataFrame::stroke_bin(const SamplePairChr &pair,
+void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair,
 				   const std::unordered_map<std::string, ChrArray> &arrays,
 				   const int32_t i, const double xcen, const int32_t yaxis,
 				   const int32_t viz)
@@ -135,7 +138,7 @@ void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
   //  DEBUGprint("stroke_peakregion");
   cr->set_source_rgba(CLR_RED, 0.3);
 
-  for (auto &bed: pair.peaks) {
+  for (auto &bed: pair.peaks1st) {
     if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
     cr->set_line_width(bed.length() * dot_per_bp);
     double x(bp2xaxis(bed.summit - par.xstart));
@@ -166,7 +169,7 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p, const int32_t nlayer)
   return;
 }
 
-void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairChr &pair,
+void DataFrame::stroke_bindata(const DROMPA::Global &p, const SamplePairParam &pair,
 			       const std::unordered_map<std::string, ChrArray> &arrays, const int32_t nlayer)
 {
   //  DEBUGprint("stroke_bindata");
@@ -194,13 +197,13 @@ void Page::stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair,
 {
   //  DEBUGprint("stroke_each_layer");
   if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair, nlayer);
-  if (p.drawparam.showpenrich && pair.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
-  if (p.drawparam.showratio && pair.argvInput!="") {
+  if (p.drawparam.showpenrich && pair.pair.first.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair, nlayer);
+  if (p.drawparam.showratio && pair.pair.first.argvInput!="") {
     if (p.drawparam.showratio == 1) stroke_readdist<RatioDataFrame>(p, pair, nlayer);
     else if (p.drawparam.showratio == 2) stroke_readdist<LogRatioDataFrame>(p, pair, nlayer);
   }
   if (p.drawparam.showctag) stroke_readdist<ChIPDataFrame>(p, pair, nlayer);
-  if (p.drawparam.showitag==1 && pair.argvInput!="") stroke_readdist<InputDataFrame>(p, pair, nlayer);
+  if (p.drawparam.showitag==1 && pair.pair.first.argvInput!="") stroke_readdist<InputDataFrame>(p, pair, nlayer);
   return;
 }
 
@@ -613,7 +616,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 #endif
 }
 
-int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairChr &pair) const {
+int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairParam &pair) const {
   int32_t height(0);
   int32_t n(0);
   if (showctag)                            { height += getlineheight(); ++n; }
@@ -632,7 +635,7 @@ int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairChr &pair) const 
     
 int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std::vector<SamplePairChr> &pairs) const {
   int32_t height(0);
-  for (auto x: pairs) height += getHeightEachSample(x);
+  for (auto x: pairs) height += getHeightEachSample(x.pair.first);
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
   if (showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
 

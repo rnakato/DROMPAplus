@@ -1,5 +1,5 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
- * This file is a part of DROMPA sources.
+ * All rights reserved.
  */
 #ifndef _DD_CLASS_H_
 #define _DD_CLASS_H_
@@ -15,7 +15,7 @@
 class chrsize;
 class SamplePairChr;
 
-enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OVERLAY, OTHER};
+enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OTHER};
 
 class CommandParamSet {
 public:
@@ -111,26 +111,31 @@ class yScale {
  yScale(): tag(TAG_DEFAULT), ratio(RATIO_DEFAULT), pvalue(P_DEFAULT) {}
 };
 
-class SamplePair {
-  int32_t overlay;
-
-  std::unordered_map<std::string, std::vector<bed>> peaks;
+class SamplePairParam {
   int32_t binsize;
-  
   yScale scale;
+  std::unordered_map<std::string, std::vector<bed>> peaks;
   
- public:
-  std::string peak_argv;
+public:
   std::string argvChIP, argvInput;
+  std::string peak_argv;
   std::string label;
-
-  SamplePair(const std::vector<std::string> &v, const int32_t b):
-    peak_argv(""), argvInput(""), label("")
+  double ratio;
+  
+  SamplePairParam():
+    binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
+  {}
+  SamplePairParam(const std::string &str, const int32_t b):
+    binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {
+    std::vector<std::string> v;
+    boost::split(v, str, boost::algorithm::is_any_of(","));
+
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
     if(v.size() >=3 && v[2] != "") label     = v[2];
     if(v.size() >=4 && v[3] != "") peak_argv = v[3];
+    std::cout << peak_argv << std::endl;
     if(peak_argv != "") peaks = parseBed_Hash<bed>(peak_argv);
     binsize = b;
     if(v.size() >=6 && v[5] != "") scale.tag = stof(v[5]);
@@ -139,18 +144,33 @@ class SamplePair {
 
     //    printBed_Hash(peaks);
   }
-  void print() {
+  std::vector<bed> getpeaksChr(const std::string &chrname) const {
+    if (peak_argv != "") return peaks.at(rmchr(chrname));
+    else return std::vector<bed>();
+  }
+  void print() const {
     std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % label % peak_argv;
     std::cout << boost::format("   Input: %1%\n") % argvInput;
     std::cout << boost::format("   binsize: %1%\n") % binsize;
   }
-  void printall() {
-    std::cout << boost::format("ChIP:%1% Input:%2% name:%3% peak:%4% scale_tag %5% scale_ratio %6% scale_pvalue %7%\n")
-      % argvChIP % argvInput % label % peak_argv % scale.tag % scale.ratio % scale.pvalue;
-  }
-  std::vector<bed> getpeaksChr(const std::string &chrname) const {
-    if (peak_argv != "") return peaks.at(rmchr(chrname));
-    else return std::vector<bed>();
+  int32_t getbinsize() const { return binsize; }
+};
+  
+class SamplePair {
+ public:
+  bool overlay;
+  SamplePairParam first;
+  SamplePairParam second;
+
+  SamplePair(const std::string &str, const int32_t b):
+    overlay(false), first(str, b)
+  {}
+  void print() const {
+    first.print();
+    if (overlay) {
+      printf("(Overlay)\n");
+      second.print();
+    }
   }
 };
 
@@ -239,7 +259,7 @@ namespace DROMPA {
     double ethre;
     double ipm;
     bool sigtest;
-    int32_t width4lmd;
+    //    int32_t width4lmd;
     
     Threshold(): sigtest(false) {}
 
@@ -316,7 +336,7 @@ namespace DROMPA {
     }
 
     int32_t getlpp() const { return linenum_per_page; }
-    int32_t getHeightEachSample(const SamplePairChr &pair) const;
+    int32_t getHeightEachSample(const SamplePairParam &pair) const;
     int32_t getHeightAllSample(const Global &p, const std::vector<SamplePairChr> &pairs) const;
     int32_t getPageHeight(const Global &p, const std::vector<SamplePairChr> &pairs) const;
   };
@@ -356,6 +376,7 @@ namespace DROMPA {
     void setValuesNorm(const MyOpt::Variables &values);
     void setOptsOther(MyOpt::Opts &allopts);
     void setValuesOther(const MyOpt::Variables &values);
+    void InitDumpChIP() const;
     void InitDumpNorm() const;
     void InitDumpOther() const;
 

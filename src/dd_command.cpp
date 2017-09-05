@@ -14,21 +14,21 @@ std::vector<Command> generateCommands()
   cmds.emplace_back(Command("PC_SHARP", "Visualization: for sharp mark parameter set",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
-			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER},
+			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
 			    CommandParamSet(5, 1, 0, 30, 4, 5, true)));
   cmds.emplace_back(Command("PC_BROAD", "Visualization: for broad mark parameter set",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
-			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OVERLAY, DrompaCommand::OTHER},
+			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
 			    CommandParamSet(10, 1, 0, 30, 4, 5, true)));
   // PC_ENRICH 
-  cmds.emplace_back(Command("PC_ENRICH","Visualization : ChIP/Input enrichment",
+  cmds.emplace_back(Command("PC_ENRICH","Visualization: ChIP/Input enrichment",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
 			    CommandParamSet(5, 0, 1, 30, 4, 5, false)));
   // GV
-  cmds.emplace_back(Command("GV", "Visualization : global-view enrichment",
+  cmds.emplace_back(Command("GV", "Visualization: global-view enrichment",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_GV,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
@@ -86,38 +86,15 @@ void Command::InitDump()
   std::cout << boost::format("output prefix: %1%\n")     % MyOpt::getVal<std::string>(values, "output");
   std::cout << boost::format("Genome-table file: %1%\n") % MyOpt::getVal<std::string>(values, "gt");
 
-  for(auto x: vopts) {
+  for (auto x: vopts) {
     switch(x) {
-    case DrompaCommand::CHIP:
-      {
-	std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
-	DEBUGprint("INITDUMP:DrompaCommand::CHIP");
-	std::cout << boost::format("\nSamples\n");
-	for(uint i=0; i<p.samplepair.size(); ++i) {
-	  std::cout << (i+1) << ": ";
-	  p.samplepair[i].print();
-	}
-	if (MyOpt::getVal<int32_t>(values, "if") < static_cast<int32_t>(WigType::NONE)) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[MyOpt::getVal<int32_t>(values, "if")];
-	break;
-      }
-    case DrompaCommand::NORM: p.InitDumpNorm(); break;
-    case DrompaCommand::THRE: p.thre.InitDump(); break;
+    case DrompaCommand::CHIP:    p.InitDumpChIP(); break;
+    case DrompaCommand::NORM:    p.InitDumpNorm(); break;
+    case DrompaCommand::THRE:    p.thre.InitDump(); break;
     case DrompaCommand::ANNO_PC: p.anno.InitDumpPC(values); break;
     case DrompaCommand::ANNO_GV: p.anno.InitDumpGV(values); break;
-    case DrompaCommand::DRAW: p.drawparam.InitDump(); break;
-    case DrompaCommand::REGION: p.drawregion.InitDump(values); break;
-    case DrompaCommand::OVERLAY:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::OVERLAY");
-	if(values.count("ioverlay")) { 
-	  std::cout << boost::format("\nOverlayed samples\n");
-	  for(uint i=0; i<p.samplepair.size(); ++i) {
-	    std::cout << (i+1) << ": ";
-	    p.samplepair[i].print();
-	  }
-	}
-	break;
-      }
+    case DrompaCommand::DRAW:    p.drawparam.InitDump(); break;
+    case DrompaCommand::REGION:  p.drawregion.InitDump(values); break;
     case DrompaCommand::CG: 
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CG");
@@ -147,7 +124,6 @@ void Command::InitDump()
 	std::cout << boost::format("   profile normalization: %1$\n") % str_ntype[MyOpt::getVal<int32_t>(values, "ntype")];
 	break;
       }
-      
     case DrompaCommand::OTHER: p.InitDumpOther(); break;
     }
   }
