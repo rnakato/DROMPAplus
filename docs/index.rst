@@ -20,12 +20,12 @@ Contents:
 ---------
 .. toctree::
    :maxdepth: 2
-	     content/Install
+
+   content/Install
 
 
 Citation:
 ---------
 Nakato, R., Itoh, T. and Shirahige, K. (2013). DROMPA: easy-to-handle peak calling and visualization software for the computational analysis and validation of ChIP-seq data. Genes Cells, 18(7), 589-601.
 
-  R
-yuichiro Nakato <rnakato AT iam.u-tokyo.ac.jp>
+Ryuichiro Nakato <rnakato AT iam.u-tokyo.ac.jp>
