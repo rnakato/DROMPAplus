@@ -44,7 +44,7 @@ For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp dir
     export PATH = $PATH:$HOME/my_chipseq_exp/cpdf-binaries-master/Linux-Intel-**bit
 
 # 3. Usage
- See Manual.pdf for detail.
+ See http://drompaplus.readthedocs.io/ for detail.
 
 # 4. Reference
 1. Nakato R., Shirahige K. Recent advances in ChIP-seq analysis: from quality management to whole-genome annotation, Briefings in Bioinformatics, 2016.
