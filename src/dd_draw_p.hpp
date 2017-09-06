@@ -547,7 +547,7 @@ public:
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "pval (ChIP internal)";
+    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP)";
     else return pair.pair.first.label;
   }
 };
@@ -576,7 +576,7 @@ class PenrichDataFrame : public DataFrame {
   {}
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "pval (IP/Input)";
+    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP/Input)";
     else return pair.pair.first.label;
   }
 };
