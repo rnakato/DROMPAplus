@@ -464,20 +464,20 @@ RGB getInterRGB(double val)
 
 void showColorBar(const Cairo::RefPtr<Cairo::Context> cr, int32_t x, const int32_t y, const double maxval)
 {
-  int32_t barwidth(4);
-  cr->set_line_width(barwidth);
+  int32_t barwidth(1);
+  cr->set_line_width(barwidth+0.1);
   
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, x-36, y+20, "-log(p)", 10);
   
-  for (int32_t i=0; i<=10; ++i) {
-    RGB color(getInterRGB(i*0.1));
+  for (int32_t i=0; i<=50; ++i) {
+    RGB color(getInterRGB(i*0.02));
     cr->set_source_rgba(color.r, color.g, color.b, 0.8);
     rel_yline(cr, x, y, 12);
     cr->stroke();
     cr->set_source_rgba(CLR_BLACK, 1);
     if (!i)    showtext_cr(cr, x-3, y+20, "0", 10);
-    if (i==10) showtext_cr(cr, x-3, y+20, float2string(maxval/3, 1), 10);
+    if (i==40) showtext_cr(cr, x-3, y+20, float2string(maxval/3, 1), 10);
     x += barwidth;
     cr->stroke();
   }
@@ -514,20 +514,19 @@ void Page::drawInteraction(const InteractionSet &vinter)
     if (x.first.chr == chr && x.second.chr == chr) {     // intra-chromosomal
 	RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
 	cr->set_source_rgba(color.r, color.g, color.b, 0.8);
-
-      if (xcen_head >= 0 && xcen_tail >= 0) {
-	double radius((xcen_tail - xcen_head)/2 * dot_per_bp);
-	double r(1);
-	if (r < radius/boxheight) r = radius/boxheight;
-	cr->scale(1, 1/r);
-	cr->arc(bp2xaxis((xcen_head + xcen_tail) /2), ybottom*r, radius, M_PI, 2*M_PI);
-	cr->stroke();
-	cr->scale(1, r);
-      }
     }
     else {   // inter-chromosomal
       RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
       cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+    }
+    if (xcen_head >= 0 && xcen_tail >= 0) {
+      double radius((xcen_tail - xcen_head)/2 * dot_per_bp);
+      double r(1);
+      if (r < radius/boxheight) r = radius/boxheight;
+      cr->scale(1, 1/r);
+      cr->arc(bp2xaxis((xcen_head + xcen_tail) /2), ybottom*r, radius, M_PI, 2*M_PI);
+      cr->stroke();
+      cr->scale(1, r);
     }
     if ((x.first.chr == chr && xcen_head > 0) && (x.second.chr != chr || xcen_tail < 0)) {
       double radius((par.xend - xcen_head - par.xstart) * dot_per_bp);
