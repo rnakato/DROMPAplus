@@ -1,6 +1,37 @@
 Installation
 ============
 
+------------
+1. Dependencies
+------------
+DROMPAplus is written in C++11 and requires the following programs and libraries:
+
+- Boost C++ library
+- Cairo libraries
+- GTK library
+- GNU Scientific Library
+- zlib
+- SAMtools (for BAM formatted input)
+- UCSC utility (for BigWig)
+- R (for PROFILE command)
+
+1.1 Install required libraries
+-------------------------------
+for Ubuntu::
+
+  sudo apt-get install git build-essential libgtkmm-3.0-dev libboost-all-dev libgsl-dev libz-dev samtools r-base
+
+for CentOS::
+
+  sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
+
+and install samtools from the website.
+  
+------------
+2. Install
+------------
+
+
 Install Homebrew-file with Homebrew::
 
     $ brew install rcmdnk/file/brew-file

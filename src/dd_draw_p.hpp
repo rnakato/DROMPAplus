@@ -372,7 +372,7 @@ protected:
     return;
   }
   void stroke_dataframe(const DROMPA::Global &p);
-  void stroke_peakregion(const SamplePairChr &pair){ return; }
+  void stroke_peakregion(const SamplePairChr &pair){ (void)(pair); return; }
   void stroke_bindata(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer);
 
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
@@ -387,6 +387,7 @@ protected:
 
 class ChIPDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
+    (void)(value);
     if (!nlayer) cr->set_source_rgba(CLR_BLUEGRAY, alpha);
     else cr->set_source_rgba(CLR_PINK2, alpha);
   }
@@ -407,6 +408,7 @@ class ChIPDataFrame : public DataFrame {
 
 class InputDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
+    (void)(value);
     if (!nlayer) cr->set_source_rgba(CLR_BLUE, alpha);
     else cr->set_source_rgba(CLR_OLIVE, alpha);
   }
@@ -418,7 +420,9 @@ class InputDataFrame : public DataFrame {
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
     DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, false, 0)
-  {}
+  {
+    (void)(pair);
+  }
 
 };
 
