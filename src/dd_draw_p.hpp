@@ -228,12 +228,12 @@ class Page {
 
     return;
   }
-  void DrawAnnotation(const DROMPA::Global &p);
+  void drawAnnotation(const DROMPA::Global &p);
   void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
   void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
   void strokeGene(const DROMPA::Global &p, const double ycenter);
   void drawGraph(const GraphData &graph);
-  void draw_interaction(const InteractionSet &vinter);
+  void drawInteraction(const InteractionSet &vinter);
 
   void Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no);
 

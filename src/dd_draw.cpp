@@ -337,9 +337,9 @@ void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
   return;
 }
 
-void Page::DrawAnnotation(const DROMPA::Global &p)
+void Page::drawAnnotation(const DROMPA::Global &p)
 {
-  DEBUGprint("DrawAnnotation");
+  DEBUGprint("drawAnnotation");
   int32_t boxheight;
   if(p.anno.getgftype() == GFTYPE_SGD) boxheight = BOXHEIGHT_GENEBOX_NOEXON;
   else boxheight = BOXHEIGHT_GENEBOX_EXON;
@@ -455,29 +455,54 @@ void Page::drawGraph(const GraphData &graph)
   return;
 }
 
-double getInterAlpha(const Interaction &x, const InteractionSet &vinter)
+RGB getInterRGB(double val)
 {
-  double alpha(0);
-  alpha = x.getval()/vinter.getmaxval();
-  alpha = alpha*0.6 + 0.4;
-  return alpha;
+  val = val*0.4 + 0.6;
+  HSV color(val, 1.0, 1.0);
+  return HSVtoRGB(color);
 }
 
-void Page::draw_interaction(const InteractionSet &vinter)
+void showColorBar(const Cairo::RefPtr<Cairo::Context> cr, int32_t x, const int32_t y, const double maxval)
 {
-  int32_t boxheight(BOXHEIGHT_INTERACTION);
-
-  // keys
-  cr->set_source_rgba(CLR_BLACK, 1);
-  cr->set_line_width(2);
+  int32_t barwidth(4);
+  cr->set_line_width(barwidth);
   
+  cr->set_source_rgba(CLR_BLACK, 1);
+  showtext_cr(cr, x-36, y+20, "-log(p)", 10);
+  
+  for (int32_t i=0; i<=10; ++i) {
+    RGB color(getInterRGB(i*0.1));
+    cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+    rel_yline(cr, x, y, 12);
+    cr->stroke();
+    cr->set_source_rgba(CLR_BLACK, 1);
+    if (!i)    showtext_cr(cr, x-3, y+20, "0", 10);
+    if (i==10) showtext_cr(cr, x-3, y+20, float2string(maxval/3, 1), 10);
+    x += barwidth;
+    cr->stroke();
+  }
+  return;
+}
+
+void Page::drawInteraction(const InteractionSet &vinter)
+{
+  DEBUGprint("drawInteraction");
+  int32_t boxheight(BOXHEIGHT_INTERACTION);
+  std::string chr(rmchr(chrname));
   double ycenter(par.yaxis_now + boxheight/2);
   double ybottom(par.yaxis_now + boxheight);
 
-  showtext_cr(cr, 40, ycenter, vinter.getlabel(), 12);
+  // colorbar
+  showColorBar(cr, 70, ycenter-2, vinter.getmaxval());
 
+  // label
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->set_line_width(2);
+  showtext_cr(cr, 70, ycenter-6, vinter.getlabel(), 12);
+  
   for (auto &x: vinter.getvinter()) {
-    if (x.first.chr != chrname && x.second.chr != chrname) continue;
+    //    printList(x.first.chr, x.second.chr, chr);
+    if (x.first.chr != chr && x.second.chr != chr) continue;
 
     int32_t xcen_head(-1);
     int32_t xcen_tail(-1);
@@ -486,9 +511,10 @@ void Page::draw_interaction(const InteractionSet &vinter)
 
     if (xcen_head < 0 && xcen_tail < 0) continue;
     
-    if (x.first.chr == chrname && x.second.chr == chrname)
-      {     // intra-chromosomal
-      cr->set_source_rgba(CLR_RED, getInterAlpha(x, vinter));
+    if (x.first.chr == chr && x.second.chr == chr) {     // intra-chromosomal
+	RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
+	cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+
       if (xcen_head >= 0 && xcen_tail >= 0) {
 	double radius((xcen_tail - xcen_head)/2 * dot_per_bp);
 	double r(1);
@@ -500,25 +526,26 @@ void Page::draw_interaction(const InteractionSet &vinter)
       }
     }
     else {   // inter-chromosomal
-      cr->set_source_rgba(CLR_GREEN4, getInterAlpha(x, vinter));
-      if ((x.first.chr == chrname && xcen_head > 0) && (x.second.chr != chrname || xcen_tail < 0)) {
-	double radius((par.xend - xcen_head - par.xstart) * dot_per_bp);
-	double r(1);
-	if (r < radius/boxheight) r = radius/boxheight;
-	cr->scale(1, 1/r);
-	cr->arc(bp2xaxis(par.xend - par.xstart), ybottom*r, radius, M_PI, 1.5*M_PI);
-	cr->stroke();
-	cr->scale(1, r);
-      }
-      if ((x.first.chr != chrname || xcen_head < 0) && (x.second.chr == chrname && xcen_tail > 0)) {
-	double radius(xcen_tail * dot_per_bp);
-	double r(1);
-	if (r < radius/boxheight) r = radius/boxheight;
-	cr->scale(1, 1/r);
-	cr->arc(OFFSET_X, ybottom*r, radius, 1.5*M_PI, 2*M_PI);
-	cr->stroke();
-	cr->scale(1, r);
-      }
+      RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
+      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+    }
+    if ((x.first.chr == chr && xcen_head > 0) && (x.second.chr != chr || xcen_tail < 0)) {
+      double radius((par.xend - xcen_head - par.xstart) * dot_per_bp);
+      double r(1);
+      if (r < radius/boxheight) r = radius/boxheight;
+      cr->scale(1, 1/r);
+      cr->arc(bp2xaxis(par.xend - par.xstart), ybottom*r, radius, M_PI, 1.5*M_PI);
+      cr->stroke();
+      cr->scale(1, r);
+    }
+    if ((x.first.chr != chr || xcen_head < 0) && (x.second.chr == chr && xcen_tail > 0)) {
+      double radius(xcen_tail * dot_per_bp);
+      double r(1);
+      if (r < radius/boxheight) r = radius/boxheight;
+      cr->scale(1, 1/r);
+      cr->arc(OFFSET_X, ybottom*r, radius, 1.5*M_PI, 2*M_PI);
+      cr->stroke();
+      cr->scale(1, r);
     }
     
   }
@@ -552,9 +579,9 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
       par.yaxis_now += GD.boxheight + MERGIN_BETWEEN_GRAPH_DATA;
     }
 
-    if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawAnnotation(p);
+    if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") drawAnnotation(p);
     if (p.anno.vinterlist.size()) {
-      for (auto &x: p.anno.vinterlist) draw_interaction(x);
+      for (auto &x: p.anno.vinterlist) drawInteraction(x);
     }
     for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j]);
     stroke_xaxis_num(par.yaxis_now, 9);
@@ -647,7 +674,7 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
     else height += BOXHEIGHT_GENEBOX_EXON;
     height += MERGIN_BETWEEN_DATA;
   }
-  //  height_lpp += BOXHEIGHT_INTERACTION * d->internum;
+  height += (BOXHEIGHT_INTERACTION +5) * p.anno.vinterlist.size();
 
 #ifdef DEBUG
   std::cout << "HeightAllSample; " << height << std::endl;

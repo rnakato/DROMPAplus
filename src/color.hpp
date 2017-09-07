@@ -37,4 +37,22 @@
 #define CLR_BLUEPURPLE 110/255.0, 69/255.0, 247/255.0
 #define CLR_BLUEGRAY 43/255.0, 199/255.0, 242/255.0
 
+class RGB {
+public:
+  double r,g,b;
+  RGB(): r(0), g(0), b(0) {}
+  RGB(double r_, double g_, double b_ ): r(r_), g(g_), b(b_) {}
+};
+
+class HSV {
+public:
+  double h;
+  double s,v;
+  HSV(): h(0), s(0), v(0) {}
+  HSV(double h_, double s_, double v_ ): h(h_), s(s_), v(v_) {}
+};
+
+RGB HSVtoRGB(const HSV &hsv);
+HSV RGBtoHSV(const RGB &rgb);
+
 #endif
