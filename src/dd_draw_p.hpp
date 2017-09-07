@@ -29,7 +29,7 @@ namespace {
 
   enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=10, MERGIN_BETWEEN_LINE=30};
   enum {BOXHEIGHT_GENEBOX_EXON=140, BOXHEIGHT_GENEBOX_NOEXON=60};
-  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15};
+  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15, BOXHEIGHT_INTERACTION=45};
   int32_t pagewidth(1088);
   int32_t width_draw(750);
   double dot_per_bp(0);
@@ -144,7 +144,7 @@ public:
 	printf("%d %d\n", start, binsize);
 	PRINTERR("[E]graph: invalid start position or binsize:  " << filename);
       }
-      double val(stof(v[1]));
+      double val(stod(v[1]));
       array[start/binsize] = val;
       if(maxtemp < val) maxtemp = val;
     }
@@ -233,6 +233,7 @@ class Page {
   void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
   void strokeGene(const DROMPA::Global &p, const double ycenter);
   void drawGraph(const GraphData &graph);
+  void draw_interaction(const InteractionSet &vinter);
 
   void Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no);
 

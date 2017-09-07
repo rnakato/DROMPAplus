@@ -455,6 +455,80 @@ void Page::drawGraph(const GraphData &graph)
   return;
 }
 
+double getInterAlpha(const Interaction &x, const InteractionSet &vinter)
+{
+  double alpha(0);
+  alpha = x.getval()/vinter.getmaxval();
+  alpha = alpha*0.6 + 0.4;
+  return alpha;
+}
+
+void Page::draw_interaction(const InteractionSet &vinter)
+{
+  int32_t boxheight(BOXHEIGHT_INTERACTION);
+
+  // keys
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->set_line_width(2);
+  
+  double ycenter(par.yaxis_now + boxheight/2);
+  double ybottom(par.yaxis_now + boxheight);
+
+  showtext_cr(cr, 40, ycenter, vinter.getlabel(), 12);
+
+  for (auto &x: vinter.getvinter()) {
+    if (x.first.chr != chrname && x.second.chr != chrname) continue;
+
+    int32_t xcen_head(-1);
+    int32_t xcen_tail(-1);
+    if (par.xstart <= x.first.summit  && x.first.summit  <= par.xend) xcen_head = x.first.summit  - par.xstart;
+    if (par.xstart <= x.second.summit && x.second.summit <= par.xend) xcen_tail = x.second.summit - par.xstart;
+
+    if (xcen_head < 0 && xcen_tail < 0) continue;
+    
+    if (x.first.chr == chrname && x.second.chr == chrname)
+      {     // intra-chromosomal
+      cr->set_source_rgba(CLR_RED, getInterAlpha(x, vinter));
+      if (xcen_head >= 0 && xcen_tail >= 0) {
+	double radius((xcen_tail - xcen_head)/2 * dot_per_bp);
+	double r(1);
+	if (r < radius/boxheight) r = radius/boxheight;
+	cr->scale(1, 1/r);
+	cr->arc(bp2xaxis((xcen_head + xcen_tail) /2), ybottom*r, radius, M_PI, 2*M_PI);
+	cr->stroke();
+	cr->scale(1, r);
+      }
+    }
+    else {   // inter-chromosomal
+      cr->set_source_rgba(CLR_GREEN4, getInterAlpha(x, vinter));
+      if ((x.first.chr == chrname && xcen_head > 0) && (x.second.chr != chrname || xcen_tail < 0)) {
+	double radius((par.xend - xcen_head - par.xstart) * dot_per_bp);
+	double r(1);
+	if (r < radius/boxheight) r = radius/boxheight;
+	cr->scale(1, 1/r);
+	cr->arc(bp2xaxis(par.xend - par.xstart), ybottom*r, radius, M_PI, 1.5*M_PI);
+	cr->stroke();
+	cr->scale(1, r);
+      }
+      if ((x.first.chr != chrname || xcen_head < 0) && (x.second.chr == chrname && xcen_tail > 0)) {
+	double radius(xcen_tail * dot_per_bp);
+	double r(1);
+	if (r < radius/boxheight) r = radius/boxheight;
+	cr->scale(1, 1/r);
+	cr->arc(OFFSET_X, ybottom*r, radius, 1.5*M_PI, 2*M_PI);
+	cr->stroke();
+	cr->scale(1, r);
+      }
+    }
+    
+  }
+  cr->stroke();
+  
+  par.yaxis_now += boxheight +5;
+
+  return;
+}
+
 void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no)
 {
   DEBUGprint("Page::Draw");
@@ -479,9 +553,9 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
     }
 
     if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawAnnotation(p);
-     /*   if(d->internum){
-      for(j=0; j<d->internum; ++j) draw_interaction(cr, &(d->inter[j]), xstart, xend, chr);
-      }*/
+    if (p.anno.vinterlist.size()) {
+      for (auto &x: p.anno.vinterlist) draw_interaction(x);
+    }
     for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j]);
     stroke_xaxis_num(par.yaxis_now, 9);
 

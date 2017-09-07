@@ -137,9 +137,9 @@ public:
     if(v.size() >=4 && v[3] != "") peak_argv = v[3];
     if(peak_argv != "") peaks = parseBed_Hash<bed>(peak_argv);
     binsize = b;
-    if(v.size() >=6 && v[5] != "") scale.tag = stof(v[5]);
-    if(v.size() >=7 && v[6] != "") scale.ratio  = stof(v[6]);
-    if(v.size() >=8 && v[7] != "") scale.pvalue = stof(v[7]);
+    if(v.size() >=6 && v[5] != "") scale.tag = stod(v[5]);
+    if(v.size() >=7 && v[6] != "") scale.ratio  = stod(v[6]);
+    if(v.size() >=8 && v[7] != "") scale.pvalue = stod(v[7]);
 
     //    printBed_Hash(peaks);
   }
@@ -207,15 +207,14 @@ namespace DROMPA {
   public:
     std::string genefile;
     int32_t gftype;
-    //    bool showgene;
     HashOfGeneDataMap gmp;
     bool showtranscriptname;
     std::string arsfile;
     bool showars;
     std::string terfile;
-    std::vector<std::vector <bed>> vbedlist;
+    std::vector<std::vector<bed>> vbedlist;
+    std::vector<InteractionSet> vinterlist;
     std::string repeatfile;
-    std::string interfile;
     std::string mpfile;
     double mpthre;
     std::string gapfile;
@@ -223,8 +222,8 @@ namespace DROMPA {
     GraphFile GD;
 
     Annotation():
-      genefile(""), arsfile(""), terfile(""), repeatfile(""),
-      interfile(""), mpfile(""), gapfile("")
+      genefile(""), arsfile(""), terfile(""),
+      repeatfile(""), mpfile(""), gapfile("")
     {}
 
     void setOptsPC(MyOpt::Opts &allopts);

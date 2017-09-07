@@ -3,6 +3,7 @@
  */
 #include "dd_class.hpp"
 #include "dd_readfile.hpp"
+#include "SSP/common/BedFormat.hpp"
 
 using namespace boost::program_options;
 using namespace MyOpt;
@@ -70,8 +71,8 @@ void Annotation::setValuesPC(const Variables &values) {
     //	printMap(gmp);
     if (values.count("repeat")) repeatfile = getVal<std::string>(values, "repeat");
 
-    if (values.count("bed")) { 
-      for(auto x: getVal<std::vector<std::string>>(values, "bed")) {
+    if (values.count("bed")) {
+      for(auto &x: getVal<std::vector<std::string>>(values, "bed")) {
 	//    std::cout << x << std::endl;
 	auto vbed = parseBed<bed>(x);
 	//    printBed(vbed);
@@ -85,14 +86,22 @@ void Annotation::setValuesPC(const Variables &values) {
 
   DEBUGprint("AnnoPC setValues done.");
 }
-  
+
 void Annotation::setValuesGV(const Variables &values) {
   DEBUGprint("AnnoGV setValues...");
       
   try {
     if (values.count("inter")) {
-      interfile = getVal<std::string>(values, "inter");
-      isFile(interfile);
+      for(auto &x: getVal<std::vector<std::string>>(values, "inter")) {
+	//    std::cout << x << std::endl;
+	std::vector<std::string> v;
+	boost::split(v, x, boost::algorithm::is_any_of(","));
+	std::string label(v[0]);
+	std::string tool("mango");
+	if(v.size() >= 2) label = v[1];
+	if(v.size() >= 3) tool  = v[2];
+	vinterlist.emplace_back(InteractionSet(v[0], label, tool));
+      }
     }
     if (values.count("mp")) mpfile = getVal<std::string>(values, "mp");
     mpthre = getVal<double>(values, "mpthre");
@@ -209,7 +218,7 @@ void DrawRegion::setValues(const Variables &values) {
       isRegion = true;
       regionBed = parseBed<bed>(getVal<std::string>(values, "region"));
       if(!regionBed.size()) PRINTERR("Error no bed regions in " << getVal<std::string>(values, "region"));
-      printBed(regionBed);
+      //      printBed(regionBed);
     }
     if (values.count("genelocifile")) genelocifile = getVal<std::string>(values, "genelocifile");
     len_geneloci = getVal<int32_t>(values, "len_geneloci");
