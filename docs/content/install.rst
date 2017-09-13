@@ -1,9 +1,12 @@
 Installation
 ============
 
-------------
+---------------
 1. Dependencies
-------------
+---------------
+
+1.1 Install required libraries
+-------------------------------
 DROMPAplus is written in C++11 and requires the following programs and libraries:
 
 - Boost C++ library
@@ -11,12 +14,10 @@ DROMPAplus is written in C++11 and requires the following programs and libraries
 - GTK library
 - GNU Scientific Library
 - zlib
-- SAMtools (for BAM formatted input)
-- UCSC utility (for BigWig)
+- SAMtools (for BAM format)
+- UCSC utility (for BigWig format)
 - R (for PROFILE command)
 
-1.1 Install required libraries
--------------------------------
 for Ubuntu::
 
   sudo apt-get install git build-essential libgtkmm-3.0-dev libboost-all-dev libgsl-dev libz-dev samtools r-base
@@ -26,62 +27,25 @@ for CentOS::
   sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
 
 and install samtools from the website.
-  
-------------
-2. Install
-------------
 
+SAMtools and R can also be installed by Anaconda.
 
-Install Homebrew-file with Homebrew::
+1.2 Install required software
+-------------------------------
 
-    $ brew install rcmdnk/file/brew-file
+UCSC utility tools::
 
-or you can use install script::
+  wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedGraphToBigWig
+  wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToBedGraph
+  chmod +x bedGraphToBigWig bigWigToBedGraph
 
-    $ curl -fsSL https://raw.github.com/rcmdnk/homebrew-file/install/install.sh |sh
+Coherent PDF (https://www.coherentpdf.com/)::
 
-which installs Homebrew itself, too, if it is not installed.
+  git clone https://github.com/coherentgraphics/cpdf-binaries.git
+  
+2.4. Add the PATH for DROMPA, samtools, cpdf and UCSC tools
+------------------------------------------------------------
 
-Then, add following lines in you **.bashrc** or **.zshrc** to wrap ``brew`` command::
+For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type::
 
-    if [ -f $(brew --prefix)/etc/brew-wrap ];then
-      source $(brew --prefix)/etc/brew-wrap
-    fi
-
-**brew-wrap** wraps the original ``brew`` command
-for an automatic update of **Brewfile** when you execute
-such a ``brew install`` or ``brew uninstall``.
-
-.. note::
-
-  17/Dec/2015 update
-  
-  The default place of Brewfile has been changed from::
-  
-      /usr/local/Library/Brewfile
-  
-  to::
-  
-      ~/.brewfile/Brewfile
-  
-  because Homebrew deletes files under **/usr/local** other than
-  Homebrew's one when such ``brew update`` is executed.
-  (Homebrew checkout its repository as **/usr/local**.)
-  
-  If you used an old default setting (**/usr/local/Library/Brewfile**), you might lose Brewfile.
-  
-  In such case, please try ``brew file init`` and chose local Brewfile, which makes
-  new file **~/.brewfile/Brewfile**.
-  
-  If you used git repository, you might see a output when you executed ``brew update``::
-  
-      $ brew update
-      Ignoring path Library/rcmdnk_Brewfile/
-      To restore the stashed changes to /usr/local run:
-        `cd /usr/local && git stash pop`
-        Already up-to-date.
-  
-  In this case, please delete **/usr/local/Library/<your_git_account>_Brewfile**,
-  then do ``brew file set_repo``.
-  
-  New repository will be checked out to **~/.brewfile/<your_git_account>_Brewfile**.
+   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin:$HOME/my_chipseq_exp/cpdf-binaries/Linux-Intel-64bit

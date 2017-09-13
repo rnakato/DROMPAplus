@@ -22,6 +22,9 @@ Contents:
    :maxdepth: 2
 
    content/install
+   content/parse2wig
+   content/drompa
+   content/appendix
 
 
 Citation:
