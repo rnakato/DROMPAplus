@@ -26,8 +26,13 @@ int32_t scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
   }
   isFile(v[0]);
 
-  if(v.size() >4) binsize = stoi(v[4]);
-  
+  if(v.size() >4 && v[4] != "") {
+    try {
+      binsize = stoi(v[4]);
+    } catch (...) {
+      std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl;
+    }
+  }
   if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], gt, binsize, iftype);
   if(sample[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
   

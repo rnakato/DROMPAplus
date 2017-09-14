@@ -59,7 +59,7 @@ public:
     if(b>0) binsize = b;
     else {
       try {
-	binsize = std::stoi(v);
+	binsize = stoi(v);
       }catch (...) {
 	binsize = 0;
       }
@@ -138,7 +138,7 @@ public:
     if(peak_argv != "") peaks = parseBed_Hash<bed>(peak_argv);
     binsize = b;
     if(v.size() >=6 && v[5] != "") scale.tag = stod(v[5]);
-    if(v.size() >=7 && v[6] != "") scale.ratio  = stod(v[6]);
+    if(v.size() >=7 && v[6] != "") scale.ratio = stod(v[6]);
     if(v.size() >=8 && v[7] != "") scale.pvalue = stod(v[7]);
 
     //    printBed_Hash(peaks);
