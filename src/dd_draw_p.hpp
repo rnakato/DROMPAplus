@@ -223,7 +223,7 @@ class Page {
     }
     df.stroke_peakregion(pair);
 
-    df.stroke_dataframe(p);
+    df.stroke_dataframe(p, pair);
     stroke_xaxis();
 
     return;
@@ -327,10 +327,12 @@ class Page {
 class DataFrame {
 
 protected:
+  enum {POSI_XLABEL=50};
   const Cairo::RefPtr<Cairo::Context> cr;
   const DParam &par;
   double scale;
   std::string label;
+  std::string label2nd;
   double width_df;
   double height_df;
 
@@ -345,9 +347,9 @@ protected:
   }
   
  public:
-  DataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const std::string &l, const double s,
+  DataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const std::string &l, const std::string &l2, const double s,
 	    const DParam &refparam, const double wdf, const double hdf, const bool sig, const double thre):
-    cr(cr_), par(refparam), scale(s), label(l), width_df(wdf), height_df(hdf),
+    cr(cr_), par(refparam), scale(s), label(l), label2nd(l2), width_df(wdf), height_df(hdf),
     sigtest(sig), threshold(thre)
   {}
 
@@ -372,7 +374,7 @@ protected:
     }
     return;
   }
-  void stroke_dataframe(const DROMPA::Global &p);
+  void stroke_dataframe(const DROMPA::Global &p, const SamplePairChr &pair);
   void stroke_peakregion(const SamplePairChr &pair){ (void)(pair); return; }
   void stroke_bindata(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer);
 
@@ -381,6 +383,7 @@ protected:
   void stroke_bin(const SamplePairParam &pair,
 		  const ChrArrayMap &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
+  virtual void stroke_ylab(const SamplePairChr &pair)=0;
   virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
   virtual double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i)=0;
 };
@@ -395,11 +398,22 @@ class ChIPDataFrame : public DataFrame {
   double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     return arrays.at(pair.argvChIP).array[i];
   }
+  void stroke_ylab(const SamplePairChr &pair) {
+    if (pair.pair.overlay) { 
+      cr->set_source_rgba(CLR_BLUEGRAY, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+      cr->set_source_rgba(CLR_PINK2, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
   
  public:
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, pair.pair.first.label, p.drawparam.scale_tag, refparam, wdf, hdf,
+    DataFrame(cr_, pair.pair.first.label, pair.pair.second.label, p.drawparam.scale_tag, refparam, wdf, hdf,
 	      p.thre.sigtest, p.thre.ipm)
   {}
 
@@ -416,11 +430,23 @@ class InputDataFrame : public DataFrame {
   double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     return arrays.at(pair.argvInput).array[i];
   }
-  
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: blue, 2: olive", 12);
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+    return;
+  }
+
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
 		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, "Input", p.drawparam.scale_tag, refparam, wdf, hdf, false, 0)
+    DataFrame(cr_, "Input", "", p.drawparam.scale_tag, refparam, wdf, hdf, false, 0)
   {
     (void)(pair);
   }
@@ -452,18 +478,42 @@ class RatioDataFrame : public DataFrame {
     return CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
   }
 
-public:
-  RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
-		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.sigtest, getEthre(p)),
-    isGV(p.isGV)
-  {}
-
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag) return "IP/Input";
     else return pair.pair.first.label;
   }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_ORANGE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_PURPLE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: orange, 2: purple", 12);
+	
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+public:
+  RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double wdf, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.sigtest, getEthre(p)),
+    isGV(p.isGV)
+  {}
+
 };
 
 class LogRatioDataFrame : public DataFrame { // log10(ratio)
@@ -493,20 +543,43 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     double val(CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
     return val ? log10(val): 0;
   }
-
- public:
-  LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
-		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.sigtest, getEthre(p)),
-    isGV(p.isGV),
-    barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
-  {}
-
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag) return "IP/Input";
     else return pair.pair.first.label;
   }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_ORANGE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_PURPLE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: orange, 2: purple", 12);
+	
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+
+ public:
+  LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double wdf, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.sigtest, getEthre(p)),
+    isGV(p.isGV),
+    barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
+  {}
 
   void stroke_ymem(const int32_t nlayer)
   {
@@ -543,18 +616,40 @@ class PinterDataFrame : public DataFrame {
     const ChrArray &a = arrays.at(pair.argvChIP);
     return a.stats.getlogp(a.array[i]);
   }
-
-public:
-  PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
-		const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
-	      p.thre.sigtest, -log10(p.thre.pthre_inter))
-  {}
-
   const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
     if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP)";
     else return pair.pair.first.label;
   }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_RED, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_YELLOW2, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: red, 2: yellow", 12);
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+public:
+  PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double wdf, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+	      p.thre.sigtest, -log10(p.thre.pthre_inter))
+  {}
+
 };
 
 class PenrichDataFrame : public DataFrame {
@@ -571,19 +666,42 @@ class PenrichDataFrame : public DataFrame {
   double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
     return binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
   }
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP/Input)";
+    else return pair.pair.first.label;
+  }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_RED, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_YELLOW2, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: red, 2: yellow", 12);
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
 
  public:
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
 		   const DROMPA::Global &p, const SamplePairChr &pair,
 		   const DParam &refparam, const double wdf, const double hdf):
-    DataFrame(cr_, getlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, wdf, hdf,
 	      p.thre.sigtest, -log10(p.thre.pthre_enrich))
   {}
 
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP/Input)";
-    else return pair.pair.first.label;
-  }
 };
 
 class GeneElement{

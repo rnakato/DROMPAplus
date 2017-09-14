@@ -167,7 +167,7 @@ class SamplePair {
   void print() const {
     first.print();
     if (overlay) {
-      printf("(Overlay)\n");
+      printf("Overlay ");
       second.print();
     }
   }

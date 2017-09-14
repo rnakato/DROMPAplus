@@ -42,8 +42,7 @@ void DataFrame::stroke_bin(const SamplePairParam &pair,
   return;
 }
 
-void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair,
-			       const ChrArrayMap &arrays,
+void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair, const ChrArrayMap &arrays,
 			       const int32_t i, const double xcen, const int32_t yaxis,
 			       const int32_t nlayer)
 {
@@ -80,7 +79,7 @@ void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
   return;
 }
 
-void DataFrame::stroke_dataframe(const DROMPA::Global &p)
+void DataFrame::stroke_dataframe(const DROMPA::Global &p, const SamplePairChr &pair)
 {
   //  DEBUGprint("stroke_dataframe");
   stroke_frame();
@@ -93,11 +92,8 @@ void DataFrame::stroke_dataframe(const DROMPA::Global &p)
   cr->stroke();
 
   if (p.drawparam.isshowymem()) stroke_ymem(0);
-   
-  if (p.drawparam.isshowylab()) {
-    cr->set_source_rgba(CLR_BLACK, 1);
-    showtext_cr(cr, 50, par.yaxis_now - height_df/2, label, 12);
-  }
+  if (p.drawparam.isshowylab()) stroke_ylab(pair);
+  
   return;
 }
 
