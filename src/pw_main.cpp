@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include "SSP/src/ParseMapfile.hpp"
+#include "SSP/common/BoostOptions.hpp"
 #include "pw_makefile.hpp"
 #include "version.hpp"
 #include "pw_gv.hpp"
