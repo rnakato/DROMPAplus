@@ -27,10 +27,10 @@ and install samtools from [the website](http://samtools.sourceforge.net/).
 #### 2.2. Install cpdf
  DROMPA uses Coherent PDF (http://community.coherentpdf.com/) for merging pdf files.
  
-     git clone https://github.com/coherentgraphics/cpdf-binaries.git
+     git clone https://github.com/coherentgraphics/cpdf-binaries
     
 #### 2.3. Install DROMPAplus
-    git clone --recursive https://github.com/rnakato/DROMPAplus.git
+    git clone --recursive https://github.com/rnakato/DROMPAplus
     cd DROMPAplus
     make
 
