@@ -82,7 +82,7 @@ void Command::InitDump()
   std::vector<std::string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
 
   std::cout << boost::format("\n======================================\n");
-  std::cout << boost::format("drompa version %1%: %2%\n\n") % VERSION % name;
+  std::cout << boost::format("drompa+ version %1%: %2%\n\n") % VERSION % name;
   std::cout << boost::format("output prefix: %1%\n")     % MyOpt::getVal<std::string>(values, "output");
   std::cout << boost::format("Genome-table file: %1%\n") % MyOpt::getVal<std::string>(values, "gt");
 

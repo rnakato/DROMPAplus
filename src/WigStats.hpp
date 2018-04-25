@@ -159,16 +159,22 @@ class WigArray {
     return rmGeta(v95);
   }
 
-  void outputAsWig(std::ofstream &out, const int32_t binsize) const {
+  void outputAsWig(std::ofstream &out, const int32_t binsize, const int32_t showzero) const {
     for(size_t i=0; i<array.size(); ++i) {
-      if(array[i]) out << boost::format("%1%\t%2%\n") % (i*binsize+1) % rmGeta(array[i]);
+      if(array[i] || showzero) out << (i*binsize+1) << "\t"
+				   << rmGeta(array[i])
+				   << std::endl;
     }
   }
-  void outputAsBedGraph(std::ofstream &out, const int32_t binsize, const std::string &name, const uint64_t chrend) const {
+  void outputAsBedGraph(std::ofstream &out, const int32_t binsize, const std::string &name, const uint64_t chrend, const int32_t showzero) const {
     uint64_t e;
     for(size_t i=0; i<array.size(); ++i) {
       if(i==array.size() -1) e = chrend; else e = (i+1) * binsize;
-      if(array[i]) out << boost::format("%1% %2% %3% %4%\n") % name % (i*binsize) % e % rmGeta(array[i]);
+      if(array[i] || showzero) out << name        << " "
+				   << (i*binsize) << " "
+				   << e           << " "
+				   << rmGeta(array[i])
+				   << std::endl;
     }
   }
   void outputAsBinary(std::ofstream &out) const {
@@ -186,6 +192,7 @@ class WigStatsGenome {
   int32_t binsize;
   int32_t rcenter;
   WigType type;
+  int32_t outputzero;
   double pthre_inter;
 
 public:
@@ -198,11 +205,14 @@ public:
     MyOpt::Opts opt("Wigarray", 100);
     opt.add_options()
       ("outputformat",
-       boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
+       boost::program_options::value<int32_t>()->default_value(4)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
        "Output format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
       ("binsize,b",
        boost::program_options::value<int32_t>()->default_value(50)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
        "bin size")
+      ("outputzero",
+       boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--outputzero")),
+       "output zero-value bins (default: omitted)")
       ("rcenter",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcenter")),
        "consider length around the center of fragment")
@@ -214,6 +224,7 @@ public:
     binsize = MyOpt::getVal<int32_t>(values, "binsize");
     rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
+    outputzero  = MyOpt::getVal<int32_t>(values, "outputzero");
     pthre_inter = MyOpt::getVal<double>(values, "pthre");
 
     for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1, pthre_inter);
@@ -229,6 +240,7 @@ public:
   int32_t getbinsize() const { return binsize; }
   int32_t getWigDistsize() const { return genome.getWigDistsize(); }
   int32_t getrcenter() const { return rcenter; }
+  int32_t isoutputzero() const { return outputzero; }
   WigType getWigType() const { return type; }
 
   void setWigStats(const int32_t id, const WigArray &array) {

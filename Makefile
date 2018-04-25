@@ -18,8 +18,13 @@ PROGRAMS = parse2wig+ drompa+
 TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
 #$(warning $(TARGET))
 
+ifdef CLOCK
+CFLAGS += -DCLOCK
+OFLAGS += CLOCK=1
+endif
 ifdef DEBUG
 CFLAGS += -DDEBUG
+OFLAGS += DEBUG=1
 endif
 ifdef PRINTFRAGMENT
 CFLAGS += -DPRINTFRAGMENT
@@ -39,11 +44,11 @@ all: $(TARGET)
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP)  $(CFLAGS)
+	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(CFLAGS)
 
 $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO)  $(CFLAGS)
+	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO) $(CFLAGS)
 
 $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
@@ -53,10 +58,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(WFLAGS)
 
 $(SSPOBJDIR)/%.o: $(SSPSRCDIR)/%.cpp
-	$(MAKE) -C $(SSPDIR) $(OBJDIR)/$(notdir $@)
+	$(MAKE) -C $(SSPDIR) $(OBJDIR)/$(notdir $@) $(OFLAGS)
 
 $(SSPCMNOBJDIR)/%.o: $(SSPCMNDIR)/%.cpp
-	$(MAKE) -C $(SSPDIR) cobj/$(notdir $@)
+	$(MAKE) -C $(SSPDIR) cobj/$(notdir $@) $(OFLAGS)
 
 clean:
 	rm -rf bin obj

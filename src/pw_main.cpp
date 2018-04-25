@@ -22,7 +22,7 @@ void output_wigstats(const Mapfile &p);
 
 void printVersion()
 {
-  std::cerr << "parse2wig version " << VERSION << std::endl;
+  std::cerr << "parse2wig+ version " << VERSION << std::endl;
   exit(0);
 }
 
@@ -45,24 +45,43 @@ void CalcDepth(T &obj, const int32_t flen)
   obj.setdepth(d);
 }
 
+void DefineFragmentLength(Mapfile &p)
+{
+  clock_t t1,t2;
+  if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
+    t1 = clock();
+    strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
+    t2 = clock();
+    PrintTime(t1, t2, "ShiftProfile");
+  }
+  for (auto &x: p.genome.chr) {
+    std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
+    x.setF5ToRead(p.genome.dflen.getflen());
+    x.printvRead();
+  }
+}
+
 int main(int32_t argc, char* argv[])
 {
   Mapfile p;
   getOpts(p, argc, argv);
 
+  clock_t t1,t2;
+  t1 = clock();
   read_mapfile(p.genome);
+  t2 = clock();
+  PrintTime(t1, t2, "read_mapfile");
+  t1 = clock();
   p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
+  t2 = clock();
+  PrintTime(t1, t2, "dflen.outputDistFile");
 
+  t1 = clock();
   p.complexity.checkRedundantReads(p.genome);
+  t2 = clock();
+  PrintTime(t1, t2, "checkRedundantReads");
 
-  if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
-    strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
-    for (auto &x: p.genome.chr) {
-      //      std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
-      x.setF5ToRead(p.genome.dflen.getflen());
-      x.printvRead();
-    }
-  }
+  DefineFragmentLength(p);
 
   for (auto &x: p.genome.chr) CalcDepth(x, p.genome.dflen.getflen());
   CalcDepth(p.genome, p.genome.dflen.getflen());
@@ -76,11 +95,17 @@ int main(int32_t argc, char* argv[])
   p.calcGenomeCoverage();
   p.normalizeByGCcontents();
 
+  t1 = clock();
   makewig(p);
+  t2 = clock();
+  std::cout << "MakeWig: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
+  t1 = clock();
   p.wsGenome.estimateZINB(p.getIdLongestChr());
+  t2 = clock();
+  std::cout << "estimateZINB: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
   
-  p.wsGenome.printPeak(p.getbinprefix());
+  // p.wsGenome.printPeak(p.getbinprefix());
 
   output_wigstats(p);
   output_stats(p);
@@ -152,7 +177,7 @@ void setOpts(MyOpt::Opts &allopts)
 void init_dump(const Mapfile &p, const MyOpt::Variables &values)
 {
   std::cout << boost::format("\n======================================\n");
-  std::cout << boost::format("parse2wig version %1%\n\n") % VERSION;
+  std::cout << boost::format("parse2wig+ version %1%\n\n") % VERSION;
 
   MyOpt::dumpIO(values);
   MyOpt::dumpGenomeTable(values);

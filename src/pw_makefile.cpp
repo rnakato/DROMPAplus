@@ -64,11 +64,11 @@ void makewig(Mapfile &p)
 
 void addReadToWigArray(const WigStatsGenome &p, WigArray &wigarray, const Read x, const int64_t chrlen)
 {
-  int s, e;
+  int32_t s, e;
   s = std::min(x.F3, x.F5);
   e = std::max(x.F3, x.F5);
 
-  int rcenter(p.getrcenter());
+  int32_t rcenter(p.getrcenter());
   if(rcenter) {  // consider only center region of fragments
     s = (s + e - rcenter)/2;
     e = s + rcenter;
@@ -84,7 +84,7 @@ void addReadToWigArray(const WigStatsGenome &p, WigArray &wigarray, const Read x
 
 WigArray makeWigarray(Mapfile &p, const int32_t id)
 {
-  std::cout << p.genome.chr[id].getname() << ".." << std::flush;
+  std::cout << "chr" << p.genome.chr[id].getname() << ".." << std::flush;
   WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0);
 
   for (auto strand: {Strand::FWD, Strand::REV}) {
@@ -102,11 +102,17 @@ WigArray makeWigarray(Mapfile &p, const int32_t id)
       if(mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));
     }
   }
+
   /* Total read normalization */
   if(p.rpm.getType() != "NONE") norm2rpm(p, p.genome.chr[id], wigarray);
-  
+
   p.wsGenome.setWigStats(id, wigarray);
+
+  /*  t1 = clock();
+  clock_t t1,t2;
   p.wsGenome.chr[id].peakcall(wigarray, p.genome.chr[id].getname());
+  t2 = clock();
+  PrintTime(t1, t2, "peakcall");*/
 
   return wigarray;
 }
@@ -162,7 +168,7 @@ void outputWig(Mapfile &p, const std::string &filename)
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     WigArray array = makeWigarray(p, i);
     out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % p.genome.chr[i].getrefname() % binsize;
-    array.outputAsWig(out, binsize);
+    array.outputAsWig(out, binsize, p.wsGenome.isoutputzero());
   }
   
   return;
@@ -184,17 +190,25 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
   std::string tempfile = filename + ".temp";
   std::ofstream out2(tempfile);
   
+  clock_t t1,t2;
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
+    t1 = clock();
     WigArray array = makeWigarray(p, i);
-    array.outputAsBedGraph(out2, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1);
+    t2 = clock();
+    PrintTime(t1, t2, "makeWigarray");
+    t1 = clock();
+    array.outputAsBedGraph(out2, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1, p.wsGenome.isoutputzero());    
+    t2 = clock();
+    PrintTime(t1, t2, "outputAsBedGraph");
   }
   out2.close();
   
+  printf("sort bedGraph...\n");
   std::string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
   if(system(command.c_str())) PRINTERR("sorting bedGraph failed.");
 
   remove(tempfile.c_str());
-  
+
   return;
 }
 
