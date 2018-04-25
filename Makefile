@@ -78,5 +78,5 @@ $(OBJDIR)/WigStats.o: $(SRCDIR)/WigStats.hpp $
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/ReadBpStatus.o: $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
-$(OBJS_PW): Makefile $(SRCDIR)/pw_gv.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile.hpp
+$(OBJS_PW): Makefile $(SRCDIR)/pw_gv.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp
 $(OBJS_DD): Makefile $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_class.hpp $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_peakcall.hpp $(SSPCMNDIR)/BedFormat.hpp $(HEADS_UTIL)

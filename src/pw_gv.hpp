@@ -105,7 +105,7 @@ class Mapfile: private Uncopyable {
     Greekchr(false), 
     id_longestChr(0),
     maxGC(0), genome(),
-    sspst(-1, -1, -1, -10, 600),
+    sspst(-1, -1, -1, 0, 600),
     complexity()
   {
     opt.add_options()
