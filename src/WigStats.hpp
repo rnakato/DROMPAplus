@@ -16,7 +16,7 @@
 uint32_t getWigDistThre(const std::vector<uint64_t> &, const uint64_t);
 
 enum class WigType {
-  BINARY,
+  //  BINARY,
   COMPRESSWIG,
   UNCOMPRESSWIG,
   BEDGRAPH,
@@ -177,12 +177,12 @@ class WigArray {
 				   << std::endl;
     }
   }
-  void outputAsBinary(std::ofstream &out) const {
+  /*  void outputAsBinary(std::ofstream &out) const {
     for(size_t i=0; i<array.size(); ++i) out.write((char *)&array[i], sizeof(int32_t));
   }
   void readBinary(std::ifstream &in, const int32_t nbin) const {
     for(int32_t i=0; i<nbin; ++i) in.read((char *)&array[i], sizeof(int32_t));
-  }
+    }*/
   void dump() const {
     for (auto x: array) std::cout << x << std::endl;
   }
@@ -205,8 +205,8 @@ public:
     MyOpt::Opts opt("Wigarray", 100);
     opt.add_options()
       ("outputformat",
-       boost::program_options::value<int32_t>()->default_value(4)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
-       "Output format\n   0: binary (.bin)\n   1: compressed wig (.wig.gz)\n   2: uncompressed wig (.wig)\n   3: bedGraph (.bedGraph)\n   4: bigWig (.bw)")
+       boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
+       "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
       ("binsize,b",
        boost::program_options::value<int32_t>()->default_value(50)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
        "bin size")
@@ -231,7 +231,7 @@ public:
     for (auto &x: chr) genome.nbin += x.getnbin();
   }
   void dump() const {
-    std::vector<std::string> strType = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+    std::vector<std::string> strType = {"COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
     std::cout << "\tOutput format: " << strType[static_cast<int32_t>(type)] << std::endl;
     std::cout << "Binsize: " << binsize << " bp" << std::endl;
     std::cout << "Peak calling threshold: " << pthre_inter << std::endl;

@@ -84,7 +84,7 @@ public:
        --last;
      } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
      else if(v[last] == "bw")         iftype = WigType::BIGWIG;
-     else if(v[last] == "bin")        iftype = WigType::BINARY;
+     //     else if(v[last] == "bin")        iftype = WigType::BINARY;
      else PRINTERR("invalid postfix: " << filename);
    }
    setbinsize(v[last-1], b);

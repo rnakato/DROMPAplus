@@ -130,7 +130,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
   }
 }
 
-void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
+/*void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
 {
   static int nbinsum(0);
   std::ifstream in(filename, std::ios::in | std::ios::binary);
@@ -143,7 +143,7 @@ void readBinary(WigArray &array, const std::string &filename, const int32_t nbin
 
   nbinsum += nbin;
   return;
-}
+  }*/
 
 void funcWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
@@ -186,11 +186,11 @@ void funcBedGraph(WigArray &array, const std::string &filename, const int32_t bi
   readBedGraph(array, filename, chrname, binsize);
 }
 
-void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin)
+/*void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin)
 {
   DEBUGprint("WigType::BINARY");
   readBinary(array, filename, nbin);
-}
+  }*/
 
 
 WigArray loadWigData(const std::string &filename, const SampleFile &x, const chrsize &chr)
@@ -210,7 +210,7 @@ WigArray loadWigData(const std::string &filename, const SampleFile &x, const chr
   else if (iftype == WigType::COMPRESSWIG)   funcCompressWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BIGWIG)        funcBigWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BEDGRAPH)      funcBedGraph(array, filename, binsize, chrname);
-  else if (iftype == WigType::BINARY)        funcBinary(array, filename, nbin);
+  //  else if (iftype == WigType::BINARY)        funcBinary(array, filename, nbin);
   
   //array.dump();
 

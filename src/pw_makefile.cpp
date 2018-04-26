@@ -19,7 +19,7 @@ WigArray makeWigarray(Mapfile &, int32_t);
 void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(Mapfile &, const std::string &);
 void outputBedGraph(Mapfile &, const std::string &);
-void outputBinary(Mapfile &, const std::string &);
+//void outputBinary(Mapfile &, const std::string &);
 
 void makewig(Mapfile &p)
 {
@@ -53,10 +53,10 @@ void makewig(Mapfile &p)
       PRINTERR("conversion failed.");
     }
     unlink(tmpfile);
-  } else if (oftype==WigType::BINARY) {
+  } /*else if (oftype==WigType::BINARY) {
     filename += ".bin";
     outputBinary(p, filename);
-  }
+    }*/
 
   printf("done.\n");
   return;
@@ -212,7 +212,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
   return;
 }
 
-void outputBinary(Mapfile &p, const std::string &filename)
+/*void outputBinary(Mapfile &p, const std::string &filename)
 {
   std::ofstream out(filename, std::ios::binary);
   
@@ -222,3 +222,4 @@ void outputBinary(Mapfile &p, const std::string &filename)
   }
   return;
 }
+*/
