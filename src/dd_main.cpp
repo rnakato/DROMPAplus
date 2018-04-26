@@ -24,7 +24,7 @@ return;
 
 void printVersion()
 {
-std::cerr << "drompa version " << VERSION << std::endl;
+std::cerr << "drompa+ version " << VERSION << std::endl;
 exit(0);
 }
 
@@ -121,8 +121,6 @@ void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
 
 void exec_PCSHARP(DROMPA::Global &p)
 {
-  printf("Drawing...\n");
-
   std::string StrAllPdf("");
   for(auto &chr: p.gt) {
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
@@ -138,8 +136,6 @@ void exec_PCSHARP(DROMPA::Global &p)
 
 void exec_GV(DROMPA::Global &p)
 {
-  printf("Drawing...\n");
-
   p.isGV = true;
   int32_t lenmax(0);
   for (auto &x: p.gt) {

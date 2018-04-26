@@ -47,12 +47,8 @@ void CalcDepth(T &obj, const int32_t flen)
 
 void DefineFragmentLength(Mapfile &p)
 {
-  clock_t t1,t2;
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
-    t1 = clock();
     strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
-    t2 = clock();
-    PrintTime(t1, t2, "ShiftProfile");
   }
   for (auto &x: p.genome.chr) {
     std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
@@ -81,7 +77,10 @@ int main(int32_t argc, char* argv[])
   t2 = clock();
   PrintTime(t1, t2, "checkRedundantReads");
 
+  t1 = clock();
   DefineFragmentLength(p);
+  t2 = clock();
+  PrintTime(t1, t2, "ShiftProfile");
 
   for (auto &x: p.genome.chr) CalcDepth(x, p.genome.dflen.getflen());
   CalcDepth(p.genome, p.genome.dflen.getflen());

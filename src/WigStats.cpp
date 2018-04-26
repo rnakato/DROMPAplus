@@ -38,11 +38,11 @@ void WigStats::peakcall(const WigArray &wigarray, const std::string chrname)
   if(!ave) return;
     
   int32_t ext(0);
-    
+
   for (size_t i=0; i<wigarray.size(); ++i) {
     double val(wigarray[i]);
     double logp(getlogp(val));
-      
+
     if (!ext) {
       if (logp > pthre) {
 	vPeak.emplace_back(Peak(chrname, i, i, val, logp));

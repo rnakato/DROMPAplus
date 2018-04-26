@@ -13,7 +13,8 @@ int32_t scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
 		    WigType iftype)
 {
   std::vector<std::string> v;
-  boost::split(v, str, boost::algorithm::is_any_of(","));
+  ParseLine(v, str, ',');
+  //  boost::split(v, str, boost::algorithm::is_any_of(","));
   int32_t binsize(0);
 
   if(v.size() >8) {
@@ -47,7 +48,8 @@ int32_t scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
 pdSample scan_pdstr(const std::string &str)
 {
   std::vector<std::string> v;
-  boost::split(v, str, boost::algorithm::is_any_of(","));
+  ParseLine(v, str, ',');
+  //  boost::split(v, str, boost::algorithm::is_any_of(","));
 
   if(v.size() > 2) {
     std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
@@ -67,7 +69,17 @@ pdSample scan_pdstr(const std::string &str)
   return pd;
 }
 
-
+void SplitBedGraphLine(std::vector<std::string> &v, const std::string &str)
+{
+  size_t current(0), found;
+  while((found = str.find_first_of(" \t", current)) != std::string::npos) {
+    v.emplace_back(std::string(str, current, found - current));
+    current = found + 1;
+  }
+  v.emplace_back(std::string(str, current, str.size() - current));
+  return;
+}
+  
 template <class T>
 void readWig(T &in, WigArray &array, const std::string &chrname, const int binsize)
 {
@@ -85,7 +97,8 @@ void readWig(T &in, WigArray &array, const std::string &chrname, const int binsi
     }
     if(!on) continue;
     std::vector<std::string> v;
-    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
+    SplitBedGraphLine(v, lineStr);
+    //    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
     array.setval((stoi(v[0])-1)/binsize, stol(v[1]));
   }
 
@@ -103,7 +116,8 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     getline(in, lineStr);
     if (lineStr.empty()) continue;
     std::vector<std::string> v;
-    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
+    SplitBedGraphLine(v, lineStr);
+    //    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
     if (v[0] != chrname) {
       if (!on) continue;
       else break;
@@ -115,7 +129,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     array.setval(start/binsize, stol(v[3]));
   }
 }
-    
+
 void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
 {
   static int nbinsum(0);
@@ -198,34 +212,19 @@ WigArray loadWigData(const std::string &filename, const SampleFile &x, const chr
   else if (iftype == WigType::BEDGRAPH)      funcBedGraph(array, filename, binsize, chrname);
   else if (iftype == WigType::BINARY)        funcBinary(array, filename, nbin);
   
-  /*  if (iftype == WigType::NONE) {
-    if (isStr(filename, ".bin"))           funcBinary(array, filename, nbin);
-    else if (isStr(filename, ".bedGraph")) funcBedGraph(array, filename, binsize, chrname);
-    else if (isStr(filename, ".bw"))       funcBigWig(array, filename, binsize, chrname);
-    else if (isStr(filename, ".wig.gz"))   funcCompressWig(array, filename, binsize, chrname);
-    else if (isStr(filename, ".wig"))      funcWig(array, filename, binsize, chrname);
-    else PRINTERR("Suffix error of "<< filename <<". please specify --iftype option.");
-  } else if (iftype == WigType::UNCOMPRESSWIG) funcWig(array, filename, binsize, chrname);
-  else if (iftype == WigType::COMPRESSWIG)     funcCompressWig(array, filename, binsize, chrname);
-  else if (iftype == WigType::BIGWIG)          funcBigWig(array, filename, binsize, chrname);
-  else if (iftype == WigType::BEDGRAPH)        funcBedGraph(array, filename, binsize, chrname);
-  else if (iftype == WigType::BINARY)          funcBinary(array, filename, nbin);
-  */
   //array.dump();
 
   // NCIS hakokode
 
-  
-  
   return array;
 }
-
 
 int32_t getNcolReadNum(std::string &lineStr)
 {
   int32_t ncol_readnum(0);
   std::vector<std::string> v;
-  boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+  ParseLine(v, lineStr, '\t');
+  //  boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
   for (size_t i=0; i<v.size(); ++i) {
     if(isStr(v[i], "normalized read number")) {
       ncol_readnum = i;
@@ -254,13 +253,15 @@ void SampleFile::scanStatsFile(const std::string &filename)
       if(isStr(lineStr, "normalized read number")) ncol_readnum = getNcolReadNum(lineStr);
       else if(isStr(lineStr, "Genome")) {
 	std::vector<std::string> v;
-	boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+	ParseLine(v, lineStr, '\t');
+	//	boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
 	totalreadnum = stoi(v[ncol_readnum]);
 	on=1;
       }
     } else {
       std::vector<std::string> v;
-      boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+      ParseLine(v, lineStr, '\t');
+      //      boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
       totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
     }
   }

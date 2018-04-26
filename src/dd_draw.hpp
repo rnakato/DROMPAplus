@@ -27,9 +27,19 @@ public:
     totalreadnum(x.second.gettotalreadnum()),
     totalreadnum_chr(x.second.gettotalreadnum_chr())
   {
+    clock_t t1,t2;
+    t1 = clock();
     if(p.getSmoothing()) array.Smoothing(p.getSmoothing());
+    t2 = clock();
+    PrintTime(t1, t2, "Smoothing");
+    t1 = clock();
     stats.setWigStats(array);
+    t2 = clock();
+    PrintTime(t1, t2, "WigStats");
+    t1 = clock();
     stats.peakcall(array, chr.getname());
+    t2 = clock();
+    PrintTime(t1, t2, "peakcall");
   }
 };
   
@@ -84,9 +94,14 @@ class Figure {
   std::vector<bed> regionBed;
   
   void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
+    clock_t t1,t2;
     for (auto x: p.sample) {
+      t1 = clock();
       arrays[x.first] = ChrArray(p, x, chr);
+      t2 = clock();
+      PrintTime(t1, t2, "ChrArray new");
     }
+  
     for (auto &x: p.samplepair) {
 #ifdef DEBUG
       std::cout << "Samplepairchr " << x.first.argvChIP << ", " << x.first.argvInput << std::endl;
@@ -113,9 +128,16 @@ public:
   
   void DrawData(DROMPA::Global &p, const chrsize &chr);
   int32_t Draw(DROMPA::Global &p, const chrsize &chr) {
+    clock_t t1,t2;
     if (p.drawregion.isRegionBed() && !regionBed.size()) return 0;
+    t1 = clock();
     loadSampleData(p, chr);
+    t2 = clock();
+    PrintTime(t1, t2, "loadSampleData");
+    t1 = clock();
     DrawData(p, chr);
+    t2 = clock();
+    PrintTime(t1, t2, "DrawData");
     return 1;
   }
   
