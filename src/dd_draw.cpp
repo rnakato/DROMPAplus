@@ -35,7 +35,7 @@ void DataFrame::stroke_bin(const SamplePairParam &pair,
   if(len <=-1 && len >= height_df) rel_yline(cr, xcen, yaxis + len, 1);
   cr->stroke();
 
-  setColor(value, nlayer, 0.5);
+  setColor(value, nlayer, 0.8);
   rel_yline(cr, xcen, yaxis, len);
   cr->stroke();
 

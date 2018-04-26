@@ -131,10 +131,12 @@ public:
     clock_t t1,t2;
     if (p.drawregion.isRegionBed() && !regionBed.size()) return 0;
     t1 = clock();
+    std::cout << "Loading data..";
     loadSampleData(p, chr);
     t2 = clock();
     PrintTime(t1, t2, "loadSampleData");
     t1 = clock();
+    std::cout << "Drawing.." << std::endl;
     DrawData(p, chr);
     t2 = clock();
     PrintTime(t1, t2, "DrawData");
