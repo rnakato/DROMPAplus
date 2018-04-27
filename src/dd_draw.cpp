@@ -522,15 +522,9 @@ void Page::drawInteraction(const InteractionSet &vinter)
     if (xcen_head < 0 && xcen_tail < 0) continue;
 
     //    printf("%d, %d, %d, %d, %d, %d\n", x.first.start, x.first.summit, x.first.end, x.second.start, x.second.summit, x.second.end);
-       if (xcen_head >= 0 && xcen_tail >= 0) drawArc_from_to(xcen_head, xcen_tail, boxheight, ytop);
-
-   if (xcen_head > 0 && xcen_tail < 0) {
-      drawArc_from_none(xcen_head, par.xend - par.xstart, boxheight, ytop);
-    }
-   if (xcen_head < 0 && xcen_tail > 0) {
-      drawArc_none_to(xcen_head, xcen_tail, boxheight, ytop);
-   }
-    
+    if (xcen_head >= 0 && xcen_tail >= 0) drawArc_from_to(x, xcen_head, xcen_tail, boxheight, ytop);
+    if (xcen_head > 0 && xcen_tail < 0)   drawArc_from_none(x, xcen_head, par.xend - par.xstart, boxheight, ytop);
+    if (xcen_head < 0 && xcen_tail > 0)   drawArc_none_to(x, xcen_head, xcen_tail, boxheight, ytop);
   }
   cr->stroke();
   

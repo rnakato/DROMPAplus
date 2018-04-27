@@ -313,8 +313,18 @@ class Page {
     }
     return;
   }
+
+  void stroke_binofinteraction(const bed site, const double y) {
+    cr->set_line_width(2);
+    cr->set_source_rgba(CLR_DARKORANGE, 0.8);
+    double s = bp2xaxis(site.start - par.xstart);
+    double e = bp2xaxis(site.end - par.xstart);
+    rel_xline(cr, s, y, e-s);
+    cr->stroke();
+  }
+  
   // cr->arc(中心x, 中心y, 半径, start角度, end角度) 角度はラジアン
-  void drawArc_from_to(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+  void drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
     int32_t height = ref_height - 20;
     double radius((end - start)/2.0 * dot_per_bp); // 半径
@@ -326,8 +336,13 @@ class Page {
     cr->arc(bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
     cr->stroke();
     cr->scale(1, 1/r);
+    
+    // bin of interaction
+    stroke_binofinteraction(inter.first, ytop);
+    stroke_binofinteraction(inter.second, ytop);
   }
-  void drawArc_from_none(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+  
+  void drawArc_from_none(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
     int32_t height = ref_height;
     double radius(height*3);
@@ -337,15 +352,18 @@ class Page {
     double bp_e(bp2xaxis(end));
     double bp_x(bp_s + radius);
     double bp_y(ytop/r);
-    
+
     cr->set_line_width(4);
     cr->scale(1, r);
     cr->arc(bp_x, bp_y, radius, 0.5*M_PI, M_PI);
     if (bp_e - bp_x > 0) rel_xline(cr, bp_x, bp_y + radius, bp_e - bp_x);
     cr->stroke();
     cr->scale(1, 1/r);
+
+    // bin of interaction
+    stroke_binofinteraction(inter.first, ytop);
   }
-  void drawArc_none_to(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+  void drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
     int32_t height = ref_height;
     double radius(height*3);
@@ -362,6 +380,9 @@ class Page {
     if (bp_x - bp_s > 0) rel_xline(cr, bp_x, bp_y + radius, -(bp_x - bp_s));
     cr->stroke();
     cr->scale(1, 1/r);
+    
+    // bin of interaction
+    stroke_binofinteraction(inter.second, ytop);
   }
 
   std::tuple<int32_t, int32_t> get_start_end_linenum(const int32_t page, const int32_t linenum_per_page) const {
