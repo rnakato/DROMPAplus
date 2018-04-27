@@ -79,12 +79,15 @@ public:
   double ystep;
   int32_t barnum;
 
+  double alpha;
+  
   DParam(const int32_t s, const int32_t e, const DROMPA::Global &p):
     start(s), end(e),
     num_line(p.drawparam.getNumLine(start, end)),
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
-    yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2)
+    yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2),
+    alpha(p.drawparam.alpha)
   {
     dot_per_bp = getratio(width_draw, width_per_line);
   }
@@ -310,6 +313,42 @@ class Page {
     }
     return;
   }
+  // cr->arc(中心x, 中心y, 半径, start角度, end角度) 角度はラジアン
+  void drawArc_from_to(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+    double ytop = ref_ytop + 10;
+    int32_t height = ref_height - 20;
+    double radius((end - start)/2.0 * dot_per_bp); // 半径
+    double r = std::min(0.5, height/radius);
+    //    printf("r %f %f %d %d %d\n", r, radius, height, start, end);
+    cr->scale(1, r);
+    cr->arc(bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
+    cr->stroke();
+    cr->scale(1, 1/r);
+  }
+  void drawArc_from_none(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+    double ytop = ref_ytop + 10;
+    int32_t height = ref_height - 20;
+    //    double radius((end - start) * dot_per_bp);
+    double radius(height*2);
+    double r(0.5);
+    
+    cr->scale(1, r);
+    cr->arc(bp2xaxis(start) + radius, ytop/r, radius, 0.5*M_PI, M_PI);
+    cr->stroke();
+    cr->scale(1, 1/r);
+  }
+  void drawArc_none_to(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+    double ytop = ref_ytop + 10;
+    int32_t height = ref_height - 20;
+    //    double radius(end * dot_per_bp);
+    double radius(height*2);
+    double r(0.5);
+
+    cr->scale(1, r);
+    cr->arc(bp2xaxis(end) - radius, ytop/r, radius, 0, 0.5*M_PI);
+    cr->stroke();
+    cr->scale(1, 1/r);
+  }
 
   std::tuple<int32_t, int32_t> get_start_end_linenum(const int32_t page, const int32_t linenum_per_page) const {
     int32_t start(0), end(0);
@@ -338,6 +377,9 @@ protected:
 
   bool sigtest;
   double threshold;
+
+  double alpha;
+  double len_binedge;
   
   double getEthre(const DROMPA::Global &p) {
     double thre(0);
@@ -350,7 +392,7 @@ protected:
   DataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const std::string &l, const std::string &l2, const double s,
 	    const DParam &refparam, const double wdf, const double hdf, const bool sig, const double thre):
     cr(cr_), par(refparam), scale(s), label(l), label2nd(l2), width_df(wdf), height_df(hdf),
-    sigtest(sig), threshold(thre)
+    sigtest(sig), threshold(thre), alpha(refparam.alpha), len_binedge(2)
   {}
 
   void stroke_frame()
@@ -392,7 +434,8 @@ protected:
 class ChIPDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
     (void)(value);
-    if (!nlayer) cr->set_source_rgba(CLR_BLUEGRAY, alpha);
+    //    if (!nlayer) cr->set_source_rgba(CLR_BLUEGRAY, alpha);
+    if (!nlayer) cr->set_source_rgba(CLR_GREEN3, alpha);
     else cr->set_source_rgba(CLR_PINK2, alpha);
   }
   double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
@@ -460,7 +503,8 @@ class RatioDataFrame : public DataFrame {
   {
     if (!nlayer) { // first layer
       if(isGV || sigtest) {
-	if (value > threshold) cr->set_source_rgba(CLR_LAKEBLUE, alpha);
+	//	if (value > threshold) cr->set_source_rgba(CLR_LAKEBLUE, alpha);
+	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
 	else cr->set_source_rgba(CLR_GRAY, alpha);
       } else {
 	cr->set_source_rgba(CLR_ORANGE, alpha);

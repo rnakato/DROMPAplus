@@ -32,12 +32,14 @@ void DataFrame::stroke_bin(const SamplePairParam &pair,
   int32_t len(getbinlen(value / scale));
 
   setColor(value, nlayer, 1);
-  if(len <=-1 && len >= height_df) rel_yline(cr, xcen, yaxis + len, 1);
+  if(len <0) rel_yline(cr, xcen, yaxis + len, len_binedge);
   cr->stroke();
 
-  setColor(value, nlayer, 0.8);
-  rel_yline(cr, xcen, yaxis, len);
-  cr->stroke();
+  if(alpha) {
+    setColor(value, nlayer, alpha);
+    rel_yline(cr, xcen, yaxis, len);
+    cr->stroke();
+  }
 
   return;
 }
@@ -53,13 +55,15 @@ void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair, const ChrArrayMa
   if(value>0) len = -std::min(par.ystep*value, height_df/2);
   else        len = -std::max(par.ystep*value, -height_df/2);
 
-  /*  setColor(value, nlayer, 1);
-  if(len <=-1 && value <= par.barnum) rel_yline(cr, xcen, yaxis + len, 1);
-  cr->stroke();*/
-
-  setColor(value, nlayer, 0.3);
-  rel_yline(cr, xcen, yaxis-height_df/2, len);
+  setColor(value, nlayer, 1);
+  rel_yline(cr, xcen, yaxis + len, len_binedge);
   cr->stroke();
+
+  if(alpha) {
+    setColor(value, nlayer, alpha);
+    rel_yline(cr, xcen, yaxis-height_df/2, len);
+    cr->stroke();
+  }
 
   return;
 }
@@ -67,7 +71,7 @@ void LogRatioDataFrame::stroke_bin(const SamplePairParam &pair, const ChrArrayMa
 void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
 {
   //  DEBUGprint("stroke_peakregion");
-  cr->set_source_rgba(CLR_RED, 0.3);
+  cr->set_source_rgba(CLR_RED, 0.4);
 
   for (auto &bed: pair.peaks1st) {
     if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
@@ -485,6 +489,7 @@ void Page::drawInteraction(const InteractionSet &vinter)
   DEBUGprint("drawInteraction");
   int32_t boxheight(BOXHEIGHT_INTERACTION);
   std::string chr(rmchr(chrname));
+  double ytop(par.yaxis_now);
   double ycenter(par.yaxis_now + boxheight/2);
   double ybottom(par.yaxis_now + boxheight);
 
@@ -493,12 +498,21 @@ void Page::drawInteraction(const InteractionSet &vinter)
 
   // label
   cr->set_source_rgba(CLR_BLACK, 1);
-  cr->set_line_width(2);
   showtext_cr(cr, 70, ycenter-6, vinter.getlabel(), 12);
   
+  cr->set_line_width(4);
   for (auto &x: vinter.getvinter()) {
     //    printList(x.first.chr, x.second.chr, chr);
     if (x.first.chr != chr && x.second.chr != chr) continue;
+
+    if (x.first.chr == chr && x.second.chr == chr) {     // intra-chromosomal
+      RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
+      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+    }
+    else {   // inter-chromosomal
+      RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
+      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+    }
 
     int32_t xcen_head(-1);
     int32_t xcen_tail(-1);
@@ -506,41 +520,15 @@ void Page::drawInteraction(const InteractionSet &vinter)
     if (par.xstart <= x.second.summit && x.second.summit <= par.xend) xcen_tail = x.second.summit - par.xstart;
 
     if (xcen_head < 0 && xcen_tail < 0) continue;
-    
-    if (x.first.chr == chr && x.second.chr == chr) {     // intra-chromosomal
-	RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
-	cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+
+    //    printf("%d, %d, %d, %d, %d, %d\n", x.first.start, x.first.summit, x.first.end, x.second.start, x.second.summit, x.second.end);
+    if (xcen_head >= 0 && xcen_tail >= 0) drawArc_from_to(xcen_head, xcen_tail, boxheight, ytop);
+    // interchromosomalは描画しない
+    if ((x.first.chr == chr && xcen_head > 0) && xcen_tail < 0) { //|| x.second.chr != chr
+      drawArc_from_none(xcen_head, par.xend - par.xstart, boxheight, ytop);
     }
-    else {   // inter-chromosomal
-      RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
-      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
-    }
-    if (xcen_head >= 0 && xcen_tail >= 0) {
-      double radius((xcen_tail - xcen_head)/2 * dot_per_bp);
-      double r(1);
-      if (r < radius/boxheight) r = radius/boxheight;
-      cr->scale(1, 1/r);
-      cr->arc(bp2xaxis((xcen_head + xcen_tail) /2), ybottom*r, radius, M_PI, 2*M_PI);
-      cr->stroke();
-      cr->scale(1, r);
-    }
-    if ((x.first.chr == chr && xcen_head > 0) && (x.second.chr != chr || xcen_tail < 0)) {
-      double radius((par.xend - xcen_head - par.xstart) * dot_per_bp);
-      double r(1);
-      if (r < radius/boxheight) r = radius/boxheight;
-      cr->scale(1, 1/r);
-      cr->arc(bp2xaxis(par.xend - par.xstart), ybottom*r, radius, M_PI, 1.5*M_PI);
-      cr->stroke();
-      cr->scale(1, r);
-    }
-    if ((x.first.chr != chr || xcen_head < 0) && (x.second.chr == chr && xcen_tail > 0)) {
-      double radius(xcen_tail * dot_per_bp);
-      double r(1);
-      if (r < radius/boxheight) r = radius/boxheight;
-      cr->scale(1, 1/r);
-      cr->arc(OFFSET_X, ybottom*r, radius, 1.5*M_PI, 2*M_PI);
-      cr->stroke();
-      cr->scale(1, r);
+    if (xcen_head < 0 && (x.second.chr == chr && xcen_tail > 0)) { // || x.first.chr != chr
+      drawArc_none_to(xcen_head, xcen_tail, boxheight, ytop);
     }
     
   }
@@ -575,11 +563,12 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
     }
 
     if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") drawAnnotation(p);
+    for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j]);
+    stroke_xaxis_num(par.yaxis_now, 9);
+
     if (p.anno.vinterlist.size()) {
       for (auto &x: p.anno.vinterlist) drawInteraction(x);
     }
-    for (size_t j=0; j<pairs.size(); ++j) stroke_each_layer(p, pairs[j]);
-    stroke_xaxis_num(par.yaxis_now, 9);
 
     //    if(d->bednum) draw_bedfile(d, cr, xstart, xend, chr);
     //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);

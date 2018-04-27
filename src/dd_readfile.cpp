@@ -125,8 +125,9 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     if (!on) on=1;
     
     int32_t start(stoi(v[1]));
+    int32_t end(stoi(v[2])-1);
     if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
-    array.setval(start/binsize, stol(v[3]));
+    for(int32_t i=start; i<=end; ++i) array.setval(i/binsize, stol(v[3]));
   }
 }
 
@@ -167,7 +168,7 @@ void funcBigWig(WigArray &array, const std::string &filename, const int32_t bins
 {
   DEBUGprint("WigType::BIGWIG");
   int32_t fd(0);
-  char tmpfile[] = "/tmp/DROMPAplus_bigWigToBedGraph_XXXXXX";
+  char tmpfile[] = "/tmp/DROMPAplus_bigWigToBedGraph_XXXXXXXX";
   if ((fd = mkstemp(tmpfile)) < 0){
     perror("mkstemp");
     //      fd = EXIT_FAILURE;

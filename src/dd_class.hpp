@@ -261,7 +261,7 @@ namespace DROMPA {
     
     Threshold(): sigtest(false) {}
 
-    void setOpts(MyOpt::Opts &allopts, const bool sig);
+    void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
     void InitDump() const;
   };
@@ -311,10 +311,10 @@ namespace DROMPA {
     int32_t showratio;
     int32_t showpinter;
     int32_t showpenrich;
-    int32_t viz;
     double scale_tag;
     double scale_ratio;
     double scale_pvalue;
+    double alpha;
 
     DrawParam(): showymem(true), showylab(true) {}
 

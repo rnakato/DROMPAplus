@@ -147,8 +147,8 @@ void Annotation::InitDumpGV(const Variables &values) const {
 	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
 }
 
-void Threshold::setOpts(MyOpt::Opts &allopts, const bool sig) {
-  sigtest = sig;
+void Threshold::setOpts(MyOpt::Opts &allopts) {
+  sigtest = false;
 
   MyOpt::Opts opt("Threshold",100);
   opt.add_options()
@@ -157,7 +157,7 @@ void Threshold::setOpts(MyOpt::Opts &allopts, const bool sig) {
     ("qthre",          value<double>()->default_value(1),    "FDR")
     ("ethre",          value<double>()->default_value(2),    "IP/Input fold enrichment")
     ("ipm",            value<double>()->default_value(0),    "Read intensity of peak summit")
-    ("nosig", "Omit highlighting peak regions")
+    ("callpeak",       "Call peaks by DROMPA")
     //    (SETOPT_OVER("width4lmd", int32_t, 100000, 0), "Width for calculating local lambda")
     ;
   allopts.add(opt);
@@ -171,7 +171,7 @@ void Threshold::setValues(const Variables &values) {
     qthre        = getVal<double>(values, "qthre");
     ethre        = getVal<double>(values, "ethre");
     ipm          = getVal<double>(values, "ipm");
-    if(values.count("nosig")) sigtest = false;
+    if(values.count("callpeak")) sigtest = true;
     //    width4lmd    = getVal<int32_t>(values, "width4lmd");
   } catch (const boost::bad_any_cast& e) {
     std::cout << e.what() << std::endl;
@@ -184,7 +184,7 @@ void Threshold::InitDump() const {
   std::vector<std::string> str_bool = {"OFF", "ON"};
   DEBUGprint("INITDUMP:DrompaCommand::THRE");
       
-  std::cout << boost::format("   significance test: %1%\n") % str_bool[sigtest];
+  std::cout << boost::format("\nPeak calling by DROMPA+: %1%\n") % str_bool[sigtest];
   if (sigtest) {
     std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
     std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
@@ -256,9 +256,9 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
     (SETOPT_OVER("lpp", int32_t, 1, 1), "Line number per page")
     (SETOPT_OVER("bn",  int32_t, 2, 1), "Number of memories of y-axis")
     (SETOPT_OVER("ystep", double, 15, 1), "Height of read line")
+    (SETOPT_RANGE("alpha", double, 1,  0, 1), "Transparency of read distribution")
     ("offymem", "Omit Y memory")
     ("offylabel", "Omit Y label")
-    (SETOPT_RANGE("viz", int32_t, 0, 0, 2), "Color of read profile\n     0: normal color\n     1: semitransparent color\n")
     ;
   allopts.add(opt);
 }
@@ -277,7 +277,7 @@ void DrawParam::setValues(const Variables &values, const int32_t n) {
     ystep  = getVal<double>(values, "ystep");
     showymem = !values.count("offymem");
     showylab = !values.count("offylabel");
-    viz      = getVal<int32_t>(values, "viz");
+    alpha = getVal<double>(values, "alpha");
 
     scale_tag    = getVal<double>(values, "scale_tag");
     scale_ratio  = getVal<double>(values, "scale_ratio");
@@ -330,7 +330,7 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 	break;
       }
     case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm); break;
-    case DrompaCommand::THRE:    thre.setOpts(opts, cps.sigtest); break;
+    case DrompaCommand::THRE:    thre.setOpts(opts); break;
     case DrompaCommand::ANNO_PC: anno.setOptsPC(opts); break;
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;

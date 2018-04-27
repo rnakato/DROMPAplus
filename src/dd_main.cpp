@@ -12,11 +12,11 @@ auto helpmsg = R"(
 
     For the detailed information on the options for each command, use the -h flag along with the command.
 
-    Usage: drompa_draw <Command> [options]
+    Usage: drompa+ <Command> [options]
 
     Command:)";
 
-std::cerr << "\n    DROMPA v" << VERSION << helpmsg << std::endl;
+std::cerr << "\n    DROMPA+ v" << VERSION << helpmsg << std::endl;
 for(size_t i=0; i<cmds.size(); ++i) cmds[i].printCommandName();
 std::cerr << std::endl;
 return;
