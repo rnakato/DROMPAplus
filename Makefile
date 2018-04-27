@@ -35,7 +35,7 @@ endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o 
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_class.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/color.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o $(SSPCMNOBJDIR)/ReadAnnotation.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_class.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o $(SSPCMNOBJDIR)/ReadAnnotation.o
 OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/ReadAnnotation.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 
 .PHONY: all clean
@@ -51,6 +51,9 @@ $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO) $(CFLAGS)
 
 $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
+	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
+
+$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_drawgenes.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
@@ -74,6 +77,7 @@ $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_command.hpp
 $(OBJDIR)/dd_command.o: $(SRCDIR)/dd_command.hpp
 $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw_p.hpp
+$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_draw_p.hpp
 $(OBJDIR)/WigStats.o: $(SRCDIR)/WigStats.hpp $
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/ReadBpStatus.o: $(SSPSRCDIR)/ReadBpStatus.hpp

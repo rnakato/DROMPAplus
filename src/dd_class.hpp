@@ -73,7 +73,8 @@ public:
     binsize(0), totalreadnum(0), prefix("")
   {
    std::vector<std::string> v;
-   boost::split(v, filename, boost::algorithm::is_any_of("."));
+   ParseLine(v, filename, '.');
+   //   boost::split(v, filename, boost::algorithm::is_any_of("."));
    int last(v.size()-1);
 
    if (type != WigType::NONE) iftype = type;
@@ -129,7 +130,8 @@ public:
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {
     std::vector<std::string> v;
-    boost::split(v, str, boost::algorithm::is_any_of(","));
+    ParseLine(v, str, ',');
+    //    boost::split(v, str, boost::algorithm::is_any_of(","));
 
     if(v[0] != "") argvChIP  = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];

@@ -32,10 +32,7 @@ namespace {
   enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15, BOXHEIGHT_INTERACTION=45};
   int32_t pagewidth(1088);
   int32_t width_draw(750);
-  double dot_per_bp(0);
 }
-
-inline double bp2xaxis(const int32_t bp) { return bp * dot_per_bp + OFFSET_X; }
 
 inline int32_t setline(const int32_t start, const int32_t interval)
 {
@@ -78,6 +75,8 @@ public:
 
   double ystep;
   int32_t barnum;
+  
+  double dot_per_bp;
 
   double alpha;
   
@@ -87,10 +86,8 @@ public:
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
     yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2),
-    alpha(p.drawparam.alpha)
-  {
-    dot_per_bp = getratio(width_draw, width_per_line);
-  }
+    dot_per_bp(getratio(width_draw, width_per_line)), alpha(p.drawparam.alpha)
+  {}
 
   void set_xstart_xend(const int32_t i) {
     xstart = start + i * width_per_line;
@@ -99,6 +96,8 @@ public:
   }
   
   double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
+  
+  double bp2xaxis(const int32_t bp) const { return bp * dot_per_bp + OFFSET_X; }
 };
 
 
@@ -177,12 +176,13 @@ public:
 };
 
 class Page {
+  enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
+
   const ChrArrayMap &arrays;
   const std::vector<SamplePairChr> &pairs;
   GraphData GC;
   GraphData GD;
 
-  DParam par;
   Cairo::RefPtr<Cairo::Context> cr;
 
   std::string chrname;
@@ -195,7 +195,18 @@ class Page {
     return interval;
   }
   
+  void StrokeEachLayer(const DROMPA::Global &p);
+  void StrokeReadLines(const DROMPA::Global &p, const SamplePairChr &pair);
+  void StrokeGraph(const GraphData &graph);
+  void DrawGeneAnnotation(const DROMPA::Global &p);
+  void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
+  void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
+  void strokeGene(const DROMPA::Global &p, const double ycenter);
+
+  void drawInteraction(const InteractionSet &vinter);
+
   public:
+  DParam par;
   
   Page(const DROMPA::Global &p,
        const ChrArrayMap &refarrays,
@@ -203,25 +214,24 @@ class Page {
        const Cairo::RefPtr<Cairo::PdfSurface> surface,
        const chrsize &chr, const int32_t s, const int32_t e):
     arrays(refarrays), pairs(refpairs),
-    par(s, e, p), cr(Cairo::Context::create(surface)),
-    chrname(chr.getrefname())
+    cr(Cairo::Context::create(surface)),
+    chrname(chr.getrefname()),
+    par(s, e, p)
   {
     cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
     if(p.anno.GC.isOn()) GC.setValue(p.anno.GC, chrname, chr.getlen(), "GC%",         20, 70, MEMNUM_GC, BOXHEIGHT_GRAPH);
     if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, chr.getlen(), "Num of genes", 0, 40, MEMNUM_GC, BOXHEIGHT_GRAPH);
   }
 
-  void stroke_each_layer(const DROMPA::Global &p, const SamplePairChr &pair);
-
   template <class T>
   void stroke_readdist(const DROMPA::Global &p, const SamplePairChr &pair)
   {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
     T df(cr, p, pair, par, getWidthDf(), getHeightDf());
-    df.stroke_bindata(pair.pair.first, arrays, 0);
+    df.StrokeBinsInLine(pair.pair.first, arrays, 0);
     if (pair.pair.overlay) {
       int32_t nlayer(1);
-      df.stroke_bindata(pair.pair.second, arrays, nlayer);
+      df.StrokeBinsInLine(pair.pair.second, arrays, nlayer);
       df.stroke_ymem(nlayer);
     }
     df.stroke_peakregion(pair);
@@ -231,14 +241,8 @@ class Page {
 
     return;
   }
-  void drawAnnotation(const DROMPA::Global &p);
-  void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
-  void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
-  void strokeGene(const DROMPA::Global &p, const double ycenter);
-  void drawGraph(const GraphData &graph);
-  void drawInteraction(const InteractionSet &vinter);
 
-  void Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t region_no);
+  void MakePage(const DROMPA::Global &p, const int32_t page_no, const int32_t region_no);
 
   void set_xstart_xend(const int32_t i) {
     par.set_xstart_xend(i);
@@ -251,7 +255,7 @@ class Page {
     
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-      x = bp2xaxis(i - par.xstart);
+      x = par.bp2xaxis(i - par.xstart);
       if (!(i%interval_large)) {
 	cr->set_line_width(1);
 	rel_yline(cr, x, y-4, 8);
@@ -272,7 +276,7 @@ class Page {
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
       std::string str;
-      x = bp2xaxis(i - par.xstart);
+      x = par.bp2xaxis(i - par.xstart);
       if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M"; 
       else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k"; 
       else {
@@ -300,7 +304,7 @@ class Page {
 
     cr->set_source_rgba(CLR_BLACK, 1);
     for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-      x = bp2xaxis(i-par.xstart);
+      x = par.bp2xaxis(i-par.xstart);
     
       if (!(i%interval_large)) {
 	cr->set_line_width(1);
@@ -314,11 +318,11 @@ class Page {
     return;
   }
 
-  void stroke_binofinteraction(const bed site, const double y) {
+  void StrokeWidthOfInteractionSite(const bed site, const double y) {
     cr->set_line_width(2);
     cr->set_source_rgba(CLR_DARKORANGE, 0.8);
-    double s = bp2xaxis(site.start - par.xstart);
-    double e = bp2xaxis(site.end - par.xstart);
+    double s = par.bp2xaxis(site.start - par.xstart);
+    double e = par.bp2xaxis(site.end - par.xstart);
     rel_xline(cr, s, y, e-s);
     cr->stroke();
   }
@@ -327,19 +331,19 @@ class Page {
   void drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
     int32_t height = ref_height - 20;
-    double radius((end - start)/2.0 * dot_per_bp); // 半径
+    double radius((end - start)/2.0 * par.dot_per_bp); // 半径
     double r = std::min(0.4, height/radius);
     //    printf("r %f %f %d %d %d\n", r, radius, height, start, end);
     
     cr->set_line_width(3);
     cr->scale(1, r);
-    cr->arc(bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
+    cr->arc(par.bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
     cr->stroke();
     cr->scale(1, 1/r);
     
     // bin of interaction
-    stroke_binofinteraction(inter.first, ytop);
-    stroke_binofinteraction(inter.second, ytop);
+    StrokeWidthOfInteractionSite(inter.first, ytop);
+    StrokeWidthOfInteractionSite(inter.second, ytop);
   }
   
   void drawArc_from_none(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
@@ -348,8 +352,8 @@ class Page {
     double radius(height*3);
     double r(1/3.0);
 
-    double bp_s(bp2xaxis(start));
-    double bp_e(bp2xaxis(end));
+    double bp_s(par.bp2xaxis(start));
+    double bp_e(par.bp2xaxis(end));
     double bp_x(bp_s + radius);
     double bp_y(ytop/r);
 
@@ -361,7 +365,7 @@ class Page {
     cr->scale(1, 1/r);
 
     // bin of interaction
-    stroke_binofinteraction(inter.first, ytop);
+    StrokeWidthOfInteractionSite(inter.first, ytop);
   }
   void drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
@@ -369,8 +373,8 @@ class Page {
     double radius(height*3);
     double r(1/3.0);
 
-    double bp_s(bp2xaxis(start));
-    double bp_e(bp2xaxis(end));
+    double bp_s(par.bp2xaxis(start));
+    double bp_e(par.bp2xaxis(end));
     double bp_x(bp_e - radius);
     double bp_y(ytop/r);
 
@@ -382,7 +386,7 @@ class Page {
     cr->scale(1, 1/r);
     
     // bin of interaction
-    stroke_binofinteraction(inter.second, ytop);
+    StrokeWidthOfInteractionSite(inter.second, ytop);
   }
 
   std::tuple<int32_t, int32_t> get_start_end_linenum(const int32_t page, const int32_t linenum_per_page) const {
@@ -393,7 +397,7 @@ class Page {
     return std::forward_as_tuple(start, end);
   }
 
-  double getWidthDf() const { return (par.xend - par.xstart +1) * dot_per_bp; }
+  double getWidthDf() const { return width_draw; } //return (par.xend - par.xstart +1) * par.dot_per_bp; }
   double getHeightDf() const { return par.ystep * par.barnum; }
 };
 
@@ -453,11 +457,11 @@ protected:
   }
   void stroke_dataframe(const DROMPA::Global &p, const SamplePairChr &pair);
   void stroke_peakregion(const SamplePairChr &pair){ (void)(pair); return; }
-  void stroke_bindata(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer);
+  void StrokeBinsInLine(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer);
 
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
   
-  void stroke_bin(const SamplePairParam &pair,
+  void StrokeEachBin(const SamplePairParam &pair,
 		  const ChrArrayMap &arrays,
 		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
   virtual void stroke_ylab(const SamplePairChr &pair)=0;
@@ -676,8 +680,8 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     }
     return;
   }
-  void stroke_bin(const SamplePairParam &pair, const ChrArrayMap &arrays,
-		  const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
+  void StrokeEachBin(const SamplePairParam &pair, const ChrArrayMap &arrays,
+		     const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
 };
 
 class PinterDataFrame : public DataFrame {
@@ -781,59 +785,6 @@ class PenrichDataFrame : public DataFrame {
 	      p.thre.sigtest, -log10(p.thre.pthre_enrich))
   {}
 
-};
-
-class GeneElement{
-  int32_t dif;
-  int32_t cnt;
-  
- public:
-  double x1, x2, xcen, xwid;
-  double x_name;
-  int32_t y_name, ylen;
-  int32_t ybar;
-
-  GeneElement(const genedata &m, const int32_t xstart,
-	      const double ycenter, const int32_t ty,
-	      int32_t &on_plus, int32_t &on_minus):
-    dif(6), cnt(1),
-    x1(bp2xaxis(m.txStart - xstart +1)),
-    x2(bp2xaxis(m.txEnd   - xstart +1)),
-    xcen((x1+x2)/2), xwid(x2 - x1),
-    ylen(0), ybar(0)
-  {
-
-    if(!ty) { // SGD
-      x_name = xcen - 3.25 * m.gname.length() + 6;
-      if (m.strand == "+") {
-	ybar   = ycenter - dif;
-	y_name = ybar -5 - on_minus*6;
-	if(on_minus == cnt) on_minus=0; else ++on_minus;
-      }
-      else if (m.strand == "-") {
-	ybar   = ycenter + dif;
-	y_name = ybar +9 + on_plus*6;
-	if (on_plus == cnt) on_plus=0; else ++on_plus;
-      }
-      else y_name = ycenter -22;
-      ylen = y_name - ycenter;
-    } else {  // Others
-      if (m.strand == "+") {
-	ybar = ycenter - 8 - on_minus * 8;
-	//	y_name = ybar -6;
-	if(on_minus==7) on_minus=0; else ++on_minus;
-      } else{
-	ybar = ycenter + 8 + on_plus * 8;
-	//	y_name = ybar +11;
-	if(on_plus==7) on_plus=0; else ++on_plus;
-      }
-      x_name = x2 + 2;
-      if (x_name < 150) x_name = 150;
-      else if (x_name > OFFSET_X + width_draw + 60) x_name = OFFSET_X + width_draw + 60;
-      y_name = ybar +3;
-    }
-    
-  }
 };
 
 #endif /* _DD_READFILE_P_H_ */

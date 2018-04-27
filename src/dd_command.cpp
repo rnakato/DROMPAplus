@@ -15,18 +15,18 @@ std::vector<Command> generateCommands()
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			    CommandParamSet(5, 1, 0, 30, 4, 5, true)));
+			    CommandParamSet(5, 1, 0, 30, 3, 5, true)));
   cmds.emplace_back(Command("PC_BROAD", "Visualization: for broad mark parameter set",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			    CommandParamSet(10, 1, 0, 30, 4, 5, true)));
+			    CommandParamSet(10, 1, 0, 30, 3, 5, true)));
   // PC_ENRICH 
   cmds.emplace_back(Command("PC_ENRICH","Visualization: ChIP/Input enrichment",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			    CommandParamSet(5, 0, 1, 30, 4, 5, false)));
+			    CommandParamSet(5, 0, 1, 30, 3, 5, false)));
   // GV
   cmds.emplace_back(Command("GV", "Visualization: global-view enrichment",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
