@@ -459,6 +459,7 @@ RGB getInterRGB(double val)
 {
   val = val*0.4 + 0.6;
   HSV color(val, 1.0, 1.0);
+
   return HSVtoRGB(color);
 }
 
@@ -491,7 +492,6 @@ void Page::drawInteraction(const InteractionSet &vinter)
   std::string chr(rmchr(chrname));
   double ytop(par.yaxis_now);
   double ycenter(par.yaxis_now + boxheight/2);
-  double ybottom(par.yaxis_now + boxheight);
 
   // colorbar
   showColorBar(cr, 70, ycenter-2, vinter.getmaxval());
@@ -500,19 +500,19 @@ void Page::drawInteraction(const InteractionSet &vinter)
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, 70, ycenter-6, vinter.getlabel(), 12);
   
-  cr->set_line_width(4);
   for (auto &x: vinter.getvinter()) {
     //    printList(x.first.chr, x.second.chr, chr);
     if (x.first.chr != chr && x.second.chr != chr) continue;
 
-    if (x.first.chr == chr && x.second.chr == chr) {     // intra-chromosomal
+    // interchromosomalは描画しない
+    if (x.first.chr != chr || x.second.chr != chr) continue;
+    
+    RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
+    cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+    /*    else {   // inter-chromosomal
       RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
       cr->set_source_rgba(color.r, color.g, color.b, 0.8);
-    }
-    else {   // inter-chromosomal
-      RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
-      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
-    }
+      }*/
 
     int32_t xcen_head(-1);
     int32_t xcen_tail(-1);
@@ -522,14 +522,14 @@ void Page::drawInteraction(const InteractionSet &vinter)
     if (xcen_head < 0 && xcen_tail < 0) continue;
 
     //    printf("%d, %d, %d, %d, %d, %d\n", x.first.start, x.first.summit, x.first.end, x.second.start, x.second.summit, x.second.end);
-    if (xcen_head >= 0 && xcen_tail >= 0) drawArc_from_to(xcen_head, xcen_tail, boxheight, ytop);
-    // interchromosomalは描画しない
-    if ((x.first.chr == chr && xcen_head > 0) && xcen_tail < 0) { //|| x.second.chr != chr
+       if (xcen_head >= 0 && xcen_tail >= 0) drawArc_from_to(xcen_head, xcen_tail, boxheight, ytop);
+
+   if (xcen_head > 0 && xcen_tail < 0) {
       drawArc_from_none(xcen_head, par.xend - par.xstart, boxheight, ytop);
     }
-    if (xcen_head < 0 && (x.second.chr == chr && xcen_tail > 0)) { // || x.first.chr != chr
+   if (xcen_head < 0 && xcen_tail > 0) {
       drawArc_none_to(xcen_head, xcen_tail, boxheight, ytop);
-    }
+   }
     
   }
   cr->stroke();
@@ -567,6 +567,7 @@ void Page::Draw(const DROMPA::Global &p, const int32_t page_curr, const int32_t 
     stroke_xaxis_num(par.yaxis_now, 9);
 
     if (p.anno.vinterlist.size()) {
+      par.yaxis_now += 5;
       for (auto &x: p.anno.vinterlist) drawInteraction(x);
     }
 

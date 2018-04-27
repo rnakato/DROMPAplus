@@ -318,8 +318,10 @@ class Page {
     double ytop = ref_ytop + 10;
     int32_t height = ref_height - 20;
     double radius((end - start)/2.0 * dot_per_bp); // 半径
-    double r = std::min(0.5, height/radius);
+    double r = std::min(0.4, height/radius);
     //    printf("r %f %f %d %d %d\n", r, radius, height, start, end);
+    
+    cr->set_line_width(3);
     cr->scale(1, r);
     cr->arc(bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
     cr->stroke();
@@ -327,25 +329,37 @@ class Page {
   }
   void drawArc_from_none(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
-    int32_t height = ref_height - 20;
-    //    double radius((end - start) * dot_per_bp);
-    double radius(height*2);
-    double r(0.5);
+    int32_t height = ref_height;
+    double radius(height*3);
+    double r(1/3.0);
+
+    double bp_s(bp2xaxis(start));
+    double bp_e(bp2xaxis(end));
+    double bp_x(bp_s + radius);
+    double bp_y(ytop/r);
     
+    cr->set_line_width(4);
     cr->scale(1, r);
-    cr->arc(bp2xaxis(start) + radius, ytop/r, radius, 0.5*M_PI, M_PI);
+    cr->arc(bp_x, bp_y, radius, 0.5*M_PI, M_PI);
+    if (bp_e - bp_x > 0) rel_xline(cr, bp_x, bp_y + radius, bp_e - bp_x);
     cr->stroke();
     cr->scale(1, 1/r);
   }
   void drawArc_none_to(const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
     double ytop = ref_ytop + 10;
-    int32_t height = ref_height - 20;
-    //    double radius(end * dot_per_bp);
-    double radius(height*2);
-    double r(0.5);
+    int32_t height = ref_height;
+    double radius(height*3);
+    double r(1/3.0);
 
+    double bp_s(bp2xaxis(start));
+    double bp_e(bp2xaxis(end));
+    double bp_x(bp_e - radius);
+    double bp_y(ytop/r);
+
+    cr->set_line_width(4);
     cr->scale(1, r);
-    cr->arc(bp2xaxis(end) - radius, ytop/r, radius, 0, 0.5*M_PI);
+    cr->arc(bp_x, bp_y, radius, 0, 0.5*M_PI);
+    if (bp_x - bp_s > 0) rel_xline(cr, bp_x, bp_y + radius, -(bp_x - bp_s));
     cr->stroke();
     cr->scale(1, 1/r);
   }
