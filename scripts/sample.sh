@@ -1,3 +1,5 @@
+# DROMPAplus sample scripts
+# Visualization of H3K4me3, H3K27me3, H3K9me3 and Input samples for K562 cells from ENCODE project
 
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam
@@ -21,8 +23,6 @@ drompa+ PC_SHARP \
 	--ioverlay $dir/H3K36me3.50.bw,$dir/Input.50.bw,H3K36me3,,,10 \
 	-o drompa-K562-overlay -g refFlat.txt --gt $gt \
 	--lpp 3 --chr 1
-
-exit
 
 dir=parse2wigdir+
 drompa+ PC_SHARP \
