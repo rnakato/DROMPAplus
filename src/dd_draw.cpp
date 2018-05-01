@@ -143,24 +143,6 @@ void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
   return;
 }
 
-void DataFrame::stroke_dataframe(const DROMPA::Global &p, const SamplePairChr &pair)
-{
-  //  DEBUGprint("stroke_dataframe");
-  stroke_frame();
-  
-  /* y memory */
-  cr->set_line_width(0.4);
-  cr->set_source_rgba(CLR_BLACK, 0.5);
-
-  for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, width_df);
-  cr->stroke();
-
-  if (p.drawparam.isshowymem()) stroke_ymem(0);
-  if (p.drawparam.isshowylab()) stroke_ylab(pair);
-  
-  return;
-}
-
 void DataFrame::StrokeBinsInLine(const SamplePairParam &pair, const ChrArrayMap &arrays,
 			       const int32_t nlayer)
 {
@@ -205,7 +187,7 @@ void Page::drawInteraction(const InteractionSet &vinter)
 
     // interchromosomalは描画しない
     if (x.first.chr != chr || x.second.chr != chr) continue;
-    
+
     RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
     cr->set_source_rgba(color.r, color.g, color.b, 0.8);
     /*    else {   // inter-chromosomal

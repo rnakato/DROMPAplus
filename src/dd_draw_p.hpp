@@ -227,7 +227,7 @@ class Page {
   void stroke_readdist(const DROMPA::Global &p, const SamplePairChr &pair)
   {
     par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
-    T df(cr, p, pair, par, getWidthDf(), getHeightDf());
+    T df(cr, p, pair, par, width_draw, getHeightDf());
     df.StrokeBinsInLine(pair.pair.first, arrays, 0);
     if (pair.pair.overlay) {
       int32_t nlayer(1);
@@ -397,7 +397,6 @@ class Page {
     return std::forward_as_tuple(start, end);
   }
 
-  double getWidthDf() const { return width_draw; } //return (par.xend - par.xstart +1) * par.dot_per_bp; }
   double getHeightDf() const { return par.ystep * par.barnum; }
 };
 
@@ -434,20 +433,19 @@ protected:
     sigtest(sig), threshold(thre), alpha(refparam.alpha), len_binedge(2)
   {}
 
-  void stroke_frame()
-  {
+  void stroke_frame() {
     cr->set_line_width(0.4);
     cr->set_source_rgba(CLR_BLACK, 1);
-    rel_xline(cr, OFFSET_X, par.yaxis_now, width_df);
+    rel_xline(cr, OFFSET_X, par.yaxis_now, par.getXaxisLen());
     rel_yline(cr, OFFSET_X, par.yaxis_now - height_df, height_df);
     cr->stroke();
   }
-  void stroke_ymem(const int32_t nlayer)
-  {
+  void stroke_ymem(const int32_t nlayer) {
     cr->set_source_rgba(CLR_BLACK, 1);
   
     double x(0);
-    if (!nlayer) x = OFFSET_X + width_df + 7; else x = OFFSET_X - 20;
+    if (!nlayer) x = OFFSET_X + par.getXaxisLen() + 7;
+    else x = OFFSET_X - 20;
 
     for(int32_t i=1; i<=par.barnum; ++i) {
       std::string str(float2string(i*scale, 1));
@@ -455,7 +453,22 @@ protected:
     }
     return;
   }
-  void stroke_dataframe(const DROMPA::Global &p, const SamplePairChr &pair);
+  void stroke_dataframe(const DROMPA::Global &p, const SamplePairChr &pair) {
+    stroke_frame();
+    
+    /* y memory */
+    cr->set_line_width(0.4);
+    cr->set_source_rgba(CLR_BLACK, 0.5);
+    
+    for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, par.getXaxisLen());
+    cr->stroke();
+    
+    if (p.drawparam.isshowymem()) stroke_ymem(0);
+    if (p.drawparam.isshowylab()) stroke_ylab(pair);
+    
+    return;
+  }
+
   void stroke_peakregion(const SamplePairChr &pair){ (void)(pair); return; }
   void StrokeBinsInLine(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer);
 
