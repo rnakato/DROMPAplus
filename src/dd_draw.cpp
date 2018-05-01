@@ -433,6 +433,7 @@ int32_t DROMPA::DrawParam::getPageHeight(const DROMPA::Global &p, const std::vec
   int32_t height(OFFSET_Y*2);
   height += getHeightAllSample(p, pairs) * linenum_per_page;
   height += MERGIN_BETWEEN_LINE * (linenum_per_page-1);
+  height += 50; // 保険
 
 #ifdef DEBUG
   std::cout << "PageHeight: " << height << std::endl;
