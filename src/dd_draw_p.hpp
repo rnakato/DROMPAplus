@@ -29,7 +29,7 @@ namespace {
 
   enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=10, MERGIN_BETWEEN_LINE=30};
   enum {BOXHEIGHT_GENEBOX_EXON=140, BOXHEIGHT_GENEBOX_NOEXON=60};
-  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15, BOXHEIGHT_INTERACTION=45};
+  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15, BOXHEIGHT_INTERACTION=45, BOXHEIGHT_BEDANNOTATION=12};
   int32_t pagewidth(1088);
   int32_t width_draw(750);
 }
@@ -203,6 +203,7 @@ class Page {
   void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
   void strokeGene(const DROMPA::Global &p, const double ycenter);
 
+  void drawBedAnnotation(const vbed<bed12> &vbed);
   void drawInteraction(const InteractionSet &vinter);
 
   public:

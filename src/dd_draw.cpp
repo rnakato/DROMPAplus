@@ -200,6 +200,54 @@ void Page::StrokeGraph(const GraphData &graph)
   return;
 }
 
+void Page::drawBedAnnotation(const vbed<bed12> &vbed)
+{
+  DEBUGprint("drawBedAnnotation");
+  int32_t boxheight(BOXHEIGHT_BEDANNOTATION);
+  std::string chr(rmchr(chrname));
+  double ycenter(par.yaxis_now + boxheight/2);
+
+  // label
+  cr->set_source_rgba(CLR_BLACK, 1);
+  showtext_cr(cr, 90, ycenter+4, vbed.getlabel(), 12);
+
+  cr->set_line_width(0.5);
+  rel_xline(cr, OFFSET_X, ycenter, par.getXaxisLen());
+  cr->stroke();
+
+  // bed
+  cr->set_line_width(boxheight/2);
+  int32_t on(0);
+  for (auto &x: vbed.getvBed()) {
+    if (x.chr != chr) continue;
+    
+    if (x.rgb_r != -1) {
+      cr->set_source_rgba(x.rgb_r/(double)255, x.rgb_g/(double)255, x.rgb_b/(double)255, 0.6);
+    } else {
+      if(!on) {
+	cr->set_source_rgba(CLR_GRAY4, 1);
+	on=1;
+      } else {
+	cr->set_source_rgba(CLR_GREEN, 1);
+	on=0;
+      }
+    }
+    if (par.xstart <= x.end && x.start <= par.xend) {
+      double x1 = par.bp2xaxis(x.start - par.xstart);
+      double len = (x.end - x.start) * par.dot_per_bp;
+      rel_xline(cr, x1, ycenter, len);
+      cr->stroke();
+    }
+
+  }
+  cr->stroke();
+  
+  par.yaxis_now += boxheight +2;
+
+  return;
+}
+
+
 void Page::StrokeEachLayer(const DROMPA::Global &p)
 {  
   if (p.anno.GC.isOn()) StrokeGraph(GC);
@@ -210,12 +258,16 @@ void Page::StrokeEachLayer(const DROMPA::Global &p)
   for (size_t j=0; j<pairs.size(); ++j) StrokeReadLines(p, pairs[j]);
   stroke_xaxis_num(par.yaxis_now, 9);
   
+  if(p.anno.vbedlist.size()) {
+    par.yaxis_now += 15;
+    for (auto &x: p.anno.vbedlist) drawBedAnnotation(x);
+  }
+  
   if (p.anno.vinterlist.size()) {
-    par.yaxis_now += 5;
+    par.yaxis_now += 158;
     for (auto &x: p.anno.vinterlist) drawInteraction(x);
   }
 
-  //    if(d->bednum) draw_bedfile(d, cr, xstart, xend, chr);
   //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);
   
   //    if(d->visualize_itag==2) stroke_readdist(p, d, cr, &(sample[0]), xstart, xend, LTYPE_INPUT, 0);
@@ -319,7 +371,8 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
   if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
     height += BOXHEIGHT_GENEBOX_EXON + MERGIN_BETWEEN_DATA;
   }
-  height += (BOXHEIGHT_INTERACTION +5) * p.anno.vinterlist.size();
+  height += (BOXHEIGHT_BEDANNOTATION + 2) * p.anno.vbedlist.size() + 15;
+  height += (BOXHEIGHT_INTERACTION   + 2) * p.anno.vinterlist.size() + 15;
 
 #ifdef DEBUG
   std::cout << "HeightAllSample; " << height << std::endl;

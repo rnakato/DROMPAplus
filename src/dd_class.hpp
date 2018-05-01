@@ -215,7 +215,7 @@ namespace DROMPA {
     std::string arsfile;
     bool showars;
     std::string terfile;
-    std::vector<std::vector<bed>> vbedlist;
+    std::vector<vbed<bed12>> vbedlist;
     std::vector<InteractionSet> vinterlist;
     std::string repeatfile;
     std::string mpfile;

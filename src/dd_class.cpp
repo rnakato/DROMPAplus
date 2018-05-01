@@ -74,9 +74,11 @@ void Annotation::setValuesPC(const Variables &values) {
     if (values.count("bed")) {
       for(auto &x: getVal<std::vector<std::string>>(values, "bed")) {
 	//    std::cout << x << std::endl;
-	auto vbed = parseBed<bed>(x);
+	std::vector<std::string> v;
+	ParseLine(v, x, ',');
+	auto vbed = parseBed<bed12>(v[0]);
 	//    printBed(vbed);
-	vbedlist.emplace_back(vbed);
+	vbedlist.emplace_back(vbed, v[1]);
       }
     }
   } catch (const boost::bad_any_cast& e) {
