@@ -155,6 +155,7 @@ public:
     std::cout << boost::format("   binsize: %1%\n") % binsize;
   }
   int32_t getbinsize() const { return binsize; }
+  bool InputExists() const { return argvInput != "";}
 };
   
 class SamplePair {

@@ -1,0 +1,487 @@
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * All rights reserved.
+ */
+#ifndef _DD_DRAW_DATAFRAME_H_
+#define _DD_DRAW_DATAFRAME_H_
+
+#include "dd_draw_p.hpp"
+
+class DataFrame {
+
+protected:
+  enum {POSI_XLABEL=50};
+  const Cairo::RefPtr<Cairo::Context> cr;
+  const DParam &par;
+  double scale;
+  std::string label;
+  std::string label2nd;
+  double width_df;
+  double height_df;
+
+  bool sigtest;
+  double threshold;
+
+  double len_binedge;
+  
+  double getEthre(const DROMPA::Global &p) {
+    double thre(0);
+    if (p.isGV) thre = p.drawparam.scale_ratio;
+    else thre = p.thre.ethre;
+    return thre;
+  }
+  
+  void StrokeYmem(const int32_t nlayer) {
+    cr->set_source_rgba(CLR_BLACK, 0.5);
+    for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, par.getXaxisLen());
+    cr->stroke();
+    
+    cr->set_source_rgba(CLR_BLACK, 1);
+    double x(0);
+    if (!nlayer) x = OFFSET_X + par.getXaxisLen() + 7;
+    else x = OFFSET_X - 20;
+
+    for(int32_t i=1; i<=par.barnum; ++i) {
+      std::string str(float2string(i*scale, 1));
+      showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), str, 9);
+    }
+  }
+
+  void StrokeFrame() {
+    cr->set_line_width(0.4);
+    cr->set_source_rgba(CLR_BLACK, 1);
+    rel_xline(cr, OFFSET_X, par.yaxis_now, par.getXaxisLen());
+    rel_yline(cr, OFFSET_X, par.yaxis_now - height_df, height_df);
+    cr->stroke();
+  }
+
+  void StrokeBins(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t nlayer) {
+    int32_t binsize(pair.getbinsize());
+    int32_t sbin(par.xstart/binsize);
+    int32_t ebin(par.xend/binsize);
+    double dot_per_bin(binsize * par.dot_per_bp);
+    int32_t yaxis(par.yaxis_now);  // intに変換
+    
+    int32_t thin(std::min(par.width_per_line/(1000*binsize), 20));
+    
+    double xcen(par.bp2xaxis(binsize/2)); // initial position
+    if (thin > 1) cr->set_line_width(dot_per_bin*thin);
+    else cr->set_line_width(dot_per_bin);
+    
+    for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {
+      if (thin > 1 && i%thin) continue;
+      StrokeEachBin(pair, arrays, i, xcen, yaxis, nlayer);
+    }
+    cr->stroke();
+  }
+  
+  void StrokeEachBin(const SamplePairParam &pair,
+		     const ChrArrayMap &arrays,
+		     const int32_t i, const double xcen,
+		     const int32_t yaxis, const int32_t nlayer) {
+    double value(getVal(pair, arrays, i));
+    if (!value) return;
+    
+    int32_t len(getbinlen(value / scale));
+    
+    setColor(value, nlayer, 1);
+    if(len <0) rel_yline(cr, xcen, yaxis + len, len_binedge);
+    cr->stroke();
+    
+    if(par.alpha) {
+      setColor(value, nlayer, par.alpha);
+      rel_yline(cr, xcen, yaxis, len);
+      cr->stroke();
+    }
+  }
+
+ public:
+  DataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
+	    const std::string &l,
+	    const std::string &l2,
+	    const double s,
+	    const DParam &refparam,
+	    const double hdf,
+	    const bool sig,
+	    const double thre):
+    cr(cr_), par(refparam), scale(s), label(l), label2nd(l2),
+    width_df(width_draw), height_df(hdf),
+    sigtest(sig), threshold(thre), len_binedge(2)
+  {}
+
+  void Draw(const DROMPA::Global &p, const SamplePairChr &pair, const ChrArrayMap &arrays) {
+    int32_t nlayer(0);
+    StrokeBins(pair.pair.first, arrays, nlayer);
+    if (p.drawparam.isshowymem()) StrokeYmem(nlayer);
+
+    StrokeFrame();
+    HighlightPeaks(pair);
+
+    // Overlayed
+    if (pair.pair.overlay) {
+      nlayer = 1;
+      StrokeBins(pair.pair.second, arrays, nlayer);
+      if (p.drawparam.isshowymem()) StrokeYmem(nlayer);
+    }
+
+    // Sample Label
+    if (p.drawparam.isshowylab()) stroke_ylab(pair);
+  }
+
+  void HighlightPeaks(const SamplePairChr &pair){ (void)(pair); return; }
+  int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
+  
+  virtual void stroke_ylab(const SamplePairChr &pair)=0;
+  virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
+  virtual double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i)=0;
+};
+
+
+class ChIPDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha) {
+    (void)(value);
+    //    if (!nlayer) cr->set_source_rgba(CLR_BLUEGRAY, alpha);
+    if (!nlayer) cr->set_source_rgba(CLR_GREEN3, alpha);
+    else cr->set_source_rgba(CLR_PINK2, alpha);
+  }
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    return arrays.at(pair.argvChIP).array[i];
+  }
+  void stroke_ylab(const SamplePairChr &pair) {
+    if (pair.pair.overlay) { 
+      cr->set_source_rgba(CLR_BLUEGRAY, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+      cr->set_source_rgba(CLR_PINK2, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+ public:
+  ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
+		const DROMPA::Global &p,
+		const SamplePairChr &pair,
+		const DParam &refparam,
+		const double hdf):
+    DataFrame(cr_, pair.pair.first.label, pair.pair.second.label, p.drawparam.scale_tag, refparam, hdf,
+	      p.thre.sigtest, p.thre.ipm)
+  {}
+
+  void HighlightPeaks(const SamplePairChr &pair) {
+    cr->set_source_rgba(CLR_RED, 0.4);
+    
+    for (auto &bed: pair.peaks1st) {
+      if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
+      cr->set_line_width(bed.length() * par.dot_per_bp);
+      double x(par.bp2xaxis(bed.summit - par.xstart));
+      rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
+    }
+    cr->stroke();
+  }
+};
+
+class InputDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha) {
+    (void)(value);
+    if (!nlayer) cr->set_source_rgba(CLR_BLUE, alpha);
+    else cr->set_source_rgba(CLR_OLIVE, alpha);
+  }
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    return arrays.at(pair.argvInput).array[i];
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: blue, 2: olive", 12);
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+    return;
+  }
+
+ public:
+  InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double hdf):
+    DataFrame(cr_, "Input", "", p.drawparam.scale_tag, refparam, hdf, false, 0)
+  {
+    (void)(pair);
+  }
+
+};
+
+
+class RatioDataFrame : public DataFrame {
+  bool isGV;
+
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if(isGV || sigtest) {
+	//	if (value > threshold) cr->set_source_rgba(CLR_LAKEBLUE, alpha);
+	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+	else cr->set_source_rgba(CLR_GRAY, alpha);
+      } else {
+	cr->set_source_rgba(CLR_ORANGE, alpha);
+      }
+    } else {    // second layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
+	else cr->set_source_rgba(CLR_GRAY2, alpha);
+      } else {
+	cr->set_source_rgba(CLR_PURPLE, alpha);
+      }
+    }
+  }
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    return CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  }
+
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag) return "IP/Input";
+    else return pair.pair.first.label;
+  }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_ORANGE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_PURPLE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: orange, 2: purple", 12);
+	
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+public:
+  RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, hdf,
+	      p.thre.sigtest, getEthre(p)),
+    isGV(p.isGV)
+  {}
+
+};
+
+class LogRatioDataFrame : public DataFrame { // log10(ratio)
+  bool isGV;
+  int32_t barnum_minus;
+  int32_t barnum_plus;
+
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_PINK, alpha);
+	else cr->set_source_rgba(CLR_GRAY, alpha);
+      } else {
+	cr->set_source_rgba(CLR_ORANGE, alpha);
+      }
+    } else {    // second layer
+      if(isGV || sigtest) {
+	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+	else cr->set_source_rgba(CLR_GRAY2, alpha);
+      } else {
+	cr->set_source_rgba(CLR_PURPLE, alpha);
+      }
+    }
+  }
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    double val(CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
+    return val ? log10(val): 0;
+  }
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag) return "IP/Input";
+    else return pair.pair.first.label;
+  }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_ORANGE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_PURPLE, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: orange, 2: purple", 12);
+	
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+
+ public:
+  LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, hdf,
+	      p.thre.sigtest, getEthre(p)),
+    isGV(p.isGV),
+    barnum_minus(refparam.barnum/2), barnum_plus(refparam.barnum - barnum_minus)
+  {}
+
+  void stroke_ymem(const int32_t nlayer)
+  {
+    cr->set_source_rgba(CLR_BLACK, 1);
+
+    int32_t barnum_minus = par.barnum/2;
+    double x(0);
+    if (!nlayer) x = OFFSET_X + width_df + 7; else x = OFFSET_X - 20;
+    for(int32_t i=1; i<=par.barnum; ++i) {
+      std::string str;
+      if (i < barnum_minus) str = "1/" + std::to_string(static_cast<int>(pow(2, (barnum_minus-i) * scale)));
+      else str = std::to_string(static_cast<int>(pow(2, (i-barnum_minus) * scale)));
+      
+      showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), str, 9);
+    }
+    return;
+  }
+  void StrokeEachBin(const SamplePairParam &pair, const ChrArrayMap &arrays,
+		     const int32_t i, const double xcen,
+		     const int32_t yaxis, const int32_t nlayer) {
+    double value(getVal(pair, arrays, i) / scale);
+    if (!value) return;
+    
+    int32_t len(0);
+    if(value>0) len = -std::min(par.ystep*value, height_df/2);
+    else        len = -std::max(par.ystep*value, -height_df/2);
+    
+    setColor(value, nlayer, 1);
+    rel_yline(cr, xcen, yaxis + len, len_binedge);
+    cr->stroke();
+    
+    if(par.alpha) {
+      setColor(value, nlayer, par.alpha);
+      rel_yline(cr, xcen, yaxis-height_df/2, len);
+      cr->stroke();
+    }
+  }
+};
+
+class PinterDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+      else cr->set_source_rgba(CLR_GRAY, alpha);
+    } else {    // second layer
+      if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
+      else cr->set_source_rgba(CLR_GRAY2, alpha);
+    }
+  }
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    const ChrArray &a = arrays.at(pair.argvChIP);
+    return a.stats.getlogp(a.array[i]);
+  }
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP)";
+    else return pair.pair.first.label;
+  }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_RED, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_YELLOW2, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: red, 2: yellow", 12);
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+public:
+  PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p, const SamplePairChr &pair,
+		const DParam &refparam, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, hdf,
+	      p.thre.sigtest, -log10(p.thre.pthre_inter))
+  {}
+
+};
+
+class PenrichDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha)
+  {
+    if (!nlayer) { // first layer
+      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+      else cr->set_source_rgba(CLR_GRAY, alpha);
+    } else {    // second layer
+      if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
+      else cr->set_source_rgba(CLR_GRAY2, alpha);
+    }
+  }
+  double getVal(const SamplePairParam &pair, const ChrArrayMap &arrays, const int32_t i) {
+    return binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  }
+  const std::string getlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP/Input)";
+    else return pair.pair.first.label;
+  }
+  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairChr &pair) const {
+    if(p.drawparam.showctag || p.drawparam.showratio) return "";
+    else return pair.pair.second.label;
+  }
+  void stroke_ylab(const SamplePairChr &pair)
+  {
+    if (pair.pair.overlay) {
+      if (label2nd != "") {
+	cr->set_source_rgba(CLR_RED, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	cr->set_source_rgba(CLR_YELLOW2, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+      } else {
+	cr->set_source_rgba(CLR_BLACK, 1);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: red, 2: yellow", 12);
+      }
+    } else { 
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
+  
+
+ public:
+  PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
+		   const DROMPA::Global &p, const SamplePairChr &pair,
+		   const DParam &refparam, const double hdf):
+    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair), p.drawparam.scale_ratio, refparam, hdf,
+	      p.thre.sigtest, -log10(p.thre.pthre_enrich))
+  {}
+
+};
+
+#endif /* _DD_DRAW_DATAFRAME_H_ */

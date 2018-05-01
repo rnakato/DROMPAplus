@@ -76,7 +76,7 @@ $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/GCnormalization.hpp $(S
 $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_command.hpp
 $(OBJDIR)/dd_command.o: $(SRCDIR)/dd_command.hpp
-$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw_p.hpp
+$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw_p.hpp src/dd_draw_dataframe.hpp
 $(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_draw_p.hpp
 $(OBJDIR)/WigStats.o: $(SRCDIR)/WigStats.hpp $
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp

@@ -6,6 +6,7 @@
 #include <iomanip>
 #include "dd_draw.hpp"
 #include "dd_draw_p.hpp"
+#include "dd_draw_dataframe.hpp"
 #include "SSP/common/inline.hpp"
 #include "SSP/common/util.hpp"
 
@@ -81,90 +82,6 @@ namespace {
 
 }
 
-void DataFrame::StrokeEachBin(const SamplePairParam &pair,
-			       const ChrArrayMap &arrays,
-			       const int32_t i, const double xcen, const int32_t yaxis,
-			       const int32_t nlayer)
-{
-  double value(getVal(pair, arrays, i));
-  if (!value) return;
-
-  int32_t len(getbinlen(value / scale));
-
-  setColor(value, nlayer, 1);
-  if(len <0) rel_yline(cr, xcen, yaxis + len, len_binedge);
-  cr->stroke();
-
-  if(alpha) {
-    setColor(value, nlayer, alpha);
-    rel_yline(cr, xcen, yaxis, len);
-    cr->stroke();
-  }
-
-  return;
-}
-
-void LogRatioDataFrame::StrokeEachBin(const SamplePairParam &pair, const ChrArrayMap &arrays,
-			       const int32_t i, const double xcen, const int32_t yaxis,
-			       const int32_t nlayer)
-{
-  double value(getVal(pair, arrays, i) / scale);
-  if (!value) return;
-
-  int32_t len(0);
-  if(value>0) len = -std::min(par.ystep*value, height_df/2);
-  else        len = -std::max(par.ystep*value, -height_df/2);
-
-  setColor(value, nlayer, 1);
-  rel_yline(cr, xcen, yaxis + len, len_binedge);
-  cr->stroke();
-
-  if(alpha) {
-    setColor(value, nlayer, alpha);
-    rel_yline(cr, xcen, yaxis-height_df/2, len);
-    cr->stroke();
-  }
-
-  return;
-}
-
-void ChIPDataFrame::stroke_peakregion(const SamplePairChr &pair)
-{
-  //  DEBUGprint("stroke_peakregion");
-  cr->set_source_rgba(CLR_RED, 0.4);
-
-  for (auto &bed: pair.peaks1st) {
-    if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
-    cr->set_line_width(bed.length() * par.dot_per_bp);
-    double x(par.bp2xaxis(bed.summit - par.xstart));
-    rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
-  }
-  cr->stroke();
-  return;
-}
-
-void DataFrame::StrokeBinsInLine(const SamplePairParam &pair, const ChrArrayMap &arrays,
-			       const int32_t nlayer)
-{
-  int32_t binsize(pair.getbinsize());
-  int32_t sbin(par.xstart/binsize);
-  int32_t ebin(par.xend/binsize);
-  double dot_per_bin(binsize * par.dot_per_bp);
-  int32_t yaxis(par.yaxis_now);  // intに変換
-
-  int32_t thin(std::min(par.width_per_line/(1000*binsize), 20));
-
-  double xcen(par.bp2xaxis(binsize/2)); // initial position
-  if (thin > 1) cr->set_line_width(dot_per_bin*thin);
-  else cr->set_line_width(dot_per_bin);
-
-  for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {
-    if (thin > 1 && i%thin) continue;
-    StrokeEachBin(pair, arrays, i, xcen, yaxis, nlayer);
-  }
-  cr->stroke();
-  return;
-}
 
 void Page::drawInteraction(const InteractionSet &vinter)
 {
@@ -216,14 +133,14 @@ void Page::drawInteraction(const InteractionSet &vinter)
 
 void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairChr &pair)
 {
-  if (p.drawparam.showpinter) stroke_readdist<PinterDataFrame>(p, pair);
-  if (p.drawparam.showpenrich && pair.pair.first.argvInput!="") stroke_readdist<PenrichDataFrame>(p, pair);
-  if (p.drawparam.showratio && pair.pair.first.argvInput!="") {
-    if (p.drawparam.showratio == 1) stroke_readdist<RatioDataFrame>(p, pair);
-    else if (p.drawparam.showratio == 2) stroke_readdist<LogRatioDataFrame>(p, pair);
+  if (p.drawparam.showpinter) StrokeDataFrame<PinterDataFrame>(p, pair);
+  if (p.drawparam.showpenrich && pair.pair.first.InputExists()) StrokeDataFrame<PenrichDataFrame>(p, pair);
+  if (p.drawparam.showratio && pair.pair.first.InputExists()) {
+    if (p.drawparam.showratio == 1)      StrokeDataFrame<RatioDataFrame>(p, pair);
+    else if (p.drawparam.showratio == 2) StrokeDataFrame<LogRatioDataFrame>(p, pair);
   }
-  if (p.drawparam.showctag) stroke_readdist<ChIPDataFrame>(p, pair);
-  if (p.drawparam.showitag==1 && pair.pair.first.argvInput!="") stroke_readdist<InputDataFrame>(p, pair);
+  if (p.drawparam.showctag) StrokeDataFrame<ChIPDataFrame>(p, pair);
+  if (p.drawparam.showitag==1 && pair.pair.first.InputExists()) StrokeDataFrame<InputDataFrame>(p, pair);
   return;
 }
 
@@ -376,11 +293,11 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairParam &pair) const {
   int32_t height(0);
   int32_t n(0);
-  if (showctag)                            { height += getlineheight(); ++n; }
-  if (showitag==1 && pair.argvInput != "") { height += getlineheight(); ++n; }
-  if (showratio   && pair.argvInput != "") { height += getlineheight(); ++n; }
-  if (showpinter)                          { height += getlineheight(); ++n; }
-  if (showpenrich && pair.argvInput != "") { height += getlineheight(); ++n; }
+  if (showctag)                          { height += getlineheight(); ++n; }
+  if (showitag==1 && pair.InputExists()) { height += getlineheight(); ++n; }
+  if (showratio   && pair.InputExists()) { height += getlineheight(); ++n; }
+  if (showpinter)                        { height += getlineheight(); ++n; }
+  if (showpenrich && pair.InputExists()) { height += getlineheight(); ++n; }
   height += MERGIN_BETWEEN_DATA * (n-1);
   
 #ifdef DEBUG
