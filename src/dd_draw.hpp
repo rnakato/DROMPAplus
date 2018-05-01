@@ -42,28 +42,12 @@ public:
     PrintTime(t1, t2, "peakcall");
   }
 };
-  
-class SamplePairChr {
-public:
-  SamplePair &pair;
-  std::vector<bed> peaks1st;
-  std::vector<bed> peaks2nd;
 
-  SamplePairChr(const DROMPA::Global &p, SamplePair &x,
+/*class SamplePairChr {
+  void setRatio(const DROMPA::Global &p, SamplePairEach &pair,
 		const std::unordered_map<std::string, ChrArray> &arrays,
-		const std::string &chrname):
-    pair(x)
+		const std::string &chrname)
   {
-    setRatio(p, pair.first, arrays, chrname);
-    if (x.first.peak_argv != "") peaks1st = x.first.getpeaksChr(chrname);
-    if (pair.overlay) {
-      setRatio(p, pair.second, arrays, chrname);
-      if (x.second.peak_argv != "") peaks2nd = x.second.getpeaksChr(chrname);
-    }
-  }
-  
-  void setRatio (const DROMPA::Global &p, SamplePairParam &pair,
-		 const std::unordered_map<std::string, ChrArray> &arrays, const std::string &chrname) {
     DEBUGprint("setRatio");
     if (pair.argvInput == "") return;
     pair.ratio = 1;
@@ -86,12 +70,57 @@ public:
     std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << pair.ratio << std::endl;
 #endif
   }
-};
+  
+public:
+  SamplePairOverlayed &pair;
+  //  std::vector<bed> peaks1st;
+  //std::vector<bed> peaks2nd;
+
+  SamplePairChr(const DROMPA::Global &p, SamplePairOverlayed &x,
+		const std::unordered_map<std::string, ChrArray> &arrays,
+		const std::string &chrname):
+    pair(x)
+  {
+    setRatio(p, pair.first, arrays, chrname);
+    //    if (x.first.peak_argv != "") peaks1st = x.first.getpeaksChr(chrname);
+    if (pair.overlay) {
+      setRatio(p, pair.second, arrays, chrname);
+      //   if (x.second.peak_argv != "") peaks2nd = x.second.getpeaksChr(chrname);
+    }
+  }
+  
+  };*/
 
 class Figure {
   std::unordered_map<std::string, ChrArray> arrays;
-  std::vector<SamplePairChr> pairs;
+  //  std::vector<SamplePairChr> pairs;
+  std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   std::vector<bed> regionBed;
+  
+  void setRatio(const DROMPA::Global &p, SamplePairEach &pair, const std::string &chrname)
+  {
+    DEBUGprint("setRatio");
+    if (pair.argvInput == "") return;
+    pair.ratio = 1;
+    
+    switch (p.getNorm()) {
+    case 0:
+      pair.ratio = 1;
+      break;
+    case 1:
+      pair.ratio = getratio(arrays.at(pair.argvChIP).totalreadnum, arrays.at(pair.argvInput).totalreadnum);
+      break;
+    case 2:
+      pair.ratio = getratio(arrays.at(pair.argvChIP).totalreadnum_chr.at(chrname), arrays.at(pair.argvInput).totalreadnum_chr.at(chrname));
+      break;
+    case 3:
+      pair.ratio = 1; // NCIS
+      break;
+    }
+#ifdef DEBUG
+    std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << pair.ratio << std::endl;
+#endif
+  }
   
   void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
     clock_t t1,t2;
@@ -102,13 +131,14 @@ class Figure {
       PrintTime(t1, t2, "ChrArray new");
     }
   
-    for (auto &x: p.samplepair) {
+    for (auto &x: vsamplepairoverlayed) {
 #ifdef DEBUG
       std::cout << "Samplepairchr " << x.first.argvChIP << ", " << x.first.argvInput << std::endl;
 #endif
-      pairs.emplace_back(p, x, arrays, chr.getname());
+      //      pairs.emplace_back(p, x, arrays, chr.getname());
+      setRatio(p, x.first, chr.getname());
+      if (x.overlay) setRatio(p, x.second, chr.getname());
     }
-
 #ifdef DEBUG
     std::cout << "all WigArray:" << std::endl;
     for (auto x: arrays) {
@@ -123,6 +153,7 @@ class Figure {
 
 public:
   Figure(DROMPA::Global &p, const chrsize &chr):
+    vsamplepairoverlayed(p.samplepair),
     regionBed(p.drawregion.getRegionBedChr(chr.getname()))
   {}
   

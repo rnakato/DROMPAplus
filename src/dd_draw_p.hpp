@@ -86,7 +86,8 @@ public:
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
     yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2),
-    dot_per_bp(getratio(width_draw, width_per_line)), alpha(p.drawparam.alpha)
+    dot_per_bp(getratio(width_draw, width_per_line)),
+    alpha(p.drawparam.alpha)
   {}
 
   void set_xstart_xend(const int32_t i) {
@@ -98,6 +99,8 @@ public:
   double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
   
   double bp2xaxis(const int32_t bp) const { return bp * dot_per_bp + OFFSET_X; }
+  
+  double getHeightDf() const { return ystep * barnum; }
 };
 
 
@@ -179,7 +182,8 @@ class Page {
   enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
   const ChrArrayMap &arrays;
-  const std::vector<SamplePairChr> &pairs;
+  //  const std::vector<SamplePairChr> &pairs;
+  const std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   GraphData GC;
   GraphData GD;
 
@@ -196,7 +200,7 @@ class Page {
   }
   
   void StrokeEachLayer(const DROMPA::Global &p);
-  void StrokeReadLines(const DROMPA::Global &p, const SamplePairChr &pair);
+  void StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair);
   void StrokeGraph(const GraphData &graph);
   void DrawGeneAnnotation(const DROMPA::Global &p);
   void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
@@ -211,10 +215,12 @@ class Page {
   
   Page(const DROMPA::Global &p,
        const ChrArrayMap &refarrays,
-       const std::vector<SamplePairChr> &refpairs,
+       //       const std::vector<SamplePairChr> &refpairs,
+       const std::vector<SamplePairOverlayed> &pair,
        const Cairo::RefPtr<Cairo::PdfSurface> surface,
        const chrsize &chr, const int32_t s, const int32_t e):
-    arrays(refarrays), pairs(refpairs),
+    arrays(refarrays),
+    vsamplepairoverlayed(pair),
     cr(Cairo::Context::create(surface)),
     chrname(chr.getrefname()),
     par(s, e, p)
@@ -225,10 +231,12 @@ class Page {
   }
 
   template <class T>
-  void StrokeDataFrame(const DROMPA::Global &p, const SamplePairChr &pair)
+  //  void StrokeDataFrame(const DROMPA::Global &p, const SamplePairChr &pair)
+  void StrokeDataFrame(const DROMPA::Global &p, const SamplePairOverlayed &pair)
+  
   {
-    par.yaxis_now += getHeightDf() + MERGIN_BETWEEN_DATA;
-    T df(cr, p, pair, par, getHeightDf());
+    par.yaxis_now += par.getHeightDf() + MERGIN_BETWEEN_DATA;
+    T df(cr, p, pair, par, chrname);
 
     df.Draw(p, pair, arrays);
     stroke_xaxis(par.yaxis_now);
@@ -368,7 +376,6 @@ class Page {
     return std::forward_as_tuple(start, end);
   }
 
-  double getHeightDf() const { return par.ystep * par.barnum; }
 };
 
 

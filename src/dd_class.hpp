@@ -13,7 +13,7 @@
 #include "SSP/common/util.hpp"
 
 class chrsize;
-class SamplePairChr;
+//class SamplePairChr;
 
 enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OTHER};
 
@@ -22,17 +22,17 @@ public:
   int32_t sm;
   int32_t showctag;
   int32_t showratio;
-  int32_t scaletag;
-  int32_t scaleratio;
-  int32_t scalepvalue;
+  double scaletag;
+  double scaleratio;
+  double scalepvalue;
   bool sigtest;
 
   CommandParamSet(const int32_t defsm,
 		  const int32_t defshowctag,
 		  const int32_t defshowratio,
-		  const int32_t defscaletag,
-		  const int32_t defscaleratio,
-		  const int32_t defscalepvalue,
+		  const double defscaletag,
+		  const double defscaleratio,
+		  const double defscalepvalue,
 		  const bool defsigtest):
     sm(defsm),
     showctag(defshowctag),
@@ -52,6 +52,10 @@ class SampleFile {
   int32_t totalreadnum;
   std::unordered_map<std::string, int32_t> totalreadnum_chr;
   std::string prefix;
+  double scale_tag;
+  double scale_ratio;
+  double scale_pvalue;
+
 public:
   std::vector<int> data;
 
@@ -69,8 +73,10 @@ public:
   
  SampleFile() {}
   SampleFile(const std::string &filename, const std::vector<chrsize> gt,
+	     const double _scale_tag, const double _scale_ratio, const double _scale_pvalue,
 	     const int32_t b, const WigType &type):
-    binsize(0), totalreadnum(0), prefix("")
+    binsize(0), totalreadnum(0), prefix(""),
+    scale_tag(_scale_tag), scale_ratio(_scale_ratio), scale_pvalue(_scale_pvalue)
   {
    std::vector<std::string> v;
    ParseLine(v, filename, '.');
@@ -100,7 +106,9 @@ public:
 
   int32_t gettotalreadnum() const { return totalreadnum; }
   const std::unordered_map<std::string, int32_t> & gettotalreadnum_chr() const { return totalreadnum_chr;}
-  
+  void setscaletag(const double s) { scale_tag = s; }
+  void setscaleratio(const double s) { scale_ratio = s; }
+  void setscalepvalue(const double s) { scale_pvalue = s; }
 };
 
 class yScale {
@@ -112,7 +120,7 @@ class yScale {
  yScale(): tag(TAG_DEFAULT), ratio(RATIO_DEFAULT), pvalue(P_DEFAULT) {}
 };
 
-class SamplePairParam {
+class SamplePairEach {
   int32_t binsize;
   yScale scale;
   std::unordered_map<std::string, std::vector<bed>> peaks;
@@ -123,10 +131,10 @@ public:
   std::string label;
   double ratio;
   
-  SamplePairParam():
+  SamplePairEach():
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {}
-  SamplePairParam(const std::string &str, const int32_t b):
+  SamplePairEach(const std::string &str, const int32_t b):
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {
     std::vector<std::string> v;
@@ -158,13 +166,13 @@ public:
   bool InputExists() const { return argvInput != "";}
 };
   
-class SamplePair {
+class SamplePairOverlayed {
  public:
   bool overlay;
-  SamplePairParam first;
-  SamplePairParam second;
+  SamplePairEach first;
+  SamplePairEach second;
 
-  SamplePair(const std::string &str, const int32_t b):
+  SamplePairOverlayed(const std::string &str, const int32_t b):
     overlay(false), first(str, b)
   {}
   void print() const {
@@ -337,9 +345,9 @@ namespace DROMPA {
     }
 
     int32_t getlpp() const { return linenum_per_page; }
-    int32_t getHeightEachSample(const SamplePairParam &pair) const;
-    int32_t getHeightAllSample(const Global &p, const std::vector<SamplePairChr> &pairs) const;
-    int32_t getPageHeight(const Global &p, const std::vector<SamplePairChr> &pairs) const;
+    int32_t getHeightEachSample(const SamplePairEach &pair) const;
+    int32_t getHeightAllSample(const Global &p, const std::vector<SamplePairOverlayed> &pairs) const;
+    int32_t getPageHeight(const Global &p, const std::vector<SamplePairOverlayed> &pairs) const;
   };
   
   class Global {
@@ -360,7 +368,7 @@ namespace DROMPA {
 
     std::vector<chrsize> gt;
     std::unordered_map<std::string, SampleFile> sample;
-    std::vector<SamplePair> samplepair;
+    std::vector<SamplePairOverlayed> samplepair;
     std::vector<pdSample> pd;
 
     bool isGV;

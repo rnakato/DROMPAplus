@@ -414,7 +414,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	    int32_t num(0);
 	    for (auto &x:v) {
 	      int32_t bs = scan_samplestr(x, gt, sample, iftype);
-	      samplepair[num].second = SamplePairParam(x, bs);
+	      samplepair[num].second = SamplePairEach(x, bs);
 	      samplepair[num].overlay = true;
 	      ++num;
 	    }

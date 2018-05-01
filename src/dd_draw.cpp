@@ -131,16 +131,17 @@ void Page::drawInteraction(const InteractionSet &vinter)
   return;
 }
 
-void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairChr &pair)
+//void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairChr &pair)
+void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair)
 {
   if (p.drawparam.showpinter) StrokeDataFrame<PinterDataFrame>(p, pair);
-  if (p.drawparam.showpenrich && pair.pair.first.InputExists()) StrokeDataFrame<PenrichDataFrame>(p, pair);
-  if (p.drawparam.showratio && pair.pair.first.InputExists()) {
+  if (p.drawparam.showpenrich && pair.first.InputExists()) StrokeDataFrame<PenrichDataFrame>(p, pair);
+  if (p.drawparam.showratio && pair.first.InputExists()) {
     if (p.drawparam.showratio == 1)      StrokeDataFrame<RatioDataFrame>(p, pair);
     else if (p.drawparam.showratio == 2) StrokeDataFrame<LogRatioDataFrame>(p, pair);
   }
   if (p.drawparam.showctag) StrokeDataFrame<ChIPDataFrame>(p, pair);
-  if (p.drawparam.showitag==1 && pair.pair.first.InputExists()) StrokeDataFrame<InputDataFrame>(p, pair);
+  if (p.drawparam.showitag==1 && pair.first.InputExists()) StrokeDataFrame<InputDataFrame>(p, pair);
   return;
 }
 
@@ -255,7 +256,8 @@ void Page::StrokeEachLayer(const DROMPA::Global &p)
   
   if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawGeneAnnotation(p);
 
-  for (size_t j=0; j<pairs.size(); ++j) StrokeReadLines(p, pairs[j]);
+  for (auto &x: vsamplepairoverlayed) StrokeReadLines(p, x);
+    //  for (size_t j=0; j<pairs.size(); ++j) StrokeReadLines(p, pairs[j]);
   stroke_xaxis_num(par.yaxis_now, 9);
   
   if(p.anno.vbedlist.size()) {
@@ -308,7 +310,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 {
   DEBUGprint("Figure::DrawData");
   int32_t width(pagewidth);
-  int32_t height(p.drawparam.getPageHeight(p, pairs));
+  int32_t height(p.drawparam.getPageHeight(p, vsamplepairoverlayed));
   std::string pdffilename(p.getFigFileNameChr(chr.getrefname()));
   //  std::cout << chr.getrefname() << std::endl;
     
@@ -319,7 +321,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
     for (int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
-      Page page(p, arrays, pairs, surface, chr, 0, chr.getlen());
+      Page page(p, arrays, vsamplepairoverlayed, surface, chr, 0, chr.getlen());
       page.MakePage(p, i, 1);
     }
   } else {
@@ -328,7 +330,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
-	Page page(p, arrays, pairs, surface, chr, x.start, x.end);
+	Page page(p, arrays, vsamplepairoverlayed, surface, chr, x.start, x.end);
 	page.MakePage(p, i, region_no);
       }
       ++region_no;
@@ -342,7 +344,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
 #endif
 }
 
-int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairParam &pair) const {
+int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairEach &pair) const {
   int32_t height(0);
   int32_t n(0);
   if (showctag)                          { height += getlineheight(); ++n; }
@@ -359,9 +361,9 @@ int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairParam &pair) cons
   return height;
 }
     
-int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std::vector<SamplePairChr> &pairs) const {
+int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std::vector<SamplePairOverlayed> &pairs) const {
   int32_t height(0);
-  for (auto x: pairs) height += getHeightEachSample(x.pair.first);
+  for (auto &x: pairs) height += getHeightEachSample(x.first);
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
   if (showitag==2) height += getlineheight() + MERGIN_BETWEEN_DATA;
 
@@ -381,7 +383,7 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
 }
     
 
-int32_t DROMPA::DrawParam::getPageHeight(const DROMPA::Global &p, const std::vector<SamplePairChr> &pairs) const {
+int32_t DROMPA::DrawParam::getPageHeight(const DROMPA::Global &p, const std::vector<SamplePairOverlayed> &pairs) const {
   int32_t height(OFFSET_Y*2);
   height += getHeightAllSample(p, pairs) * linenum_per_page;
   height += MERGIN_BETWEEN_LINE * (linenum_per_page-1);
