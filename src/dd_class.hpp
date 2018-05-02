@@ -464,6 +464,10 @@ namespace DROMPA {
 
     int32_t getSmoothing() const { return smoothing; }
     int32_t getNorm() const { return norm; }
+    const std::string getPrefixName() const
+    {
+      return oprefix;
+    }
     const std::string getFigFileName() const
     {
       return oprefix + ".pdf";

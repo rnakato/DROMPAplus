@@ -5,9 +5,9 @@
 #include "dd_draw.hpp"
 
 namespace {
-void help_global(std::vector<Command> &cmds)
-{
-auto helpmsg = R"(
+  void help_global(std::vector<Command> &cmds)
+  {
+    auto helpmsg = R"(
     ===============
 
     For the detailed information on the options for each command, use the -h flag along with the command.
@@ -15,25 +15,25 @@ auto helpmsg = R"(
     Usage: drompa+ <Command> [options]
 
     Command:)";
-
-std::cerr << "\n    DROMPA+ v" << VERSION << helpmsg << std::endl;
-for(size_t i=0; i<cmds.size(); ++i) cmds[i].printCommandName();
-std::cerr << std::endl;
-return;
-}
-
-void printVersion()
-{
-std::cerr << "drompa+ version " << VERSION << std::endl;
-exit(0);
-}
-
-int32_t getOpts(std::vector<Command> &cmds, int argc, char* argv[])
+    
+    std::cerr << "\n    DROMPA+ v" << VERSION << helpmsg << std::endl;
+    for(size_t i=0; i<cmds.size(); ++i) cmds[i].printCommandName();
+    std::cerr << std::endl;
+    return;
+  }
+  
+  void printVersion()
+  {
+    std::cerr << "drompa+ version " << VERSION << std::endl;
+    exit(0);
+  }
+  
+  int32_t getOpts(std::vector<Command> &cmds, int argc, char* argv[])
   {
     int32_t cmdid(-1);
-
+    
     DEBUGprint("setOpts...");
-
+    
     MyOpt::Opts command("Command");
     MyOpt::Opts genopts("Options");
     
@@ -103,6 +103,8 @@ int main(int argc, char* argv[])
 void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
 {
   std::string command("cpdf " + StrAllPdf + " -o " + p.getFigFileName());
+  std::cout << "Merge PDF files \"" << command << "\"" << std::endl;
+  
   int32_t return_code = system(command.c_str());
   if(WEXITSTATUS(return_code)) {
     std::cerr << "Warning: command " << command << "return nonzero status." << std::endl;
@@ -161,6 +163,8 @@ template <class T>
 void MakeProfile(DROMPA::Global &p)
 {
   T profile(p);
+  profile.setOutputFilename(p);
+
   for(auto &chr: p.gt) {
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
 
@@ -169,17 +173,13 @@ void MakeProfile(DROMPA::Global &p)
     profile.add(p, arrays, chr);
   }
 
-  profile.output();
+  //  profile.output();
   return;
 }
 
 
 void exec_PROFILE(DROMPA::Global &p)
 {
-  std::string filename = ".R";
-  //  remove_file(d->filename_profile);
-  //p.getSmoothing() smoothing off
-
   if (p.prof.isPtypeTSS())          MakeProfile<ProfileTSS>(p);
   else if (p.prof.isPtypeTTS())     MakeProfile<ProfileTES>(p);
   else if (p.prof.isPtypeGene100()) MakeProfile<ProfileGene100>(p);

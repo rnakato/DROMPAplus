@@ -58,8 +58,7 @@ void readWig(T &in, WigArray &array, const std::string &chrname, const int binsi
     if(!on) continue;
     std::vector<std::string> v;
     SplitBedGraphLine(v, lineStr);
-    //    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
-    array.setval((stoi(v[0])-1)/binsize, stol(v[1]));
+    array.setval((stoi(v[0])-1)/binsize, stod(v[1]));
   }
 
   return;
@@ -77,7 +76,6 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     if (lineStr.empty()) continue;
     std::vector<std::string> v;
     SplitBedGraphLine(v, lineStr);
-    //    boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
     if (v[0] != chrname) {
       if (!on) continue;
       else break;

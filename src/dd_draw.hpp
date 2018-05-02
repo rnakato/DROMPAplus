@@ -61,25 +61,27 @@ public:
 
   ChrArrayList(DROMPA::Global &p, const chrsize &_chr): chr(_chr) {
     loadSampleData(p, chr);
-
-#ifdef DEBUG
-    for (auto &x: p.samplepair) {
-      std::cout << "Samplepairchr " << x.first.argvChIP << ", " << x.first.argvInput << std::endl;
-    }
     
+#ifdef DEBUG    
     std::cout << "all WigArray:" << std::endl;
     for (auto x: arrays) {
       std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
     }
     std::cout << "all SamplePair:" << std::endl;
-    for (auto &x: pair) {
-      std::cout << x.first.argvChIP << "," << x.first.argvInput << ", binsize " << x.first.getbinsize() << std::endl;
+    for (auto &x: p.samplepair) {
+	std::cout << x.first.argvChIP << "," << x.first.argvInput
+		  << ", binsize " << x.first.getbinsize() << std::endl;
     }
 #endif
   }
 };
 
 class ReadProfile {
+  int32_t stype;
+  std::string Rscriptname;
+  std::string RDataname;
+  std::string Rfigurename;
+  
 protected:
   int32_t binsize;
   int32_t nbin;
@@ -101,19 +103,32 @@ protected:
   }
 
   void addValAroundPosi(const SamplePairOverlayed &pair, const ChrArrayList &arrays,
-			const int32_t posi, const std::string &strand, const std::string &name, const int32_t chrlen) {
+			const int32_t posi, const std::string &strand,
+			const std::string &name, const int32_t chrlen)
+  {
     if(posi - width_from_center < 0 || posi + width_from_center >= chrlen) return;
     
     int32_t bincenter(posi/binsize);
     int32_t sbin(bincenter - binwidth_from_center);
     int32_t ebin(bincenter + binwidth_from_center);
+    std::ofstream out(RDataname, std::ios::app);
+    out << name;
     if (strand == "+") {
-      int32_t n(0);
-      for (int32_t i=sbin; i<=ebin; ++i) hprofile.at(pair.first.argvChIP)[n++] = getSumVal(pair, arrays, i, i);
+      //      int32_t n(0);
+      for (int32_t i=sbin; i<=ebin; ++i) {
+	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
+	out << "\t" << getSumVal(pair, arrays, i, i);
+      }
+      //      for (int32_t i=sbin; i<=ebin; ++i) hprofile.at(pair.first.argvChIP)[n++] = getSumVal(pair, arrays, i, i);
     } else {
-      int32_t n(ebin);
-      for (int32_t i=sbin; i<=ebin; ++i) hprofile.at(pair.first.argvChIP)[n--] = getSumVal(pair, arrays, i, i);
+      // int32_t n(ebin);
+      for (int32_t i=ebin; i>=sbin; --i) {
+	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
+	out << "\t" << getSumVal(pair, arrays, i, i);
+      }
+      //  for (int32_t i=sbin; i<=ebin; ++i) hprofile.at(pair.first.argvChIP)[n--] = getSumVal(pair, arrays, i, i);
     }
+    out << std::endl;
   }
 
   double getSumVal(const SamplePairOverlayed &pair, const ChrArrayList &arrays, const int32_t sbin, const int32_t ebin) {
@@ -124,6 +139,7 @@ protected:
   
 public:
   ReadProfile(const DROMPA::Global &p, const int32_t _nbin=0):
+    stype(p.prof.stype),
     width_from_center(p.prof.width_from_center)
   {
     for (auto &x: p.samplepair) binsize = x.first.getbinsize();
@@ -136,9 +152,18 @@ public:
     for (auto &x: p.samplepair) hprofile[x.first.argvChIP] = array;
   }
 
+  void setOutputFilename(const DROMPA::Global &p) {
+    std::string prefix;
+    if (stype==0)      prefix = p.getPrefixName() + ".ChIPread";
+    else if (stype==1) prefix = p.getPrefixName() + ".Enrichment";
+    Rscriptname = prefix + ".R";
+    RDataname   = prefix + ".tsv";
+    Rfigurename = prefix + ".pdf";
+    for (auto &x: {Rscriptname, RDataname, Rfigurename}) unlink(x.c_str());
+  }
+
   void output(const DROMPA::Global &p) {
-    std::string filename = p.getbinprefix() + ".R";
-    std::ofstream out(filename);
+    //    std::ofstream out();
     
     //      double color[]={CLR_RED, CLR_BLUE, CLR_GREEN, CLR_LIGHTCORAL, CLR_BLACK, CLR_PURPLE, CLR_GRAY3, CLR_OLIVE, CLR_YELLOW3, CLR_LIGHTCYAN, CLR_PINK, CLR_SALMON, CLR_GREEN2, CLR_BLUE3, CLR_PURPLE2, CLR_DARKORANGE};
     std::vector<std::string> posistr = {"",
@@ -148,7 +173,7 @@ public:
 					"Distance from the peak summit (bp)"};
 
     //    out << "# bsnum_allowed=%d, bsnum_skipped=%d\n", d->ntotal_profile, d->ntotal_skip) << std::endl;
-    for (int32_t i=0; i<p.samplepair.size(); ++i) {
+    /*    for (int32_t i=0; i<p.samplepair.size(); ++i) {
       out << "p" << (i+1) << " <- c(" << std::endl;
       for (int32_t j=0; j<num; ++j) {
 	out << sample[i].profile.IP[j];
@@ -158,7 +183,7 @@ public:
       for (int32_t j=0; j<num; ++j) out << (1.96 * sample[i].profile.SEarray[j]);  // 95% CI
       out << "p" << (i+1) << "_upper <- p" << (i+1) << " + p" << (i+1) << "_SE" << std::endl;
       out << "p" << (i+1) << "_lower <- p" << (i+1) << " + p" << (i+1) << "_SE" << std::endl;
-    }
+      }*/
   }
   
   virtual void add(const DROMPA::Global &p, const ChrArrayList &arrays, const chrsize &chr)=0;
@@ -186,8 +211,12 @@ public:
     ReadProfile(p) {}
   
   void add(const DROMPA::Global &p, const ChrArrayList &arrays, const chrsize &chr) {
-    auto gmp(get_garray(p.anno.gmp.at(rmchr(chr.getname()))));
+    std::string chrname(rmchr(chr.getname()));
+    if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
+
+    auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
+      std::cout << gene.gname << std::endl;
       for (auto &x: p.samplepair) addValAroundPosi(x, arrays, gene.txStart, gene.strand, gene.gname, chr.getlen());
     }
   }
@@ -199,7 +228,10 @@ public:
     ReadProfile(p) {}
   
   void add(const DROMPA::Global &p, const ChrArrayList &arrays, const chrsize &chr) {
-    auto gmp(get_garray(p.anno.gmp.at(rmchr(chr.getname()))));
+    std::string chrname(rmchr(chr.getname()));
+    if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
+    
+    auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
       for (auto &x: p.samplepair) addValAroundPosi(x, arrays, gene.txEnd, gene.strand, gene.gname, chr.getlen());
     }
@@ -214,7 +246,10 @@ public:
   {}
 
   void add(const DROMPA::Global &p, const ChrArrayList &arrays, const chrsize &chr) {
-    auto gmp(get_garray(p.anno.gmp.at(rmchr(chr.getname()))));
+    std::string chrname(rmchr(chr.getname()));
+    if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
+    
+    auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
       int32_t s,e;
       int32_t len(gene.length());
@@ -289,7 +324,6 @@ public:
   }
 
   void DrawData(DROMPA::Global &p);
-
 };
 
 #endif /* _DD_READFILE_H_ */

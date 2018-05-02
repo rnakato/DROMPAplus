@@ -10,7 +10,6 @@
 std::vector<Command> generateCommands()
 {
   std::vector<Command> cmds;
-  // PC_SHARP
   cmds.emplace_back(Command("PC_SHARP", "Visualization: for sharp mark parameter set",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
@@ -21,25 +20,16 @@ std::vector<Command> generateCommands()
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
 			    CommandParamSet(10, 1, 0, 30, 3, 5, true)));
-  // PC_ENRICH 
   cmds.emplace_back(Command("PC_ENRICH","Visualization: ChIP/Input enrichment",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
 			    CommandParamSet(5, 0, 1, 30, 3, 5, false)));
-  // GV
   cmds.emplace_back(Command("GV", "Visualization: global-view enrichment",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_GV,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
 			    CommandParamSet(0, 0, 1, 2000, 1, 10, false)));
-  // PD
-  /*  cmds.emplace_back(Command("PD", "peak density",
-			    "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
-			    //	   dd_pd,
-			    exec_PCSHARP,
-			    {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
-			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));*/
   cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			    "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			    exec_PCSHARP,
@@ -48,7 +38,7 @@ std::vector<Command> generateCommands()
   cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
 			    exec_PROFILE,
-			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
+			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
 			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));
   cmds.emplace_back(Command("HEATMAP", "make heatmap of multiple samples",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
@@ -65,21 +55,12 @@ std::vector<Command> generateCommands()
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::PROF, DrompaCommand::OTHER},
 			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));
-  cmds.emplace_back(Command("GOVERLOOK", "genome-wide overlook of peak positions",
-			    "-bed <bedfile>,<name> [-bed <bedfile>,<name> ...]",
-			    //dd_overlook,
-			    exec_PCSHARP,
-			    {DrompaCommand::OTHER},
-			    CommandParamSet(5, 0, 0, 0, 0, 0, false)));
   return cmds;
 }
 
 void Command::InitDump()
 {
   std::vector<std::string> str_bool = {"OFF", "ON"};
-  std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
-  std::vector<std::string> str_ptype = { "NONE", "TSS", "TTS", "GENE100", "SPECIFIEDSITES" };
-  std::vector<std::string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
 
   std::cout << boost::format("\n======================================\n");
   std::cout << boost::format("drompa+ version %1%: %2%\n\n") % VERSION % name;
@@ -116,14 +97,7 @@ void Command::InitDump()
 	}
 	break;
       }
-    case DrompaCommand::PROF:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::PROF");
-	std::cout << boost::format("   show type: %1$\n")             % str_stype[MyOpt::getVal<int32_t>(values, "stype")];
-	std::cout << boost::format("   profile type: %1$\n")          % str_ptype[MyOpt::getVal<int32_t>(values, "ptype")];
-	std::cout << boost::format("   profile normalization: %1$\n") % str_ntype[MyOpt::getVal<int32_t>(values, "ntype")];
-	break;
-      }
+    case DrompaCommand::PROF: p.prof.InitDump(); break;
     case DrompaCommand::OTHER: p.InitDumpOther(); break;
     }
   }

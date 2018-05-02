@@ -160,8 +160,8 @@ void Profile::setOpts(MyOpt::Opts &allopts) {
      "Distribution: 0; ChIP read, 1; ChIP/Input enrichment")
     (SETOPT_RANGE("ntype", int32_t, 0, 0, 1),
      "Normalization: 0; total read 1; target regions only")
-    (SETOPT_OVER("widthfromcenter", double, 2500, 1), "width from the center")
-    (SETOPT_OVER("maxval", double, 0, 1), "Upper limit for heatmap")
+    (SETOPT_OVER("widthfromcenter", int32_t, 2500, 1), "width from the center")
+    (SETOPT_OVER("maxval", double, 0, 0), "Upper limit for heatmap")
     (SETOPT_OVER("hmsort", int32_t, 1, 1),  "Column number for sorting sites")
     ;
   allopts.add(opt);
@@ -182,6 +182,18 @@ void Profile::setValues(const Variables &values) {
     exit(0);
   }
   DEBUGprint("PROF setValues done.");
+}
+
+void Profile::InitDump() const {
+  DEBUGprint("INITDUMP:DrompaCommand::PROF");
+
+  std::vector<std::string> str_ptype = { "TSS", "TTS", "GENE100", "BEDSITES" };
+  std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
+  std::vector<std::string> str_ntype = { "WHOLE GENOME", "TARGET REGIONS ONLY" };
+
+  std::cout << boost::format("   Profile type: %1%\n")  % str_ptype[ptype];
+  std::cout << boost::format("   Show type: %1%\n")     % str_stype[stype];
+  std::cout << boost::format("   Normalization: %1%\n") % str_ntype[ntype];
 }
 
 

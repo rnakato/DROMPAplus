@@ -121,7 +121,7 @@ class WigArray {
   }
 
  public:
-  WigArray(){}
+  WigArray(): geta(1000.0){}
   WigArray(const size_t num, const int32_t val):
     array(num, val), geta(1000.0)
   {}
