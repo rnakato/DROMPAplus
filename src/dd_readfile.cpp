@@ -5,61 +5,6 @@
 #include <ext/stdio_filebuf.h>
 #include "dd_readfile.hpp"
 
-/* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
-   6:scale_tag   7:scale_ratio   8:scale_pvalue */
-int32_t scan_samplestr(const std::string &str, const std::vector<chrsize> gt,
-		       std::unordered_map<std::string, SampleFile> &sample,
-		       WigType iftype)
-{
-  int32_t binsize(0);
-  double scale_tag(0);
-  double scale_ratio(0);
-  double scale_pvalue(0);
-  
-  std::vector<std::string> v;
-  ParseLine(v, str, ',');
-  //  boost::split(v, str, boost::algorithm::is_any_of(","));
-
-  if(v.size() >8) {
-    std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
-    exit(1);
-  }
-  if(v[0] == "") {
-      std::cerr << "please specify ChIP sample: " << str << std::endl;
-      exit(1);
-  }
-  isFile(v[0]);
-
-  if(v.size() >4 && v[4] != "") {
-    try { binsize = stoi(v[4]); }
-    catch (...) { std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl; }
-  }
-  if(v.size() >5 && v[5] != "") {
-    try { scale_tag = stod(v[5]); }
-    catch (...) { std::cerr << "Warning: invalid scale_tag " << v[5] << "." << std::endl; }
-  }
-  if(v.size() >6 && v[6] != "") {
-    try { scale_ratio = stod(v[6]); }
-    catch (...) { std::cerr << "Warning: invalid scale_ratio " << v[6] << "." << std::endl; }
-  }
-  if(v.size() >7 && v[7] != "") {
-    try { scale_pvalue = stod(v[7]); }
-    catch (...) { std::cerr << "Warning: invalid scale_pvalue " << v[7] << "." << std::endl; }
-  }
-
-  // ChIP sample
-  if(sample.find(v[0]) == sample.end()) sample[v[0]] = SampleFile(v[0], gt, binsize, scale_tag, scale_ratio, scale_pvalue, iftype);
-  if(sample[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
-
-  // Input sample
-  if(v.size() >=2 && v[1] != "") {
-    if(sample.find(v[1]) == sample.end()) sample[v[1]] = SampleFile(v[1], gt, binsize, scale_tag, scale_ratio, scale_pvalue, iftype);
-    if(sample[v[0]].getbinsize() != sample[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
-  }
-
-  return sample[v[0]].getbinsize();
-}
-
 pdSample scan_pdstr(const std::string &str)
 {
   std::vector<std::string> v;
@@ -209,7 +154,7 @@ void funcBedGraph(WigArray &array, const std::string &filename, const int32_t bi
   }*/
 
 
-WigArray loadWigData(const std::string &filename, const SampleFile &x, const chrsize &chr)
+WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr)
 {
   //  std::cout << chr.getname() << std::endl;
 
@@ -230,8 +175,6 @@ WigArray loadWigData(const std::string &filename, const SampleFile &x, const chr
   
   //array.dump();
 
-  // NCIS hakokode
-
   return array;
 }
 
@@ -251,7 +194,7 @@ int32_t getNcolReadNum(std::string &lineStr)
   return ncol_readnum;
 }
 
-void SampleFile::scanStatsFile(const std::string &filename)
+void SampleInfo::scanStatsFile(const std::string &filename)
 {
   DEBUGprint("scanStatsFile...");
    
@@ -283,7 +226,7 @@ void SampleFile::scanStatsFile(const std::string &filename)
   }
 }
 
-void SampleFile::gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt)
+void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt)
 {
   std::string statsfile(prefix + "csv");
   if (checkFile(statsfile)) scanStatsFile(statsfile);

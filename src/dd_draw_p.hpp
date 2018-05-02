@@ -25,7 +25,7 @@ inline double CalcRatio(const double c, const double i, const double r)
 }
 
 namespace {
-  enum class LineType { CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
+  enum class LineType{CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
 
   enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=10, MERGIN_BETWEEN_LINE=30};
   enum {BOXHEIGHT_GENEBOX_EXON=140, BOXHEIGHT_GENEBOX_NOEXON=60};
@@ -231,9 +231,7 @@ class Page {
   }
 
   template <class T>
-  //  void StrokeDataFrame(const DROMPA::Global &p, const SamplePairChr &pair)
   void StrokeDataFrame(const DROMPA::Global &p, const SamplePairOverlayed &pair)
-  
   {
     par.yaxis_now += par.getHeightDf() + MERGIN_BETWEEN_DATA;
     T df(cr, p, pair, par, chrname);
@@ -320,7 +318,7 @@ class Page {
     cr->stroke();
     cr->scale(1, 1/r);
     
-    // bin of interaction
+    // Highlight each site of interaction
     StrokeWidthOfInteractionSite(inter.first, ytop);
     StrokeWidthOfInteractionSite(inter.second, ytop);
   }
@@ -375,7 +373,6 @@ class Page {
     else end = (page+1) * linenum_per_page;
     return std::forward_as_tuple(start, end);
   }
-
 };
 
 

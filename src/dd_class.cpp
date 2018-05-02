@@ -402,20 +402,21 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	DEBUGprint("ChIP setValues...");
 	try {
 	  if (!values.count("input")) PRINTERR("specify --input option.");
-	  
+
+	  // SamplePairOverlayed first
 	  std::vector<std::string> v(getVal<std::vector<std::string>>(values, "input"));
 	  for (auto &x:v) {
-	    int32_t bs = scan_samplestr(x, gt, sample, iftype);
-	    samplepair.emplace_back(x, bs);
+	    vsinfo.addSampleInfo(x, gt, iftype);
+	    samplepair.emplace_back(x, vsinfo);
   	  }
 	  
+	  // SamplePairOverlayed second
 	  if (values.count("ioverlay")) {
 	    v = getVal<std::vector<std::string>>(values, "ioverlay");
 	    int32_t num(0);
 	    for (auto &x:v) {
-	      int32_t bs = scan_samplestr(x, gt, sample, iftype);
-	      samplepair[num].second = SamplePairEach(x, bs);
-	      samplepair[num].overlay = true;
+	      vsinfo.addSampleInfo(x, gt, iftype);
+	      samplepair[num].setSecondSample(x, vsinfo);
 	      ++num;
 	    }
 	  }

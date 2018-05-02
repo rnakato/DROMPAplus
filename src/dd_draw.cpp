@@ -131,7 +131,6 @@ void Page::drawInteraction(const InteractionSet &vinter)
   return;
 }
 
-//void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairChr &pair)
 void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair)
 {
   if (p.drawparam.showpinter) StrokeDataFrame<PinterDataFrame>(p, pair);
@@ -253,27 +252,30 @@ void Page::StrokeEachLayer(const DROMPA::Global &p)
 {  
   if (p.anno.GC.isOn()) StrokeGraph(GC);
   if (p.anno.GD.isOn()) StrokeGraph(GD);
-  
+
+  // Gene
   if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawGeneAnnotation(p);
 
+  // Read
   for (auto &x: vsamplepairoverlayed) StrokeReadLines(p, x);
-    //  for (size_t j=0; j<pairs.size(); ++j) StrokeReadLines(p, pairs[j]);
+  if (p.drawparam.showitag==2 && vsamplepairoverlayed[0].first.InputExists()) StrokeDataFrame<InputDataFrame>(p, vsamplepairoverlayed[0]);
+
   stroke_xaxis_num(par.yaxis_now, 9);
-  
+
+  // Bed file
   if(p.anno.vbedlist.size()) {
     par.yaxis_now += 15;
     for (auto &x: p.anno.vbedlist) drawBedAnnotation(x);
   }
-  
+
+  // Interaction
   if (p.anno.vinterlist.size()) {
-    par.yaxis_now += 158;
+    par.yaxis_now += 15;
     for (auto &x: p.anno.vinterlist) drawInteraction(x);
   }
 
   //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);
-  
-  //    if(d->visualize_itag==2) stroke_readdist(p, d, cr, &(sample[0]), xstart, xend, LTYPE_INPUT, 0);
-  
+
   par.yaxis_now += MERGIN_BETWEEN_LINE;
   return;
 }

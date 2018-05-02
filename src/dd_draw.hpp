@@ -19,7 +19,7 @@ public:
 
   ChrArray(){}
   ChrArray(const DROMPA::Global &p,
-	   const std::pair<const std::string, SampleFile> &x,
+	   const std::pair<const std::string, SampleInfo> &x,
 	   const chrsize &chr):
     binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
     array(loadWigData(x.first, x.second, chr)),
@@ -43,57 +43,8 @@ public:
   }
 };
 
-/*class SamplePairChr {
-  void setRatio(const DROMPA::Global &p, SamplePairEach &pair,
-		const std::unordered_map<std::string, ChrArray> &arrays,
-		const std::string &chrname)
-  {
-    DEBUGprint("setRatio");
-    if (pair.argvInput == "") return;
-    pair.ratio = 1;
-    
-    switch (p.getNorm()) {
-    case 0:
-      pair.ratio = 1;
-      break;
-    case 1:
-      pair.ratio = getratio(arrays.at(pair.argvChIP).totalreadnum, arrays.at(pair.argvInput).totalreadnum);
-      break;
-    case 2:
-      pair.ratio = getratio(arrays.at(pair.argvChIP).totalreadnum_chr.at(chrname), arrays.at(pair.argvInput).totalreadnum_chr.at(chrname));
-      break;
-    case 3:
-      pair.ratio = 1; // NCIS
-      break;
-    }
-#ifdef DEBUG
-    std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << pair.ratio << std::endl;
-#endif
-  }
-  
-public:
-  SamplePairOverlayed &pair;
-  //  std::vector<bed> peaks1st;
-  //std::vector<bed> peaks2nd;
-
-  SamplePairChr(const DROMPA::Global &p, SamplePairOverlayed &x,
-		const std::unordered_map<std::string, ChrArray> &arrays,
-		const std::string &chrname):
-    pair(x)
-  {
-    setRatio(p, pair.first, arrays, chrname);
-    //    if (x.first.peak_argv != "") peaks1st = x.first.getpeaksChr(chrname);
-    if (pair.overlay) {
-      setRatio(p, pair.second, arrays, chrname);
-      //   if (x.second.peak_argv != "") peaks2nd = x.second.getpeaksChr(chrname);
-    }
-  }
-  
-  };*/
-
 class Figure {
   std::unordered_map<std::string, ChrArray> arrays;
-  //  std::vector<SamplePairChr> pairs;
   std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   std::vector<bed> regionBed;
   
@@ -124,7 +75,7 @@ class Figure {
   
   void loadSampleData(DROMPA::Global &p, const chrsize &chr) {
     clock_t t1,t2;
-    for (auto x: p.sample) {
+    for (auto &x: p.vsinfo.getarray()) {
       t1 = clock();
       arrays[x.first] = ChrArray(p, x, chr);
       t2 = clock();
@@ -135,9 +86,8 @@ class Figure {
 #ifdef DEBUG
       std::cout << "Samplepairchr " << x.first.argvChIP << ", " << x.first.argvInput << std::endl;
 #endif
-      //      pairs.emplace_back(p, x, arrays, chr.getname());
       setRatio(p, x.first, chr.getname());
-      if (x.overlay) setRatio(p, x.second, chr.getname());
+      if (x.OverlayExists()) setRatio(p, x.second, chr.getname());
     }
 #ifdef DEBUG
     std::cout << "all WigArray:" << std::endl;
