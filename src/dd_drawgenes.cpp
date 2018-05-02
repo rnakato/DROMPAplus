@@ -93,7 +93,7 @@ namespace {
 }
 
 
-void Page::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
+void PDFPage::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
 {
   cr->set_line_width(0.3);
   try {
@@ -129,7 +129,7 @@ void Page::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
   return;
 }
 
-void Page::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
+void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
 {
   DEBUGprint("strokeGeneSGD");
 
@@ -209,7 +209,7 @@ void Page::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
   return;
 }
 
-void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
+void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
 {
   DEBUGprint("strokeGene");
   
@@ -271,7 +271,7 @@ void Page::strokeGene(const DROMPA::Global &p, const double ycenter)
   return;
 }
 
-void Page::DrawGeneAnnotation(const DROMPA::Global &p)
+void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
 {
   DEBUGprint("DrawGeneAnnotation");
   int32_t boxheight;

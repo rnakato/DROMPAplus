@@ -34,12 +34,12 @@ std::vector<Command> generateCommands()
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
 			    CommandParamSet(0, 0, 1, 2000, 1, 10, false)));
   // PD
-  cmds.emplace_back(Command("PD", "peak density",
+  /*  cmds.emplace_back(Command("PD", "peak density",
 			    "-pd <pdfile>,<name> [-pd <pdfile>,<name> ...]",
 			    //	   dd_pd,
 			    exec_PCSHARP,
 			    {DrompaCommand::PD, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
-			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));
+			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));*/
   cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			    "-i <ChIP>,,<name> -i <ChIP>,,<name> -bed <bedfile>",
 			    exec_PCSHARP,
@@ -47,7 +47,7 @@ std::vector<Command> generateCommands()
 			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));
   cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
 			    "-i <ChIP>,<Input>,<name> [-i <ChIP>,<Input>,<name> ...]",
-			    exec_PCSHARP,
+			    exec_PROFILE,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
 			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));
   cmds.emplace_back(Command("HEATMAP", "make heatmap of multiple samples",

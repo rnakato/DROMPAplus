@@ -178,11 +178,10 @@ public:
   }
 };
 
-class Page {
+class PDFPage {
   enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
   const ChrArrayMap &arrays;
-  //  const std::vector<SamplePairChr> &pairs;
   const std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   GraphData GC;
   GraphData GD;
@@ -213,9 +212,8 @@ class Page {
   public:
   DParam par;
   
-  Page(const DROMPA::Global &p,
+  PDFPage(const DROMPA::Global &p,
        const ChrArrayMap &refarrays,
-       //       const std::vector<SamplePairChr> &refpairs,
        const std::vector<SamplePairOverlayed> &pair,
        const Cairo::RefPtr<Cairo::PdfSurface> surface,
        const chrsize &chr, const int32_t s, const int32_t e):

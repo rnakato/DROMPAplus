@@ -208,7 +208,7 @@ public:
        boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
        "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
       ("binsize,b",
-       boost::program_options::value<int32_t>()->default_value(50)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
+       boost::program_options::value<int32_t>()->default_value(100)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
        "bin size")
       ("outputzero",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--outputzero")),

@@ -83,7 +83,7 @@ namespace {
 }
 
 
-void Page::drawInteraction(const InteractionSet &vinter)
+void PDFPage::drawInteraction(const InteractionSet &vinter)
 {
   DEBUGprint("drawInteraction");
   int32_t boxheight(BOXHEIGHT_INTERACTION);
@@ -131,7 +131,7 @@ void Page::drawInteraction(const InteractionSet &vinter)
   return;
 }
 
-void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair)
+void PDFPage::StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair)
 {
   if (p.drawparam.showpinter) StrokeDataFrame<PinterDataFrame>(p, pair);
   if (p.drawparam.showpenrich && pair.first.InputExists()) StrokeDataFrame<PenrichDataFrame>(p, pair);
@@ -144,9 +144,9 @@ void Page::StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &p
   return;
 }
 
-void Page::StrokeGraph(const GraphData &graph)
+void PDFPage::StrokeGraph(const GraphData &graph)
 {
-  DEBUGprint("Page::DrawGraph");
+  DEBUGprint("PDFPage::DrawGraph");
   int32_t s(par.xstart/graph.binsize);
   int32_t e(par.xend/graph.binsize +1);
   double diff = graph.binsize * par.dot_per_bp;
@@ -200,7 +200,7 @@ void Page::StrokeGraph(const GraphData &graph)
   return;
 }
 
-void Page::drawBedAnnotation(const vbed<bed12> &vbed)
+void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
 {
   DEBUGprint("drawBedAnnotation");
   int32_t boxheight(BOXHEIGHT_BEDANNOTATION);
@@ -248,7 +248,7 @@ void Page::drawBedAnnotation(const vbed<bed12> &vbed)
 }
 
 
-void Page::StrokeEachLayer(const DROMPA::Global &p)
+void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {  
   if (p.anno.GC.isOn()) StrokeGraph(GC);
   if (p.anno.GD.isOn()) StrokeGraph(GD);
@@ -280,9 +280,9 @@ void Page::StrokeEachLayer(const DROMPA::Global &p)
   return;
 }
 
-void Page::MakePage(const DROMPA::Global &p, const int32_t page_no, const int32_t region_no)
+void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const int32_t region_no)
 {
-  DEBUGprint("Page::MakePage");
+  DEBUGprint("PDFPage::MakePage");
   int32_t line_start, line_end;
   std::tie(line_start, line_end) = get_start_end_linenum(page_no, p.drawparam.getlpp());
  
@@ -308,7 +308,7 @@ void Page::MakePage(const DROMPA::Global &p, const int32_t page_no, const int32_
   return;
 }
 
-void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
+void Figure::DrawData(DROMPA::Global &p)
 {
   DEBUGprint("Figure::DrawData");
   int32_t width(pagewidth);
@@ -323,7 +323,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
     for (int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
-      Page page(p, arrays, vsamplepairoverlayed, surface, chr, 0, chr.getlen());
+      PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, 0, chr.getlen());
       page.MakePage(p, i, 1);
     }
   } else {
@@ -332,7 +332,7 @@ void Figure::DrawData(DROMPA::Global &p, const chrsize &chr)
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
-	Page page(p, arrays, vsamplepairoverlayed, surface, chr, x.start, x.end);
+	PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, x.start, x.end);
 	page.MakePage(p, i, region_no);
       }
       ++region_no;

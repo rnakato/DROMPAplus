@@ -152,12 +152,11 @@ public:
   
 
 class yScale {
-  enum {TAG_DEFAULT=30, RATIO_DEFAULT=3, P_DEFAULT=5};
  public:
   double tag;
   double ratio;
   double pvalue;
- yScale(): tag(TAG_DEFAULT), ratio(RATIO_DEFAULT), pvalue(P_DEFAULT) {}
+   yScale(): tag(0), ratio(0), pvalue(0) {}
 };
 
 class SamplePairEach {
@@ -261,7 +260,7 @@ public:
 
 namespace DROMPA {
   class Global;
-  
+
   class Annotation {
 
   public:
@@ -309,6 +308,28 @@ namespace DROMPA {
     int32_t getgftype() const { return gftype; }
   };
   
+  class Profile {
+    enum {TSS, TTS, GENE100, BEDSITES, PTYPENUM};
+
+  public:
+    int32_t ptype;
+    int32_t stype;
+    int32_t ntype;
+    int32_t width_from_center;
+    double maxval;
+    int32_t hmsort;
+    
+    Profile(){}
+    
+    void setOpts(MyOpt::Opts &allopts);
+    void setValues(const MyOpt::Variables &values);
+    void InitDump() const;
+    bool isPtypeTSS() const { return ptype == TSS; }
+    bool isPtypeTTS() const { return ptype == TTS; }
+    bool isPtypeGene100() const { return ptype == GENE100; }
+    bool isPtypeBed() const { return ptype == BEDSITES; }
+  };
+  
   class Threshold {
   public:
     double pthre_inter;
@@ -343,7 +364,7 @@ namespace DROMPA {
     void setValues(const MyOpt::Variables &values);
     void InitDump(const MyOpt::Variables &values) const;
     
-    std::vector<bed> getRegionBedChr(const std::string &chrname) {
+    std::vector<bed> getRegionBedChr(const std::string &chrname) const {
       std::vector<bed> vbed;
       for(auto &x: regionBed) {
 	if (x.chr == chrname || x.chr == "chr" + chrname) vbed.emplace_back(x);
@@ -414,6 +435,7 @@ namespace DROMPA {
     DrawRegion drawregion;
     Threshold thre;
     Annotation anno;
+    Profile prof;
 
     std::vector<chrsize> gt;
     SampleInfoList vsinfo;

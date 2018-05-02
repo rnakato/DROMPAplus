@@ -127,7 +127,7 @@ void exec_PCSHARP(DROMPA::Global &p)
     if(p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
 
     Figure fig(p, chr);
-    if (fig.Draw(p, chr)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
+    if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }
 
   MergePdf(p, StrAllPdf);
@@ -150,9 +150,40 @@ void exec_GV(DROMPA::Global &p)
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
 
     Figure fig(p, chr);
-    if (fig.Draw(p, chr)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
+    if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }
 
   MergePdf(p, StrAllPdf);
+  return;
+}
+
+template <class T>
+void MakeProfile(DROMPA::Global &p)
+{
+  T profile(p);
+  for(auto &chr: p.gt) {
+    if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
+
+    ChrArrayList arrays(p, chr);
+    DEBUGprint("addProfile");
+    profile.add(p, arrays, chr);
+  }
+
+  profile.output();
+  return;
+}
+
+
+void exec_PROFILE(DROMPA::Global &p)
+{
+  std::string filename = ".R";
+  //  remove_file(d->filename_profile);
+  //p.getSmoothing() smoothing off
+
+  if (p.prof.isPtypeTSS())          MakeProfile<ProfileTSS>(p);
+  else if (p.prof.isPtypeTTS())     MakeProfile<ProfileTES>(p);
+  else if (p.prof.isPtypeGene100()) MakeProfile<ProfileGene100>(p);
+  else if (p.prof.isPtypeBed())     MakeProfile<ProfileBedSites>(p);
+  
   return;
 }

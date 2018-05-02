@@ -34,7 +34,7 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
 }
   
 void Annotation::setOptsGV(MyOpt::Opts &allopts) {
-  MyOpt::Opts opt("Optional data",100);
+  MyOpt::Opts opt("Genome view",100);
   opt.add_options()
     ("inter",  value<std::vector<std::string>>(), "<interaction file>,<label>: Specify interaction file and name (<label> can be omited)")
     ("mp",     value<std::string>(), "Mappability file")
@@ -47,6 +47,7 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts) {
     ;
   allopts.add(opt);
 }
+
   
 void Annotation::setValuesPC(const Variables &values) {
   DEBUGprint("AnnoPC setValues...");
@@ -117,7 +118,7 @@ void Annotation::setValuesGV(const Variables &values) {
   }
   DEBUGprint("AnnoGV setValues done.");
 }
-  
+
 void Annotation::InitDumpPC(const Variables &values) const {
   std::vector<std::string> str_gftype = {"refFlat", "GTF", "SGD"};
   std::vector<std::string> str_gtype = {"Transcript", "Gene"};
@@ -148,6 +149,41 @@ void Annotation::InitDumpGV(const Variables &values) const {
   /*	if(d->GC.argv)     std::cout << boost::format("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
 	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
 }
+
+
+void Profile::setOpts(MyOpt::Opts &allopts) {
+  MyOpt::Opts opt("PROFILE AND HEATMAP",100);
+  opt.add_options()
+    (SETOPT_RANGE("ptype", int32_t, TSS, TSS, PTYPENUM),
+     "Region: 0; around TSS, 1; around TES, 2; divide gene into 100 subregions 3; around peak sites")
+    (SETOPT_RANGE("stype", int32_t, 0, 0, 1),
+     "Distribution: 0; ChIP read, 1; ChIP/Input enrichment")
+    (SETOPT_RANGE("ntype", int32_t, 0, 0, 1),
+     "Normalization: 0; total read 1; target regions only")
+    (SETOPT_OVER("widthfromcenter", double, 2500, 1), "width from the center")
+    (SETOPT_OVER("maxval", double, 0, 1), "Upper limit for heatmap")
+    (SETOPT_OVER("hmsort", int32_t, 1, 1),  "Column number for sorting sites")
+    ;
+  allopts.add(opt);
+}
+
+void Profile::setValues(const Variables &values) {
+  DEBUGprint("PROF setValues...");
+      
+  try {
+    ptype = getVal<int32_t>(values, "ptype");
+    stype = getVal<int32_t>(values, "stype");
+    ntype = getVal<int32_t>(values, "ntype");
+    width_from_center = getVal<int32_t>(values, "widthfromcenter");
+    maxval = getVal<double>(values, "maxval");
+    hmsort = getVal<int32_t>(values, "hmsort");
+  } catch (const boost::bad_any_cast& e) {
+    std::cout << e.what() << std::endl;
+    exit(0);
+  }
+  DEBUGprint("PROF setValues done.");
+}
+
 
 void Threshold::setOpts(MyOpt::Opts &allopts) {
   sigtest = false;
@@ -337,6 +373,7 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
     case DrompaCommand::REGION:  drawregion.setOpts(opts); break;
+    case DrompaCommand::PROF:    prof.setOpts(opts); break;
     case DrompaCommand::CG: 
       {
 	options_description o("CG",100);
@@ -366,24 +403,6 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 	opts.add(o);
 	break;
       }
-    case DrompaCommand::PROF:
-      {
-	options_description o("PROFILE AND HEATMAP",100);
-	o.add_options()
-	  ("ptype", value<int32_t>(),  "Region type: 1; around TSS, 2; around TES, 3; divide gene into 100 subregions 4; around peak sites")
-	  ("stype", value<int32_t>(),  "Show type: 0; ChIP read (default) 1; ChIP/Input enrichment")
-	  ("ntype", value<int32_t>(),  "Normalization type: 0; total read 1; target regions only")
-	  (SETOPT_OVER("cw", double, 2500, 1), "width from the center")
-	  ("maxval", value<double>(),  "Upper limit for heatmap")
-	  ("offse",  "Omit the standard error in profile")
-	  (SETOPT_OVER("hmsort", int32_t, 1, 1),  "Column number for sorting sites")
-	  ("sortgbody", "Sort sites by read number of gene body (default: TSS)")
-	  ("pdetail",  "")
-	  ;
-	opts.add(o);
-	break;
-      }
-      
     case DrompaCommand::OTHER: setOptsOther(opts); break;
     }
   }
@@ -435,6 +454,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::THRE: thre.setValues(values); break;
     case DrompaCommand::ANNO_PC: anno.setValuesPC(values); break;
     case DrompaCommand::ANNO_GV: anno.setValuesGV(values); break;
+    case DrompaCommand::PROF: prof.setValues(values); break;
     case DrompaCommand::DRAW: drawparam.setValues(values, samplepair.size()); break;
     case DrompaCommand::REGION: drawregion.setValues(values); break;
     case DrompaCommand::CG: 
@@ -457,15 +477,6 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	
 	std::vector<std::string> v(getVal<std::vector<std::string>>(values, "pd"));
 	for(auto &x: v) pd.emplace_back(scan_pdstr(x));
-	break;
-      }
-    case DrompaCommand::PROF:
-      {
-	DEBUGprint("Global::setValues::PROF");
-	//	chkrange<int>(values, "ptype", 0, 4);
-	//chkrange<int>(values, "stype", 0, 1);
-	//chkrange<int>(values, "ntype", 0, 1);
-	//	for (auto x: {"cw", "maxval", "hmsort"}) chkminus<int>(values, x, 0);
 	break;
       }
     case DrompaCommand::OTHER: setValuesOther(values); break;

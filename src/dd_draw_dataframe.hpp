@@ -19,7 +19,9 @@ class DataFrame {
     else x = OFFSET_X - 20;
 
     for(int32_t i=1; i<=par.barnum; ++i) {
-      std::string str(float2string(i*scale, 1));
+      std::string str;
+      if (!nlayer) str = float2string(i*scale, 1);
+      else str = float2string(i*scale2nd, 1);
       showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), str, 9);
     }
   }
@@ -59,13 +61,15 @@ class DataFrame {
     double value(getVal(pair, arrays, i));
     if (!value) return;
     
-    int32_t len(getbinlen(value / scale));
+    int32_t len;
+    if (!nlayer) len = getbinlen(value / scale);
+    else len = getbinlen(value / scale2nd);
     
     setColor(value, nlayer, 1);
-    if(len <0) rel_yline(cr, xcen, yaxis + len, len_binedge);
+    if (len <0) rel_yline(cr, xcen, yaxis + len, len_binedge);
     cr->stroke();
     
-    if(par.alpha) {
+    if (par.alpha) {
       setColor(value, nlayer, par.alpha);
       rel_yline(cr, xcen, yaxis, len);
       cr->stroke();
@@ -106,8 +110,8 @@ protected:
     width_df(width_draw), height_df(refparam.getHeightDf()), len_binedge(2),
     sigtest(sig), threshold(thre), chrname(_chrname)
   {
-    if (!slocal1) scale    = sglobal; else scale    = slocal1;
-    if (!slocal2) scale2nd = sglobal; else scale2nd = slocal2;
+    if (slocal1) scale    = slocal1; else scale    = sglobal;
+    if (slocal2) scale2nd = slocal2; else scale2nd = sglobal;
   }
 
   void Draw(const DROMPA::Global &p, const SamplePairOverlayed &pair, const ChrArrayMap &arrays) {
@@ -126,13 +130,13 @@ protected:
     }
 
     // Sample Label
-    if (p.drawparam.isshowylab()) stroke_ylab(pair);
+    if (p.drawparam.isshowylab()) StrokeYlab(pair);
   }
 
   void HighlightPeaks(const SamplePairOverlayed &pair){ (void)(pair); return; }
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
   
-  virtual void stroke_ylab(const SamplePairOverlayed &pair)=0;
+  virtual void StrokeYlab(const SamplePairOverlayed &pair)=0;
   virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
   virtual double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i)=0;
 };
@@ -142,16 +146,16 @@ class ChIPDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
     (void)(value);
     if (!nlayer) cr->set_source_rgba(CLR_GREEN3, alpha);
-    else cr->set_source_rgba(CLR_PINK2, alpha);
+    else cr->set_source_rgba(CLR_ORANGE, alpha);
   }
   double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
     return arrays.at(pair.argvChIP).array[i];
   }
-  void stroke_ylab(const SamplePairOverlayed &pair) {
+  void StrokeYlab(const SamplePairOverlayed &pair) {
     if (pair.OverlayExists()) { 
-      cr->set_source_rgba(CLR_BLUEGRAY, 1);
+      cr->set_source_rgba(CLR_GREEN3, 1);
       showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
-      cr->set_source_rgba(CLR_PINK2, 1);
+      cr->set_source_rgba(CLR_ORANGE, 1);
       showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
     } else { 
       cr->set_source_rgba(CLR_BLACK, 1);
@@ -193,7 +197,7 @@ class InputDataFrame : public DataFrame {
   double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
     return arrays.at(pair.argvInput).array[i];
   }
-  void stroke_ylab(const SamplePairOverlayed &pair)
+  void StrokeYlab(const SamplePairOverlayed &pair)
   {
     if (pair.OverlayExists()) {
       cr->set_source_rgba(CLR_BLACK, 1);
@@ -254,7 +258,7 @@ class RatioDataFrame : public DataFrame {
     if(p.drawparam.showctag) return "";
     else return pair.second.label;
   }
-  void stroke_ylab(const SamplePairOverlayed &pair)
+  void StrokeYlab(const SamplePairOverlayed &pair)
   {
     if (pair.OverlayExists()) {
       if (label2nd != "") {
@@ -300,7 +304,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
 	cr->set_source_rgba(CLR_ORANGE, alpha);
       }
     } else {    // second layer
-      if(isGV || sigtest) {
+      if (isGV || sigtest) {
 	if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
 	else cr->set_source_rgba(CLR_GRAY2, alpha);
       } else {
@@ -320,7 +324,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     if(p.drawparam.showctag) return "";
     else return pair.second.label;
   }
-  void stroke_ylab(const SamplePairOverlayed &pair)
+  void StrokeYlab(const SamplePairOverlayed &pair)
   {
     if (pair.OverlayExists()) {
       if (label2nd != "") {
@@ -347,7 +351,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     int32_t barnum_minus = par.barnum/2;
     double x(0);
     if (!nlayer) x = OFFSET_X + width_df + 7; else x = OFFSET_X - 20;
-    for(int32_t i=1; i<=par.barnum; ++i) {
+    for (int32_t i=1; i<=par.barnum; ++i) {
       std::string str;
       if (i < barnum_minus) str = "1/" + std::to_string(static_cast<int>(pow(2, (barnum_minus-i) * scale)));
       else str = std::to_string(static_cast<int>(pow(2, (i-barnum_minus) * scale)));
@@ -363,14 +367,14 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     if (!value) return;
     
     int32_t len(0);
-    if(value>0) len = -std::min(par.ystep*value, height_df/2);
-    else        len = -std::max(par.ystep*value, -height_df/2);
+    if (value>0) len = -std::min(par.ystep*value, height_df/2);
+    else         len = -std::max(par.ystep*value, -height_df/2);
     
     setColor(value, nlayer, 1);
     rel_yline(cr, xcen, yaxis + len, len_binedge);
     cr->stroke();
     
-    if(par.alpha) {
+    if (par.alpha) {
       setColor(value, nlayer, par.alpha);
       rel_yline(cr, xcen, yaxis-height_df/2, len);
       cr->stroke();
@@ -405,14 +409,14 @@ class PinterDataFrame : public DataFrame {
     return a.stats.getlogp(a.array[i]);
   }
   const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP)";
+    if (p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP)";
     else return pair.first.label;
   }
   const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "";
+    if (p.drawparam.showctag || p.drawparam.showratio) return "";
     else return pair.second.label;
   }
-  void stroke_ylab(const SamplePairOverlayed &pair)
+  void StrokeYlab(const SamplePairOverlayed &pair)
   {
     if (pair.OverlayExists()) {
       if (label2nd != "") {
@@ -444,10 +448,10 @@ public:
 class PenrichDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha)
   {
-    if (!nlayer) { // first layer
+    if (!nlayer) {
       if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
       else cr->set_source_rgba(CLR_GRAY, alpha);
-    } else {    // second layer
+    } else {
       if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     }
@@ -463,7 +467,7 @@ class PenrichDataFrame : public DataFrame {
     if(p.drawparam.showctag || p.drawparam.showratio) return "";
     else return pair.second.label;
   }
-  void stroke_ylab(const SamplePairOverlayed &pair)
+  void StrokeYlab(const SamplePairOverlayed &pair)
   {
     if (pair.OverlayExists()) {
       if (label2nd != "") {

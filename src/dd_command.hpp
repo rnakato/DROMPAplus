@@ -11,6 +11,7 @@
 
 void exec_PCSHARP(DROMPA::Global &p);
 void exec_GV(DROMPA::Global &p);
+void exec_PROFILE(DROMPA::Global &p);
 
 class Command {
   std::string name;
