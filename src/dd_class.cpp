@@ -20,7 +20,7 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
 {
   MyOpt::Opts opt("Annotation",100);
   opt.add_options()
-    ("genefile,g", value<std::string>(), "Gene annotation file")
+    ("gene,g", value<std::string>(), "Gene annotation file")
     (SETOPT_RANGE("gftype", int32_t, 0, 0, 2),
      "Format of gene annotation\n     0: RefFlat\n     1: GTF\n     2: SGD (for S. cerevisiae)\n")
     ("showtranscriptname", "Show transcript name (default: gene name)")
@@ -53,9 +53,9 @@ void Annotation::setValuesPC(const Variables &values) {
   DEBUGprint("AnnoPC setValues...");
 
   try {
-    for (auto x: {"genefile", "ars", "ter", "repeat"}) if (values.count(x)) isFile(getVal<std::string>(values, x));
-    if (values.count("genefile")) {
-      genefile = getVal<std::string>(values, "genefile");
+    for (auto x: {"gene", "ars", "ter", "repeat"}) if (values.count(x)) isFile(getVal<std::string>(values, x));
+    if (values.count("gene")) {
+      genefile = getVal<std::string>(values, "gene");
       gftype   = getVal<int32_t>(values, "gftype");
       gmp = getGMP();
     }
@@ -79,7 +79,8 @@ void Annotation::setValuesPC(const Variables &values) {
 	ParseLine(v, x, ',');
 	auto vbed = parseBed<bed12>(v[0]);
 	//    printBed(vbed);
-	vbedlist.emplace_back(vbed, v[1]);
+	if(v.size()>1) vbedlist.emplace_back(vbed, v[1]);
+	else vbedlist.emplace_back(vbed, "Bed");
       }
     }
   } catch (const boost::bad_any_cast& e) {
@@ -194,6 +195,7 @@ void Profile::InitDump() const {
   std::cout << boost::format("   Profile type: %1%\n")  % str_ptype[ptype];
   std::cout << boost::format("   Show type: %1%\n")     % str_stype[stype];
   std::cout << boost::format("   Normalization: %1%\n") % str_ntype[ntype];
+  std::cout << boost::format("   Width from center: %1%\n") % width_from_center;
 }
 
 

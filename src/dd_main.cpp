@@ -164,26 +164,24 @@ void MakeProfile(DROMPA::Global &p)
 {
   T profile(p);
   profile.setOutputFilename(p);
+  profile.printHead(p);
 
   for(auto &chr: p.gt) {
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
+    std::cout << "\nchr" << chr.getname() << "..";
 
-    ChrArrayList arrays(p, chr);
-    DEBUGprint("addProfile");
-    profile.add(p, arrays, chr);
+    profile.WriteTSV_EachChr(p, chr);
   }
 
-  //  profile.output();
+  profile.MakeFigure(p);
   return;
 }
 
-
 void exec_PROFILE(DROMPA::Global &p)
 {
-  if (p.prof.isPtypeTSS())          MakeProfile<ProfileTSS>(p);
-  else if (p.prof.isPtypeTTS())     MakeProfile<ProfileTES>(p);
+  if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) MakeProfile<ProfileTSS>(p);
   else if (p.prof.isPtypeGene100()) MakeProfile<ProfileGene100>(p);
   else if (p.prof.isPtypeBed())     MakeProfile<ProfileBedSites>(p);
-  
+
   return;
 }

@@ -297,7 +297,7 @@ namespace DROMPA {
       
       //      printMap(tmp);
       
-	return tmp; // hash for transcripts
+      return tmp; // hash for transcripts
     }
     
     void setValuesPC(const MyOpt::Variables &values);
