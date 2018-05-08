@@ -263,6 +263,14 @@ namespace DROMPA {
 
   class Annotation {
 
+    template <class T>
+    void readBedFile(const std::vector<std::string> &v) {
+      auto vbed = parseBed<T>(v[0]);
+      //    printBed(vbed);
+      if(v.size()>1) vbedlist.emplace_back(vbed, v[1]);
+      else vbedlist.emplace_back(vbed, "Bed");
+    }
+    
   public:
     std::string genefile;
     int32_t gftype;

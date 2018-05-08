@@ -48,7 +48,6 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts) {
   allopts.add(opt);
 }
 
-  
 void Annotation::setValuesPC(const Variables &values) {
   DEBUGprint("AnnoPC setValues...");
 
@@ -74,13 +73,9 @@ void Annotation::setValuesPC(const Variables &values) {
 
     if (values.count("bed")) {
       for(auto &x: getVal<std::vector<std::string>>(values, "bed")) {
-	//    std::cout << x << std::endl;
 	std::vector<std::string> v;
 	ParseLine(v, x, ',');
-	auto vbed = parseBed<bed12>(v[0]);
-	//    printBed(vbed);
-	if(v.size()>1) vbedlist.emplace_back(vbed, v[1]);
-	else vbedlist.emplace_back(vbed, "Bed");
+	readBedFile<bed12>(v);
       }
     }
   } catch (const boost::bad_any_cast& e) {

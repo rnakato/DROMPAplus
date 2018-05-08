@@ -212,7 +212,7 @@ public:
     out << "), lwd=1.5)" << std::endl;
 
     std::string command("R --vanilla < " + Rscriptname);
-    system(command.c_str());
+    if(system(command.c_str())) PRINTERR("Rscript execution failed.");   
   }
   
   virtual void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)=0;
@@ -250,7 +250,7 @@ public:
     std::ofstream out(RDataname, std::ios::app);
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
-      out << gene.gname;
+      out << gene.tname;
       for (auto &x: p.samplepair) {
 	if (p.prof.isPtypeTSS()) {
 	  if (gene.strand == "+") WriteValAroundPosi(out, x, arrays, gene.txStart, gene.strand, chr.getlen());
