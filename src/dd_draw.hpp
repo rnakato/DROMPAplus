@@ -170,7 +170,7 @@ public:
     //    out << "# bsnum_allowed=%d, bsnum_skipped=%d\n", d->ntotal_profile, d->ntotal_skip) << std::endl;
 
     out << "t <- read.table('"<< RDataname << "', header=F, sep='\\t', quote='')" << std::endl;
-    out << "rownames(t) <- t[,1]" << std::endl;
+    //    out << "rownames(t) <- t[,1]" << std::endl;
     out << "t <- t[,-1]" << std::endl;
     out << "n <- nrow(t)" << std::endl;
 
