@@ -1,15 +1,18 @@
 # DROMPAplus sample scripts
 # Visualization of H3K4me3, H3K27me3, H3K9me3 and Input samples for K562 cells from ENCODE project
 
+# Get BAM files
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562InputStdAlnRep1.bam
 
+# Get refFlat (gene annotation)
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refFlat.txt.gz
 gunzip refFlat.txt.gz
 
-# When the current directory is DROMPAplus/scripts
+# parse2wig (make BigWig)
+### When the current directory is DROMPAplus/scripts
 gt=../src/SSP/data/genometable/genometable.hg19.txt
 mptable=../src/SSP/data/mptable/mptable.UCSC.hg19.36mer.flen150.txt
 parse2wig+ -i wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam  -o H3K4me3  --gt $gt --mptable $mptable -n GR
@@ -17,12 +20,9 @@ parse2wig+ -i wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam -o H3K27me3 --gt $gt -
 parse2wig+ -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt --mptable $mptable -n GR
 parse2wig+ -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt --mptable $mptable -n GR
 
-dir=parse2wigdir+
-s1="-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3"
-s2="-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3"
-s3="-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3"
 
 # Make pdf
+dir=parse2wigdir+
 drompa+ PC_SHARP \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
