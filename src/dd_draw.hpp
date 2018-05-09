@@ -104,11 +104,13 @@ protected:
     return garray;
   }
 
+  int32_t isExceedRange(const int32_t posi, const int32_t chrlen) {
+    return posi - width_from_center < 0 || posi + width_from_center >= chrlen;
+  }
+  
   void WriteValAroundPosi(std::ofstream &out, const SamplePairOverlayed &pair, const ChrArrayList &arrays,
-			  const int32_t posi, const std::string &strand, const int32_t chrlen)
+			  const int32_t posi, const std::string &strand)
   {
-    if(posi - width_from_center < 0 || posi + width_from_center >= chrlen) return;
-    
     int32_t bincenter(posi/binsize);
     int32_t sbin(bincenter - binwidth_from_center);
     int32_t ebin(bincenter + binwidth_from_center);
@@ -136,10 +138,10 @@ public:
     stype(p.prof.stype),
     width_from_center(p.prof.width_from_center)
   {
-    if(p.prof.stype == 0) xlabel = "Distance from TSS (bp)";
-    else if(p.prof.stype == 1) xlabel = "Distance from TES (bp)";
-    else if(p.prof.stype == 2) xlabel = "% gene length from TSS";
-    else if(p.prof.stype == 3) xlabel = "Distance from the peak summit (bp)";
+    if(p.prof.isPtypeTSS())          xlabel = "Distance from TSS (bp)";
+    else if(p.prof.isPtypeTTS())     xlabel = "Distance from TES (bp)";
+    else if(p.prof.isPtypeGene100()) xlabel = "% gene length from TSS";
+    else if(p.prof.isPtypeBed())     xlabel = "Distance from the peak summit (bp)";
     
     for (auto &x: p.samplepair) binsize = x.first.getbinsize();
     binwidth_from_center = width_from_center / binsize;
@@ -170,7 +172,7 @@ public:
     //    out << "# bsnum_allowed=%d, bsnum_skipped=%d\n", d->ntotal_profile, d->ntotal_skip) << std::endl;
 
     out << "t <- read.table('"<< RDataname << "', header=F, sep='\\t', quote='')" << std::endl;
-    //    out << "rownames(t) <- t[,1]" << std::endl;
+    out << "# rownames(t) <- t[,1]" << std::endl;
     out << "t <- t[,-1]" << std::endl;
     out << "n <- nrow(t)" << std::endl;
 
@@ -186,8 +188,9 @@ public:
       out << boost::format("x <- as.integer(colnames(t%1%))\n") % i;
     }
     out << "pdf('" << Rfigurename << "',6,6)" << std::endl;
-    out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2]
-	<< "),xlab='" << xlabel << "',ylab='Read density')" << std::endl;
+    out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2] << ")";
+    if (p.prof.isPtypeGene100()) out << ",log='y'";
+    out << ",xlab='" << xlabel << "',ylab='Read density')" << std::endl;
     out << "polygon(c(x, rev(x)), c(p1_lower, rev(p1_upper)), col=rgb("
 	<< vcol[0] << "," << vcol[1] << "," << vcol[2] << ",0.3), border=NA)" << std::endl;
 
@@ -250,16 +253,19 @@ public:
     std::ofstream out(RDataname, std::ios::app);
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
-      out << gene.tname;
-      for (auto &x: p.samplepair) {
-	if (p.prof.isPtypeTSS()) {
-	  if (gene.strand == "+") WriteValAroundPosi(out, x, arrays, gene.txStart, gene.strand, chr.getlen());
-	  else                    WriteValAroundPosi(out, x, arrays, gene.txEnd,   gene.strand, chr.getlen());
-	} else if (p.prof.isPtypeTTS()) {
-	  if (gene.strand == "+") WriteValAroundPosi(out, x, arrays, gene.txEnd,   gene.strand, chr.getlen());
-	  else                    WriteValAroundPosi(out, x, arrays, gene.txStart, gene.strand, chr.getlen());
-	}
+      int32_t position(0);
+      if (p.prof.isPtypeTSS()) {
+	if (gene.strand == "+") position = gene.txStart;
+	else                    position = gene.txEnd;
+      } else if (p.prof.isPtypeTTS()) {
+	if (gene.strand == "+") position = gene.txEnd;
+	else                    position = gene.txStart;
       }
+      if (isExceedRange(position, chr.getlen())) continue;
+
+      out << gene.tname;
+    
+      for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, position, gene.strand);
       out << std::endl;
     }
   }
@@ -341,8 +347,10 @@ public:
     for (auto &vbed: p.anno.vbedlist) {
       for (auto &bed: vbed.getvBed()) {
 	if (bed.chr != chr.getname()) continue;
+	if (isExceedRange(bed.summit, chr.getlen())) continue;
+
 	out << bed.getSiteStr();
-	for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, bed.summit, "+", chr.getlen());
+	for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, bed.summit, "+");
 	out << std::endl;
       }
     }

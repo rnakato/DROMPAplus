@@ -18,16 +18,29 @@ parse2wig+ -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt -
 parse2wig+ -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt --mptable $mptable -n GR
 
 dir=parse2wigdir+
+s1="-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3"
+s2="-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3"
+s3="-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3"
+
+# Make pdf
 drompa+ PC_SHARP \
-	-i $dir/H3K4me3.50.bw,$dir/Input.50.bw,H3K4me3,,,200 \
-	--ioverlay $dir/H3K36me3.50.bw,$dir/Input.50.bw,H3K36me3,,,10 \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa-K562 -g refFlat.txt --gt $gt \
+	--lpp 2 --showitag 1
+
+# Overlayed pdf
+dir=parse2wigdir+
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
+	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
 	-o drompa-K562-overlay -g refFlat.txt --gt $gt \
 	--lpp 3 --chr 1
 
-dir=parse2wigdir+
-drompa+ PC_SHARP \
-	-i $dir/H3K4me3.50.bw,$dir/Input.50.bw,H3K4me3,,,200 \
-	-i $dir/H3K27me3.50.bw,$dir/Input.50.bw,H3K27me3,,,10 \
-	-i $dir/H3K36me3.50.bw,$dir/Input.50.bw,H3K36me3,,,10 \
-	-o drompa-K562 -g refFlat.txt --gt $gt \
-	--lpp 2 --showitag 1
+# PROFILE
+drompa+ PROFILE \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+	-o profile-K562 -g refFlat.txt --gt $gt --ptype 2
