@@ -273,6 +273,24 @@ public:
 
 class ProfileGene100: public ReadProfile {
   enum {GENEBLOCKNUM=100};
+
+  void outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
+		      const genedata &gene, const ChrArrayList &arrays, int32_t len) {
+    int32_t s,e;
+    double len100(len / (double)GENEBLOCKNUM);
+    
+    for(int32_t i=0; i<nbin; ++i) {
+      if (gene.strand == "+") {
+	s = (gene.txStart - len + len100 *i)       / binsize;
+	e = (gene.txStart - len + len100 *(i+1) -1)/ binsize;
+      }else{
+	s = (gene.txEnd + len - len100 * (i+1))/ binsize;
+	e = (gene.txEnd + len - len100 * i -1) / binsize;
+      }
+      out << "\t" << getSumVal(x, arrays, s, e);
+    }
+  }
+
 public:
   ProfileGene100(const DROMPA::Global &p):
     ReadProfile(p, GENEBLOCKNUM * 3)
@@ -293,25 +311,11 @@ public:
         
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
-      int32_t s,e;
       int32_t len(gene.length());
-      double len100(len / (double)GENEBLOCKNUM);
       if(gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) continue;
 
       out << gene.gname;
-      for(int32_t i=0; i<nbin; ++i) {
-	if (gene.strand == "+") {
-	  s = (gene.txStart - len + len100 *i)       / binsize;
-	  e = (gene.txStart - len + len100 *(i+1) -1)/ binsize;
-	}else{
-	  s = (gene.txEnd + len - len100 * (i+1))/ binsize;
-	  e = (gene.txEnd + len - len100 * i -1) / binsize;
-	}
-	for (auto &x: p.samplepair) {
-	  //printf("%d\t%d\t%f\n", s, e, getSumVal(x, arrays, s, e));
-	  out << "\t" << getSumVal(x, arrays, s, e);
-	}
-      }
+      for (auto &x: p.samplepair) outputEachGene(out, x, gene, arrays, len);
       out << std::endl;
     }
   }
