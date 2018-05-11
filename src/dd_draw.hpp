@@ -130,7 +130,7 @@ protected:
   double getSumVal(const SamplePairOverlayed &pair, const ChrArrayList &arrays, const int32_t sbin, const int32_t ebin) {
     double sum(0);
     for (int32_t i=sbin; i<=ebin; ++i) sum += arrays.arrays.at(pair.first.argvChIP).array[i];
-    return sum/(ebin - sbin + 1);
+    return getratio(sum, (ebin - sbin + 1));
   }
   
 public:
@@ -313,6 +313,8 @@ public:
     for (auto &gene: gmp) {
       int32_t len(gene.length());
       if(gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) continue;
+      if(len < 1000) continue; 
+
 
       out << gene.gname;
       for (auto &x: p.samplepair) outputEachGene(out, x, gene, arrays, len);
