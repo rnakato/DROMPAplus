@@ -15,10 +15,10 @@ gunzip refFlat.txt.gz
 ### When the current directory is DROMPAplus/scripts
 gt=../src/SSP/data/genometable/genometable.hg19.txt
 mptable=../src/SSP/data/mptable/mptable.UCSC.hg19.36mer.flen150.txt
-parse2wig+ -i wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam  -o H3K4me3  --gt $gt --mptable $mptable -n GR
-parse2wig+ -i wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam -o H3K27me3 --gt $gt --mptable $mptable -n GR
-parse2wig+ -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt --mptable $mptable -n GR
-parse2wig+ -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt --mptable $mptable -n GR
+parse2wig+ --nomodel -i wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam  -o H3K4me3  --gt $gt --mptable $mptable -n GR
+parse2wig+ --nomodel -i wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam -o H3K27me3 --gt $gt --mptable $mptable -n GR
+parse2wig+ --nomodel -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt --mptable $mptable -n GR
+parse2wig+ --nomodel -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt --mptable $mptable -n GR
 
 
 # Make pdf
@@ -36,7 +36,7 @@ drompa+ PC_SHARP \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
 	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
 	-o drompa-K562-overlay -g refFlat.txt --gt $gt \
-	--lpp 3 --chr 1
+	--lpp 3 --chr 1 --alpha 0.6
 
 # PROFILE
 drompa+ PROFILE \
