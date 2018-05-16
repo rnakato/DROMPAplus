@@ -267,7 +267,10 @@ void DrawRegion::setValues(const Variables &values) {
       if(!regionBed.size()) PRINTERR("Error no bed regions in " << getVal<std::string>(values, "region"));
       //      printBed(regionBed);
     }
-    if (values.count("genelocifile")) genelocifile = getVal<std::string>(values, "genelocifile");
+    if (values.count("genelocifile")) {
+      getGeneLoci(getVal<std::string>(values, "genelocifile"));
+      if (values.count("gene")) PRINTERR("Please spefici --gene when supplying --genelocifile.");
+    }
     len_geneloci = getVal<int32_t>(values, "len_geneloci");
       
   } catch (const boost::bad_any_cast& e) {
@@ -283,8 +286,8 @@ void DrawRegion::InitDump(const Variables &values) const {
   DEBUGprint("INITDUMP:DrompaCommand::DRAWREGION");
   printOpt<std::string>(values, "region",    "   Region file");
   if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
-  if (genelocifile != "") {
-    std::cout << boost::format("    Geneloci file: %1%, around %2% bp\n") % genelocifile % len_geneloci;
+  if (values.count("genelocifile")) {
+    std::cout << boost::format("    Geneloci file: %1%, around %2% bp\n") % getVal<std::string>(values, "genelocifile") % len_geneloci;
   }
 }
 

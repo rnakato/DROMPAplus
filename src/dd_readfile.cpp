@@ -1,7 +1,6 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#include <unordered_map>
 #include <ext/stdio_filebuf.h>
 #include "dd_readfile.hpp"
 

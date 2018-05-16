@@ -346,7 +346,6 @@ namespace DROMPA {
     double ethre;
     double ipm;
     bool sigtest;
-    //    int32_t width4lmd;
     
     Threshold(): sigtest(false) {}
 
@@ -360,12 +359,26 @@ namespace DROMPA {
     std::vector<bed> regionBed;
 
     std::string chr;
-    std::string genelocifile;
+    std::unordered_map<std::string, int32_t> geneloci;
     int32_t len_geneloci;
+
+    void getGeneLoci(const std::string &genelocifile) {
+        std::ifstream in(genelocifile);
+	if (!in) PRINTERR("cannot open " << genelocifile);
+	
+	std::string lineStr;
+	while (!in.eof()) {
+	  getline(in, lineStr);
+	  if (lineStr.empty()) continue;
+	  std::vector<std::string> v;
+	  ParseLine(v, lineStr, '\t');
+	  geneloci[v[0]] = 1;
+	}
+    }
 
   public:
     DrawRegion():
-      isRegion(false), chr(""), genelocifile(""), len_geneloci(0)
+      isRegion(false), chr(""), len_geneloci(0)
     {}
 
     void setOpts(MyOpt::Opts &allopts);
@@ -381,7 +394,12 @@ namespace DROMPA {
     }
     const std::string & getchr() const { return chr; }
     bool isRegionBed() const { return isRegion; }
+    bool isRegionLociFile() const { return geneloci.size() != 0; }
+    int32_t getLenGeneLoci() const { return len_geneloci; }
     void isRegionOff() { isRegion=false; }
+    bool ExistGeneLociFile(const std::string &genename) const {
+      return geneloci.find(genename) != geneloci.end();
+    }
   };
   
   class DrawParam {

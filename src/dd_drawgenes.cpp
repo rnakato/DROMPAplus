@@ -63,7 +63,6 @@ namespace {
     }
   };
 
-  
   void ShowColorAnnotation(const Cairo::RefPtr<Cairo::Context> cr, const int32_t x, int32_t &ycen,
 			   const std::string &label, const double r, const double g, const double b)
   {
