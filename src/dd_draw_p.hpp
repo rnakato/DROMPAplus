@@ -240,7 +240,7 @@ class PDFPage {
     return;
   }
 
-  void MakePage(const DROMPA::Global &p, const int32_t page_no, const int32_t region_no);
+  void MakePage(const DROMPA::Global &p, const int32_t page_no, const std::string &pagelabel);
 
   void set_xstart_xend(const int32_t i) { par.set_xstart_xend(i); }
 

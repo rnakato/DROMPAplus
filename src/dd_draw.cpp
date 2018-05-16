@@ -280,7 +280,7 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
   return;
 }
 
-void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const int32_t region_no)
+void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std::string &pagelabel)
 {
   DEBUGprint("PDFPage::MakePage");
   int32_t line_start, line_end;
@@ -299,8 +299,8 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const int
 
   // Page title
   std::string title;
-  if(par.num_page>1) title = chrname + "_" + std::to_string(region_no) + "_" + std::to_string(page_no+1);
-  else               title = chrname + "_" + std::to_string(region_no);
+  if(par.num_page>1) title = chrname + "_" + pagelabel + "_" + std::to_string(page_no+1);
+  else               title = chrname + "_" + pagelabel;
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, 50, 30, title, 16);
   cr->stroke();
@@ -327,7 +327,7 @@ void Figure::DrawData(DROMPA::Global &p)
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
 	PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, x.start, x.end);
-	page.MakePage(p, i, region_no);
+	page.MakePage(p, i, std::to_string(region_no));
       }
       ++region_no;
     }
@@ -342,7 +342,7 @@ void Figure::DrawData(DROMPA::Global &p)
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%s\r") % (i+1) % num_page % m.second.gname << std::flush;
 	PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, start, end);
-	page.MakePage(p, i, 1);
+	page.MakePage(p, i, m.second.gname);
       }
     }
   } else {  // whole chromosome
@@ -350,7 +350,7 @@ void Figure::DrawData(DROMPA::Global &p)
     for (int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
       PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, 0, chr.getlen());
-      page.MakePage(p, i, 1);
+      page.MakePage(p, i, "1");
     }
   } 
   std::cout << "Wrote PDF file \"" << pdffilename << "\"" << std::endl;

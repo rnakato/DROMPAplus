@@ -287,7 +287,7 @@ void DrawRegion::InitDump(const Variables &values) const {
   printOpt<std::string>(values, "region",    "   Region file");
   if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
   if (values.count("genelocifile")) {
-    std::cout << boost::format("    Geneloci file: %1%, around %2% bp\n") % getVal<std::string>(values, "genelocifile") % len_geneloci;
+    std::cout << boost::format("   Geneloci file: %1%, around %2% bp\n") % getVal<std::string>(values, "genelocifile") % len_geneloci;
   }
 }
 
