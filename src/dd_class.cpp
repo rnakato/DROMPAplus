@@ -269,7 +269,7 @@ void DrawRegion::setValues(const Variables &values) {
     }
     if (values.count("genelocifile")) {
       getGeneLoci(getVal<std::string>(values, "genelocifile"));
-      if (values.count("gene")) PRINTERR("Please spefici --gene when supplying --genelocifile.");
+      if (!values.count("gene")) PRINTERR("Please specify --gene option when supplying --genelocifile.");
     }
     len_geneloci = getVal<int32_t>(values, "len_geneloci");
       
