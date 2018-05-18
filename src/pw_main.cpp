@@ -228,7 +228,7 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
 
 void output_stats(const Mapfile &p)
 {
-  std::string filename = p.getbinprefix() + ".csv";
+  std::string filename = p.getbinprefix() + ".tsv";
   std::ofstream out(filename);
 
   out << "parse2wig version " << VERSION << std::endl;
@@ -280,7 +280,7 @@ void output_stats(const Mapfile &p)
 
 void output_wigstats(const Mapfile &p)
 {
-  std::string filename = p.getbinprefix() + ".binarray_dist.csv";
+  std::string filename = p.getbinprefix() + ".binarray_dist.tsv";
   std::ofstream out(filename);
 
   std::cout << "generate " << filename << ".." << std::flush;

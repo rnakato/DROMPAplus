@@ -225,7 +225,7 @@ void SampleInfo::scanStatsFile(const std::string &filename)
 
 void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt)
 {
-  std::string statsfile(prefix + "csv");
+  std::string statsfile(prefix + "tsv");
   if (checkFile(statsfile)) scanStatsFile(statsfile);
   else {
     DEBUGprint("loadWigData: noStatsFile...");

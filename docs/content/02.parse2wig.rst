@@ -1,7 +1,12 @@
+============
 Parse2wig
 ============
 
 parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin).
+
+
+.. contents::
+
 
 Example
 -------------------------------
@@ -13,9 +18,9 @@ The command::
 generates a bedGraph-formatted bin data with a bin size of 100 bp (default) and statistics files in 'parse2wigdir+' directory as follows::
 
   $ ls parse2wigdir+
-  parse2wigdir+/IHEC12_B1-n2-m1-hg19.100.binarray_dist.csv  # estimated parameters for peak-calling
-  parse2wigdir+/IHEC12_B1-n2-m1-hg19.100.bedGraph           # bedGraph data
-  parse2wigdir+/IHEC12_B1-n2-m1-hg19.100.csv                # stats file
+  parse2wigdir+/ChIP.100.binarray_dist.tsv  # estimated parameters for peak-calling
+  parse2wigdir+/ChIP.100.bedGraph           # bedGraph data
+  parse2wigdir+/ChIP.100.tsv                # stats file
 
 parse2wig+ allows multiple input files (separated by ",")::
 
@@ -31,10 +36,97 @@ For bin size 100kbp::
     * The format of input file is automatically detected by postfix (.sam/.bam/.bowtie/.tagalign(.gz)).
     * If the detection does not work well, supply -f option (e.g., "-f BAM").
 
+
+Quality check
+------------------------
+
+In the statistics file ("ChIP.100.tsv") is useful to check the quality of the input mapfile.
+
+The contents are the following:
+
+- Input file name;
+- Redundancy threshold: threshold used for PCR bias;
+- Library complexity
+    - the number of reads tested are in parenthesis
+    - if the number of mapped reads is insufficient (specified by --ncmp option), this score will be put in parentheses
+- GC summit: the summit of GC distribution (when --GC option is supplied);
+- Poisson and Negative binomial: estimated parameter;
+
+- (both whole-genome and chromosomal stats as follows);
+- Length: total length;
+- Mappable base and mappability: mappability calculated from specified mappability file;
+- Total reads: the number of reads in the input file;
+- Non-redundant reads: the number of reads remaining after PCR-bias filtering;
+- Redundant reads: the number of reads filtered by PCR-bias filtering (mapped on forward, reverse and both strands are outputted);
+- Reads (GCnormed): read number after GC normalization (when -GC is supplied);
+- Read depth;
+- Scaling weight: total weight of the read normalization;
+- Normalized read number: read number after the total read normalization; (this read number is used in drompa peakcall and drompa draw)
+
+For the quality check, library complexity and the number of non-redundant reads are especially important.
+
+sample.binarray dist.xls
+++++++++++++++++++++++++++++++++++++++++++
+
+"sample.binarray dist.xls" describes the distribution of read numbers contained in each bin. Distributions of simulated data are also shown.
+
+      
 Fragment length estimation
 -----------------------------
 
+Optionally, parse2wig+ can output the cross-correlation profile [2] with a strategy similar to spp
+[6] by specifying the “-ccp” option.
+The command
+$ parse2wig+ -i sample.sam -o sample -gt genometable.txt -ccp
+generates “sample.ccp.xls” in the output directory, which describes the cross-correlation plot be-
+tween the read number of forward and reverse strands from -500 to 1500 bp with a 5 bp step.
+In version 3.0.0, the value of bins that hace above the 95 th percentile is reduced to 95 th per-
+centile on the cross-correlation analysis.
+
 For single-end mode, mapped reads are extended to the expected DNA-fragment length.
+
+Filter reads
+-------------------------
+
+parse2wig+ filters "redundant reads" (reads starting exactly at the same 5' ends) as "PCR bias" [1].
+This filtering step can be omitted by supplying “-nofilter” option.
+By default, the threshold of filtering is defined as:
+thre pcr = max(1, 10 * E genome )
+where E genome is the averaged read depth. This is because E genome can be greater than 1 for a small genome.
+thre_pcr can be supplied manually through the “-thre pb” option.
+The number of redundant/non-redundant reads and library complexity [2] can be checked using the generated statistics file (see section 5.2). Since the library complexity depends on the number of mapped reads, parse2wig+ uses the library complexity for 10 million mapped reads.
+This default number can be changed through the “-num4cmp” option.
+
+FRiP score
+----------------------
+FRiP (fraction of reads in peaks) score (when -bed is supplied).
+  
+
+Total read normalization
+--------------------------------------------------
+
+For the comparison of multiple ChIP samples, read number normalization is necessary.
+parse2wig+ has the “-n” option to normalize the bin data with the number of total mapped reads (after PCR-bias filtering).
+  -n {NONE|GR|GD|CR|CD} (default:NONE)
+  NONE; not normalize
+  GR; for whole genome, read number
+  GD; for whole genome, read depth
+  CR; for each chromosome, read number
+  CD; for each chromosome, read depth
+  -np <int> read number after normalization
+  (default: 10000000 (10 million))
+  -nd <double>
+  depth after normalization (default: 0.1)
+
+  The users can choose total reads or read depth for normalization. For example, the command::
+
+    $ parse2wig+ -i sample.sam -o sample -gt genometable.txt -n GR -np 20000000
+
+scales bin data so that the total number of mapped reads (after filtering) onto the whole genome is 20 million.
+The normalization for each chromosome (CR or CD) is useful when the large difference in one chromosome affects to whole-genome (e.g., rDNA regions in chromosome XII for Saccharomyces cerevisiae).
+
+Note: it is not recommended to scale a small number of reads up to a larger number because
+that will result in plenty of background noise (e.g., 1 million → 10 million).
 
 Paired-end file
 -------------------------------
@@ -71,91 +163,12 @@ For multiple mapped reads, each mapped locus is weighted equally.
 Higher resolution with central regions of fragments
 -------------------------------------------------------------
 
-When high resolution is required (e.g., nucleosome-seq), it is better to consider only central regions of each fragment.
-For such purpose, parse2wig+ has the option “-rcenter”. The command::
+When high resolution is required (e.g., nucleosome-seq), it may be better to consider only central regions of each fragment.
+To do this, supply "--rcenter" option::
 
-  $ parse2wig+ -i sample.sam -o sample -gt genometable.txt -flen 200 -rcenter 50
+  $ parse2wig+ -i ChIP.paired.bam -o ChIP --gt genometable.txt --outputformat 2 --rcenter 50
 
-assumes the averaged fragment length is 200 bp and consider only 50 bp around the center of each fragment.
-
-Statistics file (for quality check)
--------------------------------------------------------------
-
-In addition to the bin files, parse2wig+ also outputs the statistics of the input file into the output directory, which are useful to check the quality of the sample. The commands in subsection 5.1.1 produce three types of statistics files: “sample.100.xls”, “sample.binarray dist.xls” and “sample.readlength dist.xls”.
-
-sample.100.xls
-+++++++++++++++++++++
-
-The contents of “sample.100.xls” are the following:
-- Input file name;
-- Redundancy threshold: threshold used for PCR bias;
-- Library complexity [2]
-(the number of reads tested are in parenthesis)
-(if the number of reads tested is insufficient, the score is put in parentheses);
-- GC summit: the summit of GC distribution (when -GC is supplied);
-- Poisson and Negative binomial: estimated parameter;
-
-- (both whole-genome and chromosomal stats as follows);
-- Length: total length;
-- Mappable base and mappability: mappability calculated from specified mappability file;
-- Total reads: the number of reads in the input file;
-- Non-redundant reads: the number of reads remaining after PCR-bias filtering;
-- Redundant reads: the number of reads filtered by PCR-bias filtering (mapped on forward, reverse and both strands are outputted);
-- Reads (GCnormed): read number after GC normalization (when -GC is supplied);
-- Read depth;
-- Scaling weight: total weight of the read normalization;
-- Normalized read number: read number after the total read normalization; (this read number is used in drompa peakcall and drompa draw)
-- FRiP (fraction of reads in peaks) score [2] (when -bed is supplied).
-  
-For the quality check, library complexity and the number of non-redundant reads are especially important.
-
-sample.binarray dist.xls
-++++++++++++++++++++++++++++++++++++++++++
-
-"sample.binarray dist.xls" describes the distribution of read numbers contained in each bin. Distributions of simulated data are also shown.
-
-sample.readlength dist.xls
-++++++++++++++++++++++++++++++++++++++++++
-
-“sample.readlength dist.xls” describes the read length distribution of the input mapfile. Only lengths in which the read number is nonzero are considered.
-
-Filter reads
--------------------------
-
-parse2wig+ filters "redundant reads" (reads starting exactly at the same 5' ends) as "PCR bias" [1].
-This filtering step can be omitted by supplying “-nofilter” option.
-By default, the threshold of filtering is defined as:
-thre pcr = max(1, 10 * E genome )
-where E genome is the averaged read depth. This is because E genome can be greater than 1 for a small genome.
-thre_pcr can be supplied manually through the “-thre pb” option.
-The number of redundant/non-redundant reads and library complexity [2] can be checked using the generated statistics file (see section 5.2). Since the library complexity depends on the number of mapped reads, parse2wig+ uses the library complexity for 10 million mapped reads.
-This default number can be changed through the “-num4cmp” option.
-
-Total read normalization
---------------------------------------------------
-
-For the comparison of multiple ChIP samples, read number normalization is necessary.
-parse2wig+ has the “-n” option to normalize the bin data with the number of total mapped reads (after PCR-bias filtering).
-  -n {NONE|GR|GD|CR|CD} (default:NONE)
-  NONE; not normalize
-  GR; for whole genome, read number
-  GD; for whole genome, read depth
-  CR; for each chromosome, read number
-  CD; for each chromosome, read depth
-  -np <int> read number after normalization
-  (default: 10000000 (10 million))
-  -nd <double>
-  depth after normalization (default: 0.1)
-
-  The users can choose total reads or read depth for normalization. For example, the command::
-
-    $ parse2wig+ -i sample.sam -o sample -gt genometable.txt -n GR -np 20000000
-
-scales bin data so that the total number of mapped reads (after filtering) onto the whole genome is 20 million.
-The normalization for each chromosome (CR or CD) is useful when the large difference in one chromosome affects to whole-genome (e.g., rDNA regions in chromosome XII for Saccharomyces cerevisiae).
-
-Note: it is not recommended to scale a small number of reads up to a larger number because
-that will result in plenty of background noise (e.g., 1 million → 10 million).
+This command considers only 50 bp around the center of each fragment.
 
 Mappability
 -------------------------------
@@ -225,15 +238,3 @@ To do that, specify a peak list using the “-bed” option::
 
   $ parse2wig+ -i sample.sam -o sample -gt genometable.txt \
   $ -GC <chromosomedir> -mpbin mappability/map -flen4gc 100 -bed peaklist.bed
-
-Cross-correlation analysis
---------------------------------
-
-Optionally, parse2wig+ can output the cross-correlation profile [2] with a strategy similar to spp
-[6] by specifying the “-ccp” option.
-The command
-$ parse2wig+ -i sample.sam -o sample -gt genometable.txt -ccp
-generates “sample.ccp.xls” in the output directory, which describes the cross-correlation plot be-
-tween the read number of forward and reverse strands from -500 to 1500 bp with a 5 bp step.
-In version 3.0.0, the value of bins that hace above the 95 th percentile is reduced to 95 th per-
-centile on the cross-correlation analysis.
