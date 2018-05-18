@@ -26,19 +26,6 @@ and install samtools from the website.
 
 SAMtools and R can also be installed by Anaconda.
 
-Install required software
--------------------------------
-
-UCSC utility tools::
-
-  wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedGraphToBigWig
-  wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bigWigToBedGraph
-  chmod +x bedGraphToBigWig bigWigToBedGraph
-
-Coherent PDF (https://www.coherentpdf.com/)::
-
-  git clone https://github.com/coherentgraphics/cpdf-binaries.git
-  
 Add the PATH for DROMPA, samtools, cpdf and UCSC tools
 ------------------------------------------------------------
 
