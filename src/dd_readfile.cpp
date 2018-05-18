@@ -8,7 +8,6 @@ pdSample scan_pdstr(const std::string &str)
 {
   std::vector<std::string> v;
   ParseLine(v, str, ',');
-  //  boost::split(v, str, boost::algorithm::is_any_of(","));
 
   if(v.size() > 2) {
     std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
@@ -86,6 +85,9 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
     for(int32_t i=start; i<=end; ++i) array.setval(i/binsize, stol(v[3]));
   }
+  
+  in.close();
+  return;
 }
 
 /*void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
@@ -109,6 +111,7 @@ void funcWig(WigArray &array, const std::string &filename, const int32_t binsize
   std::ifstream in(filename);
   if (!in) PRINTERR("cannot open " << filename);
   readWig(in, array, chrname, binsize);
+  in.close();
 }
 
 void funcCompressWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
