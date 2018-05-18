@@ -2,57 +2,86 @@ Parse2wig
 ============
 
 parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin).
-The length of each read is calculated automatically. For single-end mode, mapped reads are extended to the expected DNA-fragment length.
-
 
 Example
 -------------------------------
 
 The command::
 
-  $ parse2wig -i sample.sam -o sample -gt genometable.txt -binsize 100
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2
 
-generates bin files from sample.sam with a bin size of 100 bp. The parse2wigdir directory is created and the bin files are outputted into the directory.
-A bin file is outputted for each chromosome (in the case of binary and WIG outputs) or for the whole-genome (in the case of bedGraph and bigWig outputs).
+generates a bedGraph-formatted bin data with a bin size of 100 bp (default) and statistics files in 'parse2wigdir+' directory as follows::
 
-The command::
+  $ ls parse2wigdir+
+  parse2wigdir+/IHEC12_B1-n2-m1-hg19.100.binarray_dist.csv  # estimated parameters for peak-calling
+  parse2wigdir+/IHEC12_B1-n2-m1-hg19.100.bedGraph           # bedGraph data
+  parse2wigdir+/IHEC12_B1-n2-m1-hg19.100.csv                # stats file
 
-  $ parse2wig -f BAM -i sample.bam -o sample -gt genometable.txt -of 3
+parse2wig+ allows multiple input files (separated by ",")::
 
-reads BAM file and outputs bin data in the bedGraph format.
-Furthermore, multiple mapfiles can be given as one sample (separated by a ’,’)::
+  $ parse2wig+ -i ChIP1.bam,ChIP2.bam,ChIP3.bam -o ChIP --gt genometable.txt --outputformat 2
+
+For bin size 100kbp::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2 --binsize 100000
+
   
-  $ parse2wig -i sample_rep1.sam,sample_rep2.sam,sample_rep3.sam \
-  $ -o sample -gt genometable.txt -binsize 100
+.. note::
+   
+    * The format of input file is automatically detected by postfix (.sam/.bam/.bowtie/.tagalign(.gz)).
+    * If the detection does not work well, supply -f option (e.g., "-f BAM").
+
+Fragment length estimation
+-----------------------------
+
+For single-end mode, mapped reads are extended to the expected DNA-fragment length.
 
 Paired-end file
 -------------------------------
 
-You must supply the “-pair” option for paired-end files (when parsing paired-end mapfiles with single-end mode, warning messages are outputted). In paired-end mode, each fragment length is calculated from the mapfile automatically. Inter-chromosomal read-pairs and read-pairs longer than the maximum fragment length (specified by the “-maxins” option) are ignored.
+For paired-end files, supply "--pair" option::
 
-Note: For TagAlign format, paired-end data is not supported.
+  $ parse2wig+ --pair -i ChIP.paired.bam -o ChIP --gt genometable.txt --outputformat 2 
+
+In paired-end mode, fragment length of each read pair is calculated automatically.
+
+Read pairs which are "inter-chromosomal" or are longer than the fragment length limitation (500bp in default, specified by the "-maxins" option) are discarded.
+
+.. note::
+
+   * When parsing paired-end mapfiles with single-end mode, warning messages will be outputted.
+   * In TagAlign format, paired-end data is not supported.
+
 
 Multiple mapped reads
 -------------------------------
 
-parse2wig automatically recognizes the uniquely mapped and multiple mapped reads. For multiple mapped reads, each mapped locus is weighted equally. Thus, the total number of reads mapped into bin x is r x = k∈R 1/n k where n k is the number of times that read k is mapped onto the reference genome and R is the full set of reads mapped onto bin x.
+parse2wig+ automatically recognizes the uniquely mapped and multiple mapped reads.
+For multiple mapped reads, each mapped locus is weighted equally.
 
-Note: For SAM and BAM format, while parse2wig uses the “NH” flag to check multiple mapped reads, some mapping tools such as Bowtie and BWA do not output the “NH” column. In those cases, all reads are considered as ‘uniquely mapped’. Therefore, we recommend the Bowtie format when treating multiple mapped reads.
+.. Thus, the total number of reads mapped into bin x is :math:`r_{x} = k∈R 1/n_{k}`
+.. where :math:`n_{k}` is the number of times that read k is mapped onto the reference genome and R is the full set of reads mapped onto bin x.
+
+.. note::
+
+    * For SAM and BAM format, while parse2wig+ uses the 'NH' flag to check multiple mapped reads,
+    * However, some mapping tools (e.g., Bowtie and BWA) do not output the 'NH' column. In those cases, all reads are considered as 'uniquely mapped'.
+    * Therefore we recommend the Bowtie format when treating multiple mapped reads.
 
 Higher resolution with central regions of fragments
 -------------------------------------------------------------
 
 When high resolution is required (e.g., nucleosome-seq), it is better to consider only central regions of each fragment.
-For such purpose, parse2wig has the option “-rcenter”. The command::
+For such purpose, parse2wig+ has the option “-rcenter”. The command::
 
-  $ parse2wig -i sample.sam -o sample -gt genometable.txt -flen 200 -rcenter 50
+  $ parse2wig+ -i sample.sam -o sample -gt genometable.txt -flen 200 -rcenter 50
 
 assumes the averaged fragment length is 200 bp and consider only 50 bp around the center of each fragment.
 
 Statistics file (for quality check)
 -------------------------------------------------------------
 
-In addition to the bin files, parse2wig also outputs the statistics of the input file into the output directory, which are useful to check the quality of the sample. The commands in subsection 5.1.1 produce three types of statistics files: “sample.100.xls”, “sample.binarray dist.xls” and “sample.readlength dist.xls”.
+In addition to the bin files, parse2wig+ also outputs the statistics of the input file into the output directory, which are useful to check the quality of the sample. The commands in subsection 5.1.1 produce three types of statistics files: “sample.100.xls”, “sample.binarray dist.xls” and “sample.readlength dist.xls”.
 
 sample.100.xls
 +++++++++++++++++++++
@@ -93,20 +122,20 @@ sample.readlength dist.xls
 Filter reads
 -------------------------
 
-parse2wig filters "redundant reads" (reads starting exactly at the same 5' ends) as "PCR bias" [1].
+parse2wig+ filters "redundant reads" (reads starting exactly at the same 5' ends) as "PCR bias" [1].
 This filtering step can be omitted by supplying “-nofilter” option.
 By default, the threshold of filtering is defined as:
 thre pcr = max(1, 10 * E genome )
 where E genome is the averaged read depth. This is because E genome can be greater than 1 for a small genome.
 thre_pcr can be supplied manually through the “-thre pb” option.
-The number of redundant/non-redundant reads and library complexity [2] can be checked using the generated statistics file (see section 5.2). Since the library complexity depends on the number of mapped reads, parse2wig uses the library complexity for 10 million mapped reads.
+The number of redundant/non-redundant reads and library complexity [2] can be checked using the generated statistics file (see section 5.2). Since the library complexity depends on the number of mapped reads, parse2wig+ uses the library complexity for 10 million mapped reads.
 This default number can be changed through the “-num4cmp” option.
 
 Total read normalization
 --------------------------------------------------
 
 For the comparison of multiple ChIP samples, read number normalization is necessary.
-parse2wig has the “-n” option to normalize the bin data with the number of total mapped reads (after PCR-bias filtering).
+parse2wig+ has the “-n” option to normalize the bin data with the number of total mapped reads (after PCR-bias filtering).
   -n {NONE|GR|GD|CR|CD} (default:NONE)
   NONE; not normalize
   GR; for whole genome, read number
@@ -120,7 +149,7 @@ parse2wig has the “-n” option to normalize the bin data with the number of t
 
   The users can choose total reads or read depth for normalization. For example, the command::
 
-    $ parse2wig -i sample.sam -o sample -gt genometable.txt -n GR -np 20000000
+    $ parse2wig+ -i sample.sam -o sample -gt genometable.txt -n GR -np 20000000
 
 scales bin data so that the total number of mapped reads (after filtering) onto the whole genome is 20 million.
 The normalization for each chromosome (CR or CD) is useful when the large difference in one chromosome affects to whole-genome (e.g., rDNA regions in chromosome XII for Saccharomyces cerevisiae).
@@ -131,10 +160,10 @@ that will result in plenty of background noise (e.g., 1 million → 10 million).
 Mappability
 -------------------------------
 
-parse2wig can normalize reads based on the genome mappability [3] by supplying mappability
+parse2wig+ can normalize reads based on the genome mappability [3] by supplying mappability
 files as follows::
 
-  $ parse2wig -i sample.sam -o sample -gt genometable.txt \
+  $ parse2wig+ -i sample.sam -o sample -gt genometable.txt \
   $ -mp mappability/map_fragL150
 
 When “-mp” is not supplied, all bases are considered as mappable. The low mappability regions
@@ -147,11 +176,11 @@ GC content
 
 Sometimes the sequenced data has much GC bias.
 In those cases, GC normalization is necessary.
-parse2wig can adopt a GC normalization similar to BEADS [5].
+parse2wig+ can adopt a GC normalization similar to BEADS [5].
 This procedure requires the FASTA files of chromosomes and the binary mappability files.
 The command::
 
-  $ parse2wig -i sample.sam -o sample -gt genometable.txt \
+  $ parse2wig+ -i sample.sam -o sample -gt genometable.txt \
   $ -GC <chromosomedir> -mpbin mappability/map -flen4gc 100
 
 calculates the GC contents of the input file using the central 100 bp of each fragment.
@@ -167,7 +196,7 @@ than using it with GC normalization.
 GC distribution file
 -------------------------------
 
-parse2wig uses the longest chromosome described in genometable.txt for GC bias estimation.
+parse2wig+ uses the longest chromosome described in genometable.txt for GC bias estimation.
 When using GC normalization, the GC distribution file “sample.GCdist.xls” is also outputted
 into the output directory. The contents are the following:
 - GC: the GC content;
@@ -180,7 +209,7 @@ are the number of positions containing the GC contents and G is the total number
 n GC /n GC ;
 - Weight: the ratio of the proportion between reads and genome sequence, namely, weight = reads prop GC /prop GC
 
-Because GC contents with low depth (depth GC ) cause background noise, by default parse2wig 
+Because GC contents with low depth (depth GC ) cause background noise, by default parse2wig+ 
 sets a weight of 1 to the GC content with depth GC less than 0.001, and a weight of 0 to the GC
 genome content having prop GC less than 0.00001.
 When supplying the “-gcdepthoff” option, the former threshold is ignored.
@@ -194,16 +223,16 @@ For ChIP samples, it is necessary to ignore fragments that overlap with peak reg
 ground reads only, because ChIP reads can have different GC distribution from the background.
 To do that, specify a peak list using the “-bed” option::
 
-  $ parse2wig -i sample.sam -o sample -gt genometable.txt \
+  $ parse2wig+ -i sample.sam -o sample -gt genometable.txt \
   $ -GC <chromosomedir> -mpbin mappability/map -flen4gc 100 -bed peaklist.bed
 
 Cross-correlation analysis
 --------------------------------
 
-Optionally, parse2wig can output the cross-correlation profile [2] with a strategy similar to spp
+Optionally, parse2wig+ can output the cross-correlation profile [2] with a strategy similar to spp
 [6] by specifying the “-ccp” option.
 The command
-$ parse2wig -i sample.sam -o sample -gt genometable.txt -ccp
+$ parse2wig+ -i sample.sam -o sample -gt genometable.txt -ccp
 generates “sample.ccp.xls” in the output directory, which describes the cross-correlation plot be-
 tween the read number of forward and reverse strands from -500 to 1500 bp with a 5 bp step.
 In version 3.0.0, the value of bins that hace above the 95 th percentile is reduced to 95 th per-

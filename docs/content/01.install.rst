@@ -1,38 +1,54 @@
 Installation
 ================
 
-Install required libraries
+Install dependencies
 -------------------------------
-DROMPAplus is written in C++11 and requires the following programs and libraries:
+
+DROMPAplus is written in C++ and requires the following programs and libraries:
 
 - Boost C++ library
 - Cairo libraries
 - GTK library
 - GNU Scientific Library
 - zlib
-- SAMtools (for BAM format)
-- UCSC utility (for BigWig format)
-- R (for PROFILE command)
+- SAMtools
 
-for Ubuntu::
+for Ubuntu:
 
-  sudo apt-get install git build-essential libgtkmm-3.0-dev libboost-all-dev libgsl-dev libz-dev samtools r-base
+.. code-block:: bash
 
-for CentOS::
+    sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev libgsl-dev libz-dev samtools
 
-  sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
+for CentOS:
 
-and install samtools from the website.
+.. code-block:: bash
 
-SAMtools and R can also be installed by Anaconda.
+    sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
 
-Add the PATH for DROMPA, samtools, cpdf and UCSC tools
-------------------------------------------------------------
+and install SAMtools from the `website <http://samtools.sourceforge.net/>`_ or by `Anaconda <https://anaconda.org/bioconda/samtools>`_.
 
-For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type::
+Install DROMPA+
+-------------------
 
-   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin:$HOME/my_chipseq_exp/cpdf-binaries/Linux-Intel-64bit
+.. code-block:: bash
 
+   git clone --recursive https://github.com/rnakato/DROMPAplus
+   cd DROMPAplus
+   make
+
+
+Add the PATH
+-------------------
+
+If you downloaded DROMPA+ the $HOME/my_chipseq_exp directory, type:
+
+.. code-block:: bash
+
+   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin                     # DROMPA+
+   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/scripts                 # UCSC tools
+   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/cpdf/Linux-Intel-64bit  # cpdf
+
+Add these lines to ~/.bashrc to permanently set PATH.
 
 Docker image
 ---------------------------------
@@ -42,3 +58,9 @@ DROMPA+ is also probatively available on Docker Hub.
 To obtain a docker image for DROMPA+, type::
 
    docker pull rnakato/ssp_drompa
+
+Run the docker image::
+
+   docker run -it rnakato/ssp_drompa /bin/bash
+
+
