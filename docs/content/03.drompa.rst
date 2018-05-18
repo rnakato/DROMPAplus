@@ -1,5 +1,6 @@
-DROMPA+
-============
+DROMPA+: read distritbution
+====================================
+
 drompa+ can visualize multiple ChIP samples with specified genome annotation, using modes for the implementation of various types of ChIP-seq analysis:
 PC_SHARP peak-calling (for sharp mode)
 PC_BROAD peak-calling (for broad mode)
@@ -13,12 +14,14 @@ PROFILE make R script of averaged read density
 HEATMAP make heatmap of multiple samples
 TR calculate the travelling ratio (pausing index) for each gene
 
-7.1 Output of parameter used
+Output of parameter used
 -------------------------------
+
 When excuting drompa peakcall and drompa draw, the summary of parameters specified is outputted to STDOUT. The users can check whether the command is specified as expected.
 
-7.2 Read distribution visualization (PC SHARP)
+Read distribution visualization (PC SHARP)
 --------------------------------------------------------------
+
 drompa draw can take multiple ChIP-input pairs as input. Each pair should be specified with the option “-i”, as in the drompa peakcall mode. For example, the command::
   
   $ IP1=’parse2wigdir/ChIP1’
@@ -47,8 +50,9 @@ Similarly, to display the lines of p-value and enrichment line (Figure 3b), type
 
 where the “-scale tag”, “-scale ratio” and “-scale pvalue” options change the maximum values for the y axis of the corresponding lines.
 
-7.2.1 Specify different parameter for each sample pair
+Specify different parameter for each sample pair
 --------------------------------------------------------------
+
 For drompa draw, the option “-i” can take the following comma-separated multiple fields:
 1. ChIP sample (required);
 2. Input control sample;
@@ -81,15 +85,17 @@ The previous command can be rewritten as::
 
 where “ $s1 $s2 $s3 $s4” are used as ChIP-input sample pairs.
 
-7.3 Read distribution visualization (PC BROAD)
+Read distribution visualization (PC BROAD)
 --------------------------------------------------------------
+
 To identify broadly enriched region, use the PC BROAD mode as follows::
   
   $ drompa_draw PC_BROAD -p ChIPseq_broad -gt genometable.txt $s1 $s2 $s3 $s4 \
   $ -gene refFlat.txt -showratio 1 -showpinter 1 -showpenrich 1
 
-7.4 Enrichment visualization (PC ENRICH)
+Enrichment visualization (PC ENRICH)
 --------------------------------------------------------------
+
 For a small genome, such as the yeast’s, the sequencing depth is generally enough (> 10 fold).
 In such cases, the genome-wide ChIP/Input enrichment distribution is informative because the
 technical and biological bias in high throughput sequencing can be minimized.
@@ -105,12 +111,14 @@ Supply “-showratio 2” to use logratio. If you want to check the enrichment p
   $ -gt genometable.txt -gene SGD_features.tab -gftype 3 -ars ARS-oriDB.txt \
   $ -lpp 1 -scale_ratio 4 -ls 100 -bn 5 -ystep 10
 
-7.5 Annotation data for drompa draw
+Annotation data for drompa draw
 --------------------------------------------------------------
+
 DROMPA accepts annotation data from the publicly accessible websites listed below. These annotation files can also be downloaded from the DROMPA website.
 
-7.5.1 Gene annotation data
+Gene annotation data
 --------------------------------------------------------------
+
 DROMPA+ accepts the Gtf, refFlat and “SGD features.tab” obtained from the Saccharomyces Genome Database (SGD) format for gene annotation.
 
 - RefSeq annotation (refFlat format) obtained from the UCSC Genome Browser website [8].
@@ -120,20 +128,23 @@ website.
 charomyces pombe.EF1.62.gtf”) from the Ensembl website.
 Supply the option “-gene” to specify gene data.
 
-7.5.2 Replication origin data
+Replication origin data
 --------------------------------------------------------------
+
 DROMPA can visualize DNA replication origin data (ARS) available for S. cerevisiae and S.pombe.
 The annotation data can be obtained from OriDB 7 . Download the origin list and supply with the option “-ars”.
 
-7.5.3 Mappability and Gap-region data
+Mappability and Gap-region data
 --------------------------------------------------------------
+
 If the mappability file and/or gap regions (filled with “Ns”) are supplied through the “-mp” and “-gap” options, the low mappable regions and gap regions are shaded in purple and gray in the figure, respectively. See section 9.1 for details on how to generate these data.::
 
   $ drompa_draw PC_SHARP -p ChIPseq -gt genometable.txt $s1 $s2 $s3 $s4 \
   $ -gene refFlat.txt -mp mappability/map_fragL150 -gap mappability/N_fragL150
 
-7.5.4 Showing limited regions
+Showing limited regions
 --------------------------------------------------------------
+
 When the “-chr” option specified, only the specified chromosome is outputted::
 
   $ drompa_draw PC_SHARP -p ChIPseq -gt genometable.txt $s1 $s2 $s3 $s4 \
@@ -145,8 +156,9 @@ To focus on specific regions (in this example, the HOX A cluster region), supply
   $ drompa_draw PC_SHARP -gene refFlat.txt $s1 $s2 $s3 $s4 -p HOXA \
   $ -gt genometable.txt -r HOXA.txt -ls 300
 
-7.5.5 Repeat data (RepBase) and GC contents
+Repeat data (RepBase) and GC contents
 --------------------------------------------------------------
+
 DROMPA can incorporate the BED-formatted GC content files and RepBase files using the options “-repeat” and “-GC”, respectively. These data can be obtained from the Table Browser of the UCSC Genome Browser [8].
 $ drompa_draw PC_SHARP -p ChIPseq -gt genometable.txt $s1 $s2 $s3 $s4 \
 $ -repeat RepeatMasker_hg19.txt -GC GCcontents/ -gcsize 1000
@@ -154,8 +166,9 @@ where “-gcsize” specifies the window size of GC contents. GC content files s
 
 To supply an arbitrary window size, the DROMPA website provides the program GCcount.pl to generate these files from a FASTA-formatted file.
 
-7.5.6 BED annotation and long-range interactions
+BED annotation and long-range interactions
 --------------------------------------------------------------
+
 drompa draw accepts annotation data in BED or BED6 format (e.g., ChromHMM results [9]) with the “-bed” option.
 The long-range interactions file such as ChIA-PET results are also allowed
 with the “-inter” option, which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end. The intra- and inter-chromosomal interactions are shown in red and green, respectively.

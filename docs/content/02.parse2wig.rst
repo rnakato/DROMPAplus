@@ -4,12 +4,8 @@ Parse2wig
 parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin).
 The length of each read is calculated automatically. For single-end mode, mapped reads are extended to the expected DNA-fragment length.
 
----------------
-1. Main options
----------------
 
-
-1.1 Example
+Example
 -------------------------------
 
 The command::
@@ -29,21 +25,23 @@ Furthermore, multiple mapfiles can be given as one sample (separated by a ’,�
   $ parse2wig -i sample_rep1.sam,sample_rep2.sam,sample_rep3.sam \
   $ -o sample -gt genometable.txt -binsize 100
 
-1.2 Paired-end file
+Paired-end file
 -------------------------------
+
 You must supply the “-pair” option for paired-end files (when parsing paired-end mapfiles with single-end mode, warning messages are outputted). In paired-end mode, each fragment length is calculated from the mapfile automatically. Inter-chromosomal read-pairs and read-pairs longer than the maximum fragment length (specified by the “-maxins” option) are ignored.
 
 Note: For TagAlign format, paired-end data is not supported.
 
-1.3 Multiple mapped reads
+Multiple mapped reads
 -------------------------------
 
 parse2wig automatically recognizes the uniquely mapped and multiple mapped reads. For multiple mapped reads, each mapped locus is weighted equally. Thus, the total number of reads mapped into bin x is r x = k∈R 1/n k where n k is the number of times that read k is mapped onto the reference genome and R is the full set of reads mapped onto bin x.
 
 Note: For SAM and BAM format, while parse2wig uses the “NH” flag to check multiple mapped reads, some mapping tools such as Bowtie and BWA do not output the “NH” column. In those cases, all reads are considered as ‘uniquely mapped’. Therefore, we recommend the Bowtie format when treating multiple mapped reads.
 
-1.4 Higher resolution with central regions of fragments
+Higher resolution with central regions of fragments
 -------------------------------------------------------------
+
 When high resolution is required (e.g., nucleosome-seq), it is better to consider only central regions of each fragment.
 For such purpose, parse2wig has the option “-rcenter”. The command::
 
@@ -51,12 +49,14 @@ For such purpose, parse2wig has the option “-rcenter”. The command::
 
 assumes the averaged fragment length is 200 bp and consider only 50 bp around the center of each fragment.
 
-1.5 Statistics file (for quality check)
+Statistics file (for quality check)
 -------------------------------------------------------------
+
 In addition to the bin files, parse2wig also outputs the statistics of the input file into the output directory, which are useful to check the quality of the sample. The commands in subsection 5.1.1 produce three types of statistics files: “sample.100.xls”, “sample.binarray dist.xls” and “sample.readlength dist.xls”.
 
-1.5.1 sample.100.xls
--------------------------------------------------------------
+sample.100.xls
++++++++++++++++++++++
+
 The contents of “sample.100.xls” are the following:
 - Input file name;
 - Redundancy threshold: threshold used for PCR bias;
@@ -80,27 +80,31 @@ The contents of “sample.100.xls” are the following:
   
 For the quality check, library complexity and the number of non-redundant reads are especially important.
 
-1.5.2 sample.binarray dist.xls
------------------------------------
-“sample.binarray dist.xls” describes the distribution of read numbers contained in each bin. Distributions of simulated data are also shown.
+sample.binarray dist.xls
+++++++++++++++++++++++++++++++++++++++++++
 
-1.5.3 sample.readlength dist.xls
-------------------------------------
+"sample.binarray dist.xls" describes the distribution of read numbers contained in each bin. Distributions of simulated data are also shown.
+
+sample.readlength dist.xls
+++++++++++++++++++++++++++++++++++++++++++
+
 “sample.readlength dist.xls” describes the read length distribution of the input mapfile. Only lengths in which the read number is nonzero are considered.
 
-1.6 Filtering reads
----------------------
-parse2wig filters “redundant reads” (reads starting exactly at the same 5’ ends) as “PCR bias” [1].
+Filter reads
+-------------------------
+
+parse2wig filters "redundant reads" (reads starting exactly at the same 5' ends) as "PCR bias" [1].
 This filtering step can be omitted by supplying “-nofilter” option.
 By default, the threshold of filtering is defined as:
-thre pcr = max(1, 10 ∗ E genome )
+thre pcr = max(1, 10 * E genome )
 where E genome is the averaged read depth. This is because E genome can be greater than 1 for a small genome.
 thre_pcr can be supplied manually through the “-thre pb” option.
 The number of redundant/non-redundant reads and library complexity [2] can be checked using the generated statistics file (see section 5.2). Since the library complexity depends on the number of mapped reads, parse2wig uses the library complexity for 10 million mapped reads.
 This default number can be changed through the “-num4cmp” option.
 
-1.7 Total read normalization
--------------------------------
+Total read normalization
+--------------------------------------------------
+
 For the comparison of multiple ChIP samples, read number normalization is necessary.
 parse2wig has the “-n” option to normalize the bin data with the number of total mapped reads (after PCR-bias filtering).
   -n {NONE|GR|GD|CR|CD} (default:NONE)
@@ -124,8 +128,9 @@ The normalization for each chromosome (CR or CD) is useful when the large differ
 Note: it is not recommended to scale a small number of reads up to a larger number because
 that will result in plenty of background noise (e.g., 1 million → 10 million).
 
-1.8 Mappability
+Mappability
 -------------------------------
+
 parse2wig can normalize reads based on the genome mappability [3] by supplying mappability
 files as follows::
 
@@ -137,8 +142,9 @@ When “-mp” is not supplied, all bases are considered as mappable. The low ma
 DROMPA adopts the mappability files generated through the scripts provided by MOSAiCS [4].
 See section 9.1 for details.
 
-1.9 GC content
+GC content
 -------------------------------
+
 Sometimes the sequenced data has much GC bias.
 In those cases, GC normalization is necessary.
 parse2wig can adopt a GC normalization similar to BEADS [5].
@@ -158,8 +164,9 @@ Note: Since this GC normalization scheme is under development, if a sample has a
 tribution quite different from other samples, it is better to consider re-preparing the sample rather
 than using it with GC normalization.
 
-1.9.1 GC distribution file
+GC distribution file
 -------------------------------
+
 parse2wig uses the longest chromosome described in genometable.txt for GC bias estimation.
 When using GC normalization, the GC distribution file “sample.GCdist.xls” is also outputted
 into the output directory. The contents are the following:
@@ -180,8 +187,9 @@ When supplying the “-gcdepthoff” option, the former threshold is ignored.
 Using the GC distribution file, the user can draw GC and weight distribution of the input file
 and the genome sequence. Figure 2 shows an example.
 
-1.9.2 Ignore peak regions
+Ignore peak regions
 ----------------------------
+
 For ChIP samples, it is necessary to ignore fragments that overlap with peak regions and use back-
 ground reads only, because ChIP reads can have different GC distribution from the background.
 To do that, specify a peak list using the “-bed” option::
@@ -189,8 +197,9 @@ To do that, specify a peak list using the “-bed” option::
   $ parse2wig -i sample.sam -o sample -gt genometable.txt \
   $ -GC <chromosomedir> -mpbin mappability/map -flen4gc 100 -bed peaklist.bed
 
-1.10 Cross-correlation analysis
+Cross-correlation analysis
 --------------------------------
+
 Optionally, parse2wig can output the cross-correlation profile [2] with a strategy similar to spp
 [6] by specifying the “-ccp” option.
 The command

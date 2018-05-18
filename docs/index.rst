@@ -7,6 +7,7 @@ DROMPA can be used for quality check, PCR-bias filtering, normalization, peak ca
 bioinformatics background.
 
 The main features of DROMPAplus are:
+
 * Applicable to any species whose genomic sequence is available;
 * Accepts multiple input/output file formats (SAM, BAM, Bowtie, WIG, BED, TagAlign(.gz), bigWig, and bedGraph);
 * Normalization using mappability and GC content;
@@ -17,12 +18,11 @@ The main features of DROMPAplus are:
 Contents:
 ---------
 .. toctree::
-   :maxdepth: 2
+   :numbered:
+   :glob:
+   :maxdepth: 1
 
-   content/install
-   content/parse2wig
-   content/drompa
-   content/appendix
+   content/*
 
 
 Citation:
