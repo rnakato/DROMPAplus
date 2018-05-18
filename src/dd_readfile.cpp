@@ -133,7 +133,8 @@ void funcBigWig(WigArray &array, const std::string &filename, const int32_t bins
   std::string command = "bigWigToBedGraph -chrom=chr" + rmchr(chrname) + " " + filename + " " + std::string(tmpfile);
   int32_t return_code = system(command.c_str());
   if(WEXITSTATUS(return_code)) {
-    std::cerr << "Warning: command " << command << "return nonzero status." << std::endl;
+    std::cerr << "Error: command " << command << "return nonzero status." << std::endl;
+    exit(0);
   }
   readBedGraph(array, std::string(tmpfile), chrname, binsize);
   unlink(tmpfile);
