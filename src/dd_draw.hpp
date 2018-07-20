@@ -401,7 +401,6 @@ public:
     vsamplepairoverlayed(p.samplepair),
     regionBed(p.drawregion.getRegionBedChr(chr.getname()))
   {
-
     for (auto &x: vsamplepairoverlayed) {
       setSamplePairEachRatio(p, x.first, chr.getname());
       if (x.OverlayExists()) setSamplePairEachRatio(p, x.second, chr.getname());

@@ -127,12 +127,12 @@ void exec_PCSHARP(DROMPA::Global &p)
   for(auto &chr: p.gt) {
     if (!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
     if (p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
-    
+
+    std::cout << "chr" << chr.getname() << ": " << std::flush;
+
     std::vector<bed> regionBed(p.drawregion.getRegionBedChr(chr.getname()));
     if (p.drawregion.isRegionBed() && !regionBed.size()) continue;
-    
-    // std::cout << "chr is:" <<  chr.getname() << std::endl;
-
+ 
     Figure fig(p, chr);
     if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }
