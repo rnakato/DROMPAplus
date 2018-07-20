@@ -131,9 +131,7 @@ void exec_PCSHARP(DROMPA::Global &p)
     std::vector<bed> regionBed(p.drawregion.getRegionBedChr(chr.getname()));
     if (p.drawregion.isRegionBed() && !regionBed.size()) continue;
     
-    std::cout << "chr is:" <<  chr.getname() << std::endl;
-    printf("test\n");
-    std::cout << p.drawregion.getchr() << std::endl;
+    // std::cout << "chr is:" <<  chr.getname() << std::endl;
 
     Figure fig(p, chr);
     if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
