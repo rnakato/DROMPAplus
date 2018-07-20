@@ -56,7 +56,7 @@ class WigStats {
     if (nb_p<=0) nb_p = 0.1; 
     nb_n = ave * nb_p /(1 - nb_p);
     //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
-    if(ave) estimateZINB(nb_p, nb_n);
+    //    if(ave) estimateZINB(nb_p, nb_n);
   }
 
   void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
