@@ -30,7 +30,7 @@ void WigStats::setWigStats(const WigArray &wigarray)
     ar.emplace_back(v);
   }
 
-  setZINBParam(ar);
+  //  setZINBParam(ar);
 }
 
 void WigStats::peakcall(const WigArray &wigarray, const std::string chrname)
