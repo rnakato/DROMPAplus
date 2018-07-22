@@ -48,7 +48,7 @@ void CalcDepth(T &obj, const int32_t flen)
 void DefineFragmentLength(Mapfile &p)
 {
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
-    strShiftProfile(p.sspst, p.genome, p.getprefix(), "jaccard");
+    strShiftProfile(p.sspst, p.genome, p.getprefix(), "drompa");
   }
   for (auto &x: p.genome.chr) {
     std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
