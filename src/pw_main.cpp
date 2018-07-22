@@ -285,10 +285,10 @@ void output_wigstats(const Mapfile &p)
 
   std::cout << "generate " << filename << ".." << std::flush;
 
-  out << "\tGenome\t\t\t";
-  for (auto &x: p.genome.chr) out << x.getname() << "\t\t\t\t";
+  out << "\tGenome\t\t";
+  for (auto &x: p.genome.chr) out << x.getname() << "\t\t";
   out << std::endl;
-  out << "read number\tnum of bins genome\tprop\tZINB estimated\t";
+  out << "read number\tnum of bins genome\tprop\t";  // ZINB estimated\t
   for (size_t i=0; i<p.genome.chr.size(); ++i) out << "num of bins\tprop\t"; // \tPoisson estimated\tZINB estimated
   out << std::endl;
 
