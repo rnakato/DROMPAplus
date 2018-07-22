@@ -47,7 +47,7 @@ class WigStats {
   
   void setWigStats(const WigArray &wigarray);
   
-  void setZINBParam(const std::vector<int32_t> &ar) {
+  /*  void setZINBParam(const std::vector<int32_t> &ar) {
     MyStatistics::moment<int32_t> mm(ar, 0);
     ave = mm.getmean();
     var = mm.getvar();
@@ -57,16 +57,16 @@ class WigStats {
     nb_n = ave * nb_p /(1 - nb_p);
     //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
     //    if(ave) estimateZINB(nb_p, nb_n);
-  }
+    }*/
 
-  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
+  /*  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
     uint32_t thre = getWigDistThre(wigDist, nbin);
     double parray[thre+1];
     parray[0] = thre;
     for(uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
     iterateZINB(&parray, nb_p_pre, nb_n_pre, nb_p, nb_n, nb_p0);
     return;
-  }
+    }*/
 
   void addWigDist(const WigStats &chr) {
     for (size_t i=0; i<wigDist.size(); ++i) wigDist[i] += chr.wigDist[i];
@@ -247,9 +247,9 @@ public:
     chr[id].setWigStats(array);
     genome.addWigDist(chr[id]);
   }
-  void estimateZINB(const int32_t id) {
+  /*  void estimateZINB(const int32_t id) {
     genome.estimateZINB(chr[id].nb_p, chr[id].nb_n);
-  }
+   }*/
   void printPeak(const std::string &prefix) const {
     std::string filename = prefix + ".peak.xls";
     std::ofstream out(filename);

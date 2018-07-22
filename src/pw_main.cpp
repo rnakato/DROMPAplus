@@ -99,10 +99,10 @@ int main(int32_t argc, char* argv[])
   t2 = clock();
   std::cout << "MakeWig: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
-  t1 = clock();
+  /*  t1 = clock();
   p.wsGenome.estimateZINB(p.getIdLongestChr());
   t2 = clock();
-  std::cout << "estimateZINB: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
+  std::cout << "estimateZINB: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";*/
   
   // p.wsGenome.printPeak(p.getbinprefix());
 
@@ -249,9 +249,9 @@ void output_stats(const Mapfile &p)
   out << "scaling weight\t";
   out << "normalized read number\t";
   p.gcov.printhead(out);
-  if(p.isBedOn()) out << "reads in peaks\tFRiP\t";
-  out << "bin mean\tbin variance\t";
-  out << "nb_p\tnb_n\tnb_p0\t";
+  if(p.isBedOn()) out << "reads in peaks\tFRiP";
+  //  out << "\tbin mean\tbin variance";
+  // out << "\tnb_p\tnb_n\tnb_p0";
   out << std::endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
@@ -262,14 +262,14 @@ void output_stats(const Mapfile &p)
 
   // SeqStats
   print_SeqStats(out, p.genome, p.gcov, p);
-  p.wsGenome.genome.printPoispar(out);
-  p.wsGenome.genome.printZINBpar(out);
+  //  p.wsGenome.genome.printPoispar(out);
+  // p.wsGenome.genome.printZINBpar(out);
   out << std::endl;
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     print_SeqStats(out, p.genome.chr[i], p.gcov.chr[i], p);
-    p.wsGenome.chr[i].printPoispar(out);
-    p.wsGenome.chr[i].printZINBpar(out);
+    //   p.wsGenome.chr[i].printPoispar(out);
+    // p.wsGenome.chr[i].printZINBpar(out);
     out << std::endl;
   }
   
@@ -280,7 +280,7 @@ void output_stats(const Mapfile &p)
 
 void output_wigstats(const Mapfile &p)
 {
-  std::string filename = p.getbinprefix() + ".binarray_dist.tsv";
+  std::string filename = p.getbinprefix() + ".readcountdist.tsv";
   std::ofstream out(filename);
 
   std::cout << "generate " << filename << ".." << std::flush;
@@ -289,18 +289,18 @@ void output_wigstats(const Mapfile &p)
   for (auto &x: p.genome.chr) out << x.getname() << "\t\t\t\t";
   out << std::endl;
   out << "read number\tnum of bins genome\tprop\tZINB estimated\t";
-  for (size_t i=0; i<p.genome.chr.size(); ++i) out << "num of bins\tprop\tPoisson estimated\tZINB estimated\t";
+  for (size_t i=0; i<p.genome.chr.size(); ++i) out << "num of bins\tprop\t"; // \tPoisson estimated\tZINB estimated
   out << std::endl;
 
   for(int32_t i=0; i<p.wsGenome.getWigDistsize(); ++i) {
     out << i << "\t";
-    p.wsGenome.genome.printWigDist(out, i);
-    out << p.wsGenome.genome.getZINB(i) << "\t";
+    //    p.wsGenome.genome.printWigDist(out, i);
+    //  out << p.wsGenome.genome.getZINB(i) << "\t";
     //    out << p.genome.getZIP(i) << "\t";
     for (auto &x: p.wsGenome.chr) {
       x.printWigDist(out, i);
-      out << x.getPoisson(i) << "\t";
-      out << x.getZINB(i) << "\t";
+      //  out << x.getPoisson(i) << "\t";
+      // out << x.getZINB(i) << "\t";
     }
     out << std::endl;
   }
