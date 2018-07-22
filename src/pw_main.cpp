@@ -41,7 +41,7 @@ template <class T>
 void CalcDepth(T &obj, const int32_t flen)
 {
   uint64_t lenmpbl(obj.getlenmpbl());
-  double d = lenmpbl ? getratio(obj.getnread_nonred(Strand::BOTH) * flen, lenmpbl): 0;
+  double d = getratio(obj.getnread_nonred(Strand::BOTH) * flen, lenmpbl);
   obj.setdepth(d);
 }
 
@@ -51,7 +51,7 @@ void DefineFragmentLength(Mapfile &p)
     strShiftProfile(p.sspst, p.genome, p.getprefix(), "drompa");
   }
   for (auto &x: p.genome.chr) {
-    std::cout << x.getname() <<"\t"<< p.genome.dflen.getflen() << std::endl;
+    std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
     x.setF5ToRead(p.genome.dflen.getflen());
     x.printvRead();
   }

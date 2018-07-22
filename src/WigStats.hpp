@@ -159,23 +159,18 @@ class WigArray {
     return rmGeta(v95);
   }
 
-  void outputAsWig(std::ofstream &out, const int32_t binsize, const int32_t showzero) const {
+  void outputAsWig(FILE *File, const int32_t binsize, const int32_t showzero) const {
     for(size_t i=0; i<array.size(); ++i) {
-      if(array[i] || showzero) out << (i*binsize+1) << "\t"
-				   << rmGeta(array[i])
-				   << std::endl;
+      if(array[i] || showzero) fprintf(File, "%zu\t%.0f\n", i*binsize +1, rmGeta(array[i]));
     }
   }
-  void outputAsBedGraph(std::ofstream &out, const int32_t binsize, const std::string &name, const uint64_t chrend, const int32_t showzero) const {
-    uint64_t e;
-    for(size_t i=0; i<array.size(); ++i) {
-      if(i==array.size() -1) e = chrend; else e = (i+1) * binsize;
-      if(array[i] || showzero) out << name        << " "
-				   << (i*binsize) << " "
-				   << e           << " "
-				   << rmGeta(array[i])
-				   << std::endl;
+  void outputAsBedGraph(FILE *File, const int32_t binsize, const std::string &name, const uint64_t chrend, const int32_t showzero) {
+    for(size_t i=0; i<array.size()-1; ++i) {
+      if(array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, (i+1) * binsize, rmGeta(array[i]));
     }
+    size_t i = array.size()-1;
+    if(array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
+    
   }
   /*  void outputAsBinary(std::ofstream &out) const {
     for(size_t i=0; i<array.size(); ++i) out.write((char *)&array[i], sizeof(int32_t));

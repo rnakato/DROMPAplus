@@ -161,15 +161,18 @@ void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray)
 void outputWig(Mapfile &p, const std::string &filename)
 {
   int32_t binsize(p.wsGenome.getbinsize());
-  std::ofstream out(filename);
-  out << boost::format("track type=wiggle_0\tname=\"%1%\"\tdescription=\"Merged tag counts for every %2% bp\"\n")
-    % p.getSampleName() % binsize;
+  
+  FILE* File = fopen(filename.c_str(), "w");
+
+  fprintf(File, "track type=wiggle_0\tname=\"%s\"\tdescription=\"Merged tag counts for every %d bp\"\n", p.getSampleName().c_str(), binsize);
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     WigArray array = makeWigarray(p, i);
-    out << boost::format("variableStep\tchrom=%1%\tspan=%2%\n") % p.genome.chr[i].getrefname() % binsize;
-    array.outputAsWig(out, binsize, p.wsGenome.isoutputzero());
+    
+    fprintf(File, "variableStep\tchrom=%s\tspan=%d\n", p.genome.chr[i].getrefname().c_str(), binsize);
+    array.outputAsWig(File, binsize, p.wsGenome.isoutputzero());
   }
+  fclose(File);
   
   return;
 }
@@ -188,8 +191,9 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
   out.close();
 
   std::string tempfile = filename + ".temp";
-  std::ofstream out2(tempfile);
-  
+
+  FILE* File = fopen(tempfile.c_str(), "w");
+
   clock_t t1,t2;
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     t1 = clock();
@@ -197,11 +201,11 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
     t2 = clock();
     PrintTime(t1, t2, "makeWigarray");
     t1 = clock();
-    array.outputAsBedGraph(out2, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1, p.wsGenome.isoutputzero());    
+    array.outputAsBedGraph(File, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1, p.wsGenome.isoutputzero());
     t2 = clock();
     PrintTime(t1, t2, "outputAsBedGraph");
   }
-  out2.close();
+  fclose (File);
   
   printf("sort bedGraph...\n");
   std::string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
