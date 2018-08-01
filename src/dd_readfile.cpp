@@ -129,18 +129,19 @@ void funcBigWig(WigArray &array, const std::string &filename, const int32_t bins
   DEBUGprint("WigType::BIGWIG");
   int32_t fd(0);
   char tmpfile[] = "/tmp/DROMPAplus_bigWigToBedGraph_XXXXXXXX";
-  if ((fd = mkstemp(tmpfile)) < 0){
+  if ((fd = mkstemp(tmpfile)) < 0) {
     perror("mkstemp");
     //      fd = EXIT_FAILURE;
   }
   std::string command = "bigWigToBedGraph -chrom=chr" + rmchr(chrname) + " " + filename + " " + std::string(tmpfile);
   int32_t return_code = system(command.c_str());
-  if(WEXITSTATUS(return_code)) {
+  if (WEXITSTATUS(return_code)) {
     std::cerr << "Error: command " << command << "return nonzero status." << std::endl;
     exit(0);
   }
   readBedGraph(array, std::string(tmpfile), chrname, binsize);
   unlink(tmpfile);
+  close(fd);
 }
 void funcBedGraph(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
