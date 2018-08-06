@@ -150,7 +150,7 @@ void Annotation::InitDumpGV(const Variables &values) const {
 void Profile::setOpts(MyOpt::Opts &allopts) {
   MyOpt::Opts opt("PROFILE AND HEATMAP",100);
   opt.add_options()
-    (SETOPT_RANGE("ptype", int32_t, TSS, TSS, PTYPENUM),
+    (SETOPT_RANGE("ptype", int32_t, TSS, TSS, PTYPENUM-1),
      "Region: 0; around TSS, 1; around TES, 2; divide gene into 100 subregions 3; around peak sites")
     (SETOPT_RANGE("stype", int32_t, 0, 0, 1),
      "Distribution: 0; ChIP read, 1; ChIP/Input enrichment")
