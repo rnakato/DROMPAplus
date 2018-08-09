@@ -127,7 +127,18 @@ void exec_PCSHARP(DROMPA::Global &p)
   for(auto &chr: p.gt) {
     if (!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
     if (p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
-    if (p.drawregion.isRegionLociFile() && !p.anno.gmp.at(rmchr(chr.getname())).size()) continue;
+    if (p.drawregion.isRegionLociFile()) {
+      int32_t n(0);
+      for (auto &m: p.anno.gmp.at(rmchr(chr.getname()))) {
+	if(p.drawregion.ExistGeneLociFile(m.second.gname)) ++n;
+      }
+#ifdef DEBUG
+      printf("DEBUG geneloci\n");
+      std::cout << "chr" << chr.getname() << ": " << std::flush;
+      printf("n=%d\n",0);
+#endif
+      if(!n) continue;
+    }
 
     std::cout << "chr" << chr.getname() << ": " << std::flush;
 
