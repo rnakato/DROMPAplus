@@ -372,7 +372,7 @@ int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairEach &pair) const
   height += MERGIN_BETWEEN_DATA * (n-1);
   
 #ifdef DEBUG
-  std::cout << "LineHeight: " << getlineheight() << ",n: " << n << std::endl;
+  std::cout << "LineHeight: " << getlineheight() << ", n: " << n << std::endl;
   std::cout << "HeightEachSample: " << height << std::endl;
 #endif
   return height;
@@ -390,8 +390,8 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
   if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
     height += BOXHEIGHT_GENEBOX_EXON + MERGIN_BETWEEN_DATA;
   }
-  height += (BOXHEIGHT_BEDANNOTATION + 2) * p.anno.vbedlist.size() + 15;
-  height += (BOXHEIGHT_INTERACTION   + 2) * p.anno.vinterlist.size() + 15;
+  height += (BOXHEIGHT_BEDANNOTATION + 15 + 2) * p.anno.vbedlist.size() + 15;
+  height += (BOXHEIGHT_INTERACTION   + 15 + 5) * p.anno.vinterlist.size() + 15;
 
 #ifdef DEBUG
   std::cout << "HeightAllSample; " << height << std::endl;
