@@ -20,13 +20,17 @@ uint32_t getWigDistThre(const std::vector<uint64_t> &wigDist, const uint64_t sum
 void WigStats::setWigStats(const WigArray &wigarray)
 {
   double num95(wigarray.getPercentile(0.95));
+  double min(wigarray.getMinValue());
   std::vector<int32_t> ar;
   int32_t wigDistSize(wigDist.size());
 
+  //  std::cout << "num95  "<< num95 << "  min   " << min << std::endl;
+
+  // 負の値は暫定的に無視
   for (size_t i=0; i<wigarray.size(); ++i) {
     int32_t v(wigarray[i]);
+    if (v >= num95 || v < 0) continue;
     if (v < wigDistSize) ++wigDist[v];
-    if (v >= num95) continue;
     ar.emplace_back(v);
   }
 
@@ -35,7 +39,7 @@ void WigStats::setWigStats(const WigArray &wigarray)
 
 void WigStats::peakcall(const WigArray &wigarray, const std::string chrname)
 {
-  if(!ave) return;
+  if (!ave) return;
     
   int32_t ext(0);
 

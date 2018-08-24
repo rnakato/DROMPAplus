@@ -117,7 +117,7 @@ class WigArray {
   template <class T> double addGeta(const T val) const { return val*geta; }
   
   void checki(const size_t i) const {
-    if(i>=size()) PRINTERR("Invalid i for WigArray: " << i << " > " << size());
+    if(i>=array.size()) PRINTERR("Invalid i for WigArray: " << i << " > " << array.size());
   }
 
  public:
@@ -153,6 +153,10 @@ class WigArray {
     int64_t sum(0);
     for(auto x: array) sum += x;
     return rmGeta(sum);
+  }
+  double getMinValue() const {
+    int32_t min(*std::min_element(array.begin(), array.end()));
+    return rmGeta(min);
   }
   double getPercentile(double per) const {
     int32_t v95(MyStatistics::getPercentile(array, per));

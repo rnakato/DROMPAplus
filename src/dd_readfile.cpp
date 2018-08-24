@@ -66,7 +66,9 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
 {
   std::ifstream in(filename);
   if (!in) PRINTERR("cannot open " << filename);
-    
+
+  DEBUGprint("Read bedGraph...");
+  
   int32_t on(0);
   std::string lineStr;
   while (!in.eof()) {
@@ -79,11 +81,15 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
       else break;
     }
     if (!on) on=1;
+    //    std::cout << chrname << "\t" << v[0] << "\t" << binsize << "\t" << stod(v[3]) << "\t" << v[2] << "\t" << std::endl;
     
     int32_t start(stoi(v[1]));
     int32_t end(stoi(v[2])-1);
     if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
-    for(int32_t i=start; i<=end; ++i) array.setval(i/binsize, stol(v[3]));
+    int32_t s(start/binsize);
+    int32_t e(end/binsize);
+    //    std::cout << s << "\t " << e << "\t " << array.size() << "\t" << stod(v[3]) << std::endl;
+    for(int32_t i=s; i<=e; ++i) array.setval(i, stod(v[3]));
   }
   
   in.close();

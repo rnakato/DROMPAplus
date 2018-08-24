@@ -494,6 +494,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::OTHER: setValuesOther(values); break;
     }
   }
+
   return;
 }
 

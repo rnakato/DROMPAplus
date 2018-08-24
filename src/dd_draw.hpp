@@ -89,6 +89,9 @@ protected:
   int32_t width_from_center;
   int32_t binwidth_from_center;
 
+  int32_t nsites;
+  int32_t nsites_skipped;
+
   std::string RDataname;
   std::unordered_map<std::string, std::vector<double>> hprofile;
 
@@ -114,6 +117,7 @@ protected:
     int32_t bincenter(posi/binsize);
     int32_t sbin(bincenter - binwidth_from_center);
     int32_t ebin(bincenter + binwidth_from_center);
+
     if (strand == "+") {
       for (int32_t i=sbin; i<=ebin; ++i) {
 	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
@@ -136,8 +140,10 @@ protected:
 public:
   ReadProfile(const DROMPA::Global &p, const int32_t _nbin=0):
     stype(p.prof.stype),
-    width_from_center(p.prof.width_from_center)
+    width_from_center(p.prof.width_from_center),
+    nsites(0), nsites_skipped(0)
   {
+    
     if(p.prof.isPtypeTSS())          xlabel = "Distance from TSS (bp)";
     else if(p.prof.isPtypeTTS())     xlabel = "Distance from TES (bp)";
     else if(p.prof.isPtypeGene100()) xlabel = "% gene length from TSS";
@@ -145,8 +151,11 @@ public:
     
     for (auto &x: p.samplepair) binsize = x.first.getbinsize();
     binwidth_from_center = width_from_center / binsize;
+    if (binwidth_from_center <= 1) {
+      PRINTERR("please specify larger size for --widthfromcenter:" << width_from_center << " than binsize:" << binsize << ".");
+    }
     
-    if(_nbin) nbin = _nbin;
+    if (_nbin) nbin = _nbin;
     else nbin = binwidth_from_center * 2 +1;
 
     std::vector<double> array(nbin, 0);
@@ -230,6 +239,12 @@ public:
     }
     out << std::endl;
   }
+  
+  void printNumOfSites() const {
+    std::cout << "\n\nthe number of sites: " << nsites << std::endl;
+    std::cout << "the number of skipped sites: " << nsites_skipped << std::endl;
+  }
+  
 };
 
 class ProfileTSS: public ReadProfile {
@@ -237,7 +252,7 @@ class ProfileTSS: public ReadProfile {
 public:
   ProfileTSS(const DROMPA::Global &p):
     ReadProfile(p) {}
-  
+
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
     DEBUGprint("ProfileTSS:WriteTSV_EachChr");
     if(p.anno.genefile == "") {
@@ -253,6 +268,8 @@ public:
     std::ofstream out(RDataname, std::ios::app);
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
+      ++nsites;
+      
       int32_t position(0);
       if (p.prof.isPtypeTSS()) {
 	if (gene.strand == "+") position = gene.txStart;
@@ -261,7 +278,10 @@ public:
 	if (gene.strand == "+") position = gene.txEnd;
 	else                    position = gene.txStart;
       }
-      if (isExceedRange(position, chr.getlen())) continue;
+      if (isExceedRange(position, chr.getlen())) {
+	++nsites_skipped;
+	continue;
+      }
 
       out << gene.tname;
     
@@ -279,7 +299,7 @@ class ProfileGene100: public ReadProfile {
     int32_t s,e;
     double len100(len / (double)GENEBLOCKNUM);
     
-    for(int32_t i=0; i<nbin; ++i) {
+    for (int32_t i=0; i<nbin; ++i) {
       if (gene.strand == "+") {
 	s = (gene.txStart - len + len100 *i)       / binsize;
 	e = (gene.txStart - len + len100 *(i+1) -1)/ binsize;
@@ -311,10 +331,13 @@ public:
         
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
-      int32_t len(gene.length());
-      if(gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) continue;
-      if(len < 1000) continue; 
+      ++nsites;
 
+      int32_t len(gene.length());
+      if (len < 1000 || gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) {
+	++nsites_skipped;
+	continue;
+      }
 
       out << gene.gname;
       for (auto &x: p.samplepair) outputEachGene(out, x, gene, arrays, len);
@@ -350,16 +373,21 @@ public:
     std::ofstream out(RDataname, std::ios::app);
     
     ChrArrayList arrays(p, chr);
+
     for (auto &vbed: p.anno.vbedlist) {
       for (auto &bed: vbed.getvBed()) {
 	if (bed.chr != chr.getname()) continue;
-	if (isExceedRange(bed.summit, chr.getlen())) continue;
-
+	++nsites;
+	if (isExceedRange(bed.summit, chr.getlen())) {
+	  ++nsites_skipped;
+	  continue;
+	}
 	out << bed.getSiteStr();
 	for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, bed.summit, "+");
 	out << std::endl;
       }
     }
+    out.close();
   }
 };
 

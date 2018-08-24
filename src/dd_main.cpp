@@ -188,14 +188,17 @@ void MakeProfile(DROMPA::Global &p)
     std::cout << "\nchr" << chr.getname() << "..";
 
     profile.WriteTSV_EachChr(p, chr);
+
+    DEBUGprint("WriteTSV_EachChr done.");
   }
 
+  profile.printNumOfSites();
   profile.MakeFigure(p);
   return;
 }
 
 void exec_PROFILE(DROMPA::Global &p)
-{
+{  
   if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) MakeProfile<ProfileTSS>(p);
   else if (p.prof.isPtypeGene100()) MakeProfile<ProfileGene100>(p);
   else if (p.prof.isPtypeBed())     MakeProfile<ProfileBedSites>(p);
