@@ -434,17 +434,11 @@ namespace DROMPA {
     double getlineheight() const { return ystep * barnum; }
 
     int32_t getNumLine(const int32_t s, const int32_t e) const{
-      int32_t len(e-s);
-      int32_t nline(0);
-      if (! len % width_per_line) nline = (e-s)/width_per_line;
-      else                        nline = (e-s)/width_per_line + 1;
+      int32_t nline = (e-s -1) / width_per_line +1;
       return nline;
     }
     int32_t getNumPage(const int32_t s, const int32_t e) const {
-      int32_t nline(getNumLine(s,e));
-      int32_t npage(0);
-      if (! nline % linenum_per_page) npage = nline / linenum_per_page;
-      else                            npage = nline / linenum_per_page + 1;
+      int32_t npage = (getNumLine(s,e) -1) / linenum_per_page +1;
       return npage;
     }
 

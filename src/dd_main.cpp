@@ -44,10 +44,10 @@ namespace {
 
     boost::program_options::positional_options_description pd;
     pd.add("command", 1);
-    
+
     MyOpt::Opts allopts("Options");
     allopts.add(command).add(genopts);
-    
+
     DEBUGprint("getOpts...");
     
     MyOpt::Variables values;

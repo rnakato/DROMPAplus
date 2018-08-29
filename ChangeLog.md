@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2 (2018-08-29)
+	- bug fix for pdf page count
+	
 ## 1.1.1 (2018-08-24)
 - modify PROFILE command for bedsites
 

@@ -231,7 +231,7 @@ void Threshold::InitDump() const {
   std::vector<std::string> str_bool = {"OFF", "ON"};
   DEBUGprint("INITDUMP:DrompaCommand::THRE");
       
-  std::cout << boost::format("\nPeak calling by DROMPA+: %1%\n") % str_bool[sigtest];
+  //  std::cout << boost::format("\nPeak calling by DROMPA+: %1%\n") % str_bool[sigtest];
   if (sigtest) {
     std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
     std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
@@ -561,7 +561,7 @@ void Global::InitDumpNorm() const {
       
   DEBUGprint("INITDUMP:DrompaCommand::NORM");
   std::cout << boost::format("   ChIP/Input normalization: %1%\n") % str_norm[norm];
-  if (smoothing) std::cout << boost::format("   smoothing width: %1% bp\n") % smoothing;
+  if (smoothing) std::cout << boost::format("   smoothing width: %1% bins\n") % smoothing;
 }
   
 void Global::InitDumpOther() const {
@@ -571,6 +571,6 @@ void Global::InitDumpOther() const {
   DEBUGprint("INITDUMP:DrompaCommand::OTHER");
   std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
   if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
-  if (!showchr) std::cout << boost::format("   remove chr pdfs\n");
+  //  if (!showchr) std::cout << boost::format("   remove chr pdfs\n");
 }
 

@@ -327,6 +327,7 @@ void Figure::DrawData(DROMPA::Global &p)
 	page.MakePage(p, i, std::to_string(region_no));
       }
       ++region_no;
+      printf("\n");
     }
   } else if (p.drawregion.isRegionLociFile()) {  // --genelocifile
     int32_t len(p.drawregion.getLenGeneLoci());
@@ -341,6 +342,7 @@ void Figure::DrawData(DROMPA::Global &p)
 	PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, start, end);
 	page.MakePage(p, i, m.second.gname);
       }
+      printf("\n");
     }
   } else {  // whole chromosome
     int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
@@ -349,6 +351,7 @@ void Figure::DrawData(DROMPA::Global &p)
       PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, 0, chr.getlen());
       page.MakePage(p, i, "1");
     }
+    printf("\n");
   } 
   std::cout << "Wrote PDF file \"" << pdffilename << "\"" << std::endl;
 
