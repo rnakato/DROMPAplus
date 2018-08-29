@@ -79,9 +79,7 @@ namespace {
     }
     return;
   }
-
 }
-
 
 void PDFPage::drawInteraction(const InteractionSet &vinter)
 {
@@ -247,7 +245,6 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
   return;
 }
 
-
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {  
   if (p.anno.GC.isOn()) StrokeGraph(GC);
@@ -398,7 +395,6 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
 #endif
   return height;
 }
-    
 
 int32_t DROMPA::DrawParam::getPageHeight(const DROMPA::Global &p, const std::vector<SamplePairOverlayed> &pairs) const {
   int32_t height(OFFSET_Y*2);

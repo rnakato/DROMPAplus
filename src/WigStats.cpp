@@ -20,7 +20,7 @@ uint32_t getWigDistThre(const std::vector<uint64_t> &wigDist, const uint64_t sum
 void WigStats::setWigStats(const WigArray &wigarray)
 {
   double num95(wigarray.getPercentile(0.95));
-  double min(wigarray.getMinValue());
+  //  double min(wigarray.getMinValue());
   std::vector<int32_t> ar;
   int32_t wigDistSize(wigDist.size());
 
