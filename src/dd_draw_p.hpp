@@ -8,7 +8,6 @@
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
 #include "dd_peakcall.hpp"
-#include "color.hpp"
 
 #define rel_xline(cr, x1, y1, xlen) do{		\
     cr->move_to(x1,   (int32_t)y1);		\

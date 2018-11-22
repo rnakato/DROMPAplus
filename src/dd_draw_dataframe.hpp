@@ -242,7 +242,7 @@ class RatioDataFrame : public DataFrame {
 	if (value > threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
 	else cr->set_source_rgba(CLR_GRAY2, alpha);
       } else {
-	cr->set_source_rgba(CLR_PURPLE, alpha);
+	cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha);
       }
     }
   }
@@ -264,7 +264,7 @@ class RatioDataFrame : public DataFrame {
       if (label2nd != "") {
 	cr->set_source_rgba(CLR_ORANGE, 1);
 	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
-	cr->set_source_rgba(CLR_PURPLE, 1);
+	cr->set_source_rgba(CLR_DEEPSKYBLUE, 1);
 	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
       } else {
 	cr->set_source_rgba(CLR_BLACK, 1);
