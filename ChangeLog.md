@@ -1,8 +1,12 @@
 # Changelog
 
+## 1.1.3 (2019-04-15)
+- Parse2wig+: Accept CRAM format for the input file
+- src/SSP/script/makegenometable.pl: accept scaffold in Ensembl genome
+
 ## 1.1.2 (2018-08-29)
 	- bug fix for pdf page count
-	
+
 ## 1.1.1 (2018-08-24)
 - modify PROFILE command for bedsites
 
