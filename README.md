@@ -24,23 +24,26 @@ for CentOS:
     sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
 and install samtools from [the website](http://samtools.sourceforge.net/).
 
-#### 2.2. Install cpdf
- DROMPA uses Coherent PDF (http://community.coherentpdf.com/) for merging pdf files.
- 
-     git clone https://github.com/coherentgraphics/cpdf-binaries
-    
-#### 2.3. Install DROMPAplus
+#### 2.2. Install DROMPAplus
     git clone --recursive https://github.com/rnakato/DROMPAplus
     cd DROMPAplus
     make
 
 If you get an installation error, make sure that all required libraries are installed.
 
-#### 2.4. Add the PATH environment variable
+#### 2.3 Submodules
+DROMPAplus contains submodules as below:
+
+* SSP (https://github.com/rnakato/SSP)
+* ChIPseqTools (https://github.com/rnakato/ChIPseqTools)
+* Coherent PDF (http://community.coherentpdf.com/) 
+    
+#### 2.3. Add the PATH environment variable
 For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type:
 
     export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin
     export PATH = $PATH:$HOME/my_chipseq_exp/cpdf-binaries/Linux-Intel-64bit/
+
 
 # 3. Usage
  See http://drompaplus.readthedocs.io/ for detail.
