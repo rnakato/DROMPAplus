@@ -11,10 +11,13 @@
 namespace {
   void printwarning(double w)
   {
-    std::cerr << "Warning: Read scaling weight = " << w << ". Too much scaling up will bring noisy results." << std::endl;
+    std::cerr << "Warning: Read scaling weight = "
+              << w
+              << ". Too much scaling up will bring noisy results."
+              << std::endl;
   }
 }
-  
+
 WigArray makeWigarray(Mapfile &, int32_t);
 void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(Mapfile &, const std::string &);
@@ -26,7 +29,7 @@ void makewig(Mapfile &p)
   printf("Convert read data to array: \n");
   WigType oftype(p.wsGenome.getWigType());
   std::string filename(p.getbinprefix());
-  
+
   if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
     filename += ".wig";
     outputWig(p, filename);
@@ -122,7 +125,7 @@ void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray)
   static int on(0);
   double w(0);
   std::string ntype(p.rpm.getType());
-  
+
   if(ntype == "GR") {
     double dn(p.genome.getnread_nonred(Strand::BOTH));
     w = getratio(p.rpm.getnrpm(), dn);
@@ -161,26 +164,26 @@ void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray)
 void outputWig(Mapfile &p, const std::string &filename)
 {
   int32_t binsize(p.wsGenome.getbinsize());
-  
+
   FILE* File = fopen(filename.c_str(), "w");
 
   fprintf(File, "track type=wiggle_0\tname=\"%s\"\tdescription=\"Merged tag counts for every %d bp\"\n", p.getSampleName().c_str(), binsize);
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     WigArray array = makeWigarray(p, i);
-    
+
     fprintf(File, "variableStep\tchrom=%s\tspan=%d\n", p.genome.chr[i].getrefname().c_str(), binsize);
     array.outputAsWig(File, binsize, p.wsGenome.isoutputzero());
   }
   fclose(File);
-  
+
   return;
 }
 
 void outputBedGraph(Mapfile &p, const std::string &filename)
 {
   int32_t binsize(p.wsGenome.getbinsize());
-  
+
   std::ofstream out(filename);
   out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getrefname() % 0 % (p.genome.chr[1].getlen()/100);
   out << "browser hide all" << std::endl;
@@ -206,7 +209,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
     PrintTime(t1, t2, "outputAsBedGraph");
   }
   fclose (File);
-  
+
   printf("sort bedGraph...\n");
   std::string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
   if(system(command.c_str())) PRINTERR("sorting bedGraph failed.");
@@ -219,7 +222,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
 /*void outputBinary(Mapfile &p, const std::string &filename)
 {
   std::ofstream out(filename, std::ios::binary);
-  
+
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
     WigArray array = makeWigarray(p, i);
     array.outputAsBinary(out);
