@@ -3,8 +3,8 @@
  */
 #include "GCnormalization.hpp"
 #include "WigStats.hpp"
-#include "SSP/src/Mapfile.hpp"
-#include "SSP/common/util.hpp"
+#include "../submodules/SSP/src/Mapfile.hpp"
+#include "../submodules/SSP/common/util.hpp"
 
 namespace {
   const int32_t lenIgnoreOfFragment=5;

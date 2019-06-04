@@ -6,8 +6,8 @@
 #include <iomanip>
 #include "dd_draw.hpp"
 #include "dd_draw_p.hpp"
-#include "SSP/common/inline.hpp"
-#include "SSP/common/util.hpp"
+#include "../submodules/SSP/common/inline.hpp"
+#include "../submodules/SSP/common/util.hpp"
 
 namespace {
 

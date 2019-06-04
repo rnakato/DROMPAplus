@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include "dd_class.hpp"
-#include "SSP/common/seq.hpp"
+#include "../submodules/SSP/common/seq.hpp"
 
 pdSample scan_pdstr(const std::string &str);
 

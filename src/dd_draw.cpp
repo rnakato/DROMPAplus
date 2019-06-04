@@ -7,8 +7,8 @@
 #include "dd_draw.hpp"
 #include "dd_draw_p.hpp"
 #include "dd_draw_dataframe.hpp"
-#include "SSP/common/inline.hpp"
-#include "SSP/common/util.hpp"
+#include "../submodules/SSP/common/inline.hpp"
+#include "../submodules/SSP/common/util.hpp"
 
       /*    if (p->gapfile && d->gaparray[i] >= GAP_THRE){
 	    cr->set_source_rgba(CLR_BLACK, 0.3);

@@ -4,9 +4,9 @@
 #include "pw_makefile.hpp"
 #include "pw_gv.hpp"
 #include "WigStats.hpp"
-#include "SSP/src/ReadBpStatus.hpp"
-#include "SSP/src/SeqStats.hpp"
-#include "SSP/common/inline.hpp"
+#include "../submodules/SSP/src/ReadBpStatus.hpp"
+#include "../submodules/SSP/src/SeqStats.hpp"
+#include "../submodules/SSP/common/inline.hpp"
 
 namespace {
   void printwarning(double w)

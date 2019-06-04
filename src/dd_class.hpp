@@ -7,10 +7,10 @@
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
 #include "WigStats.hpp"
-#include "SSP/common/BoostOptions.hpp"
-#include "SSP/common/BedFormat.hpp"
-#include "SSP/common/ReadAnnotation.hpp"
-#include "SSP/common/util.hpp"
+#include "../submodules/SSP/common/BoostOptions.hpp"
+#include "../submodules/SSP/common/BedFormat.hpp"
+#include "../submodules/SSP/common/ReadAnnotation.hpp"
+#include "../submodules/SSP/common/util.hpp"
 
 class chrsize;
 

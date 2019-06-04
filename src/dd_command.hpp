@@ -7,7 +7,7 @@
 #include <iostream>
 #include "dd_class.hpp"
 #include "version.hpp"
-#include "SSP/common/BoostOptions.hpp"
+#include "../submodules/SSP/common/BoostOptions.hpp"
 
 void exec_PCSHARP(DROMPA::Global &p);
 void exec_GV(DROMPA::Global &p);

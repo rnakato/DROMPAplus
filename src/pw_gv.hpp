@@ -9,10 +9,10 @@
 #include "WigStats.hpp"
 #include "GenomeCoverage.hpp"
 #include "GCnormalization.hpp"
-#include "SSP/src/MThread.hpp"
-#include "SSP/src/LibraryComplexity.hpp"
-#include "SSP/src/Mapfile.hpp"
-#include "SSP/src/ShiftProfile.hpp"
+#include "../submodules/SSP/src/MThread.hpp"
+#include "../submodules/SSP/src/LibraryComplexity.hpp"
+#include "../submodules/SSP/src/Mapfile.hpp"
+#include "../submodules/SSP/src/ShiftProfile.hpp"
 
 namespace RPM {
   class Pnorm {

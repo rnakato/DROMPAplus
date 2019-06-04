@@ -7,11 +7,11 @@
 #include <vector>
 #include <fstream>
 #include <boost/bind.hpp>
-#include "SSP/common/util.hpp"
-#include "SSP/common/inline.hpp"
-#include "SSP/common/BoostOptions.hpp"
-#include "SSP/common/BedFormat.hpp"
-#include "SSP/src/SeqStats.hpp"
+#include "../submodules/SSP/common/util.hpp"
+#include "../submodules/SSP/common/inline.hpp"
+#include "../submodules/SSP/common/BoostOptions.hpp"
+#include "../submodules/SSP/common/BedFormat.hpp"
+#include "../submodules/SSP/src/SeqStats.hpp"
 
 uint32_t getWigDistThre(const std::vector<uint64_t> &, const uint64_t);
 

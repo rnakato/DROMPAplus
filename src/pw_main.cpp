@@ -8,8 +8,8 @@
 #include <fstream>
 #include <algorithm>
 #include <boost/filesystem.hpp>
-#include "SSP/src/ParseMapfile.hpp"
-#include "SSP/common/BoostOptions.hpp"
+#include "../submodules/SSP/src/ParseMapfile.hpp"
+#include "../submodules/SSP/common/BoostOptions.hpp"
 #include "pw_makefile.hpp"
 #include "version.hpp"
 #include "pw_gv.hpp"

@@ -2,7 +2,7 @@
  * All rights reserved.
  */
 
-#include "SSP/common/statistics.hpp"
+#include "../submodules/SSP/common/statistics.hpp"
 
 double binomial_test(const double n1_ref, const double n2_ref, const double ratio)
 {

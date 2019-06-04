@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "GenomeCoverage.hpp"
 #include "pw_gv.hpp"
-#include "SSP/src/SeqStats.hpp"
+#include "../submodules/SSP/src/SeqStats.hpp"
 
 namespace GenomeCov {
   std::vector<BpStatus> makeGcovArray(const Mapfile &p, const SeqStats &chr, const double r4cmp)
