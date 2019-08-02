@@ -40,7 +40,10 @@ OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadB
 
 .PHONY: all clean
 
-all: $(TARGET)
+all: $(TARGET) prnt
+
+prnt: $(TARGET)
+	@echo "\nAdd '$(CURDIR)/bin:$(CURDIR)/scripts:$(CURDIR)/cpdf/Linux-Intel-64bit/' to your PATH."
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
