@@ -41,7 +41,7 @@ namespace RPM {
     void setOpts(MyOpt::Opts &allopts) {
       allopts.add(opt);
     }
-    
+
     void setValues(const MyOpt::Variables &values) {
       DEBUGprint("Pnorm setValues...");
       ntype  = MyOpt::getVal<std::string>(values, "ntype");
@@ -60,7 +60,7 @@ namespace RPM {
       }
       printf("\n");
     }
-    
+
     const std::string & getType() const { return ntype; }
     int32_t getnrpm()  const { return nrpm; }
     double getndepth() const { return ndepth; }
@@ -98,11 +98,11 @@ class Mapfile: private Uncopyable {
   // for SSP
   SSPstats sspst;
   LibComp complexity;
-  
+
   Mapfile():
     opt("Fragment",100),
     mpdir(""), mpthre(0),
-    Greekchr(false), 
+    Greekchr(false),
     id_longestChr(0),
     maxGC(0), genome(),
     sspst(-1, -1, -1, 0, 600),
@@ -117,7 +117,7 @@ class Mapfile: private Uncopyable {
        "Threshold of low mappability regions")
       ;
   }
-    
+
   void setOpts(MyOpt::Opts &allopts) {
     genome.setOpts(allopts);
     wsGenome.setOpts(allopts);
@@ -183,7 +183,7 @@ class Mapfile: private Uncopyable {
   const std::vector<bed> & getvbedref() const { return vbed; }
 
   void setFRiP() {
-    if (isBedOn()) { 
+    if (isBedOn()) {
       std::cout << "calculate FRiP score.." << std::flush;
       for(auto &x: genome.chr) x.setFRiP(vbed);
       std::cout << "done." << std::endl;

@@ -32,7 +32,7 @@ void help_global()
 ===============
 
 Usage: parse2wig+ [option] -i <inputfile> -o <output> --gt <genome_table>)";
-  
+
   std::cerr << "\nparse2wig v" << VERSION << helpmsg << std::endl;
   return;
 }
@@ -103,7 +103,7 @@ int main(int32_t argc, char* argv[])
   p.wsGenome.estimateZINB(p.getIdLongestChr());
   t2 = clock();
   std::cout << "estimateZINB: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";*/
-  
+
   // p.wsGenome.printPeak(p.getbinprefix());
 
   output_wigstats(p);
@@ -119,9 +119,9 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
   MyOpt::Opts allopts("Options");
   p.setOpts(allopts);
   setOpts(allopts);
-  
+
   MyOpt::Variables values;
-  
+
   DEBUGprint("getOpts...");
 
   try {
@@ -160,7 +160,7 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
     std::cout << e.what() << std::endl;
     exit(0);
   }
-  
+
   DEBUGprint("getOpts done.");
   return;
 }
@@ -272,7 +272,7 @@ void output_stats(const Mapfile &p)
     // p.wsGenome.chr[i].printZINBpar(out);
     out << std::endl;
   }
-  
+
   std::cout << "stats is output in " << filename << "." << std::endl;
 
   return;
@@ -327,12 +327,12 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   wsGenome.setValues(values, genome.chr);
 
   //  for (auto &x: genome.chr) wsGenome.chr.emplace_back(x.getlen(), wsGenome.getbinsize());
-  
+
   rpm.setValues(values);
   complexity.setValues(values);
   sspst.setValues(values);
   gc.setValues(values);
-  
+
   samplename = MyOpt::getVal<std::string>(values, "output");
   id_longestChr = setIdLongestChr(genome);
   oprefix = MyOpt::getVal<std::string>(values, "odir") + "/" + MyOpt::getVal<std::string>(values, "output");
