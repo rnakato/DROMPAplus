@@ -38,22 +38,22 @@ class WigStats {
  public:
   int32_t nbin;
   double nb_p, nb_n;
-  WigStats(const int32_t _nbin=0, const double thre=0):
+  WigStats(const int32_t _nbin=0, double thre=0):
     ave(0), var(0), nb_p0(0),
     wigDist(WIGDISTNUM, 0),
     pthre(-log10(thre)),
     nbin(_nbin), nb_p(0), nb_n(0)
   {}
-  
+
   void setWigStats(const WigArray &wigarray);
-  
+
   /*  void setZINBParam(const std::vector<int32_t> &ar) {
     MyStatistics::moment<int32_t> mm(ar, 0);
     ave = mm.getmean();
     var = mm.getvar();
     nb_p = var ? ave/var : 0;
     if (nb_p>=1) nb_p = 0.9;
-    if (nb_p<=0) nb_p = 0.1; 
+    if (nb_p<=0) nb_p = 0.1;
     nb_n = ave * nb_p /(1 - nb_p);
     //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
     //    if(ave) estimateZINB(nb_p, nb_n);
@@ -71,7 +71,7 @@ class WigStats {
   void addWigDist(const WigStats &chr) {
     for (size_t i=0; i<wigDist.size(); ++i) wigDist[i] += chr.wigDist[i];
   }
-    
+
   double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
 
   double getPoisson(const int32_t i) const {
@@ -112,10 +112,10 @@ class WigStats {
 class WigArray {
   std::vector<int32_t> array;
   double geta;
-  
-  template <class T> double rmGeta(const T val)  const { return val/geta; } 
+
+  template <class T> double rmGeta(const T val)  const { return val/geta; }
   template <class T> double addGeta(const T val) const { return val*geta; }
-  
+
   void checki(const size_t i) const {
     if(i>=array.size()) PRINTERR("Invalid i for WigArray: " << i << " > " << array.size());
   }
@@ -174,7 +174,7 @@ class WigArray {
     }
     size_t i = array.size()-1;
     if(array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
-    
+
   }
   /*  void outputAsBinary(std::ofstream &out) const {
     for(size_t i=0; i<array.size(); ++i) out.write((char *)&array[i], sizeof(int32_t));
@@ -192,7 +192,7 @@ class WigStatsGenome {
   int32_t rcenter;
   WigType type;
   int32_t outputzero;
-  double pthre_inter;
+//  double pthre_inter;
 
 public:
   std::vector<WigStats> chr;
@@ -215,7 +215,7 @@ public:
       ("rcenter",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcenter")),
        "consider length around the center of fragment")
-      ("pthre", boost::program_options::value<double>()->default_value(1e-3), "p-value threshold for peak calling")
+//      ("pthre", boost::program_options::value<double>()->default_value(1e-3), "p-value threshold for peak calling")
       ;
     allopts.add(opt);
   }
@@ -224,16 +224,17 @@ public:
     rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
     outputzero  = MyOpt::getVal<int32_t>(values, "outputzero");
-    pthre_inter = MyOpt::getVal<double>(values, "pthre");
+//    pthre_inter = MyOpt::getVal<double>(values, "pthre");
 
-    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1, pthre_inter);
+//    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1, pthre_inter);
+    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1);
     for (auto &x: chr) genome.nbin += x.getnbin();
   }
   void dump() const {
     std::vector<std::string> strType = {"COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
     std::cout << "\tOutput format: " << strType[static_cast<int32_t>(type)] << std::endl;
     std::cout << "Binsize: " << binsize << " bp" << std::endl;
-    std::cout << "Peak calling threshold: " << pthre_inter << std::endl;
+//    std::cout << "Peak calling threshold: " << pthre_inter << std::endl;
   }
 
   int32_t getbinsize() const { return binsize; }
