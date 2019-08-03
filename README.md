@@ -35,15 +35,14 @@ If you get an installation error, make sure that all required libraries are inst
 DROMPAplus contains submodules as below:
 
 * SSP (https://github.com/rnakato/SSP)
-* ChIPseqTools (https://github.com/rnakato/ChIPseqTools)
-* Coherent PDF (http://community.coherentpdf.com/) 
-    
+* Coherent PDF (http://community.coherentpdf.com/)
+
 #### 2.3. Add the PATH environment variable
 For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type:
 
     export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin
-    export PATH = $PATH:$HOME/my_chipseq_exp/cpdf-binaries/Linux-Intel-64bit/
-
+    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/otherbins
+    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/submodules/cpdf/Linux-Intel-64bit
 
 # 3. Usage
  See http://drompaplus.readthedocs.io/ for detail.
