@@ -32,13 +32,13 @@ and install samtools from [the website](http://samtools.sourceforge.net/).
 If you get an installation error, make sure that all required libraries are installed.
 
 #### 2.3 Submodules
-DROMPAplus contains submodules as below:
+DROMPAplus contains submodules in 'submodules' directory as below:
 
 * SSP (https://github.com/rnakato/SSP)
 * Coherent PDF (http://community.coherentpdf.com/)
 
 #### 2.3. Add the PATH environment variable
-For example, if you downloaded DROMPA and cpdf into the $HOME/my_chipseq_exp directory, type:
+For example, if you downloaded DROMPA+ into the $HOME/my_chipseq_exp directory, type:
 
     export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin
     export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/otherbins
