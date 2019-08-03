@@ -67,10 +67,6 @@ int main(int32_t argc, char* argv[])
   read_mapfile(p.genome);
   t2 = clock();
   PrintTime(t1, t2, "read_mapfile");
-  t1 = clock();
-  p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
-  t2 = clock();
-  PrintTime(t1, t2, "dflen.outputDistFile");
 
   t1 = clock();
   p.complexity.checkRedundantReads(p.genome);
@@ -97,7 +93,7 @@ int main(int32_t argc, char* argv[])
   t1 = clock();
   generate_wigfile(p);
   t2 = clock();
-  std::cout << "MakeWig: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
+  std::cout << "generate_wigfile: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
   /*  t1 = clock();
   p.wsGenome.estimateZINB(p.getIdLongestChr());
@@ -106,7 +102,10 @@ int main(int32_t argc, char* argv[])
 
   // p.wsGenome.printPeak(p.getbinprefix());
 
-  output_wigstats(p);
+  if(p.isverbose()) {
+    output_wigstats(p);
+    p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
+  }
   output_stats(p);
 
   return 0;
@@ -331,6 +330,8 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   complexity.setValues(values);
   sspst.setValues(values);
   gc.setValues(values);
+
+  verbose = values.count("verbose");
 
   samplename = MyOpt::getVal<std::string>(values, "output");
   id_longestChr = setIdLongestChr(genome);

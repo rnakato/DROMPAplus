@@ -80,6 +80,7 @@ class Mapfile: private Uncopyable {
   double mpthre;
 
   bool Greekchr;
+  bool verbose;
 
   //  std::vector<Peak> vPeak;
   int32_t id_longestChr;
@@ -143,6 +144,7 @@ class Mapfile: private Uncopyable {
 
   int32_t getIdLongestChr () const { return id_longestChr; }
   int32_t isBedOn () const { return on_bed; }
+  bool isverbose () const { return verbose; }
   const std::string & getbedfilename() const { return bedfilename; }
   const std::string & getSampleName() const { return samplename; }
   const std::string & getMpDir()      const { return mpdir; }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 (2019-08-03)
+- Parse2wig+: modify --outputzero option from <int> to <bool>
+- Parse2wig+: add --verbose option. "*.ReadLengthDist.tsv" and "*.readcountdist.tsv" are output only when supplying --verbose option.
+- DROMPA+: withdraw CI, CG, TR, HEATMAP command
+- modify help messages
+
 ## 1.1.3 (2019-04-15)
 - Parse2wig+: Accept CRAM format for the input file
 - src/SSP/script/makegenometable.pl: accept scaffold in Ensembl genome
