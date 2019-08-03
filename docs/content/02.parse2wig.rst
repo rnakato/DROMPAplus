@@ -26,15 +26,23 @@ parse2wig+ allows multiple input files (separated by ",")::
 
   $ parse2wig+ -i ChIP1.bam,ChIP2.bam,ChIP3.bam -o ChIP --gt genometable.txt --outputformat 2
 
+In default, the windows in which the value is zero are ommited to reduce the file size. If you want to output all windows, supply --outputzero.
+
+  $ parse2wig+ -i ChIP1.bam,ChIP2.bam,ChIP3.bam -o ChIP --gt genometable.txt --outputformat 2 --outputzero
+
 For bin size 100kbp::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2 --binsize 100000
 
-  
+
 .. note::
-   
+
     * The format of input file is automatically detected by postfix (.sam/.bam/.bowtie/.tagalign(.gz)).
     * If the detection does not work well, supply -f option (e.g., "-f BAM").
+
+.. note::
+
+    * Multithreading is activated only in strand-shift profile for estimating frangment length. When suppying --nomodel option, multithreading is off.
 
 
 Quality check
@@ -70,7 +78,7 @@ sample.binarray dist.xls
 
 "sample.binarray dist.xls" describes the distribution of read numbers contained in each bin. Distributions of simulated data are also shown.
 
-      
+
 Fragment length estimation
 -----------------------------
 
@@ -100,7 +108,7 @@ This default number can be changed through the “-num4cmp” option.
 FRiP score
 ----------------------
 FRiP (fraction of reads in peaks) score (when -bed is supplied).
-  
+
 
 Total read normalization
 --------------------------------------------------
@@ -133,7 +141,7 @@ Paired-end file
 
 For paired-end files, supply "--pair" option::
 
-  $ parse2wig+ --pair -i ChIP.paired.bam -o ChIP --gt genometable.txt --outputformat 2 
+  $ parse2wig+ --pair -i ChIP.paired.bam -o ChIP --gt genometable.txt --outputformat 2
 
 In paired-end mode, fragment length of each read pair is calculated automatically.
 
@@ -222,7 +230,7 @@ are the number of positions containing the GC contents and G is the total number
 n GC /n GC ;
 - Weight: the ratio of the proportion between reads and genome sequence, namely, weight = reads prop GC /prop GC
 
-Because GC contents with low depth (depth GC ) cause background noise, by default parse2wig+ 
+Because GC contents with low depth (depth GC ) cause background noise, by default parse2wig+
 sets a weight of 1 to the GC content with depth GC less than 0.001, and a weight of 0 to the GC
 genome content having prop GC less than 0.00001.
 When supplying the “-gcdepthoff” option, the former threshold is ignored.

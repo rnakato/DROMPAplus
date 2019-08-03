@@ -191,7 +191,7 @@ class WigStatsGenome {
   int32_t binsize;
   int32_t rcenter;
   WigType type;
-  int32_t outputzero;
+  bool outputzero;
 //  double pthre_inter;
 
 public:
@@ -210,7 +210,7 @@ public:
        boost::program_options::value<int32_t>()->default_value(100)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
        "bin size")
       ("outputzero",
-       boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--outputzero")),
+//       boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--outputzero")),
        "output zero-value bins (default: omitted)")
       ("rcenter",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcenter")),
@@ -223,7 +223,8 @@ public:
     binsize = MyOpt::getVal<int32_t>(values, "binsize");
     rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
-    outputzero  = MyOpt::getVal<int32_t>(values, "outputzero");
+    outputzero  = values.count("outputzero"); //MyOpt::getVal<int32_t>(values, "outputzero");
+//    outputzero  = MyOpt::getVal<int32_t>(values, "outputzero");
 //    pthre_inter = MyOpt::getVal<double>(values, "pthre");
 
 //    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1, pthre_inter);
@@ -240,7 +241,7 @@ public:
   int32_t getbinsize() const { return binsize; }
   int32_t getWigDistsize() const { return genome.getWigDistsize(); }
   int32_t getrcenter() const { return rcenter; }
-  int32_t isoutputzero() const { return outputzero; }
+  bool isoutputzero() const { return outputzero; }
   WigType getWigType() const { return type; }
 
   void setWigStats(const int32_t id, const WigArray &array) {
