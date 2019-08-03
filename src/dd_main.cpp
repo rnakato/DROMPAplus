@@ -15,28 +15,28 @@ namespace {
     Usage: drompa+ <Command> [options]
 
     Command:)";
-    
+
     std::cerr << "\n    DROMPA+ v" << VERSION << helpmsg << std::endl;
     for(size_t i=0; i<cmds.size(); ++i) cmds[i].printCommandName();
     std::cerr << std::endl;
     return;
   }
-  
+
   void printVersion()
   {
     std::cerr << "drompa+ version " << VERSION << std::endl;
     exit(0);
   }
-  
+
   int32_t getOpts(std::vector<Command> &cmds, int argc, char* argv[])
   {
     int32_t cmdid(-1);
-    
+
     DEBUGprint("setOpts...");
-    
+
     MyOpt::Opts command("Command");
     MyOpt::Opts genopts("Options");
-    
+
     command.add_options()
       ("command", boost::program_options::value<std::string>(), "command to run");
     genopts.add_options()
@@ -49,16 +49,16 @@ namespace {
     allopts.add(command).add(genopts);
 
     DEBUGprint("getOpts...");
-    
+
     MyOpt::Variables values;
-    
+
     try {
       // parse first argument only
       boost::program_options::parsed_options parsed = boost::program_options::command_line_parser(2, argv).options(allopts).positional(pd).run();
       store(parsed, values);
 
       if (values.count("version")) printVersion();
-      
+
       // check command and param
       int32_t on(0);
       std::string cmd = MyOpt::getVal<std::string>(values, "command");
@@ -75,14 +75,14 @@ namespace {
 	help_global(cmds);
 	exit(0);
       }
-      
+
     } catch (std::exception &e) {
       std::cout << e.what() << std::endl;
       exit(0);
     }
     return cmdid;
   }
-  
+
 }
 
 int main(int argc, char* argv[])
@@ -104,7 +104,7 @@ void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
 {
   std::string command("cpdf " + StrAllPdf + " -o " + p.getFigFileName());
   std::cout << "Merge PDF files \"" << command << "\"" << std::endl;
-  
+
   int32_t return_code = system(command.c_str());
   if(WEXITSTATUS(return_code)) {
     std::cerr << "Warning: command " << command << "return nonzero status." << std::endl;
@@ -144,7 +144,7 @@ void exec_PCSHARP(DROMPA::Global &p)
 
     std::vector<bed> regionBed(p.drawregion.getRegionBedChr(chr.getname()));
     if (p.drawregion.isRegionBed() && !regionBed.size()) continue;
- 
+
     Figure fig(p, chr);
     if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }
@@ -163,7 +163,7 @@ void exec_GV(DROMPA::Global &p)
   p.drawparam.width_per_line = lenmax + 1;
 
   p.drawregion.isRegionOff();
-  
+
   std::string StrAllPdf("");
   for(auto &chr: p.gt) {
     if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
@@ -198,7 +198,7 @@ void MakeProfile(DROMPA::Global &p)
 }
 
 void exec_PROFILE(DROMPA::Global &p)
-{  
+{
   if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) MakeProfile<ProfileTSS>(p);
   else if (p.prof.isPtypeGene100()) MakeProfile<ProfileGene100>(p);
   else if (p.prof.isPtypeBed())     MakeProfile<ProfileBedSites>(p);

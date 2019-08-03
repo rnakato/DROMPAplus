@@ -58,7 +58,6 @@ namespace RPM {
       else if(ntype == "GD" || ntype == "CD"){
 	std::cout << "\tnormed depth: " << ndepth << std::endl;
       }
-      printf("\n");
     }
 
     const std::string & getType() const { return ntype; }

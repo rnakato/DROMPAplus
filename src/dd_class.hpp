@@ -66,7 +66,7 @@ public:
     }
     if(binsize <= 0) PRINTERR("invalid binsize: " << v);
   }
-  
+
   SampleInfo() {}
   SampleInfo(const std::string &filename,
 	     const std::vector<chrsize> gt,
@@ -80,7 +80,7 @@ public:
 
    if (type != WigType::NONE) iftype = type;
    else {
-     if(v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;    
+     if(v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;
      else if(v[last] == "gz" && v[last-1] == "wig") {
        iftype = WigType::COMPRESSWIG;
        --last;
@@ -93,7 +93,7 @@ public:
    for (int32_t i=0; i<last; ++i) prefix += v[i] + ".";
    gettotalreadnum(filename, gt);
   }
-  
+
   void scanStatsFile(const std::string &filename);
   void gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt);
   int32_t getbinsize() const { return binsize; }
@@ -109,12 +109,12 @@ class SampleInfoList {
 
 public:
   SampleInfoList(){}
-  
+
   void addSampleInfo(const std::string &str, const std::vector<chrsize> &gt, const WigType iftype) {
-    int32_t binsize(0);  
+    int32_t binsize(0);
     std::vector<std::string> v;
     ParseLine(v, str, ',');
-      
+
     if(v.size() >8) {
       std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
       exit(1);
@@ -124,16 +124,16 @@ public:
       exit(1);
     }
     isFile(v[0]);
-      
+
     if(v.size() >4 && v[4] != "") {
       try { binsize = stoi(v[4]); }
       catch (...) { std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl; }
     }
-      
+
     // ChIP sample
     if(!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
     if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
-      
+
     // Input sample
     if(v.size() >=2 && v[1] != "") {
       if(!Exists(v[1])) vsinfo[v[1]] = SampleInfo(v[1], gt, binsize, iftype);
@@ -143,13 +143,13 @@ public:
 
   bool Exists(const std::string &str) const { return vsinfo.find(str) != vsinfo.end(); }
   int32_t getbinsize(const std::string &str) const { return vsinfo.at(str).getbinsize(); }
-  
+
   const SampleInfo& operator[](const std::string &str) const& {
     return vsinfo.at(str);
   }
   const std::unordered_map<std::string, SampleInfo> &getarray() const & { return vsinfo; }
 };
-  
+
 
 class yScale {
  public:
@@ -162,14 +162,14 @@ class yScale {
 class SamplePairEach {
   int32_t binsize;
   std::unordered_map<std::string, std::vector<bed>> peaks;
-  
+
 public:
   std::string argvChIP, argvInput;
   std::string peak_argv;
   std::string label;
   double ratio;
   yScale scale;
-  
+
   SamplePairEach():
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {}
@@ -179,7 +179,7 @@ public:
     std::vector<std::string> v;
     ParseLine(v, str, ',');
 
-    /* 1:ChIP   2:Input   3:name   4:peaklist   5:binsize
+    /* 1:ChIP   2:Input   3:label   4:peaklist   5:binsize
        6:scale_tag   7:scale_ratio   8:scale_pvalue */
     if(v[0] != "") argvChIP = v[0];
     if(v.size() >=2 && v[1] != "") argvInput = v[1];
@@ -205,10 +205,10 @@ public:
   int32_t getbinsize() const { return binsize; }
   bool InputExists() const { return argvInput != "";}
 };
-  
+
 class SamplePairOverlayed {
   bool overlay;
-  
+
  public:
   SamplePairEach first;
   SamplePairEach second;
@@ -270,7 +270,7 @@ namespace DROMPA {
       if(v.size()>1) vbedlist.emplace_back(vbed, v[1]);
       else vbedlist.emplace_back(vbed, "Bed");
     }
-    
+
   public:
     std::string genefile;
     int32_t gftype;
@@ -302,20 +302,20 @@ namespace DROMPA {
       else if(gftype==1) tmp = parseGtf(genefile);
       else if(gftype==2) tmp = parseSGD(genefile);
       else PRINTERR("invalid --gftype: " << gftype);
-      
+
       //      printMap(tmp);
-      
+
       return tmp; // hash for transcripts
     }
-    
+
     void setValuesPC(const MyOpt::Variables &values);
     void setValuesGV(const MyOpt::Variables &values);
     void InitDumpPC(const MyOpt::Variables &values) const;
     void InitDumpGV(const MyOpt::Variables &values) const;
-    
+
     int32_t getgftype() const { return gftype; }
   };
-  
+
   class Profile {
     enum {TSS, TTS, GENE100, BEDSITES, PTYPENUM};
 
@@ -326,9 +326,9 @@ namespace DROMPA {
     int32_t width_from_center;
     double maxval;
     int32_t hmsort;
-    
+
     Profile(){}
-    
+
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
     void InitDump() const;
@@ -337,7 +337,7 @@ namespace DROMPA {
     bool isPtypeGene100() const { return ptype == GENE100; }
     bool isPtypeBed() const { return ptype == BEDSITES; }
   };
-  
+
   class Threshold {
   public:
     double pthre_inter;
@@ -346,14 +346,14 @@ namespace DROMPA {
     double ethre;
     double ipm;
     bool sigtest;
-    
+
     Threshold(): sigtest(false) {}
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
     void InitDump() const;
   };
-  
+
   class DrawRegion {
     bool isRegion;
     std::vector<bed> regionBed;
@@ -365,7 +365,7 @@ namespace DROMPA {
     void getGeneLoci(const std::string &genelocifile) {
         std::ifstream in(genelocifile);
 	if (!in) PRINTERR("cannot open " << genelocifile);
-	
+
 	std::string lineStr;
 	while (!in.eof()) {
 	  getline(in, lineStr);
@@ -384,7 +384,7 @@ namespace DROMPA {
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
     void InitDump(const MyOpt::Variables &values) const;
-    
+
     std::vector<bed> getRegionBedChr(const std::string &chrname) const {
       std::vector<bed> vbed;
       for(auto &x: regionBed) {
@@ -401,7 +401,7 @@ namespace DROMPA {
       return geneloci.find(genename) != geneloci.end();
     }
   };
-  
+
   class DrawParam {
     int32_t linenum_per_page;
     int32_t barnum;
@@ -471,7 +471,7 @@ namespace DROMPA {
     std::vector<pdSample> pd;
 
     bool isGV;
-    
+
     Global():
       ispng(false), showchr(false), iftype(WigType::NONE),
       oprefix(""), includeYM(false),

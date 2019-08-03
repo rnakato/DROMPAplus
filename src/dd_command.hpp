@@ -36,14 +36,14 @@ public:
   {
     p.setOpts(v, cps);
   };
-  
+
   void printCommandName() const {
     std::cout << std::setw(8) << " " << std::left << std::setw(12) << name
 	      << std::left << std::setw(40) << desc << std::endl;
   }
   void printhelp() const {
     std::cout << boost::format("%1%:  %2%\n") % name % desc;
-    std::cout << boost::format("Usage: drompa %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
+    std::cout << boost::format("Usage:\n\tdrompa+ %1% [options] -o <output> --gt <genometable> %2%\n\n") % name % requiredstr;
     std::cout << p.opts << std::endl;
   }
   void InitDump();
@@ -54,7 +54,7 @@ public:
     }
     try {
       store(parse_command_line(argc, argv, p.opts), values);
-      
+
       if (values.count("help")) {
 	printhelp();
 	exit(0);

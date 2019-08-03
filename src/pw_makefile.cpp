@@ -18,13 +18,13 @@ namespace {
   }
 }
 
-WigArray makeWigarray(Mapfile &, int32_t);
-void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray);
+WigArray count_and_normalize_Wigarray(Mapfile &, int32_t);
+void normalize_wigaray_for_totalreads(Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(Mapfile &, const std::string &);
 void outputBedGraph(Mapfile &, const std::string &);
 //void outputBinary(Mapfile &, const std::string &);
 
-void makewig(Mapfile &p)
+void generate_wigfile(Mapfile &p)
 {
   printf("Convert read data to array: \n");
   WigType oftype(p.wsGenome.getWigType());
@@ -84,7 +84,7 @@ void addReadToWigArray(const WigStatsGenome &p, WigArray &wigarray, const Read x
   return;
 }
 
-WigArray makeWigarray(Mapfile &p, const int32_t id)
+WigArray count_and_normalize_Wigarray(Mapfile &p, const int32_t id)
 {
   std::cout << "chr" << p.genome.chr[id].getname() << ".." << std::flush;
   WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0);
@@ -108,7 +108,7 @@ WigArray makeWigarray(Mapfile &p, const int32_t id)
   }
 
   /* Total read normalization */
-  if (p.rpm.getType() != "NONE") norm2rpm(p, p.genome.chr[id], wigarray);
+  if (p.rpm.getType() != "NONE") normalize_wigaray_for_totalreads(p, p.genome.chr[id], wigarray);
 
   p.wsGenome.setWigStats(id, wigarray);
 
@@ -122,7 +122,7 @@ WigArray makeWigarray(Mapfile &p, const int32_t id)
   return wigarray;
 }
 
-void norm2rpm(Mapfile &p, SeqStats &chr, WigArray &wigarray)
+void normalize_wigaray_for_totalreads(Mapfile &p, SeqStats &chr, WigArray &wigarray)
 {
   static int32_t on(0);
   double w(0);
@@ -172,7 +172,7 @@ void outputWig(Mapfile &p, const std::string &filename)
   fprintf(File, "track type=wiggle_0\tname=\"%s\"\tdescription=\"Merged tag counts for every %d bp\"\n", p.getSampleName().c_str(), binsize);
 
   for (size_t i=0; i<p.genome.chr.size(); ++i) {
-    WigArray array = makeWigarray(p, i);
+    WigArray array = count_and_normalize_Wigarray(p, i);
 
     fprintf(File, "variableStep\tchrom=%s\tspan=%d\n", p.genome.chr[i].getrefname().c_str(), binsize);
     array.outputAsWig(File, binsize, p.wsGenome.isoutputzero());
@@ -195,16 +195,16 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
     % p.getSampleName() % binsize;
   out.close();
 
-  std::string tempfile = filename + ".temp";
+  std::string tempfile = filename + ".tmpfile";
 
   FILE* File = fopen(tempfile.c_str(), "w");
 
   clock_t t1,t2;
   for (size_t i=0; i<p.genome.chr.size(); ++i) {
     t1 = clock();
-    WigArray array = makeWigarray(p, i);
+    WigArray array = count_and_normalize_Wigarray(p, i);
     t2 = clock();
-    PrintTime(t1, t2, "makeWigarray");
+    PrintTime(t1, t2, "count_and_normalize_Wigarray");
     t1 = clock();
     array.outputAsBedGraph(File, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1, p.wsGenome.isoutputzero());
     t2 = clock();
@@ -226,7 +226,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
   std::ofstream out(filename, std::ios::binary);
 
   for (size_t i=0; i<p.genome.chr.size(); ++i) {
-    WigArray array = makeWigarray(p, i);
+    WigArray array = count_and_normalize_Wigarray(p, i);
     array.outputAsBinary(out);
   }
   return;

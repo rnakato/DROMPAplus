@@ -95,7 +95,7 @@ int main(int32_t argc, char* argv[])
   p.normalizeByGCcontents();
 
   t1 = clock();
-  makewig(p);
+  generate_wigfile(p);
   t2 = clock();
   std::cout << "MakeWig: " << static_cast<double>(t2 - t1) / CLOCKS_PER_SEC << "sec.\n";
 
@@ -179,9 +179,8 @@ void init_dump(const Mapfile &p, const MyOpt::Variables &values)
   std::cout << boost::format("parse2wig+ version %1%\n\n") % VERSION;
 
   MyOpt::dumpIO(values);
-  MyOpt::dumpGenomeTable(values);
-
   p.wsGenome.dump();
+  MyOpt::dumpGenomeTable(values);
 
   MyOpt::dumpFragmentLengthDist(values);
   MyOpt::dumpPair(values);

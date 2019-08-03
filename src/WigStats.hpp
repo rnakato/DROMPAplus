@@ -233,7 +233,7 @@ public:
   }
   void dump() const {
     std::vector<std::string> strType = {"COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
-    std::cout << "\tOutput format: " << strType[static_cast<int32_t>(type)] << std::endl;
+    std::cout << "Output format: " << strType[static_cast<int32_t>(type)] << std::endl;
     std::cout << "Binsize: " << binsize << " bp" << std::endl;
 //    std::cout << "Peak calling threshold: " << pthre_inter << std::endl;
   }

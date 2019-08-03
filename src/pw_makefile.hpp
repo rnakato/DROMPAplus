@@ -5,6 +5,6 @@
 #define _PW_MAKEFILE_HPP_
 
 class Mapfile;
-void makewig(Mapfile &);
+void generate_wigfile(Mapfile &);
 
 #endif /* _PW_MAKEFILE_HPP_ */
