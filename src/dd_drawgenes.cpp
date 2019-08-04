@@ -14,7 +14,7 @@ namespace {
   class GeneElement{
     int32_t dif;
     int32_t cnt;
-  
+
   public:
     double x1, x2, xcen, xwid;
     double x_name;
@@ -59,7 +59,7 @@ namespace {
 	else if (x_name > OFFSET_X + width_draw + 60) x_name = OFFSET_X + width_draw + 60;
 	y_name = ybar +3;
       }
-    
+
     }
   };
 
@@ -85,7 +85,7 @@ namespace {
 	  m.second.gtype == "retained_intron") continue;
       garray.emplace_back(m.second);
     }
-    sort(garray.begin(), garray.end(), 
+    sort(garray.begin(), garray.end(),
 	 [](const genedata &x, const genedata &y) { return x.txStart < y.txStart;});
     return garray;
   }
@@ -124,7 +124,7 @@ void PDFPage::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
   } catch (...) {
     std::cerr << "Warning: " << chrname << " has no gene." << std::endl;
   }
-  
+
   return;
 }
 
@@ -147,7 +147,7 @@ void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
     int32_t on_minus(0);
     for (auto &m: garray) {
       GeneElement g(m, par, ycenter, 0, on_plus, on_minus);
- 
+
       cr->set_line_width(0.3);
       if (m.gtype=="centromere" || m.gtype=="teromere") {
 	cr->set_source_rgba(CLR_GREEN, 1);
@@ -204,22 +204,28 @@ void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
   } catch (...) {
     std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
   }
-  
+
   return;
 }
 
 void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
 {
   DEBUGprint("strokeGene");
-  
+
   cr->set_line_width(2.5);
   int32_t ycen(ycenter-20);
-  ShowColorAnnotation(cr, 50, ycen, "CodingRNA", CLR_BLUE);
-  ShowColorAnnotation(cr, 50, ycen, "lincRNA", CLR_PINK);
-  ShowColorAnnotation(cr, 50, ycen, "Antisence", CLR_GREEN);
-  ShowColorAnnotation(cr, 50, ycen, "other RNA", CLR_ORANGE);
-  ShowColorAnnotation(cr, 50, ycen, "Pseudo", CLR_GRAY2);
-  ShowColorAnnotation(cr, 50, ycen, "Others", CLR_BLACK);
+
+  if (p.anno.is_Anno_UCSC()){
+    ShowColorAnnotation(cr, 50, ycen, "CodingRNA", CLR_BLUE);
+    ShowColorAnnotation(cr, 50, ycen, "ncRNA", CLR_GREEN);
+  } else {
+    ShowColorAnnotation(cr, 50, ycen, "CodingRNA", CLR_BLUE);
+    ShowColorAnnotation(cr, 50, ycen, "lincRNA", CLR_PINK);
+    ShowColorAnnotation(cr, 50, ycen, "Antisence", CLR_GREEN);
+    ShowColorAnnotation(cr, 50, ycen, "other RNA", CLR_ORANGE);
+    ShowColorAnnotation(cr, 50, ycen, "Pseudo", CLR_GRAY2);
+    ShowColorAnnotation(cr, 50, ycen, "Others", CLR_BLACK);
+  }
 
   try {
     std::vector<genedata> garray(get_garray(p.anno.gmp.at(rmchr(chrname)), par.xstart, par.xend));
@@ -232,6 +238,7 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
       GeneElement g(m, par, ycenter, 1, on_plus, on_minus);
 
       if (isStr(m.gtype, "protein_coding")) cr->set_source_rgba(CLR_BLUE, 1);
+      else if (isStr(m.gtype, "noncoding RNA")) cr->set_source_rgba(CLR_GREEN, 1); // UCSC
       else if (isStr(m.gtype, "lincRNA"))   cr->set_source_rgba(CLR_PINK, 1);
       else if (isStr(m.gtype, "antisense")) cr->set_source_rgba(CLR_GREEN, 1);
       else if (isStr(m.gtype, "RNA"))       cr->set_source_rgba(CLR_ORANGE, 1);
@@ -247,7 +254,7 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
       cr->move_to(std::max(g.x1, llimit), g.ybar);
       cr->line_to(std::min(g.x2, rlimit), g.ybar);
       cr->stroke();
-      
+
       // Exon
       cr->set_line_width(6);
       for (int32_t i=0; i<m.exonCount; ++i) {
@@ -258,7 +265,7 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
 	  cr->stroke();
 	}
       }
-      
+
       // Name
       cr->set_source_rgba(CLR_BLACK, 1);
       if(p.anno.showtranscriptname) showtext_cr(cr, g.x_name, g.y_name, m.tname, 8);

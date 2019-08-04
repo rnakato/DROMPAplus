@@ -262,6 +262,7 @@ namespace DROMPA {
   class Global;
 
   class Annotation {
+    bool isUCSC;
 
     template <class T>
     void readBedFile(const std::vector<std::string> &v) {
@@ -289,7 +290,7 @@ namespace DROMPA {
     GraphFile GD;
 
     Annotation():
-      genefile(""), arsfile(""), terfile(""),
+      isUCSC(false), genefile(""), arsfile(""), terfile(""),
       repeatfile(""), mpfile(""), gapfile("")
     {}
 
@@ -303,6 +304,7 @@ namespace DROMPA {
       else if(gftype==2) tmp = parseSGD(genefile);
       else PRINTERR("invalid --gftype: " << gftype);
 
+      isUCSC = isGeneUCSC(tmp);
       //      printMap(tmp);
 
       return tmp; // hash for transcripts
@@ -314,6 +316,7 @@ namespace DROMPA {
     void InitDumpGV(const MyOpt::Variables &values) const;
 
     int32_t getgftype() const { return gftype; }
+    bool is_Anno_UCSC() const {return isUCSC; }
   };
 
   class Profile {

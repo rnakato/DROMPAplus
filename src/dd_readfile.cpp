@@ -37,7 +37,7 @@ void SplitBedGraphLine(std::vector<std::string> &v, const std::string &str)
   v.emplace_back(std::string(str, current, str.size() - current));
   return;
 }
-  
+
 template <class T>
 void readWig(T &in, WigArray &array, const std::string &chrname, const int binsize)
 {
@@ -68,7 +68,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
   if (!in) PRINTERR("cannot open " << filename);
 
   DEBUGprint("Read bedGraph...");
-  
+
   int32_t on(0);
   std::string lineStr;
   while (!in.eof()) {
@@ -82,7 +82,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     }
     if (!on) on=1;
     //    std::cout << chrname << "\t" << v[0] << "\t" << binsize << "\t" << stod(v[3]) << "\t" << v[2] << "\t" << std::endl;
-    
+
     int32_t start(stoi(v[1]));
     int32_t end(stoi(v[2])-1);
     if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
@@ -91,7 +91,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
     //    std::cout << s << "\t " << e << "\t " << array.size() << "\t" << stod(v[3]) << std::endl;
     for(int32_t i=s; i<=e; ++i) array.setval(i, stod(v[3]));
   }
-  
+
   in.close();
   return;
 }
@@ -180,7 +180,7 @@ WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chr
   else if (iftype == WigType::BIGWIG)        funcBigWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BEDGRAPH)      funcBedGraph(array, filename, binsize, chrname);
   //  else if (iftype == WigType::BINARY)        funcBinary(array, filename, nbin);
-  
+
   //array.dump();
 
   return array;
@@ -205,10 +205,10 @@ int32_t getNcolReadNum(std::string &lineStr)
 void SampleInfo::scanStatsFile(const std::string &filename)
 {
   DEBUGprint("scanStatsFile...");
-   
+
   std::ifstream in(filename);
   if (!in) PRINTERR("cannot open " << filename);
-    
+
   std::string lineStr;
   int32_t on(0);
   int32_t ncol_readnum(0);
@@ -246,7 +246,7 @@ void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<
       totalreadnum += totalreadnum_chr[chr.getname()];
     }
   }
-  
+
 #ifdef DEBUG
     std::cout << "Total read number:" << std::endl;
     std::cout << "Whole genome: " << totalreadnum << std::endl;
