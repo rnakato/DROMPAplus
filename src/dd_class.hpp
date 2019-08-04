@@ -14,7 +14,20 @@
 
 class chrsize;
 
-enum class DrompaCommand {CHIP, NORM, THRE, ANNO_PC, ANNO_GV, DRAW, REGION, CG, PD, TR, PROF, OTHER};
+enum class DrompaCommand {
+  CHIP,
+  NORM,
+  THRE,
+  ANNO_PC,
+  ANNO_GV,
+  DRAW,
+  REGION,
+  CG,
+  PD,
+  TR,
+  PROF,
+  OTHER
+};
 
 class CommandParamSet {
 public:
@@ -102,7 +115,6 @@ public:
   int32_t gettotalreadnum() const { return totalreadnum; }
   const std::unordered_map<std::string, int32_t>& gettotalreadnum_chr() const& { return totalreadnum_chr; }
 };
-
 
 class SampleInfoList {
   std::unordered_map<std::string, SampleInfo> vsinfo;
@@ -497,14 +509,8 @@ namespace DROMPA {
 
     int32_t getSmoothing() const { return smoothing; }
     int32_t getChIPInputNormType() const { return norm; }
-    const std::string getPrefixName() const
-    {
-      return oprefix;
-    }
-    const std::string getFigFileName() const
-    {
-      return oprefix + ".pdf";
-    }
+    const std::string getPrefixName() const { return oprefix; }
+    const std::string getFigFileName() const { return oprefix + ".pdf"; }
     const std::string getFigFileNameChr(const std::string &chr) const
     {
       return oprefix + "_" + chr + ".pdf";
