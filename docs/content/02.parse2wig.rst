@@ -47,7 +47,7 @@ To use multiple cpus, supply "-p"::
 
 .. note::
 
-    * Multithreading is activated only in strand-shift profile for estimating frangment length. When suppying "--nomodel" option, multithreading is off.
+    * Multithreading is activated only in strand-shift profile for estimating frangment length. When suppying "--nomodel" option, multithreading will make no differece.
 
 
 Quality check
@@ -60,6 +60,7 @@ The contents are the following:
 - Input file name;
 - Redundancy threshold: threshold used for PCR bias;
 - Library complexity
+
     - the number of reads tested are in parenthesis
     - if the number of mapped reads is insufficient (specified by --ncmp option), this score will be put in parentheses
 - GC summit: the summit of GC distribution (when --GC option is supplied);
