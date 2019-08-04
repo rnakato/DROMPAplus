@@ -62,8 +62,8 @@ public:
 
   ChrArrayList(const DROMPA::Global &p, const chrsize &_chr): chr(_chr) {
     loadSampleData(p);
-    
-#ifdef DEBUG    
+
+#ifdef DEBUG
     std::cout << "all WigArray:" << std::endl;
     for (auto &x: arrays) {
       std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
@@ -82,7 +82,7 @@ class ReadProfile {
   std::string xlabel;
   std::string Rscriptname;
   std::string Rfigurename;
-  
+
 protected:
   int32_t binsize;
   int32_t nbin;
@@ -110,7 +110,7 @@ protected:
   int32_t isExceedRange(const int32_t posi, const int32_t chrlen) {
     return posi - width_from_center < 0 || posi + width_from_center >= chrlen;
   }
-  
+
   void WriteValAroundPosi(std::ofstream &out, const SamplePairOverlayed &pair, const ChrArrayList &arrays,
 			  const int32_t posi, const std::string &strand)
   {
@@ -136,25 +136,25 @@ protected:
     for (int32_t i=sbin; i<=ebin; ++i) sum += arrays.arrays.at(pair.first.argvChIP).array[i];
     return getratio(sum, (ebin - sbin + 1));
   }
-  
+
 public:
   ReadProfile(const DROMPA::Global &p, const int32_t _nbin=0):
     stype(p.prof.stype),
     width_from_center(p.prof.width_from_center),
     nsites(0), nsites_skipped(0)
   {
-    
+
     if(p.prof.isPtypeTSS())          xlabel = "Distance from TSS (bp)";
     else if(p.prof.isPtypeTTS())     xlabel = "Distance from TES (bp)";
     else if(p.prof.isPtypeGene100()) xlabel = "% gene length from TSS";
     else if(p.prof.isPtypeBed())     xlabel = "Distance from the peak summit (bp)";
-    
+
     for (auto &x: p.samplepair) binsize = x.first.getbinsize();
     binwidth_from_center = width_from_center / binsize;
     if (binwidth_from_center <= 1) {
       PRINTERR("please specify larger size for --widthfromcenter:" << width_from_center << " than binsize:" << binsize << ".");
     }
-    
+
     if (_nbin) nbin = _nbin;
     else nbin = binwidth_from_center * 2 +1;
 
@@ -175,9 +175,9 @@ public:
   void MakeFigure(const DROMPA::Global &p) {
     std::cout << "\nMake figure.." << std::endl;
     std::ofstream out(Rscriptname);
-    
+
     std::vector<double> vcol({CLR_RED, CLR_BLUE, CLR_GREEN, CLR_LIGHTCORAL, CLR_BLACK, CLR_PURPLE, CLR_GRAY3, CLR_OLIVE, CLR_YELLOW3, CLR_SLATEGRAY, CLR_PINK, CLR_SALMON, CLR_GREEN2, CLR_BLUE3, CLR_PURPLE2, CLR_DARKORANGE});
-   
+
     //    out << "# bsnum_allowed=%d, bsnum_skipped=%d\n", d->ntotal_profile, d->ntotal_skip) << std::endl;
 
     out << "t <- read.table('"<< RDataname << "', header=F, sep='\\t', quote='')" << std::endl;
@@ -204,14 +204,14 @@ public:
 	<< vcol[0] << "," << vcol[1] << "," << vcol[2] << ",0.3), border=NA)" << std::endl;
 
     for (size_t i=1; i<p.samplepair.size(); ++i) {
-      std::string colstr = 
+      std::string colstr =
 	std::to_string(vcol[i*3]) + ","
 	+ std::to_string(vcol[i*3 +1]) + ","
 	+ std::to_string(vcol[i*3 +2]) + "";
       out << boost::format("lines(x,p%1%,col=rgb(%2%))\n") % (i+1) % colstr;
       out << boost::format("polygon(c(x, rev(x)), c(p%1%_lower, rev(p%1%_upper)), col=rgb(%2%,0.3), border=NA)\n") % (i+1) % colstr;
-    } 
-    
+    }
+
     out << "legend('bottomleft',c(";
     for (size_t i=0; i<p.samplepair.size(); ++i) {
       out << "'" << p.samplepair[i].first.label << "'";
@@ -224,9 +224,9 @@ public:
     out << "), lwd=1.5)" << std::endl;
 
     std::string command("R --vanilla < " + Rscriptname);
-    if(system(command.c_str())) PRINTERR("Rscript execution failed.");   
+    if(system(command.c_str())) PRINTERR("Rscript execution failed.");
   }
-  
+
   virtual void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)=0;
 
   void printHead(const DROMPA::Global &p) {
@@ -239,12 +239,12 @@ public:
     }
     out << std::endl;
   }
-  
+
   void printNumOfSites() const {
     std::cout << "\n\nthe number of sites: " << nsites << std::endl;
     std::cout << "the number of skipped sites: " << nsites_skipped << std::endl;
   }
-  
+
 };
 
 class ProfileTSS: public ReadProfile {
@@ -264,12 +264,12 @@ public:
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
 
     ChrArrayList arrays(p, chr);
-    
+
     std::ofstream out(RDataname, std::ios::app);
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
       ++nsites;
-      
+
       int32_t position(0);
       if (p.prof.isPtypeTSS()) {
 	if (gene.strand == "+") position = gene.txStart;
@@ -284,7 +284,7 @@ public:
       }
 
       out << gene.tname;
-    
+
       for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, position, gene.strand);
       out << std::endl;
     }
@@ -298,7 +298,7 @@ class ProfileGene100: public ReadProfile {
 		      const genedata &gene, const ChrArrayList &arrays, int32_t len) {
     int32_t s,e;
     double len100(len / (double)GENEBLOCKNUM);
-    
+
     for (int32_t i=0; i<nbin; ++i) {
       if (gene.strand == "+") {
 	s = (gene.txStart - len + len100 *i)       / binsize;
@@ -325,10 +325,10 @@ public:
 
     std::string chrname(rmchr(chr.getname()));
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
-    
+
     ChrArrayList arrays(p, chr);
     std::ofstream out(RDataname, std::ios::app);
-        
+
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
     for (auto &gene: gmp) {
       ++nsites;
@@ -347,7 +347,7 @@ public:
 
   void printHead(const DROMPA::Global &p) {
     std::ofstream out(RDataname);
-    
+
     for (size_t j=0;j<p.samplepair.size(); ++j) {
       for (int32_t i=-GENEBLOCKNUM; i<GENEBLOCKNUM*2; ++i) {
 	out << "\t" << i;
@@ -365,13 +365,13 @@ public:
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
     DEBUGprint("ProfileBedSites:WriteTSV_EachChr");
-    
+
     if(!p.anno.vbedlist.size()) {
       std::cerr << "Please specify --bed." << std::endl;
       exit(1);
     }
     std::ofstream out(RDataname, std::ios::app);
-    
+
     ChrArrayList arrays(p, chr);
 
     for (auto &vbed: p.anno.vbedlist) {
@@ -396,42 +396,46 @@ class Figure {
   ChrArrayList arrays;
   std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   std::vector<bed> regionBed;
-  
-  void setSamplePairEachRatio(const DROMPA::Global &p, SamplePairEach &pair, const std::string &chrname)
+  int32_t pagewidth;
+
+  void setChIPInputRatio_SamplePairEach(const DROMPA::Global &p, SamplePairEach &pair, const std::string &chrname)
   {
     DEBUGprint("setSamplePairEachRatio");
     if (pair.argvInput == "") return;
     pair.ratio = 1;
-    
-    switch (p.getNorm()) {
-    case 0:
+
+    switch (p.getChIPInputNormType()) {
+    case 0:  // not normalize
       pair.ratio = 1;
       break;
-    case 1:
-      pair.ratio = getratio(arrays.arrays.at(pair.argvChIP).totalreadnum, arrays.arrays.at(pair.argvInput).totalreadnum);
+    case 1:  // total read for genome
+      pair.ratio = getratio(arrays.arrays.at(pair.argvChIP).totalreadnum,
+			    arrays.arrays.at(pair.argvInput).totalreadnum);
       break;
-    case 2:
-      pair.ratio = getratio(arrays.arrays.at(pair.argvChIP).totalreadnum_chr.at(chrname), arrays.arrays.at(pair.argvInput).totalreadnum_chr.at(chrname));
+    case 2:  // total read for each chromosome
+      pair.ratio = getratio(arrays.arrays.at(pair.argvChIP).totalreadnum_chr.at(chrname),
+			    arrays.arrays.at(pair.argvInput).totalreadnum_chr.at(chrname));
       break;
-    case 3:
-      pair.ratio = 1; // NCIS
+    case 3:  // NCIS
+      pair.ratio = 1;
       break;
     }
 #ifdef DEBUG
     std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << pair.ratio << std::endl;
 #endif
   }
-  
+
 public:
   Figure(DROMPA::Global &p, const chrsize &_chr):
     chr(_chr),
     arrays(p, chr),
     vsamplepairoverlayed(p.samplepair),
-    regionBed(p.drawregion.getRegionBedChr(chr.getname()))
+    regionBed(p.drawregion.getRegionBedChr(chr.getname())),
+    pagewidth(1088)
   {
     for (auto &x: vsamplepairoverlayed) {
-      setSamplePairEachRatio(p, x.first, chr.getname());
-      if (x.OverlayExists()) setSamplePairEachRatio(p, x.second, chr.getname());
+      setChIPInputRatio_SamplePairEach(p, x.first, chr.getname());
+      if (x.OverlayExists()) setChIPInputRatio_SamplePairEach(p, x.second, chr.getname());
     }
   }
 

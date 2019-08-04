@@ -56,7 +56,7 @@ namespace {
 	}
 	x_name = x2 + 2;
 	if (x_name < 150) x_name = 150;
-	else if (x_name > OFFSET_X + width_draw + 60) x_name = OFFSET_X + width_draw + 60;
+	else if (x_name > OFFSET_X + par.width_draw + 60) x_name = OFFSET_X + par.width_draw + 60;
 	y_name = ybar +3;
       }
 
@@ -231,7 +231,7 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
     std::vector<genedata> garray(get_garray(p.anno.gmp.at(rmchr(chrname)), par.xstart, par.xend));
 
     double llimit(150);
-    double rlimit(OFFSET_X + width_draw + 60);
+    double rlimit(OFFSET_X + p.drawparam.width_draw_pixel + 60);
     int32_t on_plus(0);
     int32_t on_minus(0);
     for (auto &m: garray) {

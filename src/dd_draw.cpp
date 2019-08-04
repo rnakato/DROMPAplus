@@ -62,10 +62,10 @@ namespace {
   {
     int32_t barwidth(1);
     cr->set_line_width(barwidth+0.1);
-  
+
     cr->set_source_rgba(CLR_BLACK, 1);
     showtext_cr(cr, x-36, y+20, "-log(p)", 10);
-  
+
     for (int32_t i=0; i<=50; ++i) {
       RGB color(getInterRGB(i*0.02));
       cr->set_source_rgba(color.r, color.g, color.b, 0.8);
@@ -95,7 +95,7 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
   // label
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, 70, ycenter-6, vinter.getlabel(), 12);
-  
+
   for (auto &x: vinter.getvinter()) {
     //    printList(x.first.chr, x.second.chr, chr);
     if (x.first.chr != chr && x.second.chr != chr) continue;
@@ -123,7 +123,7 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
     if (xcen_head < 0 && xcen_tail > 0)   drawArc_none_to(x, xcen_head, xcen_tail, boxheight, ytop);
   }
   cr->stroke();
-  
+
   par.yaxis_now += boxheight +5;
 
   return;
@@ -165,7 +165,7 @@ void PDFPage::StrokeGraph(const GraphData &graph)
     xpre = xcen;
     ypre = ycen;
   }
-  
+
   cr->set_source_rgba(CLR_BLACK, 1);
 
   // label
@@ -173,7 +173,7 @@ void PDFPage::StrokeGraph(const GraphData &graph)
 
   // x-axis
   stroke_xaxis(ybottom);
-  
+
   // y-axis
   cr->set_line_width(0.4);
   rel_yline(cr, OFFSET_X, ytop, graph.boxheight);
@@ -182,7 +182,7 @@ void PDFPage::StrokeGraph(const GraphData &graph)
   rel_xline(cr, OFFSET_X, ybottom, (par.xend - par.xstart+1) * par.dot_per_bp);
   cr->stroke();
 
-  // y memory 
+  // y memory
   cr->set_line_width(0.5);
   for (int32_t i=0; i<=graph.memnum; ++i) {
     std::string str(graph.getmemory(i));
@@ -218,7 +218,7 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
   int32_t on(0);
   for (auto &x: vbed.getvBed()) {
     if (x.chr != chr) continue;
-    
+
     if (x.rgb_r != -1) {
       cr->set_source_rgba(x.rgb_r/(double)255, x.rgb_g/(double)255, x.rgb_b/(double)255, 0.6);
     } else {
@@ -239,14 +239,14 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
 
   }
   cr->stroke();
-  
+
   par.yaxis_now += boxheight +2;
 
   return;
 }
 
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
-{  
+{
   if (p.anno.GC.isOn()) StrokeGraph(GC);
   if (p.anno.GD.isOn()) StrokeGraph(GD);
 
@@ -282,7 +282,7 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
   DEBUGprint("PDFPage::MakePage");
   int32_t line_start, line_end;
   std::tie(line_start, line_end) = get_start_end_linenum(page_no, p.drawparam.getlpp());
- 
+
   par.yaxis_now = OFFSET_Y;
   cr->set_source_rgba(CLR_WHITE, 1);
   cr->paint();
@@ -301,7 +301,7 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, 50, 30, title, 16);
   cr->stroke();
-  
+
   cr->show_page();
   return;
 }
@@ -309,11 +309,11 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
 void Figure::DrawData(DROMPA::Global &p)
 {
   DEBUGprint("Figure::DrawData");
-  int32_t width(pagewidth);
+  int32_t width(p.drawparam.width_page_pixel);
   int32_t height(p.drawparam.getPageHeight(p, vsamplepairoverlayed));
   std::string pdffilename(p.getFigFileNameChr(chr.getrefname()));
   //  std::cout << chr.getrefname() << std::endl;
-    
+
 #ifdef CAIRO_HAS_PDF_SURFACE
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
 
@@ -329,11 +329,11 @@ void Figure::DrawData(DROMPA::Global &p)
       ++region_no;
       printf("\n");
     }
-  } else if (p.drawregion.isRegionLociFile()) {  // --genelocifile
+  } else if (p.drawregion.isGeneLociFile()) {  // --genelocifile
     int32_t len(p.drawregion.getLenGeneLoci());
     for (auto &m: p.anno.gmp.at(rmchr(chr.getname()))) {
-      if(!p.drawregion.ExistGeneLociFile(m.second.gname)) continue;
-      
+      if(!p.drawregion.ExistInGeneLociFile(m.second.gname)) continue;
+
       int32_t start = std::max(0, m.second.txStart - len);
       int32_t end   = std::min(m.second.txEnd + len, chr.getlen() -1);
       int32_t num_page(p.drawparam.getNumPage(start, end));
@@ -352,7 +352,7 @@ void Figure::DrawData(DROMPA::Global &p)
       page.MakePage(p, i, "1");
     }
     printf("\n");
-  } 
+  }
   std::cout << "Wrote PDF file \"" << pdffilename << "\"" << std::endl;
 
 #else
@@ -370,14 +370,14 @@ int32_t DROMPA::DrawParam::getHeightEachSample(const SamplePairEach &pair) const
   if (showpinter)                        { height += getlineheight(); ++n; }
   if (showpenrich && pair.InputExists()) { height += getlineheight(); ++n; }
   height += MERGIN_BETWEEN_DATA * (n-1);
-  
+
 #ifdef DEBUG
   std::cout << "LineHeight: " << getlineheight() << ", n: " << n << std::endl;
   std::cout << "HeightEachSample: " << height << std::endl;
 #endif
   return height;
 }
-    
+
 int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std::vector<SamplePairOverlayed> &pairs) const {
   int32_t height(0);
   for (auto &x: pairs) height += getHeightEachSample(x.first);
@@ -386,7 +386,7 @@ int32_t DROMPA::DrawParam::getHeightAllSample(const DROMPA::Global &p, const std
 
   if (p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
   if (p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
-  
+
   if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") {
     height += BOXHEIGHT_GENEBOX_EXON + MERGIN_BETWEEN_DATA;
   }
@@ -410,4 +410,3 @@ int32_t DROMPA::DrawParam::getPageHeight(const DROMPA::Global &p, const std::vec
 #endif
   return height;
 }
-

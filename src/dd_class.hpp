@@ -397,10 +397,10 @@ namespace DROMPA {
     }
     const std::string & getchr() const { return chr; }
     bool isRegionBed() const { return isRegion; }
-    bool isRegionLociFile() const { return geneloci.size() != 0; }
+    bool isGeneLociFile() const { return geneloci.size() != 0; }
     int32_t getLenGeneLoci() const { return len_geneloci; }
     void isRegionOff() { isRegion=false; }
-    bool ExistGeneLociFile(const std::string &genename) const {
+    bool ExistInGeneLociFile(const std::string &genename) const {
       return geneloci.find(genename) != geneloci.end();
     }
   };
@@ -415,6 +415,8 @@ namespace DROMPA {
     int32_t samplenum;
 
   public:
+    int32_t width_page_pixel;
+    int32_t width_draw_pixel;
     int32_t width_per_line;
     int32_t showctag;
     int32_t showitag;
@@ -494,7 +496,7 @@ namespace DROMPA {
     WigType getIfType() const { return iftype; }
 
     int32_t getSmoothing() const { return smoothing; }
-    int32_t getNorm() const { return norm; }
+    int32_t getChIPInputNormType() const { return norm; }
     const std::string getPrefixName() const
     {
       return oprefix;

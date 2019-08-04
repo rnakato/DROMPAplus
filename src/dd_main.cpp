@@ -127,10 +127,12 @@ void exec_PCSHARP(DROMPA::Global &p)
   for(auto &chr: p.gt) {
     if (!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
     if (p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
-    if (p.drawregion.isRegionLociFile()) {
+
+    // when --genefile is supplied
+    if (p.drawregion.isGeneLociFile()) {
       int32_t n(0);
       for (auto &m: p.anno.gmp.at(rmchr(chr.getname()))) {
-	if(p.drawregion.ExistGeneLociFile(m.second.gname)) ++n;
+	if(p.drawregion.ExistInGeneLociFile(m.second.gname)) ++n;
       }
 #ifdef DEBUG
       printf("DEBUG geneloci\n");
@@ -140,11 +142,11 @@ void exec_PCSHARP(DROMPA::Global &p)
       if(!n) continue;
     }
 
-    std::cout << "chr" << chr.getname() << ": " << std::flush;
-
+    // when -r is supplied
     std::vector<bed> regionBed(p.drawregion.getRegionBedChr(chr.getname()));
     if (p.drawregion.isRegionBed() && !regionBed.size()) continue;
 
+    std::cout << "chr" << chr.getname() << ": " << std::flush;
     Figure fig(p, chr);
     if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }

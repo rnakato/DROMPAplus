@@ -306,6 +306,8 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
     (SETOPT_OVER("lpp", int32_t, 1, 1), "Line number per page")
     (SETOPT_OVER("bn",  int32_t, 2, 1), "Number of memories of y-axis")
     (SETOPT_OVER("ystep", double, 15, 1), "Height of read line")
+    (SETOPT_OVER("width_page", int32_t, 1088, 1), "Width(pixel) of pdf page")
+    (SETOPT_OVER("width_draw", int32_t, 750, 1), "Width(pixel) of read line")
     (SETOPT_RANGE("alpha", double, 1,  0, 1), "Transparency of read distribution")
     ("offymem", "Omit Y memory")
     ("offylabel", "Omit Y label")
@@ -321,6 +323,8 @@ void DrawParam::setValues(const Variables &values, const int32_t n) {
     showratio = getVal<int32_t>(values, "showratio");
     showpinter = getVal<int32_t>(values, "showpinter");
     showpenrich = getVal<int32_t>(values, "showpenrich");
+    width_page_pixel = getVal<int32_t>(values, "width_page");
+    width_draw_pixel = getVal<int32_t>(values, "width_draw");
     width_per_line = 1000 * getVal<int32_t>(values, "ls");
     linenum_per_page = getVal<int32_t>(values, "lpp");
     barnum = getVal<int32_t>(values, "bn");
