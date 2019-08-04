@@ -278,7 +278,7 @@ void output_stats(const Mapfile &p)
 
 void output_wigstats(const Mapfile &p)
 {
-  std::string filename = p.getbinprefix() + ".readcountdist.tsv";
+  std::string filename = p.getbinprefix() + ".ReadCountDist.tsv";
   std::ofstream out(filename);
 
   std::cout << "generate " << filename << ".." << std::flush;

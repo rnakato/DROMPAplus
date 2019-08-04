@@ -45,8 +45,8 @@ If you downloaded DROMPA+ the $HOME/my_chipseq_exp directory, type:
 .. code-block:: bash
 
    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin                     # DROMPA+
-   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/scripts                 # UCSC tools
-   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/cpdf/Linux-Intel-64bit  # cpdf
+   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/otherbins               # UCSC tools
+   export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/submodules/cpdf/Linux-Intel-64bit  # cpdf
 
 Add these lines to ~/.bashrc to permanently set PATH.
 
@@ -57,10 +57,8 @@ DROMPA+ is also probatively available on Docker Hub.
 
 To obtain a docker image for DROMPA+, type::
 
-   docker pull rnakato/ssp_drompa
+   docker pull rnakato/ssp_drompa:latest
 
 Run the docker image::
 
    docker run -it rnakato/ssp_drompa /bin/bash
-
-

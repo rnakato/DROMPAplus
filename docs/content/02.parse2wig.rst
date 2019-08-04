@@ -13,32 +13,37 @@ Example
 
 The command::
 
-  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt
 
-generates a bedGraph-formatted bin data with a bin size of 100 bp (default) and statistics files in 'parse2wigdir+' directory as follows::
+generates a bigWig data (ChIP.100.bw) with a bin size of 100 bp (default) and a statistics file (ChIP.100.tsv) in 'parse2wigdir+' directory as follows::
 
   $ ls parse2wigdir+
-  parse2wigdir+/ChIP.100.binarray_dist.tsv  # estimated parameters for peak-calling
-  parse2wigdir+/ChIP.100.bedGraph           # bedGraph data
-  parse2wigdir+/ChIP.100.tsv                # stats file
-
-parse2wig+ allows multiple input files (separated by ",")::
-
-  $ parse2wig+ -i ChIP1.bam,ChIP2.bam,ChIP3.bam -o ChIP --gt genometable.txt --outputformat 2
-
-In default, the windows in which the value is zero are ommited to reduce the file size. If you want to output all windows, supply --outputzero.
-
-  $ parse2wig+ -i ChIP1.bam,ChIP2.bam,ChIP3.bam -o ChIP --gt genometable.txt --outputformat 2 --outputzero
-
-For bin size 100kbp::
-
-  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2 --binsize 100000
-
+  parse2wigdir+/ChIP.100.bw   parse2wigdir+/ChIP.100.tsv
 
 .. note::
 
     * The format of input file is automatically detected by postfix (.sam/.bam/.bowtie/.tagalign(.gz)).
     * If the detection does not work well, supply -f option (e.g., "-f BAM").
+
+parse2wig+ allows multiple input files (separated by ",")::
+
+  $ parse2wig+ -i ChIP1.bam,ChIP2.bam,ChIP3.bam -o ChIP --gt genometable.txt
+
+If you want to generate it as bedGraph format, supply "--outputformat 2"::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2
+
+In default, the output file does not contain the windows in which the value is zero to reduce the file size. If you want to output all windows, supply --outputzero.::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputzero
+
+For bin size 100kbp::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --binsize 100000
+
+To use multiple cpus, supply "-p"::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt -p 4
 
 .. note::
 
@@ -48,7 +53,7 @@ For bin size 100kbp::
 Quality check
 ------------------------
 
-In the statistics file ("ChIP.100.tsv") is useful to check the quality of the input mapfile.
+The statistics file ("parse2wigdir+/ChIP.100.tsv") is useful to check the quality of the input mapfile.
 
 The contents are the following:
 
