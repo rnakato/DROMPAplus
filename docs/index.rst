@@ -32,7 +32,7 @@ The main features of DROMPAplus are:
 * Output PDF format that is suitable to share the visualization on a cloud;
 * In addtion to typical peak calling, various types of ChIP-seq analysis are available.
 
-.. image:: workflow.jpg
+.. image:: img/workflow.jpg
    :scale: 40%
    :height: 100px
    :width: 200px
