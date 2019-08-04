@@ -4,6 +4,7 @@
 - Parse2wig+: modify --outputzero option from <int> to <bool>
 - Parse2wig+: add --verbose option. "*.ReadLengthDist.tsv" and "*.readcountdist.tsv" are output only when supplying --verbose option.
 - DROMPA+: withdraw CI, CG, TR, HEATMAP command
+- add tutorial directory
 - modify help messages
 
 ## 1.1.3 (2019-04-15)
