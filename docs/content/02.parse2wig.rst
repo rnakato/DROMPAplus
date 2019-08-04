@@ -33,7 +33,7 @@ If you want to generate it as bedGraph format, supply "--outputformat 2"::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputformat 2
 
-In default, the output file does not contain the windows in which the value is zero to reduce the file size. If you want to output all windows, supply --outputzero.::
+In default, the output file does not contain the windows in which the value is zero to reduce the file size. If you want to output all windows, supply "--outputzero"::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --outputzero
 
@@ -47,7 +47,7 @@ To use multiple cpus, supply "-p"::
 
 .. note::
 
-    * Multithreading is activated only in strand-shift profile for estimating frangment length. When suppying --nomodel option, multithreading is off.
+    * Multithreading is activated only in strand-shift profile for estimating frangment length. When suppying "--nomodel" option, multithreading is off.
 
 
 Quality check
