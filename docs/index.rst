@@ -16,7 +16,7 @@ The main features of DROMPAplus are:
 * In addtion to typical peak calling, various types of ChIP-seq analysis are available.
 
 .. image:: img/workflow.jpg
-   :scale: 60%
+   :width: 600px
    :align: center
 
 Contents:
