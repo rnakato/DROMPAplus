@@ -97,7 +97,7 @@ class WigStats {
   int32_t getnbin() const { return nbin; }
   int32_t getWigDistsize() const { return wigDist.size(); }
 
-  void peakcall(const WigArray &wigarray, const std::string chrname);
+  void peakcall(const WigArray &wigarray, const std::string &chrname);
 
   int32_t printPeak(std::ofstream &out, const int32_t num, const int32_t binsize) const {
     for(uint32_t i=0; i<vPeak.size(); ++i) {
@@ -173,7 +173,7 @@ class WigArray {
       if(array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, (i+1) * binsize, rmGeta(array[i]));
     }
     size_t i = array.size()-1;
-    if(array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
+    if(array[i] || showzero) fprintf(File, "%s %zu %lu %.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
 
   }
   /*  void outputAsBinary(std::ofstream &out) const {
@@ -198,7 +198,7 @@ public:
   std::vector<WigStats> chr;
   WigStats genome;
 
-  WigStatsGenome(){}
+  WigStatsGenome(): binsize(0), rcenter(0), type(WigType::NONE), outputzero(false) {}
 
   void setOpts(MyOpt::Opts &allopts) {
     MyOpt::Opts opt("Wigarray", 100);

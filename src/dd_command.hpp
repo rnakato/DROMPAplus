@@ -28,7 +28,7 @@ public:
   Command(const std::string &n,
 	  const std::string &d,
 	  const std::string &r,
-	  const std::function<void(DROMPA::Global &p)> _func,
+	  const std::function<void(DROMPA::Global &p)> &_func,
 	  const std::vector<DrompaCommand> &v,
 	  const CommandParamSet &cps):
     name(n), desc(d), requiredstr(r), vopts(v),

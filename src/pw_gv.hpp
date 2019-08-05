@@ -23,7 +23,8 @@ namespace RPM {
 
   public:
     Pnorm():
-      opt("Total Read normalization",100)
+      opt("Total Read normalization",100),
+      nrpm(0), ndepth(0)
     {
       opt.add_options()
 	("ntype,n",
@@ -101,8 +102,10 @@ class Mapfile: private Uncopyable {
 
   Mapfile():
     opt("Fragment",100),
+    on_bed(0),
     mpdir(""), mpthre(0),
     Greekchr(false),
+    verbose(false),
     id_longestChr(0),
     maxGC(0), genome(),
     sspst(-1, -1, -1, 0, 600),

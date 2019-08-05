@@ -47,8 +47,8 @@ public:
 class ChrArrayList {
   void loadSampleData(const DROMPA::Global &p) {
     std::cout << "Load sample data..";
-    clock_t t1,t2;
     for (auto &x: p.vsinfo.getarray()) {
+      clock_t t1,t2;
       t1 = clock();
       arrays[x.first] = ChrArray(p, x, chr);
       t2 = clock();
@@ -250,7 +250,7 @@ public:
 class ProfileTSS: public ReadProfile {
 
 public:
-  ProfileTSS(const DROMPA::Global &p):
+  explicit ProfileTSS(const DROMPA::Global &p):
     ReadProfile(p) {}
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
@@ -312,7 +312,7 @@ class ProfileGene100: public ReadProfile {
   }
 
 public:
-  ProfileGene100(const DROMPA::Global &p):
+  explicit ProfileGene100(const DROMPA::Global &p):
     ReadProfile(p, GENEBLOCKNUM * 3)
   {}
 
@@ -360,7 +360,7 @@ public:
 
 class ProfileBedSites: public ReadProfile {
 public:
-  ProfileBedSites(const DROMPA::Global &p):
+  explicit ProfileBedSites(const DROMPA::Global &p):
     ReadProfile(p) {}
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {

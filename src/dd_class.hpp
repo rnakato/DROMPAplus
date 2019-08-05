@@ -82,7 +82,7 @@ public:
 
   SampleInfo() {}
   SampleInfo(const std::string &filename,
-	     const std::vector<chrsize> gt,
+	     const std::vector<chrsize> &gt,
 	     const int32_t b,
 	     const WigType &type):
     binsize(0), totalreadnum(0), prefix("")
@@ -108,7 +108,7 @@ public:
   }
 
   void scanStatsFile(const std::string &filename);
-  void gettotalreadnum(const std::string &filename, const std::vector<chrsize> gt);
+  void gettotalreadnum(const std::string &filename, const std::vector<chrsize> &gt);
   int32_t getbinsize() const { return binsize; }
   WigType getiftype() const { return iftype; }
 
@@ -302,8 +302,14 @@ namespace DROMPA {
     GraphFile GD;
 
     Annotation():
-      isUCSC(false), genefile(""), arsfile(""), terfile(""),
-      repeatfile(""), mpfile(""), gapfile("")
+      isUCSC(false),
+      genefile(""), gftype(0),
+      showtranscriptname(false),
+      arsfile(""), showars(false),
+      terfile(""),
+      repeatfile(""),
+      mpfile(""), mpthre(0),
+      gapfile("")
     {}
 
     void setOptsPC(MyOpt::Opts &allopts);
@@ -342,7 +348,9 @@ namespace DROMPA {
     double maxval;
     int32_t hmsort;
 
-    Profile(){}
+    Profile(): ptype(0), stype(0), ntype(0),
+	       width_from_center(0), maxval(0), hmsort(0)
+    {}
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
@@ -362,7 +370,10 @@ namespace DROMPA {
     double ipm;
     bool sigtest;
 
-    Threshold(): sigtest(false) {}
+    Threshold(): pthre_inter(0), pthre_enrich(0),
+      qthre(0), ethre(0), ipm(0),
+      sigtest(false)
+    {}
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
@@ -440,7 +451,22 @@ namespace DROMPA {
     double scale_pvalue;
     double alpha;
 
-    DrawParam(): showymem(true), showylab(true) {}
+    DrawParam(): linenum_per_page(0), barnum(0), ystep(0),
+		 showymem(true), showylab(true),
+		 samplenum(0),
+		 width_page_pixel(0),
+		 width_draw_pixel(0),
+		 width_per_line(0),
+		 showctag(0),
+		 showitag(0),
+		 showratio(0),
+		 showpinter(0),
+		 showpenrich(0),
+		 scale_tag(0),
+		 scale_ratio(0),
+		 scale_pvalue(0),
+		 alpha(0)
+    {}
 
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
     void setValues(const MyOpt::Variables &values, const int32_t n);
@@ -492,6 +518,7 @@ namespace DROMPA {
     Global():
       ispng(false), showchr(false), iftype(WigType::NONE),
       oprefix(""), includeYM(false),
+      norm(0), smoothing(0),
       opts("Options"), isGV(false)
     {}
 
