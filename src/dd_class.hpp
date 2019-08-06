@@ -89,7 +89,7 @@ public:
   {
    std::vector<std::string> v;
    ParseLine(v, filename, '.');
-   int last(v.size()-1);
+   int32_t last(v.size()-1);
 
    if (type != WigType::NONE) iftype = type;
    else {
@@ -116,64 +116,31 @@ public:
   const std::unordered_map<std::string, int32_t>& gettotalreadnum_chr() const& { return totalreadnum_chr; }
 };
 
-class SampleInfoList {
+class vSampleInfo {
   std::unordered_map<std::string, SampleInfo> vsinfo;
 
 public:
-  SampleInfoList(){}
+  vSampleInfo(){}
 
-  void addSampleInfo(const std::string &str, const std::vector<chrsize> &gt, const WigType iftype) {
-    int32_t binsize(0);
-    std::vector<std::string> v;
-    ParseLine(v, str, ',');
-
-    if(v.size() >8) {
-      std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
-      exit(1);
-    }
-    if(v[0] == "") {
-      std::cerr << "please specify ChIP sample: " << str << std::endl;
-      exit(1);
-    }
-    isFile(v[0]);
-
-    if(v.size() >4 && v[4] != "") {
-      try { binsize = stoi(v[4]); }
-      catch (...) { std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl; }
-    }
-
-    // ChIP sample
-    if(!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
-    if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
-
-    // Input sample
-    if(v.size() >=2 && v[1] != "") {
-      if(!Exists(v[1])) vsinfo[v[1]] = SampleInfo(v[1], gt, binsize, iftype);
-      if(vsinfo[v[0]].getbinsize() != vsinfo[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
-    }
-  }
-
+  void addSampleInfo(const std::string &str, const std::vector<chrsize> &gt, const WigType iftype);
   bool Exists(const std::string &str) const { return vsinfo.find(str) != vsinfo.end(); }
   int32_t getbinsize(const std::string &str) const { return vsinfo.at(str).getbinsize(); }
 
-  const SampleInfo& operator[](const std::string &str) const& {
-    return vsinfo.at(str);
-  }
+  const SampleInfo& operator[](const std::string &str) const& { return vsinfo.at(str); }
   const std::unordered_map<std::string, SampleInfo> &getarray() const & { return vsinfo; }
-};
-
-
-class yScale {
- public:
-  double tag;
-  double ratio;
-  double pvalue;
-   yScale(): tag(0), ratio(0), pvalue(0) {}
 };
 
 class SamplePairEach {
   int32_t binsize;
   std::unordered_map<std::string, std::vector<bed>> peaks;
+
+  class yScale {
+  public:
+    double tag;
+    double ratio;
+    double pvalue;
+    yScale(): tag(0), ratio(0), pvalue(0) {}
+  };
 
 public:
   std::string argvChIP, argvInput;
@@ -185,7 +152,7 @@ public:
   SamplePairEach():
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {}
-  SamplePairEach(const std::string &str,  const SampleInfoList &vsinfo):
+  SamplePairEach(const std::string &str,  const vSampleInfo &vsinfo):
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {
     std::vector<std::string> v;
@@ -225,11 +192,11 @@ class SamplePairOverlayed {
   SamplePairEach first;
   SamplePairEach second;
 
-  SamplePairOverlayed(const std::string &str, const SampleInfoList &vsinfo):
+  SamplePairOverlayed(const std::string &str, const vSampleInfo &vsinfo):
     overlay(false), first(str, vsinfo)
   {}
 
-  void setSecondSample(const std::string &str, const SampleInfoList &vsinfo) {
+  void setSecondSample(const std::string &str, const vSampleInfo &vsinfo) {
     second = SamplePairEach(str, vsinfo);
     overlay = true;
   }
@@ -242,13 +209,6 @@ class SamplePairOverlayed {
     }
   }
   bool OverlayExists() const { return overlay; }
-};
-
-class pdSample {
- public:
-  std::string argv;
-  std::string name;
-  pdSample(){}
 };
 
 class GraphFile {
@@ -500,6 +460,13 @@ namespace DROMPA {
     int32_t norm;
     int32_t smoothing;
 
+    class pdSample {
+    public:
+      std::string argv;
+      std::string name;
+      pdSample(){}
+    };
+
   public:
     MyOpt::Opts opts;
     DrawParam drawparam;
@@ -509,7 +476,7 @@ namespace DROMPA {
     Profile prof;
 
     std::vector<chrsize> gt;
-    SampleInfoList vsinfo;
+    vSampleInfo vsinfo;
     std::vector<SamplePairOverlayed> samplepair;
     std::vector<pdSample> pd;
 
@@ -544,6 +511,8 @@ namespace DROMPA {
     }
     bool isincludeYM() const { return includeYM; }
     bool isshowchr() const { return showchr; }
+
+    pdSample scan_pdstr(const std::string &str);
   };
 
 }

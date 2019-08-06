@@ -10,8 +10,6 @@
 #include "dd_class.hpp"
 #include "../submodules/SSP/common/seq.hpp"
 
-pdSample scan_pdstr(const std::string &str);
-
 WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr);
 
 #endif /* _DD_READFILE_H_ */

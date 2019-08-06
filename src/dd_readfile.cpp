@@ -4,29 +4,6 @@
 #include <ext/stdio_filebuf.h>
 #include "dd_readfile.hpp"
 
-pdSample scan_pdstr(const std::string &str)
-{
-  std::vector<std::string> v;
-  ParseLine(v, str, ',');
-
-  if(v.size() > 2) {
-    std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
-    exit(1);
-  }
-
-  pdSample pd;
-  if(v[0] == "") {
-      std::cerr << "please specify file: " << str << std::endl;
-      exit(1);
-  } else {
-    pd.argv = v[0];
-  }
-  if(v[1] != "") pd.name = v[1];
-  else pd.name = v[0];
-
-  return pd;
-}
-
 void SplitBedGraphLine(std::vector<std::string> &v, const std::string &str)
 {
   size_t current(0), found;

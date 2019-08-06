@@ -16,6 +16,37 @@ using namespace DROMPA;
 
 inline std::string addDoubleQuotes (const std::string &str) { return "\"" + str + "\"";}
 
+void vSampleInfo::addSampleInfo(const std::string &str, const std::vector<chrsize> &gt, const WigType iftype) {
+  int32_t binsize(0);
+  std::vector<std::string> v;
+  ParseLine(v, str, ',');
+
+  if(v.size() >8) {
+    std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
+    exit(1);
+  }
+  if(v[0] == "") {
+    std::cerr << "please specify ChIP sample: " << str << std::endl;
+    exit(1);
+  }
+  isFile(v[0]);
+
+  if(v.size() >4 && v[4] != "") {
+    try { binsize = stoi(v[4]); }
+    catch (...) { std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl; }
+  }
+
+  // ChIP sample
+  if(!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
+  if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
+
+  // Input sample
+  if(v.size() >=2 && v[1] != "") {
+    if(!Exists(v[1])) vsinfo[v[1]] = SampleInfo(v[1], gt, binsize, iftype);
+    if(vsinfo[v[0]].getbinsize() != vsinfo[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
+  }
+}
+
 void Annotation::setOptsPC(MyOpt::Opts &allopts)
 {
   MyOpt::Opts opt("Annotation",100);
@@ -576,4 +607,26 @@ void Global::InitDumpOther() const {
   std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
   if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
   //  if (!showchr) std::cout << boost::format("   remove chr pdfs\n");
+}
+
+Global::pdSample Global::scan_pdstr(const std::string &str){
+  std::vector<std::string> v;
+  ParseLine(v, str, ',');
+
+  if(v.size() > 2) {
+    std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
+    exit(1);
+  }
+
+  pdSample pd;
+  if(v[0] == "") {
+    std::cerr << "please specify file: " << str << std::endl;
+    exit(1);
+  } else {
+    pd.argv = v[0];
+  }
+  if(v[1] != "") pd.name = v[1];
+  else pd.name = v[0];
+
+  return pd;
 }
