@@ -5,7 +5,7 @@
 #define _DD_COMMAND_H_
 
 #include <iostream>
-#include "dd_class.hpp"
+#include "dd_gv.hpp"
 #include "version.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
 

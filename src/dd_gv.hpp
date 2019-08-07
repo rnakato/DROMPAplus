@@ -1,8 +1,8 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#ifndef _DD_CLASS_H_
-#define _DD_CLASS_H_
+#ifndef _DD_GV_H_
+#define _DD_GV_H_
 
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
@@ -514,7 +514,6 @@ namespace DROMPA {
 
     pdSample scan_pdstr(const std::string &str);
   };
-
 }
 
-#endif /* _DD_CLASS_H_ */
+#endif /* _DD_GV_H_ */

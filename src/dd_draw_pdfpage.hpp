@@ -7,7 +7,7 @@
 #include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
-#include "dd_class.hpp"
+#include "dd_gv.hpp"
 #include "dd_readfile.hpp"
 #include "dd_peakcall.hpp"
 #include "dd_draw_environment_variable.hpp"

@@ -4,7 +4,7 @@
 #ifndef _DD_PROFILE_H_
 #define _DD_PROFILE_H_
 
-#include "dd_class.hpp"
+#include "dd_gv.hpp"
 
 class ReadProfile {
   int32_t stype;

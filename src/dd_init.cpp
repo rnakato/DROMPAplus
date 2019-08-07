@@ -1,7 +1,7 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#include "dd_class.hpp"
+#include "dd_gv.hpp"
 #include "dd_readfile.hpp"
 #include "../submodules/SSP/common/BedFormat.hpp"
 
@@ -322,76 +322,6 @@ void DrawRegion::InitDump(const Variables &values) const {
   }
 }
 
-void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
-  MyOpt::Opts opt("Drawing",100);
-  opt.add_options()
-    (SETOPT_RANGE("showctag",   int32_t, cps.showctag,  0, 1), "Display ChIP read lines")
-    (SETOPT_RANGE("showitag",   int32_t, 0,             0, 2), "Display Input read lines (0:off 1:all 2:first one)")
-    (SETOPT_RANGE("showratio",  int32_t, cps.showratio, 0, 2), "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
-    (SETOPT_RANGE("showpinter", int32_t, 0,             0, 1), "Display -log10(p) lines for ChIP internal")
-    (SETOPT_RANGE("showpenrich",int32_t, 0,             0, 1), "Display -log10(p) lines for ChIP/Input enrichment")
-    (SETOPT_OVER("scale_tag",    double, cps.scaletag,     0), "Scale for read line")
-    (SETOPT_OVER("scale_ratio",  double, cps.scaleratio,   0), "Scale for fold enrichment")
-    (SETOPT_OVER("scale_pvalue", double, cps.scalepvalue,  0), "Scale for -log10(p)")
-    (SETOPT_OVER("ls",  int32_t, 500, 1), "Width for each line (kp)")
-    (SETOPT_OVER("lpp", int32_t, 1, 1), "Line number per page")
-    (SETOPT_OVER("bn",  int32_t, 2, 1), "Number of memories of y-axis")
-    (SETOPT_OVER("ystep", double, 15, 1), "Height of read line")
-    (SETOPT_OVER("width_page", int32_t, 1088, 1), "Width(pixel) of pdf page")
-    (SETOPT_OVER("width_draw", int32_t, 750, 1), "Width(pixel) of read line")
-    (SETOPT_RANGE("alpha", double, 1,  0, 1), "Transparency of read distribution")
-    ("offymem", "Omit Y memory")
-    ("offylabel", "Omit Y label")
-    ;
-  allopts.add(opt);
-}
-
-void DrawParam::setValues(const Variables &values, const int32_t n) {
-  DEBUGprint("DrawParam setValues...");
-  try {
-    showctag = getVal<int32_t>(values, "showctag");
-    showitag = getVal<int32_t>(values, "showitag");
-    showratio = getVal<int32_t>(values, "showratio");
-    showpinter = getVal<int32_t>(values, "showpinter");
-    showpenrich = getVal<int32_t>(values, "showpenrich");
-    width_page_pixel = getVal<int32_t>(values, "width_page");
-    width_draw_pixel = getVal<int32_t>(values, "width_draw");
-    width_per_line = 1000 * getVal<int32_t>(values, "ls");
-    linenum_per_page = getVal<int32_t>(values, "lpp");
-    barnum = getVal<int32_t>(values, "bn");
-    ystep  = getVal<double>(values, "ystep");
-    showymem = !values.count("offymem");
-    showylab = !values.count("offylabel");
-    alpha = getVal<double>(values, "alpha");
-
-    scale_tag    = getVal<double>(values, "scale_tag");
-    scale_ratio  = getVal<double>(values, "scale_ratio");
-    scale_pvalue = getVal<double>(values, "scale_pvalue");
-
-    samplenum = n;
-  } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
-  }
-  DEBUGprint("DrawParam setValues done.");
-}
-
-void DrawParam::InitDump() const {
-  std::vector<std::string> str_bool = {"OFF", "ON"};
-  std::vector<std::string> str_input = {"OFF", "ALL", "FIRST"};
-  std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
-
-  DEBUGprint("INITDUMP:DrompaCommand::DRAW");
-  std::cout << boost::format("\nFigure parameter:\n");
-  std::cout << boost::format("   Display read: ChIP %1%, Input %2%, y-axis scale: %3%\n") % str_bool[showctag] % str_input[showitag] % scale_tag;
-  std::cout << boost::format("   Display enrichment: %1%, y-axis scale: %2%\n")           % str_ratio[showratio] % scale_ratio;
-  std::cout << boost::format("   Display pvalue (internal): %1%, y-axis scale: %2%\n")    % str_bool[showpinter] % scale_pvalue;
-  std::cout << boost::format("   Display pvalue (ChIP/Input): %1%, y-axis scale: %2%\n")  % str_bool[showpenrich] % scale_pvalue;
-  std::cout << boost::format("   Width per line: %1% kbp\n")           % (width_per_line/1000);
-  std::cout << boost::format("   Y-axis label: %1%\n")                 % str_bool[showylab];
-  std::cout << boost::format("   Y-axis memory: %1%\n")                % str_bool[showymem];
-}
-
 void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps) {
   MyOpt::Opts o("Required",100);
   o.add_options()
@@ -607,6 +537,77 @@ void Global::InitDumpOther() const {
   std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
   if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
   //  if (!showchr) std::cout << boost::format("   remove chr pdfs\n");
+}
+
+
+void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
+  MyOpt::Opts opt("Drawing",100);
+  opt.add_options()
+    (SETOPT_RANGE("showctag",   int32_t, cps.showctag,  0, 1), "Display ChIP read lines")
+    (SETOPT_RANGE("showitag",   int32_t, 0,             0, 2), "Display Input read lines (0:off 1:all 2:first one)")
+    (SETOPT_RANGE("showratio",  int32_t, cps.showratio, 0, 2), "Display ChIP/Input ratio (0:off 1:liner scale 2:logscale)")
+    (SETOPT_RANGE("showpinter", int32_t, 0,             0, 1), "Display -log10(p) lines for ChIP internal")
+    (SETOPT_RANGE("showpenrich",int32_t, 0,             0, 1), "Display -log10(p) lines for ChIP/Input enrichment")
+    (SETOPT_OVER("scale_tag",    double, cps.scaletag,     0), "Scale for read line")
+    (SETOPT_OVER("scale_ratio",  double, cps.scaleratio,   0), "Scale for fold enrichment")
+    (SETOPT_OVER("scale_pvalue", double, cps.scalepvalue,  0), "Scale for -log10(p)")
+    (SETOPT_OVER("ls",  int32_t, 500, 1), "Width for each line (kp)")
+    (SETOPT_OVER("lpp", int32_t, 1, 1), "Line number per page")
+    (SETOPT_OVER("bn",  int32_t, 2, 1), "Number of memories of y-axis")
+    (SETOPT_OVER("ystep", double, 15, 1), "Height of read line")
+    (SETOPT_OVER("width_page", int32_t, 1088, 1), "Width(pixel) of pdf page")
+    (SETOPT_OVER("width_draw", int32_t, 750, 1), "Width(pixel) of read line")
+    (SETOPT_RANGE("alpha", double, 1,  0, 1), "Transparency of read distribution")
+    ("offymem", "Omit Y memory")
+    ("offylabel", "Omit Y label")
+    ;
+  allopts.add(opt);
+}
+
+void DrawParam::setValues(const Variables &values, const int32_t n) {
+  DEBUGprint("DrawParam setValues...");
+  try {
+    showctag = getVal<int32_t>(values, "showctag");
+    showitag = getVal<int32_t>(values, "showitag");
+    showratio = getVal<int32_t>(values, "showratio");
+    showpinter = getVal<int32_t>(values, "showpinter");
+    showpenrich = getVal<int32_t>(values, "showpenrich");
+    width_page_pixel = getVal<int32_t>(values, "width_page");
+    width_draw_pixel = getVal<int32_t>(values, "width_draw");
+    width_per_line = 1000 * getVal<int32_t>(values, "ls");
+    linenum_per_page = getVal<int32_t>(values, "lpp");
+    barnum = getVal<int32_t>(values, "bn");
+    ystep  = getVal<double>(values, "ystep");
+    showymem = !values.count("offymem");
+    showylab = !values.count("offylabel");
+    alpha = getVal<double>(values, "alpha");
+
+    scale_tag    = getVal<double>(values, "scale_tag");
+    scale_ratio  = getVal<double>(values, "scale_ratio");
+    scale_pvalue = getVal<double>(values, "scale_pvalue");
+
+    samplenum = n;
+  } catch (const boost::bad_any_cast& e) {
+    std::cout << e.what() << std::endl;
+    exit(0);
+  }
+  DEBUGprint("DrawParam setValues done.");
+}
+
+void DrawParam::InitDump() const {
+  std::vector<std::string> str_bool = {"OFF", "ON"};
+  std::vector<std::string> str_input = {"OFF", "ALL", "FIRST"};
+  std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
+
+  DEBUGprint("INITDUMP:DrompaCommand::DRAW");
+  std::cout << boost::format("\nFigure parameter:\n");
+  std::cout << boost::format("   Display read: ChIP %1%, Input %2%, y-axis scale: %3%\n") % str_bool[showctag] % str_input[showitag] % scale_tag;
+  std::cout << boost::format("   Display enrichment: %1%, y-axis scale: %2%\n")           % str_ratio[showratio] % scale_ratio;
+  std::cout << boost::format("   Display pvalue (internal): %1%, y-axis scale: %2%\n")    % str_bool[showpinter] % scale_pvalue;
+  std::cout << boost::format("   Display pvalue (ChIP/Input): %1%, y-axis scale: %2%\n")  % str_bool[showpenrich] % scale_pvalue;
+  std::cout << boost::format("   Width per line: %1% kbp\n")           % (width_per_line/1000);
+  std::cout << boost::format("   Y-axis label: %1%\n")                 % str_bool[showylab];
+  std::cout << boost::format("   Y-axis memory: %1%\n")                % str_bool[showymem];
 }
 
 Global::pdSample Global::scan_pdstr(const std::string &str){

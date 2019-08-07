@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include "dd_class.hpp"
+#include "dd_gv.hpp"
 #include "../submodules/SSP/common/seq.hpp"
 
 WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr);

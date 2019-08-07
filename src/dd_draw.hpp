@@ -4,7 +4,7 @@
 #ifndef _DD_DRAW_H_
 #define _DD_DRAW_H_
 
-#include "dd_class.hpp"
+#include "dd_gv.hpp"
 #include "dd_readfile.hpp"
 #include "WigStats.hpp"
 #include "color.hpp"
