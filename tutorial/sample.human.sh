@@ -28,7 +28,8 @@ drompa+ PC_SHARP \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
 	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
 	-o drompa-K562 -g refFlat.txt --gt $gt \
-	--lpp 2 --showitag 1
+	--lpp 2 --showitag 1 \
+	--chr 1
 
 # Overlayed pdf
 dir=parse2wigdir+
@@ -36,7 +37,8 @@ drompa+ PC_SHARP \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
 	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
 	-o drompa-K562-overlay -g refFlat.txt --gt $gt \
-	--lpp 3 --chr 1 --alpha 0.6
+	--lpp 3 --chr 1 \
+	--alpha 0.6 \
 
 # PROFILE
 drompa+ PROFILE \
