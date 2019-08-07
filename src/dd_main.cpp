@@ -3,6 +3,7 @@
  */
 #include "dd_command.hpp"
 #include "dd_draw.hpp"
+#include "dd_profile.hpp"
 
 namespace {
   void help_global(std::vector<Command> &cmds)

@@ -1,58 +1,18 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#ifndef _DD_DRAW_P_H_
-#define _DD_DRAW_P_H_
+#ifndef _DD_DRAW_PDFPAGE_H_
+#define _DD_DRAW_PDFPAGE_H_
 
 #include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
+#include "dd_class.hpp"
+#include "dd_readfile.hpp"
 #include "dd_peakcall.hpp"
-
-#define rel_xline(cr, x1, y1, xlen) do{		\
-    cr->move_to(x1,   (int32_t)y1);		\
-    cr->line_to(x1+xlen, (int32_t)y1); }while(0)
-#define rel_yline(cr, x1, y1, ylen) do{		\
-    cr->move_to(x1, (int32_t)y1);		\
-    cr->line_to(x1, (int32_t)(y1+ylen)); }while(0)
-
-using ChrArrayMap = std::unordered_map<std::string, ChrArray>;
-
-inline double CalcRatio(const double c, const double i, const double r)
-{
-  return i ? c/i*r: 0;
-}
-
-namespace {
-  enum class LineType{CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
-
-  enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=10, MERGIN_BETWEEN_LINE=30};
-  enum {BOXHEIGHT_GENEBOX_EXON=140, BOXHEIGHT_GENEBOX_NOEXON=60};
-  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15, BOXHEIGHT_INTERACTION=45, BOXHEIGHT_BEDANNOTATION=12};
-}
-
-inline int32_t setline(const int32_t start, const int32_t interval)
-{
-  int32_t posi(start-1);
-  if(!posi%interval) return posi;
-  else return (posi/interval +1) * interval;
-}
-
-inline void showtext_cr(const Cairo::RefPtr<Cairo::Context> cr, const double x, const double y, const std::string &str, const int32_t fontsize)
-{
-  cr->move_to(x, y);
-  cr->set_font_size(fontsize);
-  cr->show_text(str);
-  cr->stroke();
-  return;
-}
-
-inline const std::string float2string(const double f, const int32_t digits)
-{
-  std::ostringstream oss;
-  oss << std::setprecision(digits) << std::setiosflags(std::ios::fixed) << f;
-  return oss.str();
-}
+#include "dd_draw_environment_variable.hpp"
+#include "dd_draw_myfunc.hpp"
+#include "color.hpp"
 
 class DParam {
 public:
@@ -340,27 +300,7 @@ class PDFPage {
     // bin of interaction
     StrokeWidthOfInteractionSite(inter.first, ytop);
   }
-  void drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
-    double ytop = ref_ytop + 10;
-    int32_t height = ref_height;
-    double radius(height*3);
-    double r(1/3.0);
-
-    double bp_s(par.bp2xaxis(start));
-    double bp_e(par.bp2xaxis(end));
-    double bp_x(bp_e - radius);
-    double bp_y(ytop/r);
-
-    cr->set_line_width(4);
-    cr->scale(1, r);
-    cr->arc(bp_x, bp_y, radius, 0, 0.5*M_PI);
-    if (bp_x - bp_s > 0) rel_xline(cr, bp_x, bp_y + radius, -(bp_x - bp_s));
-    cr->stroke();
-    cr->scale(1, 1/r);
-
-    // bin of interaction
-    StrokeWidthOfInteractionSite(inter.second, ytop);
-  }
+  void drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
 
   std::tuple<int32_t, int32_t> get_start_end_linenum(const int32_t page, const int32_t linenum_per_page) const {
     int32_t start(0), end(0);
@@ -371,4 +311,4 @@ class PDFPage {
   }
 };
 
-#endif /* _DD_READFILE_P_H_ */
+#endif /* _DD_DRAW_PDFPAGE_H_ */

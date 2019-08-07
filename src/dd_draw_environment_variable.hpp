@@ -1,0 +1,15 @@
+/* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+ * All rights reserved.
+ */
+#ifndef _DD_ENV_V_H_
+#define _DD_ENV_V_H_
+
+namespace {
+  enum class LineType{CHIP, INPUT, RATIO, RATIO_GV, PVALUE_INTER, PVALUE_ENRICH};
+
+  enum {OFFSET_X=190, OFFSET_Y=50, MERGIN_BETWEEN_DATA=10, MERGIN_BETWEEN_LINE=30};
+  enum {BOXHEIGHT_GENEBOX_EXON=140, BOXHEIGHT_GENEBOX_NOEXON=60};
+  enum {BOXHEIGHT_GRAPH=80, MEMNUM_GC=10, MERGIN_BETWEEN_GRAPH_DATA=15, BOXHEIGHT_INTERACTION=45, BOXHEIGHT_BEDANNOTATION=12};
+}
+
+#endif /* _DD_ENV_V_H_ */

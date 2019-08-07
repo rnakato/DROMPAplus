@@ -4,7 +4,7 @@
 #ifndef _DD_DRAW_DATAFRAME_H_
 #define _DD_DRAW_DATAFRAME_H_
 
-#include "dd_draw_p.hpp"
+#include "dd_draw_pdfpage.hpp"
 
 class DataFrame {
 

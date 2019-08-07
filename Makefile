@@ -35,7 +35,7 @@ endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_class.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o $(SSPCMNOBJDIR)/ReadAnnotation.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_class.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_draw_pdfpage.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/dd_peakcall.o $(OBJDIR)/WigStats.o $(SSPCMNOBJDIR)/ReadAnnotation.o
 OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadBpStatus.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/ReadAnnotation.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 
 .PHONY: all clean
@@ -59,6 +59,9 @@ $(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
 $(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_drawgenes.cpp
 	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
 
+$(OBJDIR)/dd_draw_pdfpage.o: $(SRCDIR)/dd_draw_pdfpage.cpp
+	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ -c $< $(CFLAGS) $(WFLAGS)
@@ -77,11 +80,11 @@ HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)
 
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp $(SRCDIR)/GenomeCoverage.hpp
 $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
-$(OBJDIR)/dd_main.o: $(SRCDIR)/dd_command.hpp $(SRCDIR)/dd_draw.hpp
+$(OBJDIR)/dd_main.o: $(SRCDIR)/dd_command.hpp $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_profile.hpp
 $(OBJDIR)/dd_command.o: $(SRCDIR)/dd_command.hpp
 $(OBJDIR)/dd_readfile.o:
-$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_p.hpp src/dd_draw_dataframe.hpp
-$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_p.hpp
+$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp src/dd_draw_dataframe.hpp
+$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/ReadBpStatus.o: $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)

@@ -3,9 +3,8 @@
  */
 
 #include <sstream>
-#include <iomanip>
 #include "dd_draw.hpp"
-#include "dd_draw_p.hpp"
+#include "dd_draw_pdfpage.hpp"
 #include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
