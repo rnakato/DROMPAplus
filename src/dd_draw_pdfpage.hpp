@@ -73,7 +73,8 @@ public:
   double mwid;
   GraphData(){}
 
-  void setValue(const GraphFile &g, const std::string &chr,
+  void setValue(const DROMPA::Annotation::GraphDataFileName &g,
+		const std::string &chr,
 		const int32_t chrlen, const std::string &l,
 		const double ymin, const double ymax,
 		const int32_t m, const int32_t bh)

@@ -211,30 +211,12 @@ class SamplePairOverlayed {
   bool OverlayExists() const { return overlay; }
 };
 
-class GraphFile {
-  std::string filename;
-  int32_t binsize;
-
-public:
-  GraphFile(): filename(""), binsize(0) {}
-
-  void setValue(const std::string &f, const int32_t s) {
-    filename = f;
-    binsize = s;
-  }
-  const std::string & getfilename() const { return filename; }
-  int32_t getbinsize() const { return binsize; }
-  bool isOn() const {
-    if(filename != "") return true;
-    else return false;
-  }
-};
-
 namespace DROMPA {
   class Global;
 
   class Annotation {
     bool isUCSC;
+    bool showars;
 
     template <class T>
     void readBedFile(const std::vector<std::string> &v) {
@@ -245,12 +227,30 @@ namespace DROMPA {
     }
 
   public:
+    class GraphDataFileName {
+      std::string filename;
+      int32_t binsize;
+
+    public:
+      GraphDataFileName(): filename(""), binsize(0) {}
+
+      void setValue(const std::string &f, const int32_t s) {
+	filename = f;
+	binsize = s;
+      }
+      const std::string & getfilename() const { return filename; }
+      int32_t getbinsize() const { return binsize; }
+      bool isOn() const {
+	if(filename != "") return true;
+	else return false;
+      }
+    };
+
     std::string genefile;
     int32_t gftype;
     HashOfGeneDataMap gmp;
     bool showtranscriptname;
     std::string arsfile;
-    bool showars;
     std::string terfile;
     std::vector<vbed<bed12>> vbedlist;
     std::vector<InteractionSet> vinterlist;
@@ -258,14 +258,14 @@ namespace DROMPA {
     std::string mpfile;
     double mpthre;
     std::string gapfile;
-    GraphFile GC;
-    GraphFile GD;
+    GraphDataFileName GC;
+    GraphDataFileName GD;
 
     Annotation():
-      isUCSC(false),
+      isUCSC(false), showars(false),
       genefile(""), gftype(0),
       showtranscriptname(false),
-      arsfile(""), showars(false),
+      arsfile(""),
       terfile(""),
       repeatfile(""),
       mpfile(""), mpthre(0),
@@ -295,6 +295,7 @@ namespace DROMPA {
 
     int32_t getgftype() const { return gftype; }
     bool is_Anno_UCSC() const {return isUCSC; }
+    bool isshowars() const {return showars; }
   };
 
   class Profile {
@@ -511,6 +512,7 @@ namespace DROMPA {
     }
     bool isincludeYM() const { return includeYM; }
     bool isshowchr() const { return showchr; }
+    bool isshowars() const {return anno.isshowars(); }
 
     pdSample scan_pdstr(const std::string &str);
   };
