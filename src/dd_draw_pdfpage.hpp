@@ -140,7 +140,8 @@ public:
 class PDFPage {
   enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
-  const ChrArrayMap &arrays;
+ // const ChrArrayMap &arrays;
+  const vChrArray &vReadArray;
   const std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   GraphData GC;
   GraphData GD;
@@ -172,19 +173,19 @@ class PDFPage {
   DParam par;
 
   PDFPage(const DROMPA::Global &p,
-       const ChrArrayMap &refarrays,
+	  const vChrArray &_vReadArray,
        const std::vector<SamplePairOverlayed> &pair,
        const Cairo::RefPtr<Cairo::PdfSurface> surface,
-       const chrsize &chr, const int32_t s, const int32_t e):
-    arrays(refarrays),
+	  const int32_t s, const int32_t e):
+    vReadArray(_vReadArray),
     vsamplepairoverlayed(pair),
     cr(Cairo::Context::create(surface)),
-    chrname(chr.getrefname()),
+    chrname(vReadArray.getchr().getrefname()),
     par(s, e, p)
   {
     cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
-    if(p.anno.GC.isOn()) GC.setValue(p.anno.GC, chrname, chr.getlen(), "GC%",         20, 70, MEMNUM_GC, BOXHEIGHT_GRAPH);
-    if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, chr.getlen(), "Num of genes", 0, 40, MEMNUM_GC, BOXHEIGHT_GRAPH);
+    if(p.anno.GC.isOn()) GC.setValue(p.anno.GC, chrname, vReadArray.getchrlen(), "GC%",         20, 70, MEMNUM_GC, BOXHEIGHT_GRAPH);
+    if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, vReadArray.getchrlen(), "Num of genes", 0, 40, MEMNUM_GC, BOXHEIGHT_GRAPH);
   }
 
   template <class T>
@@ -193,7 +194,7 @@ class PDFPage {
     par.yaxis_now += par.getHeightDf() + MERGIN_BETWEEN_DATA;
     T df(cr, p, pair, par, chrname);
 
-    df.Draw(p, pair, arrays);
+    df.Draw(p, pair, vReadArray);
     stroke_xaxis(par.yaxis_now);
 
     return;

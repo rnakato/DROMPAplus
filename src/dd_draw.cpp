@@ -308,7 +308,7 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
 
 void Figure::DrawData(DROMPA::Global &p) {
   DEBUGprint("Figure::DrawData");
-  std::string pdffilename(p.getFigFileNameChr(chr.getrefname()));
+  std::string pdffilename(p.getFigFileNameChr(vReadArray.getchr().getrefname()));
   //  std::cout << chr.getrefname() << std::endl;
   int32_t width(p.drawparam.width_page_pixel);
   int32_t height(p.drawparam.getPageHeight(p, vsamplepairoverlayed));
@@ -322,7 +322,7 @@ void Figure::DrawData(DROMPA::Global &p) {
       int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
-	PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, x.start, x.end);
+	PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, x.start, x.end);
 	page.MakePage(p, i, std::to_string(region_no));
       }
       ++region_no;
@@ -330,24 +330,24 @@ void Figure::DrawData(DROMPA::Global &p) {
     }
   } else if (p.drawregion.isGeneLociFile()) {  // --genelocifile
     int32_t len(p.drawregion.getLenGeneLoci());
-    for (auto &m: p.anno.gmp.at(rmchr(chr.getname()))) {
+    for (auto &m: p.anno.gmp.at(rmchr(vReadArray.getchr().getname()))) {
       if(!p.drawregion.ExistInGeneLociFile(m.second.gname)) continue;
 
       int32_t start = std::max(0, m.second.txStart - len);
-      int32_t end   = std::min(m.second.txEnd + len, chr.getlen() -1);
+      int32_t end   = std::min(m.second.txEnd + len, vReadArray.getchrlen() -1);
       int32_t num_page(p.drawparam.getNumPage(start, end));
       for(int32_t i=0; i<num_page; ++i) {
 	std::cout << boost::format("   page %5d/%5d/%s\r") % (i+1) % num_page % m.second.gname << std::flush;
-	PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, start, end);
+	PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, start, end);
 	page.MakePage(p, i, m.second.gname);
       }
       printf("\n");
     }
   } else {  // whole chromosome
-    int32_t num_page(p.drawparam.getNumPage(0, chr.getlen()));
+    int32_t num_page(p.drawparam.getNumPage(0, vReadArray.getchrlen()));
     for (int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
-      PDFPage page(p, arrays.arrays, vsamplepairoverlayed, surface, chr, 0, chr.getlen());
+      PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, 0, vReadArray.getchrlen());
       page.MakePage(p, i, "1");
     }
     printf("\n");

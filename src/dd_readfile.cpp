@@ -232,3 +232,29 @@ void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<
     }
 #endif
 }
+
+void SamplePairEach::setratio(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname)
+{
+    DEBUGprint("setSamplePairEachRatio");
+    if (argvInput == "") return; // ratio = 1;
+
+    switch (normtype) {
+    case 0:  // not normalize
+      ratio = 1;
+      break;
+    case 1:  // total read for genome
+      ratio = getratio(vReadArray.getArray(argvChIP).totalreadnum,
+		       vReadArray.getArray(argvInput).totalreadnum);
+      break;
+    case 2:  // total read for each chromosome
+      ratio = getratio(vReadArray.getArray(argvChIP).totalreadnum_chr.at(chrname),
+		       vReadArray.getArray(argvInput).totalreadnum_chr.at(chrname));
+      break;
+    case 3:  // NCIS
+      ratio = 1;
+      break;
+    }
+#ifdef DEBUG
+    std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << ratio << std::endl;
+#endif
+  }

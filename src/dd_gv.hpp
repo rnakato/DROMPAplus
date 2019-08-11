@@ -13,6 +13,7 @@
 #include "../submodules/SSP/common/util.hpp"
 
 class chrsize;
+class vChrArray;
 
 enum class DrompaCommand {
   CHIP,
@@ -152,7 +153,7 @@ public:
   SamplePairEach():
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {}
-  SamplePairEach(const std::string &str,  const vSampleInfo &vsinfo):
+  SamplePairEach(const std::string &str, const vSampleInfo &vsinfo):
     binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {
     std::vector<std::string> v;
@@ -172,6 +173,9 @@ public:
 
     //    printBed_Hash(peaks);
   }
+
+  void setratio(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
+
   std::vector<bed> getpeaksChr(const std::string &chrname) const {
     if (peak_argv != "") return peaks.at(rmchr(chrname));
     else return std::vector<bed>();
@@ -182,7 +186,7 @@ public:
     std::cout << boost::format("   binsize: %1%\n") % binsize;
   }
   int32_t getbinsize() const { return binsize; }
-  bool InputExists() const { return argvInput != "";}
+  bool InputExists() const { return argvInput != ""; }
 };
 
 class SamplePairOverlayed {

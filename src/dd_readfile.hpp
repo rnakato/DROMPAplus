@@ -12,7 +12,6 @@
 
 WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr);
 
-
 class ChrArray {
 public:
   int32_t binsize;
@@ -51,7 +50,10 @@ public:
 using ChrArrayMap = std::unordered_map<std::string, ChrArray>;
 
 class vChrArray {
-  void loadSampleDataToArray(const DROMPA::Global &p) {
+  const chrsize &chr;
+  ChrArrayMap arrays;
+
+  void loadvChrArray(const DROMPA::Global &p) {
     std::cout << "Load sample data..";
     for (auto &x: p.vsinfo.getarray()) {
       clock_t t1,t2;
@@ -63,11 +65,10 @@ class vChrArray {
   }
 
 public:
-  const chrsize &chr;
-  ChrArrayMap arrays;
-
-  vChrArray(const DROMPA::Global &p, const chrsize &_chr): chr(_chr) {
-    loadSampleDataToArray(p);
+  vChrArray(const DROMPA::Global &p, const chrsize &_chr):
+    chr(_chr)
+  {
+    loadvChrArray(p);
 
 #ifdef DEBUG
     std::cout << "all WigArray:" << std::endl;
@@ -81,6 +82,12 @@ public:
     }
 #endif
   }
+
+  const ChrArray & getArray(const std::string &str) const {
+    return arrays.at(str);
+  }
+  const chrsize & getchr() const { return chr; }
+  int32_t getchrlen() const { return chr.getlen(); }
 };
 
 

@@ -40,7 +40,7 @@ protected:
     return posi - width_from_center < 0 || posi + width_from_center >= chrlen;
   }
 
-  void WriteValAroundPosi(std::ofstream &out, const SamplePairOverlayed &pair, const vChrArray &arrays,
+  void WriteValAroundPosi(std::ofstream &out, const SamplePairOverlayed &pair, const vChrArray &vReadArray,
 			  const int32_t posi, const std::string &strand)
   {
     int32_t bincenter(posi/binsize);
@@ -50,19 +50,19 @@ protected:
     if (strand == "+") {
       for (int32_t i=sbin; i<=ebin; ++i) {
 	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
-	out << "\t" << getSumVal(pair, arrays, i, i);
+	out << "\t" << getSumVal(pair, vReadArray, i, i);
       }
     } else {
       for (int32_t i=ebin; i>=sbin; --i) {
 	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
-	out << "\t" << getSumVal(pair, arrays, i, i);
+	out << "\t" << getSumVal(pair, vReadArray, i, i);
       }
     }
   }
 
-  double getSumVal(const SamplePairOverlayed &pair, const vChrArray &arrays, const int32_t sbin, const int32_t ebin) {
+  double getSumVal(const SamplePairOverlayed &pair, const vChrArray &vReadArray, const int32_t sbin, const int32_t ebin) {
     double sum(0);
-    for (int32_t i=sbin; i<=ebin; ++i) sum += arrays.arrays.at(pair.first.argvChIP).array[i];
+    for (int32_t i=sbin; i<=ebin; ++i) sum += vReadArray.getArray(pair.first.argvChIP).array[i];
     return getratio(sum, (ebin - sbin + 1));
   }
 
@@ -190,7 +190,7 @@ public:
     std::string chrname(rmchr(chr.getname()));
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
 
-    vChrArray arrays(p, chr);
+    vChrArray vReadArray(p, chr);
 
     std::ofstream out(RDataname, std::ios::app);
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
@@ -212,7 +212,7 @@ public:
 
       out << gene.tname;
 
-      for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, position, gene.strand);
+      for (auto &x: p.samplepair) WriteValAroundPosi(out, x, vReadArray, position, gene.strand);
       out << std::endl;
     }
   }
@@ -222,7 +222,7 @@ class ProfileGene100: public ReadProfile {
   enum {GENEBLOCKNUM=100};
 
   void outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
-		      const genedata &gene, const vChrArray &arrays, int32_t len) {
+		      const genedata &gene, const vChrArray &vReadArray, int32_t len) {
     int32_t s,e;
     double len100(len / (double)GENEBLOCKNUM);
 
@@ -234,7 +234,7 @@ class ProfileGene100: public ReadProfile {
 	s = (gene.txEnd + len - len100 * (i+1))/ binsize;
 	e = (gene.txEnd + len - len100 * i -1) / binsize;
       }
-      out << "\t" << getSumVal(x, arrays, s, e);
+      out << "\t" << getSumVal(x, vReadArray, s, e);
     }
   }
 
@@ -253,7 +253,7 @@ public:
     std::string chrname(rmchr(chr.getname()));
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
 
-    vChrArray arrays(p, chr);
+    vChrArray vReadArray(p, chr);
     std::ofstream out(RDataname, std::ios::app);
 
     auto gmp(get_garray(p.anno.gmp.at(chrname)));
@@ -267,7 +267,7 @@ public:
       }
 
       out << gene.gname;
-      for (auto &x: p.samplepair) outputEachGene(out, x, gene, arrays, len);
+      for (auto &x: p.samplepair) outputEachGene(out, x, gene, vReadArray, len);
       out << std::endl;
     }
   }
@@ -299,7 +299,7 @@ public:
     }
     std::ofstream out(RDataname, std::ios::app);
 
-    vChrArray arrays(p, chr);
+    vChrArray vReadArray(p, chr);
 
     for (auto &vbed: p.anno.vbedlist) {
       for (auto &bed: vbed.getvBed()) {
@@ -310,7 +310,7 @@ public:
 	  continue;
 	}
 	out << bed.getSiteStr();
-	for (auto &x: p.samplepair) WriteValAroundPosi(out, x, arrays, bed.summit, "+");
+	for (auto &x: p.samplepair) WriteValAroundPosi(out, x, vReadArray, bed.summit, "+");
 	out << std::endl;
       }
     }

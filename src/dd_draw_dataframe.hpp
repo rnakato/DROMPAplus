@@ -34,7 +34,7 @@ class DataFrame {
     cr->stroke();
   }
 
-  void StrokeBins(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t nlayer) {
+  void StrokeBins(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t nlayer) {
     int32_t binsize(pair.getbinsize());
     int32_t sbin(par.xstart/binsize);
     int32_t ebin(par.xend/binsize);
@@ -49,16 +49,16 @@ class DataFrame {
 
     for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {
       if (thin > 1 && i%thin) continue;
-      StrokeEachBin(pair, arrays, i, xcen, yaxis, nlayer);
+      StrokeEachBin(pair, vReadArray, i, xcen, yaxis, nlayer);
     }
     cr->stroke();
   }
 
   void StrokeEachBin(const SamplePairEach &pair,
-		     const ChrArrayMap &arrays,
+		     const vChrArray &vReadArray,
 		     const int32_t i, const double xcen,
 		     const int32_t yaxis, const int32_t nlayer) {
-    double value(getVal(pair, arrays, i));
+    double value(getVal(pair, vReadArray, i));
     if (!value) return;
 
     int32_t len;
@@ -115,9 +115,9 @@ protected:
     if (slocal2) scale2nd = slocal2; else scale2nd = sglobal;
   }
 
-  void Draw(const DROMPA::Global &p, const SamplePairOverlayed &pair, const ChrArrayMap &arrays) {
+  void Draw(const DROMPA::Global &p, const SamplePairOverlayed &pair, const vChrArray &vReadArray) {
     int32_t nlayer(0);
-    StrokeBins(pair.first, arrays, nlayer);
+    StrokeBins(pair.first, vReadArray, nlayer);
     if (p.drawparam.isshowymem()) StrokeYmem(nlayer);
 
     StrokeFrame();
@@ -126,7 +126,7 @@ protected:
     // Overlayed
     if (pair.OverlayExists()) {
       nlayer = 1;
-      StrokeBins(pair.second, arrays, nlayer);
+      StrokeBins(pair.second, vReadArray, nlayer);
       if (p.drawparam.isshowymem()) StrokeYmem(nlayer);
     }
 
@@ -139,9 +139,8 @@ protected:
 
   virtual void StrokeYlab(const SamplePairOverlayed &pair)=0;
   virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
-  virtual double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i)=0;
+  virtual double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)=0;
 };
-
 
 class ChIPDataFrame : public DataFrame {
   void setColor(const double value, const int32_t nlayer, const double alpha) {
@@ -149,8 +148,8 @@ class ChIPDataFrame : public DataFrame {
     if (!nlayer) cr->set_source_rgba(CLR_GREEN3, alpha);
     else cr->set_source_rgba(CLR_ORANGE, alpha);
   }
-  double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
-    return arrays.at(pair.argvChIP).array[i];
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+    return vReadArray.getArray(pair.argvChIP).array[i];
   }
   void StrokeYlab(const SamplePairOverlayed &pair) {
     if (pair.OverlayExists()) {
@@ -196,8 +195,8 @@ class InputDataFrame : public DataFrame {
     if (!nlayer) cr->set_source_rgba(CLR_BLUE, alpha);
     else cr->set_source_rgba(CLR_OLIVE, alpha);
   }
-  double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
-    return arrays.at(pair.argvInput).array[i];
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+    return vReadArray.getArray(pair.argvInput).array[i];
   }
   void StrokeYlab(const SamplePairOverlayed &pair)
   {
@@ -249,8 +248,10 @@ class RatioDataFrame : public DataFrame {
       }
     }
   }
-  double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
-    return CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+    return CalcRatio(vReadArray.getArray(pair.argvChIP).array[i],
+		     vReadArray.getArray(pair.argvInput).array[i],
+		     pair.ratio);
   }
 
   const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
@@ -315,8 +316,10 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
       }
     }
   }
-  double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
-    double val(CalcRatio(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio));
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+    double val(CalcRatio(vReadArray.getArray(pair.argvChIP).array[i],
+			 vReadArray.getArray(pair.argvInput).array[i],
+			 pair.ratio));
     return val ? log10(val): 0;
   }
   const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
@@ -363,10 +366,10 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     }
     return;
   }
-  void StrokeEachBin(const SamplePairEach &pair, const ChrArrayMap &arrays,
+  void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
 		     const int32_t i, const double xcen,
 		     const int32_t yaxis, const int32_t nlayer) {
-    double value(getVal(pair, arrays, i) / scale);
+    double value(getVal(pair, vReadArray, i) / scale);
     if (!value) return;
 
     int32_t len(0);
@@ -408,8 +411,8 @@ class PinterDataFrame : public DataFrame {
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     }
   }
-  double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
-    const ChrArray &a = arrays.at(pair.argvChIP);
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+    const ChrArray &a = vReadArray.getArray(pair.argvChIP);
     return a.stats.getlogp(a.array[i]);
   }
   const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
@@ -461,8 +464,10 @@ class PenrichDataFrame : public DataFrame {
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     }
   }
-  double getVal(const SamplePairEach &pair, const ChrArrayMap &arrays, const int32_t i) {
-    return binomial_test(arrays.at(pair.argvChIP).array[i], arrays.at(pair.argvInput).array[i], pair.ratio);
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+    return binomial_test(vReadArray.getArray(pair.argvChIP).array[i],
+			 vReadArray.getArray(pair.argvInput).array[i],
+			 pair.ratio);
   }
   const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
     if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP/Input)";
