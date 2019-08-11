@@ -36,7 +36,22 @@ public:
     return 1;
   }
 
-  void DrawData(DROMPA::Global &p);
+  void DrawData(DROMPA::Global &p) {
+    DEBUGprint("Figure::DrawData");
+    std::string pdffilename(p.getFigFileNameChr(vReadArray.getchr().getrefname()));
+    int32_t width(p.drawparam.width_page_pixel);
+    int32_t height(p.drawparam.getPageHeight(p, vsamplepairoverlayed));
+
+    if (p.drawregion.isRegionBed()) DrawData_Region(p, pdffilename, width, height);
+    else if (p.drawregion.isGeneLociFile()) DrawData_GeneLoci(p, pdffilename, width, height);
+    else  DrawData_Whole(p, pdffilename, width, height);
+
+    std::cout << "Wrote PDF file \"" << pdffilename << "\"" << std::endl;
+  }
+
+  void DrawData_Region(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
+  void DrawData_GeneLoci(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
+  void DrawData_Whole(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
 };
 
 #endif /* _DD_DRAW_H_ */

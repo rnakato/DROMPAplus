@@ -174,8 +174,8 @@ class PDFPage {
 
   PDFPage(const DROMPA::Global &p,
 	  const vChrArray &_vReadArray,
-       const std::vector<SamplePairOverlayed> &pair,
-       const Cairo::RefPtr<Cairo::PdfSurface> surface,
+	  const std::vector<SamplePairOverlayed> &pair,
+	  const Cairo::RefPtr<Cairo::PdfSurface> surface,
 	  const int32_t s, const int32_t e):
     vReadArray(_vReadArray),
     vsamplepairoverlayed(pair),

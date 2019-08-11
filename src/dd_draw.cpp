@@ -81,6 +81,30 @@ namespace {
   }
 }
 
+
+void PDFPage::drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop)
+ {
+    double ytop = ref_ytop + 10;
+    int32_t height = ref_height;
+    double radius(height*3);
+    double r(1/3.0);
+
+    double bp_s(par.bp2xaxis(start));
+    double bp_e(par.bp2xaxis(end));
+    double bp_x(bp_e - radius);
+    double bp_y(ytop/r);
+
+    cr->set_line_width(4);
+    cr->scale(1, r);
+    cr->arc(bp_x, bp_y, radius, 0, 0.5*M_PI);
+    if (bp_x - bp_s > 0) rel_xline(cr, bp_x, bp_y + radius, -(bp_x - bp_s));
+    cr->stroke();
+    cr->scale(1, 1/r);
+
+    // bin of interaction
+    StrokeWidthOfInteractionSite(inter.second, ytop);
+  }
+
 void PDFPage::drawInteraction(const InteractionSet &vinter)
 {
   DEBUGprint("drawInteraction");
@@ -236,7 +260,6 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
       rel_xline(cr, x1, ycenter, len);
       cr->stroke();
     }
-
   }
   cr->stroke();
 
@@ -306,31 +329,37 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
   return;
 }
 
-void Figure::DrawData(DROMPA::Global &p) {
-  DEBUGprint("Figure::DrawData");
-  std::string pdffilename(p.getFigFileNameChr(vReadArray.getchr().getrefname()));
-  //  std::cout << chr.getrefname() << std::endl;
-  int32_t width(p.drawparam.width_page_pixel);
-  int32_t height(p.drawparam.getPageHeight(p, vsamplepairoverlayed));
 
-#ifdef CAIRO_HAS_PDF_SURFACE
+void Figure::DrawData_Region(DROMPA::Global &p,
+			     std::string &pdffilename,
+			     int32_t width,
+			     int32_t height)
+{
+  int32_t region_no(1);
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
 
-  if (p.drawregion.isRegionBed()){  // --region
-    int32_t region_no(1);
-    for (auto &x: regionBed) {
-      int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
-      for(int32_t i=0; i<num_page; ++i) {
-	std::cout << boost::format("   page %5d/%5d/%5d\r") % (i+1) % num_page % region_no << std::flush;
-	PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, x.start, x.end);
-	page.MakePage(p, i, std::to_string(region_no));
-      }
-      ++region_no;
-      printf("\n");
+  for (auto &x: regionBed) {
+    int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
+    for(int32_t i=0; i<num_page; ++i) {
+      std::cout << boost::format("   page %5d/%5d/%5d\r")
+	% (i+1) % num_page % region_no << std::flush;
+      PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, x.start, x.end);
+      page.MakePage(p, i, std::to_string(region_no));
     }
-  } else if (p.drawregion.isGeneLociFile()) {  // --genelocifile
+    ++region_no;
+    printf("\n");
+  }
+}
+
+void Figure::DrawData_GeneLoci(DROMPA::Global &p,
+			       std::string &pdffilename,
+			       int32_t width,
+			       int32_t height)
+{
     int32_t len(p.drawregion.getLenGeneLoci());
-    for (auto &m: p.anno.gmp.at(rmchr(vReadArray.getchr().getname()))) {
+
+    const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
+    for (auto &m: p.anno.gmp.at(vReadArray.getchr().getname())) {
       if(!p.drawregion.ExistInGeneLociFile(m.second.gname)) continue;
 
       int32_t start = std::max(0, m.second.txStart - len);
@@ -343,17 +372,22 @@ void Figure::DrawData(DROMPA::Global &p) {
       }
       printf("\n");
     }
-  } else {  // whole chromosome
-    int32_t num_page(p.drawparam.getNumPage(0, vReadArray.getchrlen()));
-    for (int32_t i=0; i<num_page; ++i) {
-      std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
-      PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, 0, vReadArray.getchrlen());
-      page.MakePage(p, i, "1");
-    }
-    printf("\n");
-  }
-  std::cout << "Wrote PDF file \"" << pdffilename << "\"" << std::endl;
+}
 
+void Figure::DrawData_Whole(DROMPA::Global &p,
+			    std::string &pdffilename,
+			    int32_t width,
+			    int32_t height)
+{
+#ifdef CAIRO_HAS_PDF_SURFACE
+  const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
+  int32_t num_page(p.drawparam.getNumPage(0, vReadArray.getchrlen()));
+  for (int32_t i=0; i<num_page; ++i) {
+    std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
+    PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, 0, vReadArray.getchrlen());
+    page.MakePage(p, i, "1");
+  }
+  printf("\n");
 #else
   std::cout << "You must compile cairo with PDF support for DROMPA+." << std::endl;
   return;
