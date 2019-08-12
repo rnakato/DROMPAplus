@@ -439,7 +439,7 @@ namespace DROMPA {
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
 
-    double getlineheight() const { return ystep * barnum; }
+    double getHeightDf() const { return ystep * barnum; }
 
     int32_t getNumLine(const int32_t s, const int32_t e) const{
       int32_t nline = (e-s -1) / width_per_line +1;

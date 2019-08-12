@@ -108,7 +108,7 @@ protected:
 	    const std::string &_chrname,
 	    const int32_t width_draw):
     cr(cr_), par(refparam), label(l), label2nd(l2),
-    width_df(width_draw), height_df(refparam.getHeightDf()), len_binedge(2),
+    width_df(width_draw), height_df(refparam.get_height_df()), len_binedge(2),
     sigtest(sig), threshold(thre), chrname(_chrname)
   {
     if (slocal1) scale    = slocal1; else scale    = sglobal;

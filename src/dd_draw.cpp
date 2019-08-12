@@ -10,15 +10,15 @@
 #include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
-      /*    if (p->gapfile && d->gaparray[i] >= GAP_THRE){
-	    cr->set_source_rgba(CLR_BLACK, 0.3);
-	    rel_yline(cr, xcen, yaxis - height_df, height_df);
-	    cr->stroke();
-	    } else if(p->mpfile && d->mparray[i] < p->mpthre){
-	    cr->set_source_rgba(CLR_BLACK, 0.3);
-	    rel_yline(cr, xcen, yaxis - height_df, height_df);
-	    cr->stroke();
-	    }*/
+/*    if (p->gapfile && d->gaparray[i] >= GAP_THRE){
+      cr->set_source_rgba(CLR_BLACK, 0.3);
+      rel_yline(cr, xcen, yaxis - height_df, height_df);
+      cr->stroke();
+      } else if(p->mpfile && d->mparray[i] < p->mpthre){
+      cr->set_source_rgba(CLR_BLACK, 0.3);
+      rel_yline(cr, xcen, yaxis - height_df, height_df);
+      cr->stroke();
+      }*/
 
 namespace {
   void strokeGraph4EachWindow(const Cairo::RefPtr<Cairo::Context> cr,
@@ -81,29 +81,80 @@ namespace {
   }
 }
 
+void PDFPage::StrokeWidthOfInteractionSite(const bed site, const double y)
+{
+  cr->set_line_width(2);
+  cr->set_source_rgba(CLR_DARKORANGE, 0.8);
+  double s = par.bp2xaxis(site.start - par.xstart);
+  double e = par.bp2xaxis(site.end - par.xstart);
+  rel_xline(cr, s, y, e-s);
+  cr->stroke();
+}
+
+// cr->arc(中心x, 中心y, 半径, start角度, end角度) 角度はラジアン
+void PDFPage::drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+  double ytop = ref_ytop + 10;
+  int32_t height = ref_height - 20;
+  double radius((end - start)/2.0 * par.dot_per_bp); // 半径
+  double r = std::min(0.4, height/radius);
+  //    printf("r %f %f %d %d %d\n", r, radius, height, start, end);
+
+  cr->set_line_width(3);
+  cr->scale(1, r);
+  cr->arc(par.bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
+  cr->stroke();
+  cr->scale(1, 1/r);
+
+  // Highlight each site of interaction
+  StrokeWidthOfInteractionSite(inter.first, ytop);
+  StrokeWidthOfInteractionSite(inter.second, ytop);
+}
+
+void PDFPage::drawArc_from_none(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop)
+{
+  double ytop = ref_ytop + 10;
+  int32_t height = ref_height;
+  double radius(height*3);
+  double r(1/3.0);
+
+  double bp_s(par.bp2xaxis(start));
+  double bp_e(par.bp2xaxis(end));
+  double bp_x(bp_s + radius);
+  double bp_y(ytop/r);
+
+  cr->set_line_width(4);
+  cr->scale(1, r);
+  cr->arc(bp_x, bp_y, radius, 0.5*M_PI, M_PI);
+  if (bp_e - bp_x > 0) rel_xline(cr, bp_x, bp_y + radius, bp_e - bp_x);
+  cr->stroke();
+  cr->scale(1, 1/r);
+
+  // bin of interaction
+  StrokeWidthOfInteractionSite(inter.first, ytop);
+}
 
 void PDFPage::drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop)
- {
-    double ytop = ref_ytop + 10;
-    int32_t height = ref_height;
-    double radius(height*3);
-    double r(1/3.0);
+{
+  double ytop = ref_ytop + 10;
+  int32_t height = ref_height;
+  double radius(height*3);
+  double r(1/3.0);
 
-    double bp_s(par.bp2xaxis(start));
-    double bp_e(par.bp2xaxis(end));
-    double bp_x(bp_e - radius);
-    double bp_y(ytop/r);
+  double bp_s(par.bp2xaxis(start));
+  double bp_e(par.bp2xaxis(end));
+  double bp_x(bp_e - radius);
+  double bp_y(ytop/r);
 
-    cr->set_line_width(4);
-    cr->scale(1, r);
-    cr->arc(bp_x, bp_y, radius, 0, 0.5*M_PI);
-    if (bp_x - bp_s > 0) rel_xline(cr, bp_x, bp_y + radius, -(bp_x - bp_s));
-    cr->stroke();
-    cr->scale(1, 1/r);
+  cr->set_line_width(4);
+  cr->scale(1, r);
+  cr->arc(bp_x, bp_y, radius, 0, 0.5*M_PI);
+  if (bp_x - bp_s > 0) rel_xline(cr, bp_x, bp_y + radius, -(bp_x - bp_s));
+  cr->stroke();
+  cr->scale(1, 1/r);
 
-    // bin of interaction
-    StrokeWidthOfInteractionSite(inter.second, ytop);
-  }
+  // bin of interaction
+  StrokeWidthOfInteractionSite(inter.second, ytop);
+}
 
 void PDFPage::drawInteraction(const InteractionSet &vinter)
 {
@@ -130,9 +181,9 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
     RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
     cr->set_source_rgba(color.r, color.g, color.b, 0.8);
     /*    else {   // inter-chromosomal
-      RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
-      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
-      }*/
+	  RGB color(getInterRGB(x.getval()/vinter.getmaxval() *3)); // maxval の 1/3 を色のmax値に設定
+	  cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+	  }*/
 
     int32_t xcen_head(-1);
     int32_t xcen_tail(-1);
@@ -153,16 +204,24 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
   return;
 }
 
-void PDFPage::StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair)
+void PDFPage::stroke_xaxis(const double y)
 {
-  if (p.drawparam.showpinter) StrokeDataFrame<PinterDataFrame>(p, pair);
-  if (p.drawparam.showpenrich && pair.first.InputExists()) StrokeDataFrame<PenrichDataFrame>(p, pair);
-  if (p.drawparam.showratio && pair.first.InputExists()) {
-    if (p.drawparam.showratio == 1)      StrokeDataFrame<RatioDataFrame>(p, pair);
-    else if (p.drawparam.showratio == 2) StrokeDataFrame<LogRatioDataFrame>(p, pair);
+  double x;
+  int32_t interval_large(setInterval());
+  int32_t interval(interval_large/10);
+
+  cr->set_source_rgba(CLR_BLACK, 1);
+  for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
+    x = par.bp2xaxis(i - par.xstart);
+    if (!(i%interval_large)) {
+      cr->set_line_width(1);
+      rel_yline(cr, x, y-4, 8);
+    } else {
+      cr->set_line_width(0.5);
+      rel_yline(cr, x, y-1.5, 3);
+    }
+    cr->stroke();
   }
-  if (p.drawparam.showctag) StrokeDataFrame<ChIPDataFrame>(p, pair);
-  if (p.drawparam.showitag==1 && pair.first.InputExists()) StrokeDataFrame<InputDataFrame>(p, pair);
   return;
 }
 
@@ -268,6 +327,56 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
   return;
 }
 
+void PDFPage::stroke_xaxis_num(const double y, const int32_t fontsize)
+{
+  int32_t mega, kilo;
+  double x;
+  int32_t interval(setInterval());
+
+  cr->set_source_rgba(CLR_BLACK, 1);
+  for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
+    std::string str;
+    x = par.bp2xaxis(i - par.xstart);
+    if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M";
+    else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k";
+    else {
+      mega = i/NUM_1M;
+      kilo = (i%NUM_1M)/NUM_1K;
+      if (par.width_per_line > 10*NUM_1K) str = float2string(i/static_cast<double>(NUM_1M), 3) + "M";
+      else if (par.width_per_line > 10) {
+	if (mega) str = std::to_string(mega) + "," + float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
+	else str = float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
+      } else {
+	if (mega) str = std::to_string(mega) + "," + std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
+	else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
+	else str = std::to_string(i%NUM_1K);
+      }
+    }
+    showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
+  }
+  return;
+}
+
+void PDFPage::StrokeReadLines(const DROMPA::Global &p)
+{
+  auto &d = p.drawparam;
+
+  for (auto &pair: vsamplepairoverlayed) {
+    if (d.showpinter) StrokeDataFrame<PinterDataFrame>(p, pair);
+    if (d.showpenrich && pair.first.InputExists()) StrokeDataFrame<PenrichDataFrame>(p, pair);
+    if (d.showratio && pair.first.InputExists()) {
+      if (d.showratio == 1)      StrokeDataFrame<RatioDataFrame>(p, pair);
+      else if (d.showratio == 2) StrokeDataFrame<LogRatioDataFrame>(p, pair);
+    }
+    if (d.showctag) StrokeDataFrame<ChIPDataFrame>(p, pair);
+    if (d.showitag==1 && pair.first.InputExists()) StrokeDataFrame<InputDataFrame>(p, pair);
+  }
+  if (d.showitag==2 && vsamplepairoverlayed[0].first.InputExists()) StrokeDataFrame<InputDataFrame>(p, vsamplepairoverlayed[0]);
+
+  stroke_xaxis_num(par.yaxis_now, 9);
+  return;
+}
+
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {
   if (p.anno.GC.isOn()) StrokeGraph(GC);
@@ -277,30 +386,28 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
   if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawGeneAnnotation(p);
 
   // Read
-  for (auto &x: vsamplepairoverlayed) StrokeReadLines(p, x);
-  if (p.drawparam.showitag==2 && vsamplepairoverlayed[0].first.InputExists()) StrokeDataFrame<InputDataFrame>(p, vsamplepairoverlayed[0]);
-
-  stroke_xaxis_num(par.yaxis_now, 9);
+  StrokeReadLines(p);
 
   // Bed file
   if(p.anno.vbedlist.size()) {
-    par.yaxis_now += 15;
+    par.yaxis_now += MERGIN_BETWEEN_READ_BED;
     for (auto &x: p.anno.vbedlist) drawBedAnnotation(x);
   }
 
   // Interaction
   if (p.anno.vinterlist.size()) {
-    par.yaxis_now += 15;
+    par.yaxis_now += MERGIN_BETWEEN_READ_BED;
     for (auto &x: p.anno.vinterlist) drawInteraction(x);
   }
 
   //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);
 
-  par.yaxis_now += MERGIN_BETWEEN_LINE;
   return;
 }
 
-void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std::string &pagelabel)
+void PDFPage::MakePage(const DROMPA::Global &p,
+		       const int32_t page_no,
+		       const std::string &pagelabel)
 {
   DEBUGprint("PDFPage::MakePage");
   int32_t line_start, line_end;
@@ -311,10 +418,11 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
   cr->paint();
 
   // Stroke each layer
-  for (int i=line_start; i<line_end; ++i) {
+  for (int32_t i=line_start; i<line_end; ++i) {
     set_xstart_xend(i);
     if (par.xstart >= par.xend) continue;
     StrokeEachLayer(p);
+    if (i != line_end-1) par.yaxis_now += MERGIN_BETWEEN_EACHLAYER;
   }
 
   // Page title
@@ -329,17 +437,15 @@ void PDFPage::MakePage(const DROMPA::Global &p, const int32_t page_no, const std
   return;
 }
 
-
-void Figure::DrawData_Region(DROMPA::Global &p,
-			     std::string &pdffilename,
-			     int32_t width,
-			     int32_t height)
+void Figure::Draw_Region(DROMPA::Global &p,
+			 std::string &pdffilename,
+			 int32_t width,
+			 int32_t height)
 {
-  int32_t region_no(1);
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
-
+  int32_t region_no(1);
   for (auto &x: regionBed) {
-    int32_t num_page(p.drawparam.getNumPage(x.start, x.end));
+    int32_t num_page = p.drawparam.getNumPage(x.start, x.end);
     for(int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d/%5d\r")
 	% (i+1) % num_page % region_no << std::flush;
@@ -351,37 +457,37 @@ void Figure::DrawData_Region(DROMPA::Global &p,
   }
 }
 
-void Figure::DrawData_GeneLoci(DROMPA::Global &p,
-			       std::string &pdffilename,
-			       int32_t width,
-			       int32_t height)
+void Figure::Draw_GeneLoci(DROMPA::Global &p,
+			   std::string &pdffilename,
+			   int32_t width,
+			   int32_t height)
 {
-    int32_t len(p.drawregion.getLenGeneLoci());
+  const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
+  int32_t len(p.drawregion.getLenGeneLoci());
+  auto &gmp_chr = p.anno.gmp.at(vReadArray.getchr().getname());
+  for (auto &m: gmp_chr) {
+    if(!p.drawregion.ExistInGeneLociFile(m.second.gname)) continue;
 
-    const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
-    for (auto &m: p.anno.gmp.at(vReadArray.getchr().getname())) {
-      if(!p.drawregion.ExistInGeneLociFile(m.second.gname)) continue;
-
-      int32_t start = std::max(0, m.second.txStart - len);
-      int32_t end   = std::min(m.second.txEnd + len, vReadArray.getchrlen() -1);
-      int32_t num_page(p.drawparam.getNumPage(start, end));
-      for(int32_t i=0; i<num_page; ++i) {
-	std::cout << boost::format("   page %5d/%5d/%s\r") % (i+1) % num_page % m.second.gname << std::flush;
-	PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, start, end);
-	page.MakePage(p, i, m.second.gname);
-      }
-      printf("\n");
+    int32_t start = std::max(0, m.second.txStart - len);
+    int32_t end   = std::min(m.second.txEnd + len, vReadArray.getchrlen() -1);
+    int32_t num_page(p.drawparam.getNumPage(start, end));
+    for(int32_t i=0; i<num_page; ++i) {
+      std::cout << boost::format("   page %5d/%5d/%s\r") % (i+1) % num_page % m.second.gname << std::flush;
+      PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, start, end);
+      page.MakePage(p, i, m.second.gname);
     }
+    printf("\n");
+  }
 }
 
-void Figure::DrawData_Whole(DROMPA::Global &p,
-			    std::string &pdffilename,
-			    int32_t width,
-			    int32_t height)
+void Figure::Draw_Whole(DROMPA::Global &p,
+			std::string &pdffilename,
+			int32_t width,
+			int32_t height)
 {
 #ifdef CAIRO_HAS_PDF_SURFACE
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
-  int32_t num_page(p.drawparam.getNumPage(0, vReadArray.getchrlen()));
+  int32_t num_page = p.drawparam.getNumPage(0, vReadArray.getchrlen());
   for (int32_t i=0; i<num_page; ++i) {
     std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
     PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, 0, vReadArray.getchrlen());

@@ -31,6 +31,7 @@ public:
 
   double ystep;
   int32_t barnum;
+  double height_df;
 
   int32_t width_draw;
   double dot_per_bp;
@@ -43,6 +44,7 @@ public:
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
     yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2),
+    height_df(p.drawparam.getHeightDf()),
     width_draw(p.drawparam.width_draw_pixel),
     dot_per_bp(getratio(width_draw, width_per_line)),
     alpha(p.drawparam.alpha)
@@ -56,11 +58,11 @@ public:
 
   double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
   double bp2xaxis(const int32_t bp) const { return bp * dot_per_bp + OFFSET_X; }
-  double getHeightDf() const { return ystep * barnum; }
+  double get_height_df() const { return height_df; }
 };
 
 class GraphData {
-  enum {MEM_MAX_DEFAULT=20};
+  enum {MEM_MAX_DEFAULT=20, MEMNUM_GC=10};
 public:
   int32_t binsize;
   std::vector<double> array;
@@ -76,13 +78,12 @@ public:
   void setValue(const DROMPA::Annotation::GraphDataFileName &g,
 		const std::string &chr,
 		const int32_t chrlen, const std::string &l,
-		const double ymin, const double ymax,
-		const int32_t m, const int32_t bh)
+		const double ymin, const double ymax)
   {
     binsize = g.getbinsize();
     label = l;
-    memnum = m;
-    boxheight = bh;
+    memnum = MEMNUM_GC;
+    boxheight = BOXHEIGHT_GRAPH;
     std::string filename(g.getfilename() + "/" + chr + "-bs" + std::to_string(binsize));
     setArray(filename, chrlen, ymin, ymax);
   }
@@ -140,15 +141,12 @@ public:
 class PDFPage {
   enum {GFTYPE_REFFLAT=0, GFTYPE_GTF=1, GFTYPE_SGD=2};
 
- // const ChrArrayMap &arrays;
   const vChrArray &vReadArray;
+  std::string chrname;
   const std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
-  GraphData GC;
-  GraphData GD;
+  GraphData GC, GD;
 
   Cairo::RefPtr<Cairo::Context> cr;
-
-  std::string chrname;
 
   int32_t setInterval() const {
     int32_t interval;
@@ -159,7 +157,7 @@ class PDFPage {
   }
 
   void StrokeEachLayer(const DROMPA::Global &p);
-  void StrokeReadLines(const DROMPA::Global &p, const SamplePairOverlayed &pair);
+  void StrokeReadLines(const DROMPA::Global &p);
   void StrokeGraph(const GraphData &graph);
   void DrawGeneAnnotation(const DROMPA::Global &p);
   void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
@@ -178,22 +176,21 @@ class PDFPage {
 	  const Cairo::RefPtr<Cairo::PdfSurface> surface,
 	  const int32_t s, const int32_t e):
     vReadArray(_vReadArray),
+    chrname(vReadArray.getchr().getrefname()),
     vsamplepairoverlayed(pair),
     cr(Cairo::Context::create(surface)),
-    chrname(vReadArray.getchr().getrefname()),
     par(s, e, p)
   {
     cr->select_font_face( "Arial", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
-    if(p.anno.GC.isOn()) GC.setValue(p.anno.GC, chrname, vReadArray.getchrlen(), "GC%",         20, 70, MEMNUM_GC, BOXHEIGHT_GRAPH);
-    if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, vReadArray.getchrlen(), "Num of genes", 0, 40, MEMNUM_GC, BOXHEIGHT_GRAPH);
+    if(p.anno.GC.isOn()) GC.setValue(p.anno.GC, chrname, vReadArray.getchrlen(), "GC%",         20, 70);
+    if(p.anno.GD.isOn()) GD.setValue(p.anno.GD, chrname, vReadArray.getchrlen(), "Num of genes", 0, 40);
   }
 
   template <class T>
   void StrokeDataFrame(const DROMPA::Global &p, const SamplePairOverlayed &pair)
   {
-    par.yaxis_now += par.getHeightDf() + MERGIN_BETWEEN_DATA;
+    par.yaxis_now += par.get_height_df() + MERGIN_BETWEEN_DATA;
     T df(cr, p, pair, par, chrname);
-
     df.Draw(p, pair, vReadArray);
     stroke_xaxis(par.yaxis_now);
 
@@ -203,105 +200,11 @@ class PDFPage {
   void MakePage(const DROMPA::Global &p, const int32_t page_no, const std::string &pagelabel);
 
   void set_xstart_xend(const int32_t i) { par.set_xstart_xend(i); }
-
-  void stroke_xaxis(const double y) {
-    double x;
-    int32_t interval_large(setInterval());
-    int32_t interval(interval_large/10);
-
-    cr->set_source_rgba(CLR_BLACK, 1);
-    for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-      x = par.bp2xaxis(i - par.xstart);
-      if (!(i%interval_large)) {
-	cr->set_line_width(1);
-	rel_yline(cr, x, y-4, 8);
-      } else {
-	cr->set_line_width(0.5);
-	rel_yline(cr, x, y-1.5, 3);
-      }
-      cr->stroke();
-    }
-    return;
-  }
-
-  void stroke_xaxis_num(const double y, const int32_t fontsize) {
-    int32_t mega, kilo;
-    double x;
-    int32_t interval(setInterval());
-
-    cr->set_source_rgba(CLR_BLACK, 1);
-    for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-      std::string str;
-      x = par.bp2xaxis(i - par.xstart);
-      if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M";
-      else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k";
-      else {
-	mega = i/NUM_1M;
-	kilo = (i%NUM_1M)/NUM_1K;
-	if (par.width_per_line > 10*NUM_1K) str = float2string(i/static_cast<double>(NUM_1M), 3) + "M";
-	else if (par.width_per_line > 10) {
-	  if (mega) str = std::to_string(mega) + "," + float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
-	  else str = float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
-	} else {
-	  if (mega) str = std::to_string(mega) + "," + std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
-	  else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
-	  else str = std::to_string(i%NUM_1K);
-	}
-      }
-      showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
-    }
-    return;
-  }
-
-  void StrokeWidthOfInteractionSite(const bed site, const double y) {
-    cr->set_line_width(2);
-    cr->set_source_rgba(CLR_DARKORANGE, 0.8);
-    double s = par.bp2xaxis(site.start - par.xstart);
-    double e = par.bp2xaxis(site.end - par.xstart);
-    rel_xline(cr, s, y, e-s);
-    cr->stroke();
-  }
-
-  // cr->arc(中心x, 中心y, 半径, start角度, end角度) 角度はラジアン
-  void drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
-    double ytop = ref_ytop + 10;
-    int32_t height = ref_height - 20;
-    double radius((end - start)/2.0 * par.dot_per_bp); // 半径
-    double r = std::min(0.4, height/radius);
-    //    printf("r %f %f %d %d %d\n", r, radius, height, start, end);
-
-    cr->set_line_width(3);
-    cr->scale(1, r);
-    cr->arc(par.bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
-    cr->stroke();
-    cr->scale(1, 1/r);
-
-    // Highlight each site of interaction
-    StrokeWidthOfInteractionSite(inter.first, ytop);
-    StrokeWidthOfInteractionSite(inter.second, ytop);
-  }
-
-  void drawArc_from_none(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
-    double ytop = ref_ytop + 10;
-    int32_t height = ref_height;
-    double radius(height*3);
-    double r(1/3.0);
-
-    double bp_s(par.bp2xaxis(start));
-    double bp_e(par.bp2xaxis(end));
-    double bp_x(bp_s + radius);
-    double bp_y(ytop/r);
-
-    cr->set_line_width(4);
-    cr->scale(1, r);
-    cr->arc(bp_x, bp_y, radius, 0.5*M_PI, M_PI);
-    if (bp_e - bp_x > 0) rel_xline(cr, bp_x, bp_y + radius, bp_e - bp_x);
-    cr->stroke();
-    cr->scale(1, 1/r);
-
-    // bin of interaction
-    StrokeWidthOfInteractionSite(inter.first, ytop);
-  }
+  void stroke_xaxis(const double y);
+  void stroke_xaxis_num(const double y, const int32_t fontsize);
+  void StrokeWidthOfInteractionSite(const bed site, const double y);
+  void drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
+  void drawArc_from_none(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
   void drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
 
   std::tuple<int32_t, int32_t> get_start_end_linenum(const int32_t page, const int32_t linenum_per_page) const {
