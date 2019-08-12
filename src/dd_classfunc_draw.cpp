@@ -40,6 +40,8 @@ int32_t DrawParam::getHeightAllSample(const Global &p, const std::vector<SampleP
   height += (BOXHEIGHT_BEDANNOTATION + MERGIN_BETWEEN_READ_BED + 2) * p.anno.vbedlist.size() + 15;
   height += (BOXHEIGHT_INTERACTION   + MERGIN_BETWEEN_READ_BED + 5) * p.anno.vinterlist.size() + 15;
 
+  if (p.anno.existChIADrop()) height += BOXHEIGHT_ChIADROP + MERGIN_BETWEEN_READ_BED;
+
 #ifdef DEBUG
   std::cout << "HeightAllSample; " << height << std::endl;
 #endif

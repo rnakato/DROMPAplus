@@ -7,7 +7,6 @@
 #include "dd_draw_pdfpage.hpp"
 
 class DataFrame {
-
   void StrokeYmem(const int32_t nlayer) {
     cr->set_source_rgba(CLR_BLACK, 0.5);
     for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, par.getXaxisLen());
@@ -224,7 +223,6 @@ class InputDataFrame : public DataFrame {
   }
 
 };
-
 
 class RatioDataFrame : public DataFrame {
   bool isGV;

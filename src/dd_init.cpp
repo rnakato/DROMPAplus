@@ -68,6 +68,7 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts) {
   MyOpt::Opts opt("Genome view",100);
   opt.add_options()
     ("inter",  value<std::vector<std::string>>(), "<interaction file>,<label>: Interaction file and label (<label> can be omited)")
+    ("chiadrop", value<std::string>(), "ChIADrop file (single-cell ChIA-PET)")
     ("mp",     value<std::string>(), "Mappability file")
     ("mpthre", value<double>()->default_value(0.3), "Low mappability threshold")
     ("gap",    value<std::string>(), "Specify gapped regions to be shaded")
@@ -133,6 +134,7 @@ void Annotation::setValuesGV(const Variables &values) {
 	vinterlist.emplace_back(InteractionSet(v[0], label, tool));
       }
     }
+    if (values.count("chiadrop")) parse_ChIADropData(getVal<std::string>(values, "chiadrop"));
     if (values.count("mp")) mpfile = getVal<std::string>(values, "mp");
     mpthre = getVal<double>(values, "mpthre");
     if (values.count("gap")) gapfile = getVal<std::string>(values, "gap");

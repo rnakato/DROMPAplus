@@ -22,7 +22,9 @@
 
 namespace {
   void strokeGraph4EachWindow(const Cairo::RefPtr<Cairo::Context> cr,
-			      double x_pre, double y_pre, double x_cen, double y_cen, int32_t bottom)
+			      double x_pre, double y_pre,
+			      double x_cen, double y_cen,
+			      int32_t bottom)
   {
     if(y_pre > bottom && y_cen > bottom) return;
 
@@ -198,8 +200,7 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
     if (xcen_head < 0 && xcen_tail > 0)   drawArc_none_to(x, xcen_head, xcen_tail, boxheight, ytop);
   }
   cr->stroke();
-
-  par.yaxis_now += boxheight +5;
+  par.yaxis_now += boxheight;
 
   return;
 }
@@ -275,7 +276,6 @@ void PDFPage::StrokeGraph(const GraphData &graph)
     rel_xline(cr, OFFSET_X-2, y, 2);
     cr->stroke();
   }
-
   par.yaxis_now += graph.boxheight + MERGIN_BETWEEN_GRAPH_DATA;
 
   return;
@@ -321,8 +321,7 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
     }
   }
   cr->stroke();
-
-  par.yaxis_now += boxheight +2;
+  par.yaxis_now += boxheight;
 
   return;
 }
@@ -377,13 +376,66 @@ void PDFPage::StrokeReadLines(const DROMPA::Global &p)
   return;
 }
 
+void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v)
+{
+  int32_t ycenter(par.yaxis_now + 1);
+  cr->set_line_width(2);
+  for(auto &posi: v) {
+    if(posi >= par.xstart && posi <= par.xend) {
+      double x1 = par.bp2xaxis(posi - par.xstart);
+      double len = 1000 * par.dot_per_bp;
+      rel_xline(cr, x1, ycenter, len);
+      cr->stroke();
+    }
+  }
+  int32_t s = std::max(v[0], par.xstart);
+  int32_t e = std::min(v[v.size()-1], par.xend);
+  cr->set_line_width(1);
+  rel_xline(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
+  cr->stroke();
+
+  par.yaxis_now += 3;
+}
+
+void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
+{
+  DEBUGprint("StrokeChIADrop");
+  int32_t boxheight(BOXHEIGHT_ChIADROP);
+  std::string chr(rmchr(chrname));
+
+  /* frame */
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->rectangle(par.xstart, par.xend, par.yaxis_now, boxheight);
+  cr->stroke();
+
+  int32_t on(0);
+  for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
+    const std::vector<int32_t> &v = x.second;
+    if (v.size() ==1) continue;
+    if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
+    if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
+    strokeChIADropBarcode(v);
+    if(!on) {
+      cr->set_source_rgba(CLR_GRAY4, 1);
+      on=1;
+    } else {
+      cr->set_source_rgba(CLR_GREEN, 1);
+      on=0;
+    }
+  }
+
+  par.yaxis_now += boxheight;
+
+  return;
+}
+
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {
   if (p.anno.GC.isOn()) StrokeGraph(GC);
   if (p.anno.GD.isOn()) StrokeGraph(GD);
 
   // Gene
-  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawGeneAnnotation(p);
+  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "")DrawGeneAnnotation(p);
 
   // Read
   StrokeReadLines(p);
@@ -391,13 +443,25 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
   // Bed file
   if(p.anno.vbedlist.size()) {
     par.yaxis_now += MERGIN_BETWEEN_READ_BED;
-    for (auto &x: p.anno.vbedlist) drawBedAnnotation(x);
+    for (auto &x: p.anno.vbedlist) {
+      drawBedAnnotation(x);
+      par.yaxis_now += +2;
+    }
+  }
+
+  // ChIA-Drop
+  if (p.anno.existChIADrop()) {
+    par.yaxis_now += MERGIN_BETWEEN_READ_BED;
+    StrokeChIADrop(p);
   }
 
   // Interaction
   if (p.anno.vinterlist.size()) {
     par.yaxis_now += MERGIN_BETWEEN_READ_BED;
-    for (auto &x: p.anno.vinterlist) drawInteraction(x);
+    for (auto &x: p.anno.vinterlist) {
+      drawInteraction(x);
+      par.yaxis_now += +5;
+    }
   }
 
   //if(d->repeat.argv) draw_repeat(d, cr, xstart, xend);

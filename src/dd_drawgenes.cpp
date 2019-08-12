@@ -9,7 +9,6 @@
 #include "../submodules/SSP/common/util.hpp"
 
 namespace {
-
   class GeneElement{
     int32_t dif;
     int32_t cnt;
@@ -89,7 +88,6 @@ namespace {
     return garray;
   }
 }
-
 
 void PDFPage::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
 {
@@ -186,13 +184,6 @@ void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
 	cr->stroke();
       }
       else {
-	/*	std::cout << g.x_name << " "
-		  << g.y_name << " "
-		  << m.gname << " "
-		  << g.x1 << " "
-		  << g.ybar << " "
-		  << g.xwid << std::endl;*/
-
 	cr->set_source_rgba(CLR_BLUE, 1);
 	showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
 	cr->set_line_width(1.5);
@@ -304,7 +295,6 @@ void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
 
   /* memory */
   stroke_xaxis(ycenter);
-
   par.yaxis_now += boxheight + MERGIN_BETWEEN_DATA;
   return;
 }

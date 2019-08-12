@@ -221,6 +221,7 @@ namespace DROMPA {
   class Annotation {
     bool isUCSC;
     bool showars;
+    bool isChIADrop;
 
     template <class T>
     void readBedFile(const std::vector<std::string> &v) {
@@ -228,6 +229,44 @@ namespace DROMPA {
       //    printBed(vbed);
       if(v.size()>1) vbedlist.emplace_back(vbed, v[1]);
       else vbedlist.emplace_back(vbed, "Bed");
+    }
+
+    void parse_ChIADropData(const std::string &fileName)
+    {
+      std::ifstream in(fileName);
+      if(!in) {
+	std::cerr << "Error: ChIADrop file " << fileName << " does not exist." << std::endl;
+	std::exit(1);
+      }
+
+      std::unordered_map<std::string, std::vector<GenomePosition>> mp;
+      while (!in.eof()) {
+	std::string lineStr;
+	getline(in, lineStr);
+
+	if(lineStr.empty() || lineStr[0] == '#') continue;
+	std::vector<std::string> v;
+	ParseLine(v, lineStr, ',');
+
+	mp[v[0]].emplace_back(v[1], v[2]);
+      }
+
+      for (auto &pair: mp) {
+	int32_t nbed(pair.second.size());
+	if(nbed == 1) continue;
+	for (auto &x: pair.second) {
+	  mp_ChIADrop[x.chr][pair.first].emplace_back(x.start);
+	}
+      }
+
+      for (auto &x: mp_ChIADrop) {
+	for (auto &y: x.second) {
+	  std::sort(y.second.begin(), y.second.end());
+	}
+      }
+
+      isChIADrop = true;
+      return;
     }
 
   public:
@@ -258,6 +297,10 @@ namespace DROMPA {
     std::string terfile;
     std::vector<vbed<bed12>> vbedlist;
     std::vector<InteractionSet> vinterlist;
+
+    std::unordered_map<std::string,
+		       std::unordered_map<std::string,
+					  std::vector<int32_t>>> mp_ChIADrop;
     std::string repeatfile;
     std::string mpfile;
     double mpthre;
@@ -267,6 +310,7 @@ namespace DROMPA {
 
     Annotation():
       isUCSC(false), showars(false),
+      isChIADrop(false),
       genefile(""), gftype(0),
       showtranscriptname(false),
       arsfile(""),
@@ -299,7 +343,8 @@ namespace DROMPA {
 
     int32_t getgftype() const { return gftype; }
     bool is_Anno_UCSC() const {return isUCSC; }
-    bool isshowars() const {return showars; }
+    bool isshowars() const { return showars; }
+    bool existChIADrop() const { return isChIADrop; }
   };
 
   class Profile {
