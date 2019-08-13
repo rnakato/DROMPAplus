@@ -94,7 +94,8 @@ void PDFPage::StrokeWidthOfInteractionSite(const bed site, const double y)
 }
 
 // cr->arc(中心x, 中心y, 半径, start角度, end角度) 角度はラジアン
-void PDFPage::drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop) {
+void PDFPage::drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop)
+{
   double ytop = ref_ytop + 10;
   int32_t height = ref_height - 20;
   double radius((end - start)/2.0 * par.dot_per_bp); // 半径
@@ -376,11 +377,12 @@ void PDFPage::StrokeReadLines(const DROMPA::Global &p)
   return;
 }
 
-void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v)
+void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const double _ywidth)
 {
-  int32_t ycenter(par.yaxis_now + 1);
-  cr->set_line_width(2);
-  for(auto &posi: v) {
+  double ywidth = std::min(_ywidth, 2.0);
+  int32_t ycenter(par.yaxis_now + ywidth/3);
+  cr->set_line_width(ywidth*0.8);
+  for (auto &posi: v) {
     if(posi >= par.xstart && posi <= par.xend) {
       double x1 = par.bp2xaxis(posi - par.xstart);
       double len = 1000 * par.dot_per_bp;
@@ -390,12 +392,28 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v)
   }
   int32_t s = std::max(v[0], par.xstart);
   int32_t e = std::min(v[v.size()-1], par.xend);
-  cr->set_line_width(1);
+  cr->set_line_width(ywidth/4);
   rel_xline(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
   cr->stroke();
 
-  par.yaxis_now += 3;
+  par.yaxis_now += ywidth;
 }
+
+class posivector {
+ public:
+  std::vector<int32_t> v;
+  posivector(std::vector<int32_t> _v): v(_v) {}
+  virtual ~posivector(){}
+
+  bool operator<(const posivector &another) const {
+    for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
+      if (v[i] < another.v[i]) return 1;
+      if (v[i] == another.v[i] && i==v.size()-1) return 1;
+      if (v[i] > another.v[i]) return 0;
+    }
+    return 1;
+  };
+};
 
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 {
@@ -408,13 +426,22 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
   cr->rectangle(par.xstart, par.xend, par.yaxis_now, boxheight);
   cr->stroke();
 
+  std::vector<posivector> vv;
+
   int32_t on(0);
   for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
     const std::vector<int32_t> &v = x.second;
     if (v.size() ==1) continue;
     if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
     if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
-    strokeChIADropBarcode(v);
+    vv.emplace_back(v);
+  }
+
+  printf("vv num=%d\n", vv.size());
+  std::sort(vv.begin(), vv.end());
+
+  for (auto &v: vv) {
+    strokeChIADropBarcode(v.v, boxheight/(double)vv.size());
     if(!on) {
       cr->set_source_rgba(CLR_GRAY4, 1);
       on=1;
@@ -423,8 +450,6 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
       on=0;
     }
   }
-
-  par.yaxis_now += boxheight;
 
   return;
 }
