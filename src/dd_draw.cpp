@@ -21,6 +21,22 @@
       }*/
 
 namespace {
+  class posivector {
+  public:
+    std::vector<int32_t> v;
+    posivector(std::vector<int32_t> _v): v(_v) {}
+    virtual ~posivector(){}
+
+    bool operator<(const posivector &another) const {
+      for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
+	if (v[i] < another.v[i]) return 1;
+	if (v[i] == another.v[i] && i==v.size()-1) return 1;
+	if (v[i] > another.v[i]) return 0;
+      }
+      return 1;
+    };
+  };
+
   void strokeGraph4EachWindow(const Cairo::RefPtr<Cairo::Context> cr,
 			      double x_pre, double y_pre,
 			      double x_cen, double y_cen,
@@ -380,40 +396,29 @@ void PDFPage::StrokeReadLines(const DROMPA::Global &p)
 void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const double _ywidth)
 {
   double ywidth = std::min(_ywidth, 2.0);
-  int32_t ycenter(par.yaxis_now + ywidth/3);
+  double ycenter(par.yaxis_now + ywidth/3);
+
+  int32_t s = std::max(v[0], par.xstart);
+  int32_t e = std::min(v[v.size()-1], par.xend);
+  cr->set_source_rgba(CLR_GRAY2, 1);
+  cr->set_line_width(ywidth*0.1);
+  rel_xline(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
+  cr->stroke();
+
   cr->set_line_width(ywidth*0.8);
+  cr->set_source_rgba(CLR_GREEN, 1);
   for (auto &posi: v) {
     if(posi >= par.xstart && posi <= par.xend) {
       double x1 = par.bp2xaxis(posi - par.xstart);
-      double len = 1000 * par.dot_per_bp;
+      double len = std::max(1000 * par.dot_per_bp, 0.02);
+//      std::cout << len << std::endl;
       rel_xline(cr, x1, ycenter, len);
       cr->stroke();
     }
   }
-  int32_t s = std::max(v[0], par.xstart);
-  int32_t e = std::min(v[v.size()-1], par.xend);
-  cr->set_line_width(ywidth/4);
-  rel_xline(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
-  cr->stroke();
 
   par.yaxis_now += ywidth;
 }
-
-class posivector {
- public:
-  std::vector<int32_t> v;
-  posivector(std::vector<int32_t> _v): v(_v) {}
-  virtual ~posivector(){}
-
-  bool operator<(const posivector &another) const {
-    for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
-      if (v[i] < another.v[i]) return 1;
-      if (v[i] == another.v[i] && i==v.size()-1) return 1;
-      if (v[i] > another.v[i]) return 0;
-    }
-    return 1;
-  };
-};
 
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 {
@@ -428,7 +433,6 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 
   std::vector<posivector> vv;
 
-  int32_t on(0);
   for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
     const std::vector<int32_t> &v = x.second;
     if (v.size() ==1) continue;
@@ -442,13 +446,6 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 
   for (auto &v: vv) {
     strokeChIADropBarcode(v.v, boxheight/(double)vv.size());
-    if(!on) {
-      cr->set_source_rgba(CLR_GRAY4, 1);
-      on=1;
-    } else {
-      cr->set_source_rgba(CLR_GREEN, 1);
-      on=0;
-    }
   }
 
   return;
