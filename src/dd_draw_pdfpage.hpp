@@ -167,7 +167,7 @@ class PDFPage {
   void drawBedAnnotation(const vbed<bed12> &vbed);
   void drawInteraction(const InteractionSet &vinter);
   void StrokeChIADrop(const DROMPA::Global &p);
-  void strokeChIADropBarcode(const std::vector<int32_t> &v, const double _ywidth);
+  void strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const RGB &color);
 
   public:
   DParam par;

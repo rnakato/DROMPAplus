@@ -27,11 +27,20 @@ namespace {
     posivector(std::vector<int32_t> _v): v(_v) {}
     virtual ~posivector(){}
 
-    bool operator<(const posivector &another) const {
+    bool operator < (const posivector &another) const {
       for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
 	if (v[i] < another.v[i]) return 1;
 	if (v[i] == another.v[i] && i==v.size()-1) return 1;
+	if (v[i] == another.v[i] && i==another.v.size()-1) return 0;
 	if (v[i] > another.v[i]) return 0;
+      }
+      return 1;
+    };
+    bool operator == (const posivector &another) const {
+      if(v.size() != another.v.size()) return 0;
+
+      for (size_t i=0; i<v.size(); ++i) {
+	if (v[i] != another.v[i]) return 0;
       }
       return 1;
     };
@@ -92,6 +101,27 @@ namespace {
       cr->set_source_rgba(CLR_BLACK, 1);
       if (!i)    showtext_cr(cr, x-3, y+20, "0", 10);
       if (i==40) showtext_cr(cr, x-3, y+20, float2string(maxval/3, 1), 10);
+      x += barwidth;
+      cr->stroke();
+    }
+    return;
+  }
+  void showColorBar_ChIADrop(const Cairo::RefPtr<Cairo::Context> cr, int32_t x, const int32_t y, const int32_t maxval)
+  {
+    int32_t barwidth(1);
+    cr->set_line_width(barwidth+0.1);
+
+    cr->set_source_rgba(CLR_BLACK, 1);
+    showtext_cr(cr, x-15, y+30, "num of barcodes", 10);
+
+    for (int32_t i=0; i<=50; ++i) {
+      RGB color(getInterRGB(i*0.02));
+      cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+      rel_yline(cr, x, y, 12);
+      cr->stroke();
+      cr->set_source_rgba(CLR_BLACK, 1);
+      if (!i)    showtext_cr(cr, x-3, y+20, "1", 10);
+      if (i==48) showtext_cr(cr, x-3, y+20, std::to_string(maxval), 10);
       x += barwidth;
       cr->stroke();
     }
@@ -393,26 +423,32 @@ void PDFPage::StrokeReadLines(const DROMPA::Global &p)
   return;
 }
 
-void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const double _ywidth)
+void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const RGB &color)
 {
   double ywidth = std::min(_ywidth, 2.0);
-  double ycenter(par.yaxis_now + ywidth/3);
+  double ycenter(par.yaxis_now + ywidth/2);
 
   int32_t s = std::max(v[0], par.xstart);
   int32_t e = std::min(v[v.size()-1], par.xend);
-  cr->set_source_rgba(CLR_GRAY2, 1);
+//  cr->set_source_rgba(CLR_GRAY2, 1);
+  cr->set_source_rgba(color.r, color.g, color.b, 0.8);
   cr->set_line_width(ywidth*0.1);
-  rel_xline(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
+  rel_xline_double(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
+  cr->stroke();
+
+  // barcode number
+  cr->set_source_rgba(CLR_BLACK, 1);
+  showtext_cr(cr, par.bp2xaxis(e - par.xstart) + 0.5, par.yaxis_now + ywidth, nbarcode, 1.0);
   cr->stroke();
 
   cr->set_line_width(ywidth*0.8);
-  cr->set_source_rgba(CLR_GREEN, 1);
+//  cr->set_source_rgba(CLR_GREEN, 1);
+  cr->set_source_rgba(color.r, color.g, color.b, 0.8);
   for (auto &posi: v) {
     if(posi >= par.xstart && posi <= par.xend) {
       double x1 = par.bp2xaxis(posi - par.xstart);
       double len = std::max(1000 * par.dot_per_bp, 0.02);
-//      std::cout << len << std::endl;
-      rel_xline(cr, x1, ycenter, len);
+      rel_xline_double(cr, x1, ycenter, len);
       cr->stroke();
     }
   }
@@ -441,11 +477,26 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
     vv.emplace_back(v);
   }
 
-  printf("vv num=%d\n", vv.size());
+//  printf("vv num=%d\n", vv.size());
   std::sort(vv.begin(), vv.end());
 
-  for (auto &v: vv) {
-    strokeChIADropBarcode(v.v, boxheight/(double)vv.size());
+  int32_t max(0);
+  int32_t num_line(0);
+  for (size_t i=0; i<vv.size(); ++i) {
+    int32_t n(1);
+    while(i < vv.size()-1 && vv[i].v == vv[i+1].v) { ++i; ++n; }
+    max = std::max(max, n);
+    ++num_line;
+  }
+
+  // colorbar
+  showColorBar_ChIADrop(cr, 80, par.yaxis_now + 10, max);
+
+  for (size_t i=0; i<vv.size(); ++i) {
+    int32_t n(1);
+    while(i < vv.size()-1 && vv[i].v == vv[i+1].v) { ++i; ++n; }
+    RGB color(getInterRGB((n-1)/(double)max));
+    strokeChIADropBarcode(vv[i-n+1].v, std::to_string(n), boxheight/(double)num_line, color);
   }
 
   return;

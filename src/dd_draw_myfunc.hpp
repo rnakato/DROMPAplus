@@ -11,6 +11,9 @@
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
 
+#define rel_xline_double(cr, x1, y1, xlen) do{ \
+    cr->move_to(x1,   y1); \
+    cr->line_to(x1+xlen, y1); } while(0)
 #define rel_xline(cr, x1, y1, xlen) do{ \
     cr->move_to(x1,   (int32_t)y1); \
     cr->line_to(x1+xlen, (int32_t)y1); } while(0)
