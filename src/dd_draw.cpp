@@ -22,13 +22,15 @@
 
 namespace {
   class posivector {
+    int32_t start;
   public:
     std::vector<int32_t> v;
-    posivector(std::vector<int32_t> _v): v(_v) {}
+    posivector(std::vector<int32_t> _v, int32_t xstart): start(xstart), v(_v) {}
     virtual ~posivector(){}
 
     bool operator < (const posivector &another) const {
       for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
+	if (v[i] < start && another.v[i] < start) continue;
 	if (v[i] < another.v[i]) return 1;
 	if (v[i] == another.v[i] && i==v.size()-1) return 1;
 	if (v[i] == another.v[i] && i==another.v.size()-1) return 0;
@@ -474,10 +476,9 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
     if (v.size() ==1) continue;
     if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
     if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
-    vv.emplace_back(v);
+    vv.emplace_back(v, par.xstart);
   }
 
-//  printf("vv num=%d\n", vv.size());
   std::sort(vv.begin(), vv.end());
 
   int32_t max(0);
