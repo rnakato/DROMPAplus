@@ -6,6 +6,7 @@
 - DROMPA+: withdraw CI, CG, TR, HEATMAP commands
 - DROMPA+: add --width_page and --width_draw options
 - DROMPA+: add --chipdrop option to visualize ChIPDrop data
+- DROMPA+: allow not to specify --input (-i) option.
 - add `tutorial` directory
 - modify help messages
 
