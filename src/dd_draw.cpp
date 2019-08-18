@@ -444,7 +444,6 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
   cr->stroke();
 
   cr->set_line_width(ywidth*0.8);
-//  cr->set_source_rgba(CLR_GREEN, 1);
   cr->set_source_rgba(color.r, color.g, color.b, 0.8);
   for (auto &posi: v) {
     if(posi >= par.xstart && posi <= par.xend) {
@@ -465,8 +464,8 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
   std::string chr(rmchr(chrname));
 
   /* frame */
-  cr->set_source_rgba(CLR_BLACK, 1);
-  cr->rectangle(par.xstart, par.xend, par.yaxis_now, boxheight);
+  cr->set_source_rgba(CLR_GRAY4, 1);
+  cr->rectangle(OFFSET_X, par.yaxis_now, (par.xend - par.xstart+1) * par.dot_per_bp, boxheight);
   cr->stroke();
 
   std::vector<posivector> vv;
@@ -503,8 +502,54 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
   return;
 }
 
+void PDFPage::DrawIdeogram(const DROMPA::Global &p)
+{
+  DEBUGprint("PDFPage::DrawIdeogram");
+  int32_t boxheight(BOXHEIGHT_IDEOGRAM);
+  int32_t on(0);
+
+  cr->set_line_width(1);
+  // frame
+  cr->set_source_rgba(CLR_BLACK, 1);
+  cr->rectangle(OFFSET_X, par.yaxis_now, (par.xend - par.xstart+1) * par.dot_per_bp, boxheight);
+  cr->stroke();
+
+  for (auto &x: p.anno.vcytoband) {
+    if (rmchr(chrname) != x.chr) continue;
+    //    x.print();
+    if(x.stain == "acen") cr->set_source_rgba(CLR_RED, 1);
+    else if(x.stain == "gneg") cr->set_source_rgba(CLR_GRAY0, 1);
+    else if(x.stain == "gpos25" || x.stain == "stalk") cr->set_source_rgba(CLR_GRAY, 1);
+    else if(x.stain == "gpos50") cr->set_source_rgba(CLR_GRAY2, 1);
+    else if(x.stain == "gpos75") cr->set_source_rgba(CLR_GRAY3, 1);
+    else if(x.stain == "gpos100" || x.stain == "gvar") cr->set_source_rgba(CLR_GRAY4, 1);
+    else { std::cout << "Warning: stain " << x.stain << " is not annotated." << std::endl; }
+
+    double s(OFFSET_X + x.start * par.dot_per_bp);
+    double len((x.end - x.start +1) * par.dot_per_bp);
+
+    cr->rectangle(s, par.yaxis_now, len, boxheight);
+    cr->fill();
+    cr->stroke();
+
+    cr->set_source_rgba(CLR_BLACK, 1);
+    double y;
+    if(on) y = par.yaxis_now + boxheight + 5;
+    else y = par.yaxis_now - 3;
+    showtext_cr(cr, s+1, y, x.name, 5);
+    if(on) on=0; else { ++on; }
+  }
+
+  par.yaxis_now += boxheight + MERGIN_BETWEEN_GRAPH_DATA;
+
+  return;
+}
+
+
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {
+  if (p.anno.showIdeogram()) DrawIdeogram(p);
+
   if (p.anno.GC.isOn()) StrokeGraph(GC);
   if (p.anno.GD.isOn()) StrokeGraph(GD);
 

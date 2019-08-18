@@ -1,7 +1,11 @@
 # Changelog
 
+## 1.3.0 (2019-08-18)
+- add "data" directory that contains genometable, mptable and ideograms
+- add --ideogram option
+
 ## 1.2.0 (2019-08-03)
-- Parse2wig+: modify --outputzero option from <int> to <bool>
+- Parse2wig+: modify --outputzero option from int to bool
 - Parse2wig+: add --verbose option. "*.ReadLengthDist.tsv" and "*.ReadCountDist.tsv" are output only when supplying --verbose option.
 - DROMPA+: withdraw CI, CG, TR, HEATMAP commands
 - DROMPA+: add --width_page and --width_draw options

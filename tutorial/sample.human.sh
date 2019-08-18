@@ -13,8 +13,8 @@ gunzip refFlat.txt.gz
 
 # parse2wig (make BigWig)
 ### When the current directory is DROMPAplus/scripts
-gt=../submodules/SSP/data/genometable/genometable.hg19.txt
-mptable=../submodules/SSP/data/mptable/mptable.UCSC.hg19.36mer.flen150.txt
+gt=../data/genometable/genometable.hg19.txt
+mptable=../data/mptable/mptable.UCSC.hg19.36mer.flen150.txt
 parse2wig+ -i wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam  -o H3K4me3  --gt $gt --mptable $mptable -n GR
 parse2wig+ -i wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam -o H3K27me3 --gt $gt --mptable $mptable -n GR
 parse2wig+ -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt --mptable $mptable -n GR

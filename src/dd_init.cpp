@@ -67,6 +67,7 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
 void Annotation::setOptsGV(MyOpt::Opts &allopts) {
   MyOpt::Opts opt("Genome view",100);
   opt.add_options()
+    ("ideogram", value<std::string>(), "Cytoband file for drawing ideogram")
     ("inter",  value<std::vector<std::string>>(), "<interaction file>,<label>: Interaction file and label (<label> can be omited)")
     ("chiadrop", value<std::string>(), "ChIADrop file (single-cell ChIA-PET)")
     ("mp",     value<std::string>(), "Mappability file")
@@ -133,6 +134,22 @@ void Annotation::setValuesGV(const Variables &values) {
 	if(v.size() >= 3) tool  = v[2];
 	vinterlist.emplace_back(InteractionSet(v[0], label, tool));
       }
+    }
+    if (values.count("ideogram")) {
+      std::ifstream in(getVal<std::string>(values, "ideogram"));
+      if(!in) {
+	std::cerr << "Error: ideogram file " << getVal<std::string>(values, "ideogram") << " does not exist." << std::endl;
+	std::exit(1);
+      }
+      while (!in.eof()) {
+	std::string lineStr;
+	getline(in, lineStr);
+	if(lineStr.empty() || lineStr[0] == '#') continue;
+	std::vector<std::string> v;
+	ParseLine(v, lineStr, '\t');
+	vcytoband.emplace_back(v);
+      }
+      isIdeogram = true;
     }
     if (values.count("chiadrop")) parse_ChIADropData(getVal<std::string>(values, "chiadrop"));
     if (values.count("mp")) mpfile = getVal<std::string>(values, "mp");

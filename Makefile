@@ -80,8 +80,8 @@ $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_command.hpp $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_profile.hpp
 $(OBJDIR)/dd_command.o: $(SRCDIR)/dd_command.hpp
 $(OBJDIR)/dd_classfunc_draw.o: $(SRCDIR)/dd_draw_environment_variable.hpp
-$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp src/dd_draw_dataframe.hpp
-$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp
+$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp src/dd_draw_dataframe.hpp $(SRCDIR)/color.hpp
+$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp $(SRCDIR)/color.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJDIR)/ReadBpStatus.o: $(SSPSRCDIR)/ReadBpStatus.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)

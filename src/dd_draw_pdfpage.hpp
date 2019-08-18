@@ -159,6 +159,7 @@ class PDFPage {
   void StrokeEachLayer(const DROMPA::Global &p);
   void StrokeReadLines(const DROMPA::Global &p);
   void StrokeGraph(const GraphData &graph);
+  void DrawIdeogram(const DROMPA::Global &p);
   void DrawGeneAnnotation(const DROMPA::Global &p);
   void strokeARS(const HashOfGeneDataMap &mp, const double ycenter);
   void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);

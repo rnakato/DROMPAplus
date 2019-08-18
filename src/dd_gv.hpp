@@ -221,6 +221,7 @@ namespace DROMPA {
   class Annotation {
     bool isUCSC;
     bool showars;
+    bool isIdeogram;
     bool isChIADrop;
 
     template <class T>
@@ -297,7 +298,7 @@ namespace DROMPA {
     std::string terfile;
     std::vector<vbed<bed12>> vbedlist;
     std::vector<InteractionSet> vinterlist;
-
+    std::vector<cytoband> vcytoband;
     std::unordered_map<std::string,
 		       std::unordered_map<std::string,
 					  std::vector<int32_t>>> mp_ChIADrop;
@@ -310,6 +311,7 @@ namespace DROMPA {
 
     Annotation():
       isUCSC(false), showars(false),
+      isIdeogram(false),
       isChIADrop(false),
       genefile(""), gftype(0),
       showtranscriptname(false),
@@ -345,6 +347,7 @@ namespace DROMPA {
     bool is_Anno_UCSC() const {return isUCSC; }
     bool isshowars() const { return showars; }
     bool existChIADrop() const { return isChIADrop; }
+    bool showIdeogram() const { return isIdeogram; }
   };
 
   class Profile {

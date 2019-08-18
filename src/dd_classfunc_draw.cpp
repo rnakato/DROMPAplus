@@ -31,6 +31,7 @@ int32_t DrawParam::getHeightAllSample(const Global &p, const std::vector<SampleP
   height += MERGIN_BETWEEN_DATA * (samplenum-1);
   if (showitag==2) height += getHeightDf() + MERGIN_BETWEEN_DATA;
 
+  if (p.anno.showIdeogram()) height += BOXHEIGHT_IDEOGRAM + MERGIN_BETWEEN_GRAPH_DATA;
   if (p.anno.GC.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
   if (p.anno.GD.isOn()) height += BOXHEIGHT_GRAPH + MERGIN_BETWEEN_GRAPH_DATA;
 
