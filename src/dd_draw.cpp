@@ -518,7 +518,7 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
   for (auto &x: p.anno.vcytoband) {
     if (rmchr(chrname) != x.chr) continue;
     //    x.print();
-    if (x.stain == "acen") cr->set_source_rgba(CLR_RED, 1);
+    if (x.stain == "acen") cr->set_source_rgba(CLR_SALMON, 1);
     else if (x.stain == "gneg") cr->set_source_rgba(CLR_GRAY0, 1);
     else if (x.stain == "gpos25" || x.stain == "stalk") cr->set_source_rgba(CLR_GRAY, 1);
     else if (x.stain == "gpos50") cr->set_source_rgba(CLR_GRAY2, 1);
@@ -537,8 +537,8 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
 	++acen_once;
       } else {
 	mytriangle(s,     par.yaxis_now + boxheight/2,
-		   s+len, par.yaxis_now,
-		   s+len, par.yaxis_now + boxheight);
+		   s+len+1, par.yaxis_now,
+		   s+len+1, par.yaxis_now + boxheight);
       }
     } else {
       cr->rectangle(s, par.yaxis_now, len, boxheight);
