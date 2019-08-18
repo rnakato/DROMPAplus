@@ -507,6 +507,7 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
   DEBUGprint("PDFPage::DrawIdeogram");
   int32_t boxheight(BOXHEIGHT_IDEOGRAM);
   int32_t on(0);
+  int32_t acen_once(0);
 
   cr->set_line_width(1);
   // frame
@@ -517,18 +518,31 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
   for (auto &x: p.anno.vcytoband) {
     if (rmchr(chrname) != x.chr) continue;
     //    x.print();
-    if(x.stain == "acen") cr->set_source_rgba(CLR_RED, 1);
-    else if(x.stain == "gneg") cr->set_source_rgba(CLR_GRAY0, 1);
-    else if(x.stain == "gpos25" || x.stain == "stalk") cr->set_source_rgba(CLR_GRAY, 1);
-    else if(x.stain == "gpos50") cr->set_source_rgba(CLR_GRAY2, 1);
-    else if(x.stain == "gpos75") cr->set_source_rgba(CLR_GRAY3, 1);
-    else if(x.stain == "gpos100" || x.stain == "gvar") cr->set_source_rgba(CLR_GRAY4, 1);
+    if (x.stain == "acen") cr->set_source_rgba(CLR_RED, 1);
+    else if (x.stain == "gneg") cr->set_source_rgba(CLR_GRAY0, 1);
+    else if (x.stain == "gpos25" || x.stain == "stalk") cr->set_source_rgba(CLR_GRAY, 1);
+    else if (x.stain == "gpos50") cr->set_source_rgba(CLR_GRAY2, 1);
+    else if (x.stain == "gpos75") cr->set_source_rgba(CLR_GRAY3, 1);
+    else if (x.stain == "gpos100" || x.stain == "gvar") cr->set_source_rgba(CLR_GRAY4, 1);
     else { std::cout << "Warning: stain " << x.stain << " is not annotated." << std::endl; }
 
     double s(OFFSET_X + x.start * par.dot_per_bp);
     double len((x.end - x.start +1) * par.dot_per_bp);
 
-    cr->rectangle(s, par.yaxis_now, len, boxheight);
+    if (x.stain == "acen") {
+      if(!acen_once) {
+	mytriangle(s,     par.yaxis_now,
+		   s,     par.yaxis_now + boxheight,
+		   s+len, par.yaxis_now + boxheight/2);
+	++acen_once;
+      } else {
+	mytriangle(s,     par.yaxis_now + boxheight/2,
+		   s+len, par.yaxis_now,
+		   s+len, par.yaxis_now + boxheight);
+      }
+    } else {
+      cr->rectangle(s, par.yaxis_now, len, boxheight);
+    }
     cr->fill();
     cr->stroke();
 

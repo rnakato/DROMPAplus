@@ -20,6 +20,12 @@
 #define rel_yline(cr, x1, y1, ylen) do{ \
     cr->move_to(x1, (int32_t)y1); \
     cr->line_to(x1, (int32_t)(y1+ylen)); } while(0)
+#define mytriangle(x1, y1, x2, y2, x3, y3) do{ \
+    cr->move_to(x1, y1);		       \
+    cr->rel_line_to((x2) - (x1), (y2) - (y1));	       \
+    cr->rel_line_to((x3) - (x2), (y3) - (y2));	       \
+    cr->rel_line_to((x1) - (x3), (y1) - (y3));	       \
+    cr->close_path(); } while(0)
 
 inline double CalcRatio(const double c, const double i, const double r)
 {
