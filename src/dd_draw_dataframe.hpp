@@ -42,7 +42,7 @@ class DataFrame {
 
     int32_t thin(std::min(par.width_per_line/(1000*binsize), 20));
 
-    double xcen(par.bp2xaxis(binsize/2)); // initial position
+    double xcen(BP2PIXEL(binsize/2)); // initial position
     if (thin > 1) cr->set_line_width(dot_per_bin*thin);
     else cr->set_line_width(dot_per_bin);
 
@@ -181,7 +181,7 @@ class ChIPDataFrame : public DataFrame {
     for (auto &bed: pair.first.getpeaksChr(chrname)) {
       if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
       cr->set_line_width(bed.length() * par.dot_per_bp);
-      double x(par.bp2xaxis(bed.summit - par.xstart));
+      double x(BP2PIXEL(bed.summit - par.xstart));
       rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
     }
     cr->stroke();

@@ -135,8 +135,8 @@ void PDFPage::StrokeWidthOfInteractionSite(const bed site, const double y)
 {
   cr->set_line_width(2);
   cr->set_source_rgba(CLR_DARKORANGE, 0.8);
-  double s = par.bp2xaxis(site.start - par.xstart);
-  double e = par.bp2xaxis(site.end - par.xstart);
+  double s = BP2PIXEL(site.start - par.xstart);
+  double e = BP2PIXEL(site.end - par.xstart);
   rel_xline(cr, s, y, e-s);
   cr->stroke();
 }
@@ -152,7 +152,7 @@ void PDFPage::drawArc_from_to(const Interaction &inter, const int32_t start, con
 
   cr->set_line_width(3);
   cr->scale(1, r);
-  cr->arc(par.bp2xaxis((start + end) /2), ytop/r, radius, 0, M_PI);
+  cr->arc(BP2PIXEL((start + end) /2), ytop/r, radius, 0, M_PI);
   cr->stroke();
   cr->scale(1, 1/r);
 
@@ -168,8 +168,8 @@ void PDFPage::drawArc_from_none(const Interaction &inter, const int32_t start, c
   double radius(height*3);
   double r(1/3.0);
 
-  double bp_s(par.bp2xaxis(start));
-  double bp_e(par.bp2xaxis(end));
+  double bp_s(BP2PIXEL(start));
+  double bp_e(BP2PIXEL(end));
   double bp_x(bp_s + radius);
   double bp_y(ytop/r);
 
@@ -191,8 +191,8 @@ void PDFPage::drawArc_none_to(const Interaction &inter, const int32_t start, con
   double radius(height*3);
   double r(1/3.0);
 
-  double bp_s(par.bp2xaxis(start));
-  double bp_e(par.bp2xaxis(end));
+  double bp_s(BP2PIXEL(start));
+  double bp_e(BP2PIXEL(end));
   double bp_x(bp_e - radius);
   double bp_y(ytop/r);
 
@@ -262,7 +262,7 @@ void PDFPage::stroke_xaxis(const double y)
 
   cr->set_source_rgba(CLR_BLACK, 1);
   for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-    x = par.bp2xaxis(i - par.xstart);
+    x = BP2PIXEL(i - par.xstart);
     if (!(i%interval_large)) {
       cr->set_line_width(1);
       rel_yline(cr, x, y-4, 8);
@@ -290,7 +290,7 @@ void PDFPage::StrokeGraph(const GraphData &graph)
   cr->set_line_width(0.6);
   cr->set_source_rgba(CLR_GREEN, 1);
   double xpre(OFFSET_X);
-  double xcen(par.bp2xaxis(0.5*graph.binsize));
+  double xcen(BP2PIXEL(0.5*graph.binsize));
   double ypre(ybottom - graph.getylen(s));
   for (int32_t i=s; i<e; ++i, xcen += diff) {
     double ycen(ybottom - graph.getylen(i));
@@ -312,7 +312,7 @@ void PDFPage::StrokeGraph(const GraphData &graph)
   rel_yline(cr, OFFSET_X, ytop, graph.boxheight);
   cr->stroke();
   cr->set_line_width(1.5);
-  rel_xline(cr, OFFSET_X, ybottom, (par.xend - par.xstart+1) * par.dot_per_bp);
+  rel_xline(cr, OFFSET_X, ybottom, par.getXaxisLen());
   cr->stroke();
 
   // y memory
@@ -363,7 +363,7 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
       }
     }
     if (par.xstart <= x.end && x.start <= par.xend) {
-      double x1 = par.bp2xaxis(x.start - par.xstart);
+      double x1 = BP2PIXEL(x.start - par.xstart);
       double len = (x.end - x.start) * par.dot_per_bp;
       rel_xline(cr, x1, ycenter, len);
       cr->stroke();
@@ -384,7 +384,7 @@ void PDFPage::stroke_xaxis_num(const double y, const int32_t fontsize)
   cr->set_source_rgba(CLR_BLACK, 1);
   for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
     std::string str;
-    x = par.bp2xaxis(i - par.xstart);
+    x = BP2PIXEL(i - par.xstart);
     if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M";
     else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k";
     else {
@@ -435,19 +435,19 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
 //  cr->set_source_rgba(CLR_GRAY2, 1);
   cr->set_source_rgba(color.r, color.g, color.b, 0.8);
   cr->set_line_width(ywidth*0.1);
-  rel_xline_double(cr, par.bp2xaxis(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
+  rel_xline_double(cr, BP2PIXEL(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
   cr->stroke();
 
   // barcode number
   cr->set_source_rgba(CLR_BLACK, 1);
-  showtext_cr(cr, par.bp2xaxis(e - par.xstart) + 0.5, par.yaxis_now + ywidth, nbarcode, 1.0);
+  showtext_cr(cr, BP2PIXEL(e - par.xstart) + 0.5, par.yaxis_now + ywidth, nbarcode, 1.0);
   cr->stroke();
 
   cr->set_line_width(ywidth*0.8);
   cr->set_source_rgba(color.r, color.g, color.b, 0.8);
   for (auto &posi: v) {
     if(posi >= par.xstart && posi <= par.xend) {
-      double x1 = par.bp2xaxis(posi - par.xstart);
+      double x1 = BP2PIXEL(posi - par.xstart);
       double len = std::max(1000 * par.dot_per_bp, 0.02);
       rel_xline_double(cr, x1, ycenter, len);
       cr->stroke();
@@ -465,7 +465,7 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 
   /* frame */
   cr->set_source_rgba(CLR_GRAY4, 1);
-  cr->rectangle(OFFSET_X, par.yaxis_now, (par.xend - par.xstart+1) * par.dot_per_bp, boxheight);
+  cr->rectangle(OFFSET_X, par.yaxis_now, par.getXaxisLen(), boxheight);
   cr->stroke();
 
   std::vector<posivector> vv;
@@ -512,7 +512,7 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
   cr->set_line_width(1);
   // frame
   cr->set_source_rgba(CLR_BLACK, 1);
-  cr->rectangle(OFFSET_X, par.yaxis_now, (par.xend - par.xstart+1) * par.dot_per_bp, boxheight);
+  cr->rectangle(OFFSET_X, par.yaxis_now, par.getXaxisLen(), boxheight);
   cr->stroke();
 
   for (auto &x: p.anno.vcytoband) {
@@ -526,8 +526,8 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
     else if (x.stain == "gpos100" || x.stain == "gvar") cr->set_source_rgba(CLR_GRAY4, 1);
     else { std::cout << "Warning: stain " << x.stain << " is not annotated." << std::endl; }
 
-    double s(OFFSET_X + x.start * par.dot_per_bp);
-    double len((x.end - x.start +1) * par.dot_per_bp);
+    double s(BP2PIXEL(x.start));
+    double len(par.getXaxisLen());
 
     if (x.stain == "acen") {
       if(!acen_once) {

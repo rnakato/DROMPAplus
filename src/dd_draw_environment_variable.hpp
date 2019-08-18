@@ -21,6 +21,9 @@ namespace {
 	 MERGIN_BETWEEN_GRAPH_DATA=15,
 	 MERGIN_BETWEEN_READ_BED=15
   };
+
+#define BP2PIXEL(bp) (bp) * par.dot_per_bp + OFFSET_X
+
 }
 
 #endif /* _DD_ENV_V_H_ */

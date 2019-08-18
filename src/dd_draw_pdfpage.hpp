@@ -57,7 +57,6 @@ public:
   }
 
   double getXaxisLen() const { return (xend - xstart) * dot_per_bp; }
-  double bp2xaxis(const int32_t bp) const { return bp * dot_per_bp + OFFSET_X; }
   double get_height_df() const { return height_df; }
 };
 

@@ -23,8 +23,8 @@ namespace {
 		const double ycenter, const int32_t ty,
 		int32_t &on_plus, int32_t &on_minus):
       dif(6), cnt(1),
-      x1(par.bp2xaxis(m.txStart - par.xstart +1)),
-      x2(par.bp2xaxis(m.txEnd   - par.xstart +1)),
+      x1(BP2PIXEL(m.txStart - par.xstart +1)),
+      x2(BP2PIXEL(m.txEnd   - par.xstart +1)),
       xcen((x1+x2)/2), xwid(x2 - x1),
       ylen(0), ybar(0)
     {
@@ -248,7 +248,7 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
       // Exon
       cr->set_line_width(6);
       for (int32_t i=0; i<m.exonCount; ++i) {
-	double x(par.bp2xaxis(m.exon[i].start - par.xstart +1));
+	double x(BP2PIXEL(m.exon[i].start - par.xstart +1));
 	double xlen(std::max(1.0,m.exon[i].getlen() * par.dot_per_bp));
 	if (x >= llimit && x <= rlimit) {
 	  rel_xline(cr, x, g.ybar, xlen);
@@ -285,7 +285,9 @@ void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
     else strokeGene(p, ycenter);
   }
   /* frame */
-  cr->rectangle(par.xstart, par.xend, ytop, boxheight);
+/*  cr->set_line_width(0.4);
+  cr->rectangle(OFFSET_X, ytop, par.getXaxisLen(), boxheight);
+  cr->stroke();*/
 
   /* genome line */
   cr->set_source_rgba(CLR_BLACK, 1);
