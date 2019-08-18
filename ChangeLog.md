@@ -5,6 +5,7 @@
 - Parse2wig+: add --verbose option. "*.ReadLengthDist.tsv" and "*.ReadCountDist.tsv" are output only when supplying --verbose option.
 - DROMPA+: withdraw CI, CG, TR, HEATMAP commands
 - DROMPA+: add --width_page and --width_draw options
+- DROMPA+: add --chipdrop option to visualize ChIPDrop data
 - add `tutorial` directory
 - modify help messages
 
