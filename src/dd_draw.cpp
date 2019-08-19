@@ -425,10 +425,10 @@ void PDFPage::StrokeReadLines(const DROMPA::Global &p)
   return;
 }
 
-void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const RGB &color)
+void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const double yaxis, const RGB &color)
 {
-  double ywidth = std::min(_ywidth, 2.0);
-  double ycenter(par.yaxis_now + ywidth/2);
+  double ywidth = std::min(_ywidth, 0.4);
+  double ycenter(yaxis + ywidth/2);
 
   int32_t s = std::max(v[0], par.xstart);
   int32_t e = std::min(v[v.size()-1], par.xend);
@@ -440,7 +440,7 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
 
   // barcode number
   cr->set_source_rgba(CLR_BLACK, 1);
-  showtext_cr(cr, BP2PIXEL(e - par.xstart) + 0.5, par.yaxis_now + ywidth, nbarcode, 1.0);
+  showtext_cr(cr, BP2PIXEL(e - par.xstart) + 0.5, yaxis + ywidth, nbarcode, 1.0);
   cr->stroke();
 
   cr->set_line_width(ywidth*0.8);
@@ -453,8 +453,6 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
       cr->stroke();
     }
   }
-
-  par.yaxis_now += ywidth;
 }
 
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
@@ -492,12 +490,17 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
   // colorbar
   showColorBar_ChIADrop(cr, 80, par.yaxis_now + 10, max);
 
+  double ywidth(boxheight/(double)num_line);
+
+  int32_t nbarcode(1);
   for (size_t i=0; i<vv.size(); ++i) {
     int32_t n(1);
     while(i < vv.size()-1 && vv[i].v == vv[i+1].v) { ++i; ++n; }
     RGB color(getInterRGB((n-1)/(double)max));
-    strokeChIADropBarcode(vv[i-n+1].v, std::to_string(n), boxheight/(double)num_line, color);
+    strokeChIADropBarcode(vv[i-n+1].v, std::to_string(n), ywidth, par.yaxis_now + (nbarcode++)*ywidth, color);
   }
+
+  par.yaxis_now += boxheight + MERGIN_BETWEEN_READ_BED;
 
   return;
 }
@@ -558,7 +561,6 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
 
   return;
 }
-
 
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {
