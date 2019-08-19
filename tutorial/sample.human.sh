@@ -1,3 +1,4 @@
+#!/bin/bash
 # DROMPAplus sample scripts
 # Visualization of H3K4me3, H3K27me3, H3K9me3 and Input samples for K562 cells from ENCODE project
 
