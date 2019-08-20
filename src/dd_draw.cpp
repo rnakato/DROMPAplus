@@ -466,7 +466,7 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
 
   // barcode number
   cr->set_source_rgba(CLR_BLACK, 1);
-  showtext_cr(cr, BP2PIXEL(s - par.xstart) - 1.5, yaxis + ywidth, nbarcode, ywidth);
+  showtext_cr(cr, BP2PIXEL(s - par.xstart) - 1.5, yaxis + ywidth, nbarcode, 1.0);
   cr->stroke();
 
   cr->set_line_width(ywidth*0.8);
@@ -479,15 +479,6 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
       cr->stroke();
     }
   }
-}
-
-bool ChIAequal(const std::vector<int32_t> &a, const std::vector<int32_t> &b) {
-  if(a.size() != b.size()) return 0;
-
-  for (size_t i=0; i<a.size(); ++i) {
-    if (a[i] != b[i]) return 0;
-  }
-  return 1;
 }
 
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
@@ -511,32 +502,37 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
     vChIA.emplace_back(v, par.xstart);
   }
 
-  std::cout << "size: " << vChIA.size() << std::endl;
-//  for (auto &x: vChIA) x.printvnum();
+#ifdef DEBUG
+  std::cout << "ChIA size: " << vChIA.size() << std::endl;
+  for (auto &x: vChIA) x.printvnum();
+#endif
 
   std::sort(vChIA.begin(), vChIA.end());
 
+#ifdef DEBUG
   printf("sortdone\n");
+#endif
 
   int32_t max(0);
   int32_t num_line(0);
   for (size_t i=0; i<vChIA.size(); ++i) {
     int32_t n(1);
-//    while(i < vChIA.size()-1 && ChIAequal(vChIA[i].v, vChIA[i+1].v)) { ++i; ++n; }
     while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
     max = std::max(max, n);
     ++num_line;
   }
+
+#ifdef DEBUG
   printf("num line %d\n", num_line);
+#endif
 
   showColorBar_ChIADrop(cr, 80, par.yaxis_now + 10, max);
 
-  double ywidth(boxheight/(double)num_line);
+  double ywidth = std::min(boxheight/(double)num_line, 2.0);
 
   int32_t nbarcode(1);
   for (size_t i=0; i<vChIA.size(); ++i) {
     int32_t n(1);
-//    while(i < vChIA.size()-1 && ChIAequal(vChIA[i].v, vChIA[i+1].v)) { ++i; ++n; }
     while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
     RGB color(getInterRGB((n-1)/(double)max));
     strokeChIADropBarcode(vChIA[i-n+1].v, std::to_string(n), ywidth, par.yaxis_now + (nbarcode++)*ywidth, color);
@@ -544,6 +540,7 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 
   par.yaxis_now += boxheight + MERGIN_BETWEEN_READ_BED;
 
+  DEBUGprint("StrokeChIADrop done.");
   return;
 }
 
