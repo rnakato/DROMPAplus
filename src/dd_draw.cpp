@@ -29,23 +29,49 @@ namespace {
     virtual ~posivector(){}
 
     bool operator < (const posivector &another) const {
-      for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
-	if (v[i] < start && another.v[i] < start) continue;
-	if (v[i] < another.v[i]) return 1;
-	if (v[i] == another.v[i] && i==v.size()-1) return 1;
-	if (v[i] == another.v[i] && i==another.v.size()-1) return 0;
-	if (v[i] > another.v[i]) return 0;
+      if (v[0] < start && another.v[0] < start) {
+	if (v[v.size()-1] < another.v[another.v.size()-1]) return 1;
+	else return 0;
       }
-      return 1;
+      if (v[0] < start ) return 1;
+      if (another.v[0] < start ) return 0;
+      if (v[0] < another.v[0]) return 1;
+      if (v[0] == another.v[0]) {
+	if (v[v.size()-1] < another.v[another.v.size()-1]) return 1;
+	else return 0;
+      }
+/*      printf("v: ");
+      for (auto &x: v) printf("%d ", x);
+      printf("\n");
+      for (auto &x: another.v) printf("%d ", x);
+      printf("\n");*/
+      return 0;
     };
-    bool operator == (const posivector &another) const {
+/*    bool operator < (const posivector &another) const {
+      for (size_t i=0; i<std::min(v.size(), another.v.size()); ++i) {
+	if ((v[i] < start && another.v[i] < start)
+	    || v[i] == another.v[i]) {
+	  if (v[v.size()-1] < another.v[another.v.size()-1]) return 1;
+	  else return 0;
+	}
+	if (v[i] < start ) return 1;
+	if (another.v[i] < start ) return 0;
+	if (v[i] < another.v[i]) return 1;
+      }
+      std::cout << v.size() << "ttt" << another.v.size() << std::endl;
+      return 0;
+    };*/
+    bool operator == (const posivector &another) {
       if(v.size() != another.v.size()) return 0;
 
       for (size_t i=0; i<v.size(); ++i) {
 	if (v[i] != another.v[i]) return 0;
       }
       return 1;
-    };
+    }
+    void printvnum() const {
+      printf("vnum: %lu\n", v.size());
+    }
   };
 
   void strokeGraph4EachWindow(const Cairo::RefPtr<Cairo::Context> cr,
@@ -440,7 +466,7 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
 
   // barcode number
   cr->set_source_rgba(CLR_BLACK, 1);
-  showtext_cr(cr, BP2PIXEL(e - par.xstart) + 0.5, yaxis + ywidth, nbarcode, 1.0);
+  showtext_cr(cr, BP2PIXEL(s - par.xstart) - 1.5, yaxis + ywidth, nbarcode, ywidth);
   cr->stroke();
 
   cr->set_line_width(ywidth*0.8);
@@ -455,6 +481,15 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
   }
 }
 
+bool ChIAequal(const std::vector<int32_t> &a, const std::vector<int32_t> &b) {
+  if(a.size() != b.size()) return 0;
+
+  for (size_t i=0; i<a.size(); ++i) {
+    if (a[i] != b[i]) return 0;
+  }
+  return 1;
+}
+
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 {
   DEBUGprint("StrokeChIADrop");
@@ -466,38 +501,45 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
   cr->rectangle(OFFSET_X, par.yaxis_now, par.getXaxisLen(), boxheight);
   cr->stroke();
 
-  std::vector<posivector> vv;
+  std::vector<posivector> vChIA;
 
   for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
     const std::vector<int32_t> &v = x.second;
     if (v.size() ==1) continue;
     if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
     if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
-    vv.emplace_back(v, par.xstart);
+    vChIA.emplace_back(v, par.xstart);
   }
 
-  std::sort(vv.begin(), vv.end());
+  std::cout << "size: " << vChIA.size() << std::endl;
+//  for (auto &x: vChIA) x.printvnum();
+
+  std::sort(vChIA.begin(), vChIA.end());
+
+  printf("sortdone\n");
 
   int32_t max(0);
   int32_t num_line(0);
-  for (size_t i=0; i<vv.size(); ++i) {
+  for (size_t i=0; i<vChIA.size(); ++i) {
     int32_t n(1);
-    while(i < vv.size()-1 && vv[i].v == vv[i+1].v) { ++i; ++n; }
+//    while(i < vChIA.size()-1 && ChIAequal(vChIA[i].v, vChIA[i+1].v)) { ++i; ++n; }
+    while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
     max = std::max(max, n);
     ++num_line;
   }
+  printf("num line %d\n", num_line);
 
-  // colorbar
   showColorBar_ChIADrop(cr, 80, par.yaxis_now + 10, max);
 
   double ywidth(boxheight/(double)num_line);
 
   int32_t nbarcode(1);
-  for (size_t i=0; i<vv.size(); ++i) {
+  for (size_t i=0; i<vChIA.size(); ++i) {
     int32_t n(1);
-    while(i < vv.size()-1 && vv[i].v == vv[i+1].v) { ++i; ++n; }
+//    while(i < vChIA.size()-1 && ChIAequal(vChIA[i].v, vChIA[i+1].v)) { ++i; ++n; }
+    while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
     RGB color(getInterRGB((n-1)/(double)max));
-    strokeChIADropBarcode(vv[i-n+1].v, std::to_string(n), ywidth, par.yaxis_now + (nbarcode++)*ywidth, color);
+    strokeChIADropBarcode(vChIA[i-n+1].v, std::to_string(n), ywidth, par.yaxis_now + (nbarcode++)*ywidth, color);
   }
 
   par.yaxis_now += boxheight + MERGIN_BETWEEN_READ_BED;
