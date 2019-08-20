@@ -139,50 +139,53 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 
   std::vector<posivector> vChIA;
 
-  for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
-    const std::vector<int32_t> &v = x.second;
-    if (v.size() ==1) continue;
-    if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
-    if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
-    vChIA.emplace_back(v, par.xstart);
-  }
+  // chia dataが0でない場合
+  if (p.anno.mp_ChIADrop.find(chr) != p.anno.mp_ChIADrop.end()) {
+
+    for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
+      const std::vector<int32_t> &v = x.second;
+      if (v.size() ==1) continue;
+      if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
+      if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
+      vChIA.emplace_back(v, par.xstart);
+    }
 
 #ifdef DEBUG
-  std::cout << "ChIA size: " << vChIA.size() << std::endl;
-  for (auto &x: vChIA) x.printvnum();
+    std::cout << "ChIA size: " << vChIA.size() << std::endl;
+    for (auto &x: vChIA) x.printvnum();
 #endif
 
-  std::sort(vChIA.begin(), vChIA.end());
+    std::sort(vChIA.begin(), vChIA.end());
 
 #ifdef DEBUG
-  printf("sortdone\n");
+    printf("sortdone\n");
 #endif
 
-  int32_t max(0);
-  int32_t num_line(0);
-  for (size_t i=0; i<vChIA.size(); ++i) {
-    int32_t n(1);
-    while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
-    max = std::max(max, n);
-    ++num_line;
-  }
+    int32_t max(0);
+    int32_t num_line(0);
+    for (size_t i=0; i<vChIA.size(); ++i) {
+      int32_t n(1);
+      while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
+      max = std::max(max, n);
+      ++num_line;
+    }
 
 #ifdef DEBUG
-  printf("num line %d\n", num_line);
+    printf("num line %d\n", num_line);
 #endif
 
-  showColorBar_ChIADrop(cr, 80, par.yaxis_now + 10, max);
+    showColorBar_ChIADrop(cr, 80, par.yaxis_now + 10, max);
 
-  double ywidth = std::min(boxheight/(double)num_line, 2.0);
+    double ywidth = std::min(boxheight/(double)num_line, 2.0);
 
-  int32_t nbarcode(1);
-  for (size_t i=0; i<vChIA.size(); ++i) {
-    int32_t n(1);
-    while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
-    RGB color(getInterRGB((n-1)/(double)max));
-    strokeChIADropBarcode(vChIA[i-n+1].v, std::to_string(n), ywidth, par.yaxis_now + (nbarcode++)*ywidth, color);
+    int32_t nbarcode(1);
+    for (size_t i=0; i<vChIA.size(); ++i) {
+      int32_t n(1);
+      while(i < vChIA.size()-1 && vChIA[i].v == vChIA[i+1].v) { ++i; ++n; }
+      RGB color(getInterRGB((n-1)/(double)max));
+      strokeChIADropBarcode(vChIA[i-n+1].v, std::to_string(n), ywidth, par.yaxis_now + (nbarcode++)*ywidth, color);
+    }
   }
-
   par.yaxis_now += boxheight + MERGIN_BETWEEN_READ_BED;
 
   DEBUGprint("StrokeChIADrop done.");
