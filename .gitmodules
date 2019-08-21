@@ -1,6 +1,3 @@
-[submodule "submodules/SSP"]
-	path = submodules/SSP
-	url = https://github.com/rnakato/SSP.git
 [submodule "submodules/cpdf"]
 	path = submodules/cpdf
 	url = https://github.com/coherentgraphics/cpdf-binaries.git
