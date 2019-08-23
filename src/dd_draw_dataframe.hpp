@@ -167,7 +167,7 @@ class ChIPDataFrame : public DataFrame {
 		const DROMPA::Global &p,
 		const SamplePairOverlayed &pair,
 		const DParam &refparam,
-		const std::string chrname):
+		const std::string &chrname):
     DataFrame(cr_, pair.first.label, pair.second.label,
 	      p.drawparam.scale_tag, pair.first.scale.tag, pair.second.scale.tag,
 	      refparam,
@@ -213,7 +213,7 @@ class InputDataFrame : public DataFrame {
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
 		 const SamplePairOverlayed &pair, const DParam &refparam,
-		 const std::string chrname):
+		 const std::string &chrname):
     DataFrame(cr_, "Input", "",
 	      p.drawparam.scale_tag, pair.first.scale.tag, pair.second.scale.tag,
 	      refparam, false, 0, chrname,
@@ -282,7 +282,8 @@ class RatioDataFrame : public DataFrame {
 
 public:
   RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
-		 const SamplePairOverlayed &pair, const DParam &refparam, const std::string chrname):
+		 const SamplePairOverlayed &pair, const DParam &refparam,
+		 const std::string &chrname):
     DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
 	      p.drawparam.scale_ratio, pair.first.scale.ratio, pair.second.scale.ratio,
 	      refparam, p.thre.sigtest, getEthre(p), chrname,
@@ -348,7 +349,7 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
     }
   }
 
-  void stroke_ymem(const int32_t nlayer)
+/*  void stroke_ymem(const int32_t nlayer)
   {
     cr->set_source_rgba(CLR_BLACK, 1);
 
@@ -363,8 +364,8 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
       showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), str, 9);
     }
     return;
-  }
-  void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
+  }*/
+/*  void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
 		     const int32_t i, const double xcen,
 		     const int32_t yaxis, const int32_t nlayer) {
     double value(getVal(pair, vReadArray, i) / scale);
@@ -383,11 +384,12 @@ class LogRatioDataFrame : public DataFrame { // log10(ratio)
       rel_yline(cr, xcen, yaxis-height_df/2, len);
       cr->stroke();
     }
-  }
+  }*/
 
  public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
-		    const SamplePairOverlayed &pair, const DParam &refparam, const std::string chrname):
+		    const SamplePairOverlayed &pair, const DParam &refparam,
+		    const std::string &chrname):
     DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
 	      p.drawparam.scale_ratio, pair.first.scale.ratio, pair.second.scale.ratio,
 	      refparam, p.thre.sigtest, getEthre(p), chrname,
@@ -442,7 +444,8 @@ class PinterDataFrame : public DataFrame {
 
 public:
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
-		  const SamplePairOverlayed &pair, const DParam &refparam, const std::string chrname):
+		  const SamplePairOverlayed &pair, const DParam &refparam,
+		  const std::string &chrname):
     DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
 	      p.drawparam.scale_pvalue, pair.first.scale.pvalue, pair.second.scale.pvalue,
 	      refparam, p.thre.sigtest, -log10(p.thre.pthre_inter), chrname,
@@ -497,7 +500,7 @@ class PenrichDataFrame : public DataFrame {
  public:
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
 		   const DROMPA::Global &p, const SamplePairOverlayed &pair,
-		   const DParam &refparam, const std::string chrname):
+		   const DParam &refparam, const std::string &chrname):
     DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
 	      p.drawparam.scale_pvalue, pair.first.scale.pvalue, pair.second.scale.pvalue,
 	      refparam, p.thre.sigtest, -log10(p.thre.pthre_enrich), chrname,

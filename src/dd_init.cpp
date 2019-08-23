@@ -167,7 +167,7 @@ void Annotation::setValuesGV(const Variables &values) {
 
 void Annotation::InitDumpPC(const Variables &values) const {
   std::vector<std::string> str_gftype = {"refFlat", "GTF", "SGD"};
-  std::vector<std::string> str_gtype = {"Transcript", "Gene"};
+//  std::vector<std::string> str_gtype = {"Transcript", "Gene"};
   DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
   std::cout << boost::format("\nAnnotations:\n");
   if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype];
@@ -278,7 +278,7 @@ void Threshold::setValues(const Variables &values) {
 }
 
 void Threshold::InitDump() const {
-  std::vector<std::string> str_bool = {"OFF", "ON"};
+//  std::vector<std::string> str_bool = {"OFF", "ON"};
   DEBUGprint("INITDUMP:DrompaCommand::THRE");
 
   //  std::cout << boost::format("\nPeak calling by DROMPA+: %1%\n") % str_bool[sigtest];
@@ -331,7 +331,7 @@ void DrawRegion::setValues(const Variables &values) {
 }
 
 void DrawRegion::InitDump(const Variables &values) const {
-  std::vector<std::string> str_bool = {"OFF", "ON"};
+//  std::vector<std::string> str_bool = {"OFF", "ON"};
 
   DEBUGprint("INITDUMP:DrompaCommand::DRAWREGION");
   printOpt<std::string>(values, "region",    "   Region file");
@@ -551,7 +551,7 @@ void Global::InitDumpNorm() const {
 }
 
 void Global::InitDumpOther() const {
-  std::vector<std::string> str_bool = {"OFF", "ON"};
+//  std::vector<std::string> str_bool = {"OFF", "ON"};
   std::vector<std::string> str_format = {"PDF", "PNG"};
 
   DEBUGprint("INITDUMP:DrompaCommand::OTHER");

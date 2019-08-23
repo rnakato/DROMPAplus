@@ -82,7 +82,7 @@ namespace {
   }
 }
 
-void PDFPage::StrokeWidthOfInteractionSite(const bed site, const double y)
+void PDFPage::StrokeWidthOfInteractionSite(const bed &site, const double y)
 {
   cr->set_line_width(2);
   cr->set_source_rgba(CLR_DARKORANGE, 0.8);
@@ -207,13 +207,12 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
 
 void PDFPage::stroke_xaxis(const double y)
 {
-  double x;
   int32_t interval_large(setInterval());
   int32_t interval(interval_large/10);
 
   cr->set_source_rgba(CLR_BLACK, 1);
   for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
-    x = BP2PIXEL(i - par.xstart);
+    double x(BP2PIXEL(i - par.xstart));
     if (!(i%interval_large)) {
       cr->set_line_width(1);
       rel_yline(cr, x, y-4, 8);
@@ -329,13 +328,12 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
 void PDFPage::stroke_xaxis_num(const double y, const int32_t fontsize)
 {
   int32_t mega, kilo;
-  double x;
   int32_t interval(setInterval());
 
   cr->set_source_rgba(CLR_BLACK, 1);
   for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
     std::string str;
-    x = BP2PIXEL(i - par.xstart);
+    double x(BP2PIXEL(i - par.xstart));
     if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M";
     else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k";
     else {

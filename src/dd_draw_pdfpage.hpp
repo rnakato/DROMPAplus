@@ -39,7 +39,7 @@ public:
   double alpha;
 
   DParam(const int32_t s, const int32_t e, const DROMPA::Global &p):
-    start(s), end(e),
+    pstart(0), pend(0), start(s), end(e),
     num_line(p.drawparam.getNumLine(start, end)),
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
@@ -72,7 +72,7 @@ public:
   double mmin;
   double mmax;
   double mwid;
-  GraphData(){}
+  GraphData(): binsize(0), memnum(0), boxheight(0), mmin(0), mmax(0), mwid(0){}
 
   void setValue(const DROMPA::Annotation::GraphDataFileName &g,
 		const std::string &chr,
@@ -204,7 +204,7 @@ class PDFPage {
   void set_xstart_xend(const int32_t i) { par.set_xstart_xend(i); }
   void stroke_xaxis(const double y);
   void stroke_xaxis_num(const double y, const int32_t fontsize);
-  void StrokeWidthOfInteractionSite(const bed site, const double y);
+  void StrokeWidthOfInteractionSite(const bed &site, const double y);
   void drawArc_from_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
   void drawArc_from_none(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
   void drawArc_none_to(const Interaction &inter, const int32_t start, const int32_t end, const int32_t ref_height, const double ref_ytop);
