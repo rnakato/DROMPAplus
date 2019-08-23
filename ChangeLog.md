@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1 (2019-08-22)
+- Update submodule SSP
+
 ## 1.3.0 (2019-08-18)
 - add "data" directory that contains genometable, mptable and ideograms
 - add --ideogram option
