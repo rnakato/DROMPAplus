@@ -70,6 +70,7 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts) {
     ("ideogram", value<std::string>(), "Cytoband file for drawing ideogram")
     ("inter",  value<std::vector<std::string>>(), "<interaction file>,<label>: Interaction file and label (<label> can be omited)")
     ("chiadrop", value<std::string>(), "ChIADrop file (single-cell ChIA-PET)")
+    ("chia_distance_thre", value<int32_t>()->default_value(100000), "(with --chiadrip) max distance of neighboring reads in each GEM")
     ("mp",     value<std::string>(), "Mappability file")
     ("mpthre", value<double>()->default_value(0.3), "Low mappability threshold")
     ("gap",    value<std::string>(), "Specify gapped regions to be shaded")
@@ -152,6 +153,8 @@ void Annotation::setValuesGV(const Variables &values) {
       isIdeogram = true;
     }
     if (values.count("chiadrop")) parse_ChIADropData(getVal<std::string>(values, "chiadrop"));
+    chia_distance_thre = getVal<int32_t>(values, "chia_distance_thre");
+
     if (values.count("mp")) mpfile = getVal<std::string>(values, "mp");
     mpthre = getVal<double>(values, "mpthre");
     if (values.count("gap")) gapfile = getVal<std::string>(values, "gap");
@@ -189,6 +192,10 @@ void Annotation::InitDumpGV(const Variables &values) const {
   if (mpfile != "") {
     std::cout << boost::format("Mappability file directory: %1%\n") % mpfile;
     std::cout << boost::format("\tLow mappablitiy threshold: %1$2f\n") % mpthre;
+  }
+  if (isChIADrop) {
+    std::cout << boost::format("ChIA-Drop file: %1%\n") % getVal<std::string>(values, "chiadrop");
+    std::cout << boost::format("\tMax distance threshold: %1%\n") % chia_distance_thre;
   }
   printOpt<std::string>(values, "gc", "   GCcontents file");
   printOpt<std::string>(values, "gd", "   Gene density file");

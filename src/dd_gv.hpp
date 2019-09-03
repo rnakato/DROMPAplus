@@ -302,6 +302,7 @@ namespace DROMPA {
     std::unordered_map<std::string,
 		       std::unordered_map<std::string,
 					  std::vector<int32_t>>> mp_ChIADrop;
+    int32_t chia_distance_thre;
     std::string repeatfile;
     std::string mpfile;
     double mpthre;
@@ -317,6 +318,7 @@ namespace DROMPA {
       showtranscriptname(false),
       arsfile(""),
       terfile(""),
+      chia_distance_thre(100000),
       repeatfile(""),
       mpfile(""), mpthre(0),
       gapfile("")

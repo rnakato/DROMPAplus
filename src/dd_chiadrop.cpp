@@ -12,7 +12,7 @@ namespace {
     int32_t start;
   public:
     std::vector<int32_t> v;
-    posivector(std::vector<int32_t> _v, int32_t xstart): start(xstart), v(_v) {}
+    posivector(std::vector<int32_t> _v, int32_t start): start(start), v(_v) {}
     virtual ~posivector(){}
 
     bool operator < (const posivector &another) const {
@@ -126,6 +126,32 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
   }
 }
 
+void splitbarcode(const std::vector<int32_t> &v,
+		  std::vector<std::vector<int32_t>> &vv,
+		  int32_t distance_thre)
+{
+  for (size_t i=1; i<v.size(); ++i) {
+    if (v[i] - v[i-1] > distance_thre) {
+      std::vector<int> one(v.begin(), v.begin() + i);
+      std::vector<int> rest(v.begin() + i, v.end());
+      vv.emplace_back(one);
+      splitbarcode(rest, vv, distance_thre);
+      return;
+    }
+  }
+  vv.emplace_back(v);
+  return;
+}
+
+void add_barcode(std::vector<posivector> &vChIA, const std::vector<int32_t> &v, int32_t start, int32_t end)
+{
+  if (v.size() ==1) return;
+  if (v[v.size()-1] < start || v[0] > end) return;
+  if (v[0] < start && v[v.size()-1] > end) return;
+
+  vChIA.emplace_back(v, start);
+}
+
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 {
   DEBUGprint("StrokeChIADrop");
@@ -141,13 +167,34 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 
   // chia dataが0でない場合
   if (p.anno.mp_ChIADrop.find(chr) != p.anno.mp_ChIADrop.end()) {
-
     for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
       const std::vector<int32_t> &v = x.second;
+//      std::vector<int32_t> v{100, 200, 300, 100000, 300000, 400000, 450000, 700000, 10000000};
+#ifdef DEBUG
+//      printf("vector:  ");
+     // for (auto &y: v) {
+//	std::cout << y << " ";
+    //  }
+  //    printf("\n");
+#endif
       if (v.size() ==1) continue;
       if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
       if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
-      vChIA.emplace_back(v, par.xstart);
+
+      std::vector<std::vector<int32_t>> vv;
+      splitbarcode(v, vv, p.anno.chia_distance_thre);
+#ifdef DEBUG
+      for (auto &x: vv) {
+	printf("xxx:  ");
+	for (auto &y:x) {
+	  std::cout << y << " ";
+	}
+	printf("\n");
+      }
+#endif
+      for (auto &x: vv) {
+	add_barcode(vChIA, x, par.xstart, par.xend);
+      }
     }
 
 #ifdef DEBUG
