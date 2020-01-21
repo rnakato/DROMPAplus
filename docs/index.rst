@@ -29,7 +29,7 @@ Contents:
    content/*
 
 
-Citations:
+Citation:
 ---------
 Please cite DROMPAplus as follows:
 
