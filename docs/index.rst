@@ -33,7 +33,7 @@ Citation:
 ---------
 Please cite DROMPAplus as follows:
 
-* Nakato R, Shirahige K, Methods for ChIP-seq analysis: A practical workflow and advanced applications, *in prep*.
+* Nakato R and Sakata T, Methods for ChIP-seq analysis: A practical workflow and advanced applications, *in prep*.
 
 Contact:
 ---------
