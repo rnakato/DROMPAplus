@@ -31,8 +31,9 @@ Contents:
 
 Citations:
 ---------
+Please cite DROMPAplus as follows:
+
 * Nakato R, Shirahige K, Methods for ChIP-seq analysis: A practical workflow and advanced applications, *in prep*.
-* Nakato R, Shirahige K, Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, Methods in Molecular Biology, 1672, 631-643, 2018.
 
 Contact:
 ---------
