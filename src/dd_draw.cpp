@@ -167,6 +167,7 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
   double ycenter(par.yaxis_now + boxheight/2);
 
   // colorbar
+  std::cout << "\n\n\n\n"<< vinter.getmaxval() << "\n\n\n\n" << std::endl;
   showColorBar(cr, 70, ycenter-2, vinter.getmaxval());
 
   // label
