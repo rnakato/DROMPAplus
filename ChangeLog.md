@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.3.2 (2020-02-06)
+## 1.3.2 (2020-02-14)
 - Bug fix in --inter for Mango file
+- Bug fix in --ideogram
 
 ## 1.3.1 (2019-08-22)
 - Update submodule SSP

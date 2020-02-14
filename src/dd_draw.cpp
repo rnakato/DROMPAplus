@@ -399,7 +399,7 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
     else { std::cout << "Warning: stain " << x.stain << " is not annotated." << std::endl; }
 
     double s(BP2PIXEL(x.start));
-    double len(par.getXaxisLen());
+    double len(x.getlen() * par.dot_per_bp);
 
     if (x.stain == "acen") {
       if(!acen_once) {
@@ -425,6 +425,9 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
     showtext_cr(cr, s+1, y, x.name, 5);
     if(on) on=0; else { ++on; }
   }
+
+  // label
+  showtext_cr(cr, 90, par.yaxis_now + MERGIN_BETWEEN_GRAPH_DATA/2, "Ideogram", 13);
 
   par.yaxis_now += boxheight + MERGIN_BETWEEN_GRAPH_DATA;
 
