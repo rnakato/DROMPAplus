@@ -1,8 +1,0 @@
-DROMPA+: gene profile, heatmap
-====================================
-
-PROFILE command requires R.
-
-
-
-the genes which are <1kbp long are ignored.

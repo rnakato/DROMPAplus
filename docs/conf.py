@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'DROMPAplus'
-copyright = '2017, Ryuichiro Nakato'
+copyright = '2017-2020, Ryuichiro Nakato'
 author = 'Ryuichiro Nakato'
 
 # The version info for the project you're documenting, acts as replacement for

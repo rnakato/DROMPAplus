@@ -24,7 +24,9 @@ Contents:
    :glob:
    :maxdepth: 1
 
-   content/*
+   content/Install
+   content/parse2wig
+   content/drompa
 
 
 Citation:
