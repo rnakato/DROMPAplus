@@ -20,14 +20,14 @@ DROMPAplus requires the following programs and libraries:
 
 and also contains two submodules:
 
-* SSP (https://github.com/rnakato/SSP)
-* Coherent PDF (http://community.coherentpdf.com/)
+* [SSP](https://github.com/rnakato/SSP)
+* [Coherent PDF](http://community.coherentpdf.com/)
 
 # 3. Install
 
 ### 3.1. Docker image
 
-We recommend to use the latest Docker image of DROMPAplus from DockerHub using:
+We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https://hub.docker.com/r/rnakato/ssp_drompa) using:
 
     docker pull rnakato/ssp_drompa
     docker run -it --rm rnakato/ssp_drompa drompa+
