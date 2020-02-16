@@ -40,12 +40,12 @@ For Singularity:
 ### 3.2. Building from source
 
 #### 3.2.1. Install required libraries
-for Ubuntu:
+For Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
     libgsl-dev libz-dev samtools r-base
 
-for CentOS:
+For CentOS:
 
     sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
 
