@@ -1,7 +1,13 @@
 # DROMPAplus
 
 # 1. Overview
-DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a program for user-friendly and flexible ChIP-seq pipelining. DROMPA can be used for quality check, PCRbias filtering, normalization, peak calling, visualization and other multiple analyses of ChIP-seq data. DROMPA is specially designed so that it is easy to handle, and for users without a strong bioinformatics background.
+DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a ChIP-seq pipeline tool that meets various needs, including quality check, analysis, and visualization of multiple ChIP samples.
+DROMPAplus is written in C++ and has many valuable features:
+* accept various map file formats including CRAM and wigfile (Wig, bedGraph and bigWig)
+* ability to visualize two samples in one line, which delineates the co-occurrence and exclusivity of read enrichment
+* highly customizable for track heights, axis limits, and display features
+* output the visualization in conventional PDF format, which is preferable for many users, especially when sharing results (e.g., on a cloud storage)
+
 
 # 2. Install
 DROMPAplus is written in C++ and requires the following programs and libraries:
@@ -10,7 +16,7 @@ DROMPAplus is written in C++ and requires the following programs and libraries:
 * [GTK library](http://www.gtk.org/)
 * [GNU Scientific Library](http://www.gnu.org/software/gsl/)
 * [zlib](http://www.zlib.net/)
-* [SAMtools](http://samtools.sourceforge.net/) (for BAM formatted input)
+* [SAMtools](http://samtools.sourceforge.net/) (for BAM/CRAM formatted input)
 * [R](http://www.r-project.org/) (for PROFILE command)
 
 #### 2.1. Install required libraries
