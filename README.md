@@ -27,7 +27,7 @@ and also contains two submodules:
 
 ### 3.1. Docker image
 
-We recommend to use a Docker image of the latest version from DockerHub using:
+We recommend to use the latest Docker image of DROMPAplus from DockerHub using:
 
     docker pull rnakato/ssp_drompa
 
