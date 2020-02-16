@@ -57,11 +57,13 @@ For CentOS:
 If you get an installation error, make sure that all required libraries are successfully installed.
 
 #### 3.2.3. Add the PATH environment variable
-For example, if you downloaded DROMPA+ into $HOME directory, type:
+For example, if you downloaded DROMPAplus into $HOME directory, type:
 
     export PATH = $PATH:$HOME/DROMPAplus/bin
     export PATH = $PATH:$HOME/DROMPAplus/otherbins
     export PATH = $PATH:$HOME/DROMPAplus/submodules/cpdf/Linux-Intel-64bit
+
+Add these lines to ~/.bashrc to permanently set PATH.
 
 # 4. Usage
  See http://drompaplus.readthedocs.io/ for detail.
