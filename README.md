@@ -42,7 +42,6 @@ for Ubuntu:
 for CentOS:
 
     sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
-and install samtools from [the website](http://samtools.sourceforge.net/).
 
 #### 3.2.2. Install DROMPAplus
     git clone --recursive https://github.com/rnakato/DROMPAplus
