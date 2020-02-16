@@ -2,9 +2,7 @@
 DROMPAplus: a pipeline tool for ChIP-seq analysis
 =====================================================
 
-DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a program for user-friendly and flexible ChIP-seq pipelining.
-DROMPA can be used for quality check, PCR-bias filtering, normalization, peak calling, visualization and other multiple analyses of ChIP-seq data. DROMPA is specially designed so that it is easy to handle, and for users without a strong
-bioinformatics background.
+DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a ChIP-seq pipeline tool that meets various needs, including quality check, analysis, and visualization of multiple ChIP samples.
 
 The main features of DROMPAplus are:
 
@@ -31,9 +29,8 @@ Contents:
 
 Citation:
 ---------
-Please cite DROMPAplus as follows:
 
-* Nakato R and Sakata T, Methods for ChIP-seq analysis: A practical workflow and advanced applications, *in prep*.
+* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *submitted*.
 
 Contact:
 ---------
