@@ -8,8 +8,7 @@ DROMPAplus is written in C++ and has many valuable features:
 * highly customizable for track heights, axis limits, and display features
 * output the visualization in conventional PDF format, which is preferable for many users, especially when sharing results (e.g., on a cloud storage)
 
-
-# 2. Install
+# 2. Requirements
 DROMPAplus is written in C++ and requires the following programs and libraries:
 * [Boost C++ library](http://www.boost.org/)
 * [Cairo libraries](http://www.cairographics.org/)
@@ -17,9 +16,17 @@ DROMPAplus is written in C++ and requires the following programs and libraries:
 * [GNU Scientific Library](http://www.gnu.org/software/gsl/)
 * [zlib](http://www.zlib.net/)
 * [SAMtools](http://samtools.sourceforge.net/) (for BAM/CRAM formatted input)
-* [R](http://www.r-project.org/) (for PROFILE command)
 
-#### 2.1. Install required libraries
+DROMPAplus also contains two submodules:
+
+* SSP (https://github.com/rnakato/SSP)
+* Coherent PDF (http://community.coherentpdf.com/)
+
+# 3. Install
+
+#### 3.1. Binary Releases
+
+#### 3.2. Install required libraries
 for Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
@@ -37,11 +44,7 @@ and install samtools from [the website](http://samtools.sourceforge.net/).
 
 If you get an installation error, make sure that all required libraries are installed.
 
-#### 2.3 Submodules
-DROMPAplus contains submodules in 'submodules' directory as below:
 
-* SSP (https://github.com/rnakato/SSP)
-* Coherent PDF (http://community.coherentpdf.com/)
 
 #### 2.3. Add the PATH environment variable
 For example, if you downloaded DROMPA+ into the $HOME/my_chipseq_exp directory, type:
@@ -55,7 +58,7 @@ For example, if you downloaded DROMPA+ into the $HOME/my_chipseq_exp directory, 
 
 # 4. Reference
 For DROMPAplus:
-* Nakato R., Sakata T. Methods for ChIP-seq analysis: A practical workflow and advanced applications, submitted.
+* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, ***submitted***.
 
-For DROMPA
-* Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, Methods in Molecular Biology, 2018.
+For DROMPA:
+* Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, ***Methods in Molecular Biology***, 2018.
