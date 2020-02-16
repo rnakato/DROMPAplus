@@ -68,7 +68,7 @@ For example, if you downloaded DROMPA+ into $HOME directory, type:
 
 # 5. Reference
 For DROMPAplus:
-* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, ***submitted***.
+* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *submitted*.
 
 For DROMPA:
-* Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, ***Methods in Molecular Biology***, 2018.
+* Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, *Methods in Molecular Biology*, 2018.
