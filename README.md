@@ -10,7 +10,7 @@ DROMPAplus is written in C++ and has many valuable features:
 * output the visualization in conventional PDF format, which is preferable for many users, especially when sharing results (e.g., on a cloud storage)
 
 # 2. Requirements
-DROMPAplus is written in C++ and requires the following programs and libraries:
+DROMPAplus requires the following programs and libraries:
 * [Boost C++ library](http://www.boost.org/)
 * [Cairo libraries](http://www.cairographics.org/)
 * [GTK library](http://www.gtk.org/)
