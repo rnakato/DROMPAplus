@@ -54,4 +54,8 @@ For example, if you downloaded DROMPA+ into the $HOME/my_chipseq_exp directory, 
  See http://drompaplus.readthedocs.io/ for detail.
 
 # 4. Reference
-1. Nakato R., Sakata T. Methods for ChIP-seq analysis: A practical workflow and advanced applications, submitted.
+For DROMPAplus:
+* Nakato R., Sakata T. Methods for ChIP-seq analysis: A practical workflow and advanced applications, submitted.
+
+For DROMPA
+* Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, Methods in Molecular Biology, 2018.
