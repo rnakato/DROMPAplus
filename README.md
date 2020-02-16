@@ -48,14 +48,14 @@ for CentOS:
     cd DROMPAplus
     make
 
-If you get an installation error, make sure that all required libraries are installed.
+If you get an installation error, make sure that all required libraries are successfully installed.
 
 #### 3.2.3. Add the PATH environment variable
-For example, if you downloaded DROMPA+ into the $HOME/my_chipseq_exp directory, type:
+For example, if you downloaded DROMPA+ into $HOME directory, type:
 
-    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/bin
-    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/otherbins
-    export PATH = $PATH:$HOME/my_chipseq_exp/DROMPAplus/submodules/cpdf/Linux-Intel-64bit
+    export PATH = $PATH:$HOME/DROMPAplus/bin
+    export PATH = $PATH:$HOME/DROMPAplus/otherbins
+    export PATH = $PATH:$HOME/DROMPAplus/submodules/cpdf/Linux-Intel-64bit
 
 # 4. Usage
  See http://drompaplus.readthedocs.io/ for detail.
