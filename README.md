@@ -54,6 +54,4 @@ For example, if you downloaded DROMPA+ into the $HOME/my_chipseq_exp directory, 
  See http://drompaplus.readthedocs.io/ for detail.
 
 # 4. Reference
-1. Nakato R., Shirahige K. Recent advances in ChIP-seq analysis: from quality management to whole-genome annotation, Briefings in Bioinformatics, 2016.
-
-2. Nakato, R., Itoh T. and Shirahige K.: DROMPA: easy-to-handle peak calling and visualization software for the computational analysis and validation of ChIP-seq data, Genes to Cells, vol.18, issue 7, 2013.
+1. Nakato R., Sakata T. Methods for ChIP-seq analysis: A practical workflow and advanced applications, submitted.
