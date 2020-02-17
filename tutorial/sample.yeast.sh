@@ -2,9 +2,27 @@
 # DROMPAplus sample scripts
 # Visualization of H3K4me3, H3K27me3, H3K9me3 and Input samples for K562 cells from ENCODE project
 
+gt=../data/genometable/genometable.sacCer3.txt
+dir=parse2wigdir+
+drompa+ GV \
+	-i $dir/H3K4me3.100000.bw,$dir/Input.100000.bw,H3K4me3   \
+	-i $dir/H3K27me3.100000.bw,$dir/Input.100000.bw,H3K27me3 \
+	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
+	-o drompaGV-K562 --gt $gt
+
+drompa+ GV \
+	-i $dir/H3K4me3.100000.bw,$dir/Input.100000.bw,H3K4me3   \
+	-i $dir/H3K27me3.100000.bw,$dir/Input.100000.bw,H3K27me3 \
+	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
+	-o drompaGV-K562_2 --gt $gt \
+	--GC GCcontents --gcsize 500000 \
+	--GD genedensity --gdsize 500000 \
+	--ideogram ../data/ideogram/hg19.tsv
+ exit
+
 # Get BAM files
 wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam
-wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam
+wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k27me3StdAlngtRep1.bam
 wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam
 wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562InputStdAlnRep1.bam
 
@@ -49,21 +67,7 @@ parse2wig+ -i wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam -o H3K27me3 --gt $gt -
 parse2wig+ -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt --mptable $mptable -n GR --binsize 100000
 parse2wig+ -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt --mptable $mptable -n GR --binsize 100000
 
-dir=parse2wigdir+
-drompa+ GV \
-	-i $dir/H3K4me3.100000.bw,$dir/Input.100000.bw,H3K4me3   \
-	-i $dir/H3K27me3.100000.bw,$dir/Input.100000.bw,H3K27me3 \
-	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
-	-o drompaGV-K562 --gt $gt
 
-drompa+ GV \
-	-i $dir/H3K4me3.100000.bw,$dir/Input.100000.bw,H3K4me3   \
-	-i $dir/H3K27me3.100000.bw,$dir/Input.100000.bw,H3K27me3 \
-	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
-	-o drompaGV-K562_2 --gt $gt \
-	--GC GCcontents --gcsize 500000 \
-	--GD genedensity --gdsize 500000 \
-	--ideogram ../data/ideogram/hg19.tsv
 
 # PROFILE
 drompa+ PROFILE \
