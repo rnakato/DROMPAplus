@@ -21,7 +21,6 @@ parse2wig+ -i wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam -o H3K27me3 --gt $gt -
 parse2wig+ -i wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam -o H3K36me3 --gt $gt --mptable $mptable -n GR
 parse2wig+ -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt --mptable $mptable -n GR
 
-
 # Make pdf
 dir=parse2wigdir+
 drompa+ PC_SHARP \
@@ -40,6 +39,19 @@ drompa+ PC_SHARP \
 	-o drompa-K562-overlay -g refFlat.txt --gt $gt \
 	--lpp 3 --chr 1 \
 	--alpha 0.6 \
+
+# with chromatin loops
+
+gt=../data/genometable/genometable.hg19.txt
+dir=parse2wigdir+
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa_loops -g refFlat.txt --gt $gt \
+	--inter interactions.all.mango,ChIA-PET,mango \
+	--inter HICCUPS_looplist.txt,Hi-C,hiccups \
+	--lpp 2 --chr 20 --ls 5000
 
 # GV
 gt=../data/genometable/genometable.hg19.txt
