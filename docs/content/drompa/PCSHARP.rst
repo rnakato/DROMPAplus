@@ -5,11 +5,11 @@ drompa+ can take multiple ChIP-input pairs as input. Each pair should be specifi
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
-  $         -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
-  $         -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
-  $         -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-  $         -o drompa1 -g refFlat.txt --gt genometable.txt \
-  $         --lpp 2 --showitag 2 --scale_tag 30 --chr 1
+           -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+           -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+           -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+           -o drompa1 -g refFlat.txt --gt genometable.txt \
+           --lpp 2 --showitag 2 --scale_tag 30 --chr 1
 
 generates the PDF files ``drompa1.pdf`` for three ChIP samples (ChIP1, 2, 3 and 4) using the same Input sample (Input), as shown below.
 
@@ -32,13 +32,13 @@ To display the p-value and ChIP/input enrichment lines, supply ``--showratio 1``
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
-  $         -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
-  $         -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
-  $         -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-  $         -o drompa2 -g refFlat.txt --gt genometable.txt \
-  $         --showratio 1 --showpinter 1 --showpenrich 1 \
-  $         --scale_ratio 3 --scale_pvalue 3 \
-  $         --chr 1
+           -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+           -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+           -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+           -o drompa2 -g refFlat.txt --gt genometable.txt \
+           --showratio 1 --showpinter 1 --showpenrich 1 \
+           --scale_ratio 3 --scale_pvalue 3 \
+           --chr 1
 
 where ``--scale_ratio`` and ``--scale_pvalue`` options change the maximum values for the y axis of the corresponding lines.
 
@@ -56,14 +56,14 @@ To focus on specific regions (in this example, the HOX A cluster region), supply
   chr7    27100000        27280000
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
-  $         -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
-  $         -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
-  $         -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-  $         -o drompa_hoxa -g refFlat.txt --gt genometable.txt \
-  $         --showitag 2 --scale_tag 20 -r HOXA.txt
+           -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+           -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+           -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+           -o drompa_hoxa -g refFlat.txt --gt genometable.txt \
+           --showitag 2 --scale_tag 20 -r HOXA.txt
 
 .. image:: img/drompa_hoxa.jpg
-   :width: 300px
+   :width: 400px
    :align: center
 
 
@@ -82,23 +82,37 @@ For drompa draw, the option ``-i`` can take the following comma-separated multip
 8. scale pvalue.
 
 Except for the ``ChIP sample``, all the other fields can be omitted.
+These options can be used to specify different parameters for each sample pair.
 The parameter for each sample is superior to the global parameters.
 
+For example::
+
+    -i H3K4me3.bw,Input.bw,H3K4me3,peak.bed,1000,60
+
+explicitly specifies binsize of bigWig files are 1,000 bp, max value of y_axis is 60, and "peak.bed" as a peak list.
 When a peak list (BED format) is specified, drompa+ highlights the peak regions instead of using the internal peak-calling engine.
-The rest of the options can be used to specify different parameters for each sample pair.
-
-For example, the command::
-
-  $ drompa_draw PC_SHARP -p ChIPseq --gt genometable.txt \
-  $ -i $ChIP1,$Input,ChIP1,ChIP1peak.bed,,50 \
-  $ -i $ChIP2,$Input,ChIP2,ChIP2peak.bed,,80 \
-  $ -i $ChIP3,$Input,ChIP3,ChIP3peak.bed,1000,60 \
-  $ -i $ChIP4,$Input,ChIP4,ChIP4peak.bed,1000,60 \
-  $ -g refFlat.txt --chr 4 --ls 10000
-
-generates the figure below.
 
 
+
+
+Overlay read distribution
+++++++++++++++++++++++++++++
+
+DROMAplus can overlay two samples in one line by specifying the second one with ``--ioverlay`` in the same manner of ``-i``::
+
+  $ dir=parse2wigdir+
+  $ drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
+	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa_overlay -g refFlat.txt --gt genometable.txt \
+	--lpp 3 --chr 1 \
+	--alpha 0.6 \
+
+``--alpha`` indicates the transparency.
+
+.. image:: img/drompa_overlay.jpg
+   :width: 600px
+   :align: center
 
 BED annotation and long-range interactions
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -109,6 +123,16 @@ with the ``--inter`` option, which takes tab-separated files with six columns: h
 
 For example, the following command generates the PDF file shown in Figure 6::
 
-  $ drompa_draw PC_SHARP -o ChIP-seq --gt genometable.txt $s1 $s2 $s3 $s4 \
-  $ -g refFlat.txt --bed chromhmm.bed,emission \
-  $ --inter ChIA-PET.bed,interaction
+  $ dir=parse2wigdir+
+  $ drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa_loops -g refFlat.txt --gt $gt \
+	--inter interactions.all.mango,ChIA-PET,mango \
+	--inter HICCUPS_looplist.txt,Hi-C,hiccups \
+	--lpp 2 --chr 20 --ls 5000
+
+.. image:: img/drompa_loop.jpg
+   :width: 600px
+   :align: center
