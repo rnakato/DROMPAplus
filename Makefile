@@ -43,7 +43,7 @@ OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadB
 all: $(TARGET) prnt
 
 prnt: $(TARGET)
-	@if not exist scripts; then ln -s submodules/SSP/scripts/ .; fi
+	@if [ ! -e scripts ]; then ln -s submodules/SSP/scripts/ .; fi
 	@echo "\nAdd '$(CURDIR)/bin:$(CURDIR)/otherbins:$(CURDIR)/submodules/cpdf/Linux-Intel-64bit/' to your PATH."
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
