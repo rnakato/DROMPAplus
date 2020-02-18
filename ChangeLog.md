@@ -2,6 +2,7 @@
 
 ## 1.4.0 (2020-02-18)
 - Draft the manual page
+- add drompa.heatmap.py for heatmap visualization in otherbin directory
 - add sample scripts and related annotation data in tutorial directory
 - add scripts link in the root directory
 - PROFILE: Bug fix in --stype 2
