@@ -33,7 +33,7 @@ std::vector<Command> generateCommands()
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_PROFILE,
 			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
-			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));
+			    CommandParamSet(5, 0, 0, 0, 0, 0, false)));
 /*  cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			    "-i <ChIP>,,<label> -i <ChIP>,,<label> -bed <bedfile>",
 			    exec_PCSHARP,

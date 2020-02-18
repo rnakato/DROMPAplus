@@ -29,7 +29,7 @@ protected:
     std::vector<genedata> garray;
     for (auto &m: mp) {
       if (m.second.gtype == "nonsense_mediated_decay" ||
-	  m.second.gtype == "processed_transcript" ||
+	  m.second.gtype == "processed_transcript"    ||
 	  m.second.gtype == "retained_intron") continue;
       garray.emplace_back(m.second);
     }
@@ -48,22 +48,32 @@ protected:
     int32_t ebin(bincenter + binwidth_from_center);
 
     if (strand == "+") {
-      for (int32_t i=sbin; i<=ebin; ++i) {
-	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
-	out << "\t" << getSumVal(pair, vReadArray, i, i);
-      }
+      for (int32_t i=sbin; i<=ebin; ++i) out << "\t" << getSumVal(pair, vReadArray, i, i);
     } else {
-      for (int32_t i=ebin; i>=sbin; --i) {
-	//	printf("%d\t%f\n", i, getSumVal(pair, arrays, i, i));
-	out << "\t" << getSumVal(pair, vReadArray, i, i);
-      }
+      for (int32_t i=ebin; i>=sbin; --i) out << "\t" << getSumVal(pair, vReadArray, i, i);
     }
   }
 
-  double getSumVal(const SamplePairOverlayed &pair, const vChrArray &vReadArray, const int32_t sbin, const int32_t ebin) {
-    double sum(0);
-    for (int32_t i=sbin; i<=ebin; ++i) sum += vReadArray.getArray(pair.first.argvChIP).array[i];
-    return getratio(sum, (ebin - sbin + 1));
+  double getSumVal(const SamplePairOverlayed &pair, const vChrArray &vReadArray,
+		   const int32_t sbin, const int32_t ebin) {
+    double value(-1);
+    if (!stype) { // ChIP read
+      double sumIP(0);
+      for (int32_t i=sbin; i<=ebin; ++i) sumIP += vReadArray.getArray(pair.first.argvChIP).array[i];
+      value = getratio(sumIP, (ebin - sbin + 1));
+    } else if (stype == 1) { // ChIP/Input enrichment
+      double sumRatio(0);
+      for (int32_t i=sbin; i<=ebin; ++i) {
+	double r = getratio(vReadArray.getArray(pair.first.argvChIP).array[i],
+			     vReadArray.getArray(pair.first.argvInput).array[i]);
+//	printf("%f, %f, r=%f\n",vReadArray.getArray(pair.first.argvChIP).array[i],
+//	       vReadArray.getArray(pair.first.argvInput).array[i],
+//	       r);
+	sumRatio += r;
+      }
+      value = getratio(sumRatio, (ebin - sbin + 1));
+    }
+    return value;
   }
 
 public:
@@ -81,7 +91,8 @@ public:
     for (auto &x: p.samplepair) binsize = x.first.getbinsize();
     binwidth_from_center = width_from_center / binsize;
     if (binwidth_from_center <= 1) {
-      PRINTERR("please specify larger size for --widthfromcenter:" << width_from_center << " than binsize:" << binsize << ".");
+      PRINTERR("please specify larger size for --widthfromcenter:" << width_from_center
+	       << " than binsize:" << binsize << ".");
     }
 
     if (_nbin) nbin = _nbin;
@@ -174,6 +185,8 @@ public:
     std::cout << "the number of skipped sites: " << nsites_skipped << std::endl;
   }
 };
+
+
 class ProfileTSS: public ReadProfile {
 
 public:
