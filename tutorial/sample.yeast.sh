@@ -2,6 +2,13 @@
 # DROMPAplus sample scripts
 # Replication analysis of S. cerevisiae
 
+https://drive.google.com/open?id=1f5H-umPgjzmDYLVHBdlIMWQXtt91S6Fc
+https://drive.google.com/open?id=1f991hi-V9ITAWeUzr3AkqyRY8CbFTBXO
+https://drive.google.com/open?id=1fDUgeo8IvhI-fikQv_PDCiDmNc9cBfWT
+https://drive.google.com/open?id=1fGjY5nlhjePk_0TXKC5bLOzmdrer7IHh
+https://drive.google.com/open?id=1fJh-f3CDNc7wAkuN79rndjptVq_qYU6k
+https://drive.google.com/open?id=1fNRt1uvA1CQrIfb9NSJq3hYL9-GGJnXv
+
 exit
 
 gt=../data/genometable/genometable.sacCer3.txt
