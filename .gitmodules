@@ -1,8 +1,8 @@
 [submodule "submodules/cpdf"]
 	path = submodules/cpdf
-	url = git@github.com:coherentgraphics/cpdf-binaries.git
+	url = https://github.com/coherentgraphics/cpdf-binaries.git
 	branch = master
 [submodule "submodules/SSP"]
 	path = submodules/SSP
-	url = git@github.com:rnakato/SSP.git
+	url = https://github.com/rnakato/SSP.git
 	branch = master
