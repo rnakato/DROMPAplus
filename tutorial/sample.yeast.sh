@@ -1,6 +1,8 @@
 #!/bin/bash
 # DROMPAplus sample scripts
-# Visualization of H3K4me3, H3K27me3, H3K9me3 and Input samples for K562 cells from ENCODE project
+# Replication analysis of S. cerevisiae
+
+exit
 
 gt=../data/genometable/genometable.sacCer3.txt
 dir=parse2wigdir+

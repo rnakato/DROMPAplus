@@ -1,6 +1,16 @@
 PC ENRICH: Enrichment visualization
 -----------------------------------------
 
+
+
+Download the data
++++++++++++++++++++++++++++++++
+Download the sample data from GoogleDrive:
+
+
+
+
+
 For a small genome (e.g., yeast), the sequencing depth is generally enough (> 10 fold).
 In such cases, the genome-wide ChIP/Input enrichment distribution is informative because the
 technical and biological bias in high throughput sequencing can be minimized.
