@@ -107,9 +107,15 @@ public:
     if (stype==0)      prefix = p.getPrefixName() + ".ChIPread";
     else if (stype==1) prefix = p.getPrefixName() + ".Enrichment";
     Rscriptname = prefix + ".R";
-    RDataname   = prefix + ".tsv";
+    RDataname   = prefix;    //  prefix + ".tsv";
     Rfigurename = prefix + ".pdf";
     for (auto &x: {Rscriptname, RDataname, Rfigurename}) unlink(x.c_str());
+    for (auto &x: p.samplepair) {
+      std::string file(RDataname + "." + x.first.label + ".tsv");
+//      std::cout << file << std::endl;
+      unlink(file.c_str());
+    }
+    for (auto &x: {Rscriptname, Rfigurename}) unlink(x.c_str());
   }
 
   void MakeFigure(const DROMPA::Global &p) {
@@ -118,15 +124,15 @@ public:
 
     std::vector<double> vcol({CLR_RED, CLR_BLUE, CLR_GREEN, CLR_LIGHTCORAL, CLR_BLACK, CLR_PURPLE, CLR_GRAY3, CLR_OLIVE, CLR_YELLOW3, CLR_SLATEGRAY, CLR_PINK, CLR_SALMON, CLR_GREEN2, CLR_BLUE3, CLR_PURPLE2, CLR_DARKORANGE});
 
-    //    out << "# bsnum_allowed=%d, bsnum_skipped=%d\n", d->ntotal_profile, d->ntotal_skip) << std::endl;
-
-    out << "t <- read.table('"<< RDataname << "', header=F, sep='\\t', quote='')" << std::endl;
-    out << "# rownames(t) <- t[,1]" << std::endl;
-    out << "t <- t[,-1]" << std::endl;
-    out << "n <- nrow(t)" << std::endl;
-
     for (size_t i=1; i<=p.samplepair.size(); ++i) {
-      out << boost::format("t%1% <- t[,%2%:%3%]\n") % i % (nbin*(i-1) +1) % (nbin*i);
+      out << "t <- read.table('"
+	  << RDataname << "." << p.samplepair[i-1].first.label << ".tsv"
+	  << "', header=F, sep='\\t', quote='')" << std::endl;
+      out << "t <- t[,-1]" << std::endl;
+      out << "n <- nrow(t)" << std::endl;
+
+
+      out << boost::format("t%1% <- t\n") % i;
       out << boost::format("colnames(t%1%) <- t%1%[1,]\n") % i;
       out << boost::format("t%1% <- t%1%[-1,]\n") % i;
       out << boost::format("p%1% <- apply(t%1%,2,mean)\n") % i;
@@ -174,14 +180,15 @@ public:
   virtual void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)=0;
 
   void printHead(const DROMPA::Global &p) {
-    std::ofstream out(RDataname);
-
-    for (size_t j=0; j<p.samplepair.size(); ++j) {
+    for (auto &x: p.samplepair) {
+      std::string file(RDataname + "." + x.first.label + ".tsv");
+      std::ofstream out(file);
       for (int32_t i=-binwidth_from_center; i<=binwidth_from_center; ++i) {
 	out << "\t" << (i*binsize);
       }
+      out << std::endl;
+      out.close();
     }
-    out << std::endl;
   }
 
   void printNumOfSites() const {
@@ -209,28 +216,33 @@ public:
 
     vChrArray vReadArray(p, chr);
 
-    std::ofstream out(RDataname, std::ios::app);
-    auto gmp(get_garray(p.anno.gmp.at(chrname)));
-    for (auto &gene: gmp) {
-      ++nsites;
+    for (auto &x: p.samplepair) {
+      std::string file(RDataname + "." + x.first.label + ".tsv");
+      std::ofstream out(file, std::ios::app);
 
-      int32_t position(0);
-      if (p.prof.isPtypeTSS()) {
-	if (gene.strand == "+") position = gene.txStart;
-	else                    position = gene.txEnd;
-      } else if (p.prof.isPtypeTTS()) {
-	if (gene.strand == "+") position = gene.txEnd;
-	else                    position = gene.txStart;
+      auto gmp(get_garray(p.anno.gmp.at(chrname)));
+
+      for (auto &gene: gmp) {
+	++nsites;
+
+	int32_t position(0);
+	if (p.prof.isPtypeTSS()) {
+	  if (gene.strand == "+") position = gene.txStart;
+	  else                    position = gene.txEnd;
+	} else if (p.prof.isPtypeTTS()) {
+	  if (gene.strand == "+") position = gene.txEnd;
+	  else                    position = gene.txStart;
+	}
+	if (isExceedRange(position, chr.getlen())) {
+	  ++nsites_skipped;
+	  continue;
+	}
+	out << gene.tname;
+	WriteValAroundPosi(out, x, vReadArray, position, gene.strand);
+	out << std::endl;
       }
-      if (isExceedRange(position, chr.getlen())) {
-	++nsites_skipped;
-	continue;
-      }
 
-      out << gene.tname;
-
-      for (auto &x: p.samplepair) WriteValAroundPosi(out, x, vReadArray, position, gene.strand);
-      out << std::endl;
+      out.close();
     }
   }
 };
@@ -271,33 +283,40 @@ public:
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
 
     vChrArray vReadArray(p, chr);
-    std::ofstream out(RDataname, std::ios::app);
+//    std::ofstream out(RDataname, std::ios::app);
 
-    auto gmp(get_garray(p.anno.gmp.at(chrname)));
-    for (auto &gene: gmp) {
-      ++nsites;
 
-      int32_t len(gene.length());
-      if (len < 1000 || gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) {
-	++nsites_skipped;
-	continue;
+    for (auto &x: p.samplepair) {
+      std::string file(RDataname + "." + x.first.label + ".tsv");
+      std::ofstream out(file, std::ios::app);
+
+      auto gmp(get_garray(p.anno.gmp.at(chrname)));
+      for (auto &gene: gmp) {
+	++nsites;
+
+	int32_t len(gene.length());
+	if (len < 1000 || gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) {
+	  ++nsites_skipped;
+	  continue;
+	}
+
+	out << gene.gname;
+	outputEachGene(out, x, gene, vReadArray, len);
+	out << std::endl;
       }
-
-      out << gene.gname;
-      for (auto &x: p.samplepair) outputEachGene(out, x, gene, vReadArray, len);
-      out << std::endl;
     }
   }
 
   void printHead(const DROMPA::Global &p) {
-    std::ofstream out(RDataname);
-
-    for (size_t j=0;j<p.samplepair.size(); ++j) {
+    for (auto &x: p.samplepair) {
+      std::string file(RDataname + "." + x.first.label + ".tsv");
+      std::ofstream out(file);
       for (int32_t i=-GENEBLOCKNUM; i<GENEBLOCKNUM*2; ++i) {
 	out << "\t" << i;
       }
+      out << std::endl;
+      out.close();
     }
-    out << std::endl;
   }
 };
 
@@ -314,24 +333,31 @@ public:
       std::cerr << "Please specify --bed." << std::endl;
       exit(1);
     }
-    std::ofstream out(RDataname, std::ios::app);
+//    std::ofstream out(RDataname, std::ios::app);
 
     vChrArray vReadArray(p, chr);
 
-    for (auto &vbed: p.anno.vbedlist) {
-      for (auto &bed: vbed.getvBed()) {
-	if (bed.chr != chr.getname()) continue;
-	++nsites;
-	if (isExceedRange(bed.summit, chr.getlen())) {
-	  ++nsites_skipped;
-	  continue;
+    for (auto &x: p.samplepair) {
+      std::string file(RDataname + "." + x.first.label + ".tsv");
+      std::ofstream out(file);
+
+      for (auto &vbed: p.anno.vbedlist) {
+	for (auto &bed: vbed.getvBed()) {
+	  if (bed.chr != chr.getname()) continue;
+	  ++nsites;
+	  if (isExceedRange(bed.summit, chr.getlen())) {
+	    ++nsites_skipped;
+	    continue;
+	  }
+	  out << bed.getSiteStr();
+	  WriteValAroundPosi(out, x, vReadArray, bed.summit, "+");
+	  out << std::endl;
 	}
-	out << bed.getSiteStr();
-	for (auto &x: p.samplepair) WriteValAroundPosi(out, x, vReadArray, bed.summit, "+");
-	out << std::endl;
       }
+
+      out.close();
     }
-    out.close();
+
   }
 };
 

@@ -26,10 +26,10 @@ def drawHeatmap(input, output, vmax, sortid, notsort):
             df_sort = df
         else:
             df["ref"] = df0
-            #        print(df)
+#            print(df)
             df_sort = df.sort_values('ref', ascending=False)
             del df_sort['ref']
-            #        print(df_sort)
+#            print(df_sort)
 
         ax = plt.subplot(1, nsample, i+1)
         sns.heatmap(df_sort,

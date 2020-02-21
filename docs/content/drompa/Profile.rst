@@ -67,7 +67,7 @@ The averaged read number in the background regions sometimes varies among sample
    :width: 400px
    :align: center
 
-``--stype 1`` option plot the averaged ChIP/Input enrichment::
+With ``--stype 1`` option drompa+ plots the averaged ChIP/Input enrichment (note that this is the averaged enrichment for all sites, not the enrichment of averaged read density.)::
 
     dir=parse2wigdir+
     drompa+ PROFILE --ptype 2 --stype 1 \

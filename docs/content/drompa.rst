@@ -1,3 +1,4 @@
+====================================
 DROMPAplus: read distritbution
 ====================================
 
@@ -21,3 +22,4 @@ Note that the algorithm of **PC_SHARP**, **PC_BROAD** and **PC_ENRICH** is ident
    drompa/PCENRICH
    drompa/GV
    drompa/Profile
+   drompa/Heatmap
