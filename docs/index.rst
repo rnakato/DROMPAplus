@@ -27,7 +27,7 @@ Contents:
    content/Install
    content/parse2wig
    content/drompa
-   content/Tutorial
+   content/Appendix
 
 
 Citation:

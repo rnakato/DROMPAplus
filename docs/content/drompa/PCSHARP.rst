@@ -40,7 +40,9 @@ To display the p-value and ChIP/input enrichment lines, supply ``--showratio 1``
            --scale_ratio 3 --scale_pvalue 3 \
            --chr 1
 
+
 where ``--scale_ratio`` and ``--scale_pvalue`` options change the maximum values for the y axis of the corresponding lines.
+
 
 .. image:: img/drompa2.jpg
    :width: 500px
