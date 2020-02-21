@@ -139,7 +139,11 @@ public:
     out << "pdf('" << Rfigurename << "',6,6)" << std::endl;
     out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2] << ")";
     if (p.prof.isPtypeGene100()) out << ",log='y'";
-    out << ",xlab='" << xlabel << "',ylab='Read density')" << std::endl;
+    if (!stype) {
+      out << ",xlab='" << xlabel << "',ylab='Read density')" << std::endl;
+    } else if (stype==1) {
+      out << ",xlab='" << xlabel << "',ylab='Read enrichment')" << std::endl;
+    }
     out << "polygon(c(x, rev(x)), c(p1_lower, rev(p1_upper)), col=rgb("
 	<< vcol[0] << "," << vcol[1] << "," << vcol[2] << ",0.3), border=NA)" << std::endl;
 
