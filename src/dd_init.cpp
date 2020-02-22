@@ -57,7 +57,7 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
     ("showtranscriptname", "Show transcript name (default: gene name)")
     ("ars",    value<std::string>(), "ARS list (for yeast)")
     ("ter",    value<std::string>(), "TER list (for S.cerevisiae)")
-    ("showars", "Display ARS and TER and do not display genes")
+//    ("showars", "Display ARS and TER and do not display genes")
     ("bed",    value<std::vector<std::string>>(), "<bedfile>,<label>: BED file (<label> can be omited)")
     ("repeat", value<std::string>(), "Display repeat annotation (RepeatMasker format)")
     ;
@@ -94,12 +94,12 @@ void Annotation::setValuesPC(const Variables &values) {
     }
     if (values.count("ars")) {
       arsfile = getVal<std::string>(values, "ars");
-      parseARSOriDB(arsfile, gmp);
+      parseARSOriDB(arsfile, arsgmp);
     }
-    showars = values.count("showars");
+//    showars = values.count("showars");
     if (values.count("ter")) {
       terfile = getVal<std::string>(values, "ter");
-      parseTER(terfile, gmp);
+      parseTER(terfile, arsgmp);
     }
     showtranscriptname = values.count("showtranscriptname");
     //	printMap(gmp);
@@ -179,7 +179,7 @@ void Annotation::InitDumpPC(const Variables &values) const {
   //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
   printOpt<std::string>(values, "ars",    "   ARS file");
   printOpt<std::string>(values, "ter",    "   TER file");
-  if(showars) std::cout << "Display ARS and TER only." << std::endl;
+//  if(showars) std::cout << "Display ARS and TER only." << std::endl;
   printOpt<std::string>(values, "repeat", "   Repeat file");
   printOpt<std::string>(values, "region", "   Region file");
   printVOpt<std::string>(values, "bed", "   Bed file");

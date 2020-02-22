@@ -277,10 +277,13 @@ void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
   double ytop(par.yaxis_now);
   double ycenter(ytop + boxheight/2);
 
-  if (p.isshowars()) {
-    strokeARS(p.anno.gmp, ycenter);
-    showtext_cr(cr, 70, ycenter, "ARS", 12);
-  } else {
+  if (p.anno.arsfile != "") {
+    DEBUGprint("DrawARS");
+    strokeARS(p.anno.arsgmp, ycenter);
+//    showtext_cr(cr, 70, ycenter, "ARS", 12);
+  }
+  if (p.anno.genefile != "") {
+    DEBUGprint("DrawGene");
     if(p.anno.getgftype() == GFTYPE_SGD) strokeGeneSGD(p, ycenter);
     else strokeGene(p, ycenter);
   }

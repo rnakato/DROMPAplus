@@ -498,8 +498,13 @@ void PDFPage::MakePage(const DROMPA::Global &p,
 
   // Page title
   std::string title;
-  if(par.num_page>1) title = chrname + "_" + pagelabel + "_" + std::to_string(page_no+1);
-  else               title = chrname + "_" + pagelabel;
+  if (pagelabel == "None") {
+    if (par.num_page>1) title = chrname  + "_" + std::to_string(page_no+1);
+    else                title = chrname;
+  } else {
+    if (par.num_page>1) title = chrname + "_" + pagelabel + "_" + std::to_string(page_no+1);
+    else                title = chrname + "_" + pagelabel;
+  }
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, 50, 30, title, 16);
   cr->stroke();
@@ -562,7 +567,7 @@ void Figure::Draw_Whole(DROMPA::Global &p,
   for (int32_t i=0; i<num_page; ++i) {
     std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
     PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, 0, vReadArray.getchrlen());
-    page.MakePage(p, i, "1");
+    page.MakePage(p, i, "None");
   }
   printf("\n");
 #else

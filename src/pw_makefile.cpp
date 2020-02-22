@@ -52,7 +52,8 @@ void generate_wigfile(Mapfile &p)
     std::string command = "bedGraphToBigWig " + std::string(tmpfile) + " " + p.genome.getGenomeTable() + " " + p.getbinprefix() + ".bw";
     if (system(command.c_str())) {
       unlink(tmpfile);
-      PRINTERR("conversion failed.");
+      std::cerr << "Error: command " << command << "return nonzero status. "
+		<< "Add the PATH to 'DROMPAplus/otherbins'." << std::endl;
     }
     unlink(tmpfile);
   } /*else if (oftype==WigType::BINARY) {

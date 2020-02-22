@@ -220,7 +220,7 @@ namespace DROMPA {
 
   class Annotation {
     bool isUCSC;
-    bool showars;
+//    bool showars;
     bool isIdeogram;
     bool isChIADrop;
 
@@ -293,6 +293,7 @@ namespace DROMPA {
     std::string genefile;
     int32_t gftype;
     HashOfGeneDataMap gmp;
+    HashOfGeneDataMap arsgmp;
     bool showtranscriptname;
     std::string arsfile;
     std::string terfile;
@@ -311,7 +312,7 @@ namespace DROMPA {
     GraphDataFileName GD;
 
     Annotation():
-      isUCSC(false), showars(false),
+      isUCSC(false), //showars(false),
       isIdeogram(false),
       isChIADrop(false),
       genefile(""), gftype(0),
@@ -347,7 +348,7 @@ namespace DROMPA {
 
     int32_t getgftype() const { return gftype; }
     bool is_Anno_UCSC() const {return isUCSC; }
-    bool isshowars() const { return showars; }
+//    bool isshowars() const { return showars; }
     bool existChIADrop() const { return isChIADrop; }
     bool showIdeogram() const { return isIdeogram; }
   };
@@ -566,7 +567,7 @@ namespace DROMPA {
     }
     bool isincludeYM() const { return includeYM; }
     bool isshowchr() const { return showchr; }
-    bool isshowars() const {return anno.isshowars(); }
+//    bool isshowars() const {return anno.isshowars(); }
 
     pdSample scan_pdstr(const std::string &str);
   };
