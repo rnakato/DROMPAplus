@@ -11,49 +11,36 @@
 # https://drive.google.com/open?id=1fNRt1uvA1CQrIfb9NSJq3hYL9-GGJnXv
 
 # parse2wig (make BigWig)
-gt=../data/genometable/genometable.scer.txt
+gt=../data/genometable/genometable.sacCer3.txt
 mptable=../data/mptable/mptable.UCSC.sacCer3.50mer.flen150.txt
 for cell in YST1019_Gal YST1019_Raf YST1053_Gal; do
 for min in 0min 60min; do
 cram=${cell}_${min}-n2-k1.sort.cram
-parse2wig+ -i $cram  -o ${cell}_${min} --gt $gt --mptable $mptable -n GR
+#parse2wig+ -i $cram  -o ${cell}_${min} --gt $gt --mptable $mptable -n GR
 done
 done
-
-exit
-
-dir=parse2wigdir+
-drompa+ GV \
-	-i $dir/H3K4me3.100000.bw,$dir/Input.100000.bw,H3K4me3   \
-	-i $dir/H3K27me3.100000.bw,$dir/Input.100000.bw,H3K27me3 \
-	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
-	-o drompaGV-K562 --gt $gt
-
-drompa+ GV \
-	-i $dir/H3K4me3.100000.bw,$dir/Input.100000.bw,H3K4me3   \
-	-i $dir/H3K27me3.100000.bw,$dir/Input.100000.bw,H3K27me3 \
-	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
-	-o drompaGV-K562_2 --gt $gt \
-	--GC GCcontents --gcsize 500000 \
-	--GD genedensity --gdsize 500000 \
-	--ideogram ../data/ideogram/hg19.tsv
- exit
-
-# Get refFlat (gene annotation)
-wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refFlat.txt.gz
-gunzip refFlat.txt.gz
-
-
 
 # Make pdf
 dir=parse2wigdir+
-drompa+ PC_SHARP \
-	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
-	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
-	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
-	-o drompa-K562 -g refFlat.txt --gt $gt \
-	--lpp 2 --showitag 1 \
-	--chr 1
+gene=../data/S_cerevisiae/SGD_features.tab
+
+drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast --gt $gt -g $gene --gftype 2 \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
+
+ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast-ARS --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
+
+exit
+
 
 # Overlayed pdf
 dir=parse2wigdir+
