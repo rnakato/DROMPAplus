@@ -43,8 +43,8 @@ OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/ReadB
 all: $(TARGET) prnt
 
 prnt: $(TARGET)
-	@if [ ! -e scripts ]; then ln -s submodules/SSP/scripts/ .; fi
 	@echo "\nAdd '$(CURDIR)/bin:$(CURDIR)/otherbins:$(CURDIR)/submodules/cpdf/Linux-Intel-64bit/' to your PATH."
+#	@if [ ! -e scripts ]; then ln -s submodules/SSP/scripts/ .; fi
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
@@ -74,7 +74,7 @@ $(SSPCMNOBJDIR)/%.o: $(SSPCMNDIR)/%.cpp
 	$(MAKE) -C $(SSPDIR) cobj/$(notdir $@) $(OFLAGS)
 
 clean:
-	rm -rf bin obj scripts
+	rm -rf bin obj
 	make -C $(SSPDIR) clean
 
 HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp $(SRCDIR)/WigStats.hpp
