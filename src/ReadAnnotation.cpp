@@ -91,8 +91,7 @@ void parseARSOriDB(const std::string& fileName, HashOfGeneDataMap &mp)
 
     if (v.size() < 7) {
       std::cout << lineStr << std::endl;
-      std::cerr << "Error: the ARS file does not have 7 columns." << std::endl;
-      exit(0);
+      PRINTERR_AND_EXIT("Error: the ARS file does not have 7 columns.");
     }
 
     std::string tname;

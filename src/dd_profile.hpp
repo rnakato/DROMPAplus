@@ -206,10 +206,7 @@ public:
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
     DEBUGprint("ProfileTSS:WriteTSV_EachChr");
-    if(p.anno.genefile == "") {
-      std::cerr << "Please specify --gene." << std::endl;
-      exit(1);
-    }
+    if(p.anno.genefile == "") PRINTERR_AND_EXIT("Please specify --gene.");
 
     std::string chrname(rmchr(chr.getname()));
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
@@ -274,10 +271,7 @@ public:
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
     DEBUGprint("ProfileGene100:WriteTSV_EachChr");
-    if(p.anno.genefile == "") {
-      std::cerr << "Please specify --gene." << std::endl;
-      exit(1);
-    }
+    if(p.anno.genefile == "") PRINTERR_AND_EXIT("Please specify --gene.");
 
     std::string chrname(rmchr(chr.getname()));
     if (p.anno.gmp.find(chrname) == p.anno.gmp.end()) return;
@@ -329,11 +323,7 @@ public:
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
     DEBUGprint("ProfileBedSites:WriteTSV_EachChr");
 
-    if(!p.anno.vbedlist.size()) {
-      std::cerr << "Please specify --bed." << std::endl;
-      exit(1);
-    }
-//    std::ofstream out(RDataname, std::ios::app);
+    if(!p.anno.vbedlist.size()) PRINTERR_AND_EXIT("Please specify --bed.");
 
     vChrArray vReadArray(p, chr);
 

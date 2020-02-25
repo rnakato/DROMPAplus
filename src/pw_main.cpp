@@ -128,19 +128,16 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
     store(parsed, values);
   }
   catch(const boost::program_options::error_with_option_name& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   if (values.count("version")) printVersion();
   if (argc ==1) {
     help_global();
-    std::cerr << "Use --help option for more information on the other options\n\n";
-    exit(0);
+    PRINTERR_AND_EXIT("Use --help option for more information on the other options\n\n");
   }
   if (values.count("help")) {
     help_global();
-    std::cout << "\n" << allopts << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT("\n" << allopts);
   }
   std::vector<std::string> opts = {"input", "output", "gt"};
   for (auto x: opts) {
@@ -156,8 +153,7 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
 
     init_dump(p, values);
   } catch(const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
 
   DEBUGprint("getOpts done.");

@@ -5,6 +5,7 @@
 #define _GENEANNOTATION_HPP_
 
 #include "../submodules/SSP/common/seq.hpp"
+#include "../submodules/SSP/common/inline.hpp"
 
 enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
 
@@ -72,10 +73,7 @@ class bed_gene {
 	else if(x.st == CONVERGENT) std::cout << "\tconvergent\t";
 	else if(x.st == DIVERGENT)  std::cout << "\tdivergent\t";
 	else if(x.st == PARALLEL)   std::cout << "\tparallel\t";
-	else {
-	  std::cout << "\nError: invalid status: " << gene.st << std::endl;
-	  exit(0);
-	}
+	else PRINTERR_AND_EXIT("\nError: invalid status: " << gene.st);
 	if(gene.st != INTERGENIC) x.gene->print();
 	std::cout << std::endl;
       }
@@ -88,10 +86,7 @@ class bed_gene {
       else if(gene.st == CONVERGENT) std::cout << "\tconvergent\t";
       else if(gene.st == DIVERGENT)  std::cout << "\tdivergent\t";
       else if(gene.st == PARALLEL)   std::cout << "\tparallel\t";
-      else {
-	std::cout << "\nError: invalid status: " << gene.st << std::endl;
-	exit(0);
-      }
+      else PRINTERR_AND_EXIT("\nError: invalid status: " << gene.st);
       if(gene.st != INTERGENIC) gene.gene->print();
       std::cout << std::endl;
     }

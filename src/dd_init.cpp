@@ -22,12 +22,10 @@ void vSampleInfo::addSampleInfo(const std::string &str, const std::vector<chrsiz
   ParseLine(v, str, ',');
 
   if(v.size() >8) {
-    std::cerr << "error: sample std::string has ',' more than 8: " << str << std::endl;
-    exit(1);
+    PRINTERR_AND_EXIT("error: sample std::string has ',' more than 8: " << str);
   }
   if(v[0] == "") {
-    std::cerr << "please specify ChIP sample: " << str << std::endl;
-    exit(1);
+    PRINTERR_AND_EXIT("please specify ChIP sample: " << str);
   }
   isFile(v[0]);
 
@@ -113,8 +111,7 @@ void Annotation::setValuesPC(const Variables &values) {
       }
     }
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
 
   DEBUGprint("AnnoPC setValues done.");
@@ -126,7 +123,6 @@ void Annotation::setValuesGV(const Variables &values) {
   try {
     if (values.count("inter")) {
       for(auto &x: getVal<std::vector<std::string>>(values, "inter")) {
-	//    std::cout << x << std::endl;
 	std::vector<std::string> v;
 	boost::split(v, x, boost::algorithm::is_any_of(","));
 	std::string label(v[0]);
@@ -139,8 +135,7 @@ void Annotation::setValuesGV(const Variables &values) {
     if (values.count("ideogram")) {
       std::ifstream in(getVal<std::string>(values, "ideogram"));
       if(!in) {
-	std::cerr << "Error: ideogram file " << getVal<std::string>(values, "ideogram") << " does not exist." << std::endl;
-	std::exit(1);
+	PRINTERR_AND_EXIT("Error: ideogram file " << getVal<std::string>(values, "ideogram") << " does not exist.");
       }
       while (!in.eof()) {
 	std::string lineStr;
@@ -162,8 +157,7 @@ void Annotation::setValuesGV(const Variables &values) {
     if (values.count("GD")) GD.setValue(getVal<std::string>(values, "GD"), getVal<int32_t>(values, "gdsize"));
 
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("AnnoGV setValues done.");
 }
@@ -231,8 +225,7 @@ void Profile::setValues(const Variables &values) {
     maxval = getVal<double>(values, "maxval");
     hmsort = getVal<int32_t>(values, "hmsort");
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("PROF setValues done.");
 }
@@ -278,8 +271,7 @@ void Threshold::setValues(const Variables &values) {
     if(values.count("callpeak")) sigtest = true;
     //    width4lmd    = getVal<int32_t>(values, "width4lmd");
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("Threshold setValues done.");
 }
@@ -331,8 +323,7 @@ void DrawRegion::setValues(const Variables &values) {
     len_geneloci = getVal<int32_t>(values, "len_geneloci");
 
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("DrawRegion setValues done.");
 }
@@ -448,8 +439,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	  if (values.count("if")) iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
 
 	} catch(const boost::bad_any_cast& e) {
-	  std::cout << e.what() << std::endl;
-	  exit(0);
+	  PRINTERR_AND_EXIT(e.what());
 	}
 	DEBUGprint("ChIP setValues done.");
 
@@ -507,8 +497,7 @@ void Global::setValuesNorm(const Variables &values) {
     norm = getVal<int32_t>(values, "norm");
     smoothing = getVal<int32_t>(values, "sm");
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("Norm setValues done.");
 }
@@ -532,8 +521,7 @@ void Global::setValuesOther(const Variables &values) {
     ispng = values.count("png");
     showchr = values.count("showchr");
   } catch(const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("Other setValues done.");
 }
@@ -616,8 +604,7 @@ void DrawParam::setValues(const Variables &values, const int32_t n) {
 
     samplenum = n;
   } catch (const boost::bad_any_cast& e) {
-    std::cout << e.what() << std::endl;
-    exit(0);
+    PRINTERR_AND_EXIT(e.what());
   }
   DEBUGprint("DrawParam setValues done.");
 }
@@ -643,14 +630,12 @@ Global::pdSample Global::scan_pdstr(const std::string &str){
   ParseLine(v, str, ',');
 
   if(v.size() > 2) {
-    std::cerr << "error: sample std::string has ',' more than 2: " << str << std::endl;
-    exit(1);
+    PRINTERR_AND_EXIT("error: sample std::string has ',' more than 2: " << str);
   }
 
   pdSample pd;
   if(v[0] == "") {
-    std::cerr << "please specify file: " << str << std::endl;
-    exit(1);
+    PRINTERR_AND_EXIT("please specify file: " << str);
   } else {
     pd.argv = v[0];
   }

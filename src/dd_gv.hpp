@@ -235,10 +235,7 @@ namespace DROMPA {
     void parse_ChIADropData(const std::string &fileName)
     {
       std::ifstream in(fileName);
-      if(!in) {
-	std::cerr << "Error: ChIADrop file " << fileName << " does not exist." << std::endl;
-	std::exit(1);
-      }
+      if(!in) PRINTERR_AND_EXIT("Error: ChIADrop file " << fileName << " does not exist.");
 
       std::unordered_map<std::string, std::vector<GenomePosition>> mp;
       while (!in.eof()) {

@@ -199,8 +199,7 @@ std::vector<T> parseBed(const std::string &fileName)
   std::vector<T> vbed;
   std::ifstream in(fileName);
   if(!in) {
-    std::cerr << "Error: BED file " << fileName << " does not exist." << std::endl;
-    std::exit(1);
+    PRINTERR_AND_EXIT("Error: BED file " << fileName << " does not exist.");
   }
 
   while (!in.eof()) {
@@ -291,8 +290,7 @@ class InteractionSet {
 			  val);
       maxval = std::max(val, maxval);
     } catch (std::exception &e) {
-      std::cout << e.what() << std::endl;
-      exit(0);
+      PRINTERR_AND_EXIT(e.what());
     }
   }
   void setAsHICCUPS(const std::string &lineStr) {
@@ -312,8 +310,7 @@ class InteractionSet {
 			  val);
       if(std::isfinite(val)) maxval = std::max(val, maxval);
     } catch (std::exception &e) {
-      std::cout << e.what() << std::endl;
-      exit(0);
+      PRINTERR_AND_EXIT(e.what());
     }
   }
 
@@ -323,8 +320,7 @@ public:
   {
     std::ifstream in(fileName);
     if(!in) {
-      std::cerr << "Error: Interaction file " << fileName << " does not exist." << std::endl;
-      std::exit(1);
+      PRINTERR_AND_EXIT("Error: Interaction file " << fileName << " does not exist.");
     }
     DEBUGprint("Add InteractionSet.. (--inter)");
     DEBUGprint(fileName);
@@ -454,10 +450,7 @@ std::unordered_map<std::string, std::vector<T>> parseBed_Hash(const std::string 
 {
   std::unordered_map<std::string, std::vector<T>> bedmap;
   std::ifstream in(fileName);
-  if(!in) {
-    std::cerr << "Error: BED file does not exist." << std::endl;
-    std::exit(1);
-  }
+  if(!in) PRINTERR_AND_EXIT("Error: BED file does not exist.");
 
   std::string lineStr;
   std::vector<std::string> v;
