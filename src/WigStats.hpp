@@ -48,27 +48,6 @@ class WigStats {
 
   void setWigStats(const WigArray &wigarray);
 
-  /*  void setZINBParam(const std::vector<int32_t> &ar) {
-    MyStatistics::moment<int32_t> mm(ar, 0);
-    ave = mm.getmean();
-    var = mm.getvar();
-    nb_p = var ? ave/var : 0;
-    if (nb_p>=1) nb_p = 0.9;
-    if (nb_p<=0) nb_p = 0.1;
-    nb_n = ave * nb_p /(1 - nb_p);
-    //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
-    //    if(ave) estimateZINB(nb_p, nb_n);
-    }*/
-
-  /*  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
-    uint32_t thre = getWigDistThre(wigDist, nbin);
-    double parray[thre+1];
-    parray[0] = thre;
-    for(uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
-    iterateZINB(&parray, nb_p_pre, nb_n_pre, nb_p, nb_n, nb_p0);
-    return;
-    }*/
-
   void addWigDist(const WigStats &chr) {
     for (size_t i=0; i<wigDist.size(); ++i) wigDist[i] += chr.wigDist[i];
   }
@@ -98,16 +77,37 @@ class WigStats {
   int32_t getnbin() const { return nbin; }
   int32_t getWigDistsize() const { return wigDist.size(); }
 
-  void peakcall(const WigArray &wigarray, const std::string &chrname);
-
   int32_t printPeak(std::ofstream &out, const int32_t num, const int32_t binsize) const {
     for(uint32_t i=0; i<vPeak.size(); ++i) {
       vPeak[i].print(out, num+i, binsize);
     }
     return vPeak.size();
   }
+
+  // Peakcall
+  void peakcall(const WigArray &wigarray, const std::string &chrname);
   double getpthre() const { return pthre; }
   double getlogp(const double val) const { return getlogpZINB(val, nb_p, nb_n); }
+  /*  void setZINBParam(const std::vector<int32_t> &ar) {
+    MyStatistics::moment<int32_t> mm(ar, 0);
+    ave = mm.getmean();
+    var = mm.getvar();
+    nb_p = var ? ave/var : 0;
+    if (nb_p>=1) nb_p = 0.9;
+    if (nb_p<=0) nb_p = 0.1;
+    nb_n = ave * nb_p /(1 - nb_p);
+    //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
+    //    if(ave) estimateZINB(nb_p, nb_n);
+    }*/
+
+  /*  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
+    uint32_t thre = getWigDistThre(wigDist, nbin);
+    double parray[thre+1];
+    parray[0] = thre;
+    for(uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
+    iterateZINB(&parray, nb_p_pre, nb_n_pre, nb_p, nb_n, nb_p0);
+    return;
+    }*/
 };
 
 class WigArray {
@@ -118,13 +118,13 @@ class WigArray {
   template <class T> double addGeta(const T val) const { return val*geta; }
 
   void checki(const size_t i) const {
-    if(i>=array.size()) PRINTERR("Invalid i for WigArray: " << i << " > " << array.size());
+    if(i>=array.size()) PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " > " << array.size());
   }
 
  public:
-  WigArray(): geta(1000.0){}
+  WigArray(): geta(10000.0){}
   WigArray(const size_t num, const int32_t val):
-    array(num, val), geta(1000.0)
+    array(num, val), geta(10000.0)
   {}
 
   size_t size() const { return array.size(); }
@@ -184,8 +184,9 @@ class WigArray {
     for(int32_t i=0; i<nbin; ++i) in.read((char *)&array[i], sizeof(int32_t));
     }*/
   void dump() const {
-    for (auto x: array) std::cout << x << std::endl;
+    for (auto &x: array) std::cout << x << std::endl;
   }
+
 };
 
 class WigStatsGenome {
@@ -210,9 +211,7 @@ public:
       ("binsize,b",
        boost::program_options::value<int32_t>()->default_value(100)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 1, "--binsize")),
        "bin size")
-      ("outputzero",
-//       boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--outputzero")),
-       "output zero-value bins (default: omitted)")
+      ("outputzero", "output zero-value bins (default: omitted)")
       ("rcenter",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcenter")),
        "consider length around the center of fragment")
@@ -224,8 +223,7 @@ public:
     binsize = MyOpt::getVal<int32_t>(values, "binsize");
     rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
-    outputzero  = values.count("outputzero"); //MyOpt::getVal<int32_t>(values, "outputzero");
-//    outputzero  = MyOpt::getVal<int32_t>(values, "outputzero");
+    outputzero  = values.count("outputzero");
 //    pthre_inter = MyOpt::getVal<double>(values, "pthre");
 
 //    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1, pthre_inter);

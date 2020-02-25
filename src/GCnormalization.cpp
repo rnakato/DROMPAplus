@@ -2,7 +2,6 @@
  * All rights reserved.
  */
 #include "GCnormalization.hpp"
-#include "WigStats.hpp"
 #include "../submodules/SSP/src/Mapfile.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
@@ -54,8 +53,8 @@ namespace {
     char c;
     std::vector<short> array(length,0);
     std::ifstream in(filename);
-    if(!in) PRINTERR("Could not open " << filename << ".");
-  
+    if(!in) PRINTERR_AND_EXIT("Could not open " << filename << ".");
+
     while (!in.eof()) {
       c = in.get();
       switch(state) {
@@ -83,7 +82,7 @@ namespace {
 	  }
 
 	  n++;
-	  if(n > length) PRINTERR("ERROR: length " << length << " < " << n);
+	  if(n > length) PRINTERR_AND_EXIT("ERROR: length " << length << " < " << n);
 	}
 	break;
       }
@@ -100,29 +99,29 @@ namespace {
     flen4gc = std::min(gc.getflen4gc(), flen - lenIgnoreOfFragment*2);
     std::cout << boost::format("GC distribution from %1% bp to %2% bp of fragments.\n") % lenIgnoreOfFragment % (flen4gc + lenIgnoreOfFragment);
   }
-  
+
   void GCdist::calcGCdist(const SeqStats &chr, const GCnorm &gc, const std::string &mpdir, const int32_t isBedOn, const std::vector<bed> &vbed)
   {
     std::vector<BpStatus> mparray = readMpbl_binary(mpdir, ("chr" + chr.getname()), chr.getlen());
     if(isBedOn) OverrideBedToArray(mparray, chr.getname(), vbed);
-  
+
     std::string fastaname= gc.getGCdir() + "/chr" + chr.getname() + ".fa";
     auto FastaArray = makeFastaArray(fastaname, chr.getlen(), flen4gc);
-  
+
     DistGenome = makeDistGenome(FastaArray, mparray, chr.getlen(), flen4gc);
     DistRead = makeDistRead(FastaArray, mparray, chr, chr.getlen(), flen, flen4gc);
 
     makeGCweightDist(gc.isGcDepthOff());
   }
-  
-  
+
+
   void GCdist::makeGCweightDist(const int32_t gcdepthoff)
   {
     for(int i=0; i<=flen4gc; ++i) {
       double r_genome = getPropGenome(i);
       double r_read   = getPropRead(i);
       double r_depth  = getPropDepth(i);
-    
+
       double w(0);
       if(!r_read || r_genome < threGcDist) w = 0;
       else{
@@ -142,7 +141,7 @@ namespace {
     }
     std::cout << "fragment distribution is output to "<< filename << "." << std::endl;
   }
-  
+
   void weightReadchr(SeqStatsGenome &genome, GCdist &dist, const std::string &GCdir, int s, int e, boost::mutex &mtx)
   {
     int flen(dist.getflen());
@@ -151,7 +150,7 @@ namespace {
       std::cout << genome.chr[i].getname() << ".." << std::flush;
       std::string fa = GCdir + "/chr" + genome.chr[i].getname() + ".fa";
       auto FastaArray = makeFastaArray(fa, genome.chr[i].getlen(), dist.getflen4gc());
-    
+
       for (auto strand: {Strand::FWD, Strand::REV}) {
 	for (auto &x: genome.chr[i].getvReadref_notconst(strand)) {
 	  if(x.duplicate) continue;
@@ -182,4 +181,3 @@ void weightRead(SeqStatsGenome &genome, GCdist &dist, const std::string &GCdir)
   printf("done.\n");
   return;
 }
-

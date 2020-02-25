@@ -111,7 +111,7 @@ void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
     std::cerr << "Warning: command " << command << "return nonzero status." << std::endl;
   }
 
-  /* rm */
+  /* rm _chr pdfs*/
   if (!p.isshowchr()) {
     command = "rm " + StrAllPdf;
     return_code = system(command.c_str());
@@ -180,7 +180,7 @@ void exec_GV(DROMPA::Global &p)
 }
 
 template <class T>
-void MakeProfile(DROMPA::Global &p)
+void exec_PROFILE_asType(DROMPA::Global &p)
 {
   T profile(p);
   profile.setOutputFilename(p);
@@ -202,9 +202,9 @@ void MakeProfile(DROMPA::Global &p)
 
 void exec_PROFILE(DROMPA::Global &p)
 {
-  if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) MakeProfile<ProfileTSS>(p);
-  else if (p.prof.isPtypeGene100()) MakeProfile<ProfileGene100>(p);
-  else if (p.prof.isPtypeBed())     MakeProfile<ProfileBedSites>(p);
+  if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) exec_PROFILE_asType<ProfileTSS>(p);
+  else if (p.prof.isPtypeGene100()) exec_PROFILE_asType<ProfileGene100>(p);
+  else if (p.prof.isPtypeBed())     exec_PROFILE_asType<ProfileBedSites>(p);
 
   return;
 }

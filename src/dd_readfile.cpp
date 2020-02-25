@@ -42,7 +42,7 @@ void readWig(T &in, WigArray &array, const std::string &chrname, const int binsi
 void readBedGraph(WigArray &array, const std::string &filename, const std::string &chrname, const int32_t binsize)
 {
   std::ifstream in(filename);
-  if (!in) PRINTERR("cannot open " << filename);
+  if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
 
   DEBUGprint("Read bedGraph...");
 
@@ -62,7 +62,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
 
     int32_t start(stoi(v[1]));
     int32_t end(stoi(v[2])-1);
-    if (start%binsize) PRINTERR("ERROR: invalid start position: " << start << " for binsize " << binsize);
+    if (start%binsize) PRINTERR_AND_EXIT("ERROR: invalid start position: " << start << " for binsize " << binsize);
     int32_t s(start/binsize);
     int32_t e(end/binsize);
     //    std::cout << s << "\t " << e << "\t " << array.size() << "\t" << stod(v[3]) << std::endl;
@@ -77,7 +77,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
 {
   static int nbinsum(0);
   std::ifstream in(filename, std::ios::in | std::ios::binary);
-  if (!in) PRINTERR("cannot open " << filename);
+  if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
 
   in.seekg(nbinsum * sizeof(int32_t));
 
@@ -92,7 +92,7 @@ void funcWig(WigArray &array, const std::string &filename, const int32_t binsize
 {
   DEBUGprint("WigType::UNCOMPRESSWIG");
   std::ifstream in(filename);
-  if (!in) PRINTERR("cannot open " << filename);
+  if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
   readWig(in, array, chrname, binsize);
   in.close();
 }
@@ -152,7 +152,7 @@ WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chr
   std::string chrname(chr.getrefname());
   WigType iftype(x.getiftype());
 
-  if (iftype == WigType::NONE) PRINTERR("Suffix error of "<< filename <<". please specify --iftype option.");
+  if (iftype == WigType::NONE) PRINTERR_AND_EXIT("Suffix error of "<< filename <<". please specify --iftype option.");
   else if (iftype == WigType::UNCOMPRESSWIG) funcWig(array, filename, binsize, chrname);
   else if (iftype == WigType::COMPRESSWIG)   funcCompressWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BIGWIG)        funcBigWig(array, filename, binsize, chrname);
@@ -169,7 +169,6 @@ int32_t getNcolReadNum(std::string &lineStr)
   int32_t ncol_readnum(0);
   std::vector<std::string> v;
   ParseLine(v, lineStr, '\t');
-  //  boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
   for (size_t i=0; i<v.size(); ++i) {
     if(isStr(v[i], "normalized read number")) {
       ncol_readnum = i;
@@ -185,7 +184,7 @@ void SampleInfo::scanStatsFile(const std::string &filename)
   DEBUGprint("scanStatsFile...");
 
   std::ifstream in(filename);
-  if (!in) PRINTERR("cannot open " << filename);
+  if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
 
   std::string lineStr;
   int32_t on(0);
@@ -199,14 +198,12 @@ void SampleInfo::scanStatsFile(const std::string &filename)
       else if(isStr(lineStr, "Genome")) {
 	std::vector<std::string> v;
 	ParseLine(v, lineStr, '\t');
-	//	boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
 	totalreadnum = stoi(v[ncol_readnum]);
 	on=1;
       }
     } else {
       std::vector<std::string> v;
       ParseLine(v, lineStr, '\t');
-      //      boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
       totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
     }
   }

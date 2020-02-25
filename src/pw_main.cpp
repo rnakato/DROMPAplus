@@ -144,7 +144,7 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
   }
   std::vector<std::string> opts = {"input", "output", "gt"};
   for (auto x: opts) {
-    if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+    if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
   }
 
   try {

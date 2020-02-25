@@ -91,7 +91,7 @@ public:
     for (auto &x: p.samplepair) binsize = x.first.getbinsize();
     binwidth_from_center = width_from_center / binsize;
     if (binwidth_from_center <= 1) {
-      PRINTERR("please specify larger size for --widthfromcenter:" << width_from_center
+      PRINTERR_AND_EXIT("please specify larger size for --widthfromcenter:" << width_from_center
 	       << " than binsize:" << binsize << ".");
     }
 
@@ -174,7 +174,7 @@ public:
     out << "), lwd=1.5)" << std::endl;
 
     std::string command("R --vanilla < " + Rscriptname);
-    if(system(command.c_str())) PRINTERR("Rscript execution failed.");
+    if(system(command.c_str())) PRINTERR_AND_EXIT("Rscript execution failed.");
   }
 
   virtual void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)=0;

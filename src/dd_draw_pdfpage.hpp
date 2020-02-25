@@ -90,7 +90,7 @@ public:
 		const double ymin, const double ymax)
   {
     std::ifstream in(filename);
-    if (!in) PRINTERR("cannot open " << filename);
+    if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
 
     array = std::vector<double>(chrlen/binsize +1);
 
@@ -106,7 +106,7 @@ public:
       int32_t start(stoi(v[0]));
       if(start % binsize){
 	printf("%d %d\n", start, binsize);
-	PRINTERR("[E]graph: invalid start position or binsize:  " << filename);
+	PRINTERR_AND_EXIT("[E]graph: invalid start position or binsize:  " << filename);
       }
       double val(stod(v[1]));
       array[start/binsize] = val;

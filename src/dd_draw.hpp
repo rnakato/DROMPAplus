@@ -6,7 +6,6 @@
 
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
-#include "WigStats.hpp"
 #include "color.hpp"
 
 class Figure {

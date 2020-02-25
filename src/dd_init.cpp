@@ -3,7 +3,6 @@
  */
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
-//#include "../submodules/SSP/common/BedFormat.hpp"
 #include "extendBedFormat.hpp"
 
 using namespace boost::program_options;
@@ -39,12 +38,12 @@ void vSampleInfo::addSampleInfo(const std::string &str, const std::vector<chrsiz
 
   // ChIP sample
   if(!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
-  if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR("please specify binsize.\n");
+  if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR_AND_EXIT("please specify binsize.\n");
 
   // Input sample
   if(v.size() >=2 && v[1] != "") {
     if(!Exists(v[1])) vsinfo[v[1]] = SampleInfo(v[1], gt, binsize, iftype);
-    if(vsinfo[v[0]].getbinsize() != vsinfo[v[1]].getbinsize()) PRINTERR("binsize of ChIP and Input should be same. " << str);
+    if(vsinfo[v[0]].getbinsize() != vsinfo[v[1]].getbinsize()) PRINTERR_AND_EXIT("binsize of ChIP and Input should be same. " << str);
   }
 }
 
@@ -322,12 +321,12 @@ void DrawRegion::setValues(const Variables &values) {
     if (values.count("region")) {
       isRegion = true;
       regionBed = parseBed<bed>(getVal<std::string>(values, "region"));
-      if(!regionBed.size()) PRINTERR("Error no bed regions in " << getVal<std::string>(values, "region"));
+      if(!regionBed.size()) PRINTERR_AND_EXIT("Error no bed regions in " << getVal<std::string>(values, "region"));
       //      printBed(regionBed);
     }
     if (values.count("genelocifile")) {
       getGeneLoci(getVal<std::string>(values, "genelocifile"));
-      if (!values.count("gene")) PRINTERR("Please specify --gene option when supplying --genelocifile.");
+      if (!values.count("gene")) PRINTERR_AND_EXIT("Please specify --gene option when supplying --genelocifile.");
     }
     len_geneloci = getVal<int32_t>(values, "len_geneloci");
 
@@ -413,7 +412,7 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 }
 
 void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables &values) {
-  for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+  for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
 
   oprefix = getVal<std::string>(values, "output");
   gt = read_genometable(getVal<std::string>(values, "gt"));
@@ -424,7 +423,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
       {
 	DEBUGprint("ChIP setValues...");
 	try {
-//	  if (!values.count("input")) PRINTERR("specify --input option.");
+//	  if (!values.count("input")) PRINTERR_AND_EXIT("specify --input option.");
 
 	  // SamplePairOverlayed first
 	  if (values.count("input")) {
@@ -478,7 +477,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::PD:
       {
 	DEBUGprint("Global::setValues::PD");
-	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR("specify --" << x << " option.");
+	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
 	//	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
 
 	std::vector<std::string> v(getVal<std::vector<std::string>>(values, "pd"));

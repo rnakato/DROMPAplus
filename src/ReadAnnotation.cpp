@@ -41,7 +41,7 @@ HashOfGeneDataMap extract_mp(const HashOfGeneDataMap &tmp, const std::vector<std
 std::vector<std::string> readGeneList(const std::string& fileName)
 {
   std::ifstream in(fileName);
-  if(!in) PRINTERR("genelist file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("genelist file does not exist.");
 
   std::vector<std::string> glist;
   std::string lineStr;
@@ -78,7 +78,7 @@ const std::string changeIntToGreek(const std::string& name)
 void parseARSOriDB(const std::string& fileName, HashOfGeneDataMap &mp)
 {
   std::ifstream in(fileName);
-  if(!in) PRINTERR("ARS file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("ARS file does not exist.");
 
   std::string lineStr;
 
@@ -113,7 +113,7 @@ void parseARSOriDB(const std::string& fileName, HashOfGeneDataMap &mp)
 void parseTER(const std::string& fileName, HashOfGeneDataMap &mp)
 {
   std::ifstream in(fileName);
-  if(!in) PRINTERR("ARS file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("ARS file does not exist.");
 
   std::string lineStr;
 
@@ -144,7 +144,7 @@ HashOfGeneDataMap parseSGD(const std::string& fileName)
   }
 
   std::ifstream in(fileName);
-  if(!in) PRINTERR(fileName << " does not exist.");
+  if(!in) PRINTERR_AND_EXIT(fileName << " does not exist.");
 
   HashOfGeneDataMap tmp;
   std::string lineStr;
@@ -202,7 +202,7 @@ HashOfGeneDataMap parseRefFlat(const std::string& fileName)
 
   bool UCSC(false);
   std::ifstream in(fileName);
-  if(!in) PRINTERR("refFlat file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("refFlat file does not exist.");
 
   HashOfGeneDataMap tmp;
   std::string lineStr;
@@ -251,7 +251,7 @@ HashOfGeneDataMap parseGtf(const std::string& fileName)
   }
 
   std::ifstream in(fileName);
-  if(!in) PRINTERR("gtf file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("gtf file does not exist.");
 
   HashOfGeneDataMap tmp;
   std::string lineStr;
@@ -406,7 +406,7 @@ void printRefFlat(const HashOfGeneDataMap &mp, const int32_t nameflag)
 std::vector<chrsize> read_genometable(const std::string& fileName)
 {
   std::ifstream in(fileName);
-  if(!in) PRINTERR("genometable file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("genometable file does not exist.");
 
   std::vector<chrsize> gt;
   std::string lineStr;

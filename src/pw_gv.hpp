@@ -48,7 +48,7 @@ namespace RPM {
       ntype  = MyOpt::getVal<std::string>(values, "ntype");
       nrpm   = MyOpt::getVal<int32_t>(values, "nrpm");
       ndepth = MyOpt::getVal<double>(values, "ndepth");
-      if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR("invalid --ntype.\n");
+      if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR_AND_EXIT("invalid --ntype.\n");
       DEBUGprint("Pnorm setValues done.");
     }
     void dump() const {

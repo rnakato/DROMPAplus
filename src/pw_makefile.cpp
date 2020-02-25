@@ -35,7 +35,7 @@ void generate_wigfile(Mapfile &p)
     outputWig(p, filename);
     if (oftype==WigType::COMPRESSWIG) {
       std::string command = "gzip -f " + filename;
-      if (system(command.c_str())) PRINTERR("gzip .wig failed.");
+      if (system(command.c_str())) PRINTERR_AND_EXIT("gzip .wig failed.");
     }
   } else if (oftype==WigType::BEDGRAPH) {
     filename += ".bedGraph";
@@ -215,7 +215,7 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
 
   printf("sort bedGraph...\n");
   std::string command = "sort -k1,1 -k2,2n "+ tempfile +" >> " + filename;
-  if (system(command.c_str())) PRINTERR("sorting bedGraph failed.");
+  if (system(command.c_str())) PRINTERR_AND_EXIT("sorting bedGraph failed.");
 
   remove(tempfile.c_str());
 

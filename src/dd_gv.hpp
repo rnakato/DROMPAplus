@@ -8,7 +8,6 @@
 #include <boost/algorithm/string.hpp>
 #include "WigStats.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
-//#include "../submodules/SSP/common/BedFormat.hpp"
 #include "extendBedFormat.hpp"
 #include "ReadAnnotation.hpp"
 #include "../submodules/SSP/common/util.hpp"
@@ -79,7 +78,7 @@ public:
 	binsize = 0;
       }
     }
-    if(binsize <= 0) PRINTERR("invalid binsize: " << v);
+    if(binsize <= 0) PRINTERR_AND_EXIT("invalid binsize: " << v);
   }
 
   SampleInfo() {}
@@ -102,7 +101,7 @@ public:
      } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
      else if(v[last] == "bw")         iftype = WigType::BIGWIG;
      //     else if(v[last] == "bin")        iftype = WigType::BINARY;
-     else PRINTERR("invalid postfix: " << filename);
+     else PRINTERR_AND_EXIT("invalid postfix: " << filename);
    }
    setbinsize(v[last-1], b);
    for (int32_t i=0; i<last; ++i) prefix += v[i] + ".";
@@ -334,7 +333,7 @@ namespace DROMPA {
       if(!gftype)        tmp = parseRefFlat(genefile);
       else if(gftype==1) tmp = parseGtf(genefile);
       else if(gftype==2) tmp = parseSGD(genefile);
-      else PRINTERR("invalid --gftype: " << gftype);
+      else PRINTERR_AND_EXIT("invalid --gftype: " << gftype);
 
       isUCSC = isGeneUCSC(tmp);
       //      printMap(tmp);
@@ -407,7 +406,7 @@ namespace DROMPA {
 
     void getGeneLoci(const std::string &genelocifile) {
         std::ifstream in(genelocifile);
-	if (!in) PRINTERR("cannot open " << genelocifile);
+	if (!in) PRINTERR_AND_EXIT("cannot open " << genelocifile);
 
 	std::string lineStr;
 	while (!in.eof()) {

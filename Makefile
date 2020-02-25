@@ -77,7 +77,7 @@ clean:
 	rm -rf bin obj
 	make -C $(SSPDIR) clean
 
-HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp $(SRCDIR)/WigStats.hpp
+HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/SeqStats.hpp
 
 $(OBJDIR)/ReadAnnotation.o: $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/GCnormalization.hpp $(SSPSRCDIR)/ReadBpStatus.hpp $(SRCDIR)/GenomeCoverage.hpp
