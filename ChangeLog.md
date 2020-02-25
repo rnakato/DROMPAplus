@@ -2,12 +2,13 @@
 
 ## 1.4.0 (2020-02-22)
 - Draft the manual page
-- add drompa.heatmap.py for heatmap visualization in otherbins directory
-- add sample scripts and related annotation data in tutorial directory
-- add scripts link in the root directory
+- Add drompa.heatmap.py for heatmap visualization in otherbins directory
+- Add sample scripts and related annotation data in tutorial directory
+- Add scripts link in the root directory
+- Move the source files from submodule/SSP/common to src
 - PROFILE: Bug fix in --stype 2
 - Bug fix in ARS visualiztion for yeast
-- remove --showars option
+- Remove --showars option
 
 ## 1.3.2 (2020-02-14)
 - Bug fix in --inter for Mango file

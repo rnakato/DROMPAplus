@@ -3,7 +3,8 @@
  */
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
-#include "../submodules/SSP/common/BedFormat.hpp"
+//#include "../submodules/SSP/common/BedFormat.hpp"
+#include "extendBedFormat.hpp"
 
 using namespace boost::program_options;
 using namespace MyOpt;

@@ -8,8 +8,9 @@
 #include <boost/algorithm/string.hpp>
 #include "WigStats.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
-#include "../submodules/SSP/common/BedFormat.hpp"
-#include "../submodules/SSP/common/ReadAnnotation.hpp"
+//#include "../submodules/SSP/common/BedFormat.hpp"
+#include "extendBedFormat.hpp"
+#include "ReadAnnotation.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
 class chrsize;
