@@ -1,5 +1,5 @@
 PROFILE: Aggregation plot (using R)
-====================================
+-----------------------------------------
 
 **PROFILE** mode makes an aggregation plot by supplying:
 

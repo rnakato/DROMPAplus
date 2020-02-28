@@ -1,5 +1,5 @@
 GV: Whole-chromosome view
-====================================
+-----------------------------------------
 
 The **GV** mode shows a chromosome-wide overview of the ChIP-seq data. Type::
 

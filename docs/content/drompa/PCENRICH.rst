@@ -9,39 +9,61 @@ technical and biological bias in high throughput sequencing can be minimized.
 Download the data
 +++++++++++++++++++++++++++++++
 
-Download the sample data (CRAM-format map files) from GoogleDrive::
+Download the sample data (CRAM-format map files) from GoogleDrive
 
-    https://drive.google.com/open?id=1f5H-umPgjzmDYLVHBdlIMWQXtt91S6Fc
-    https://drive.google.com/open?id=1f991hi-V9ITAWeUzr3AkqyRY8CbFTBXO
-    https://drive.google.com/open?id=1fDUgeo8IvhI-fikQv_PDCiDmNc9cBfWT
-    https://drive.google.com/open?id=1fGjY5nlhjePk_0TXKC5bLOzmdrer7IHh
-    https://drive.google.com/open?id=1fJh-f3CDNc7wAkuN79rndjptVq_qYU6k
-    https://drive.google.com/open?id=1fNRt1uvA1CQrIfb9NSJq3hYL9-GGJnXv
+- `YST1019_Gal_0min-n2-k1.sort.cram <https://drive.google.com/open?id=1-T5eq6ZgY5kUmRDlbIfFYNMBuwVCQKkc>`_
+- `YST1019_Gal_60min-n2-k1.sort.cram <https://drive.google.com/open?id=1-ZabbvJdAYxdaH5MD8s-sMKHkNiEsTQu>`_
+- `YST1019_Raf_0min-n2-k1.sort.cram <https://drive.google.com/open?id=1-aCu7DSfEG8EIfYCdwPwsmzjsLXfelY6>`_
+- `YST1019_Raf_60min-n2-k1.sort.cram <https://drive.google.com/open?id=1-bzJi5MNjVee5J3chQ7kbhlHTMgqqFut>`_
+- `YST1053_Gal_0min-n2-k1.sort.cram <https://drive.google.com/open?id=1-c-FHugX47qUHx50KWshhYS8V2Ns0n_c>`_
+- `YST1053_Gal_60min-n2-k1.sort.cram <https://drive.google.com/open?id=1-i0Vbpbd5nLfiTtieD3LLACCf5mVYUiG>`_
 
+
+Parse2wig
+++++++++++++++++++++++++++++++
+
+
+The command below generates a bigWig data for the six cram files::
+
+    gt=../data/genometable/genometable.sacCer3.txt
+    mptable=../data/mptable/mptable.UCSC.sacCer3.50mer.flen150.txt
+    for cell in YST1019_Gal YST1019_Raf YST1053_Gal; do
+       for min in 0min 60min; do
+           cram=${cell}_${min}-n2-k1.sort.cram
+           parse2wig+ -i $cram  -o ${cell}_${min} --gt $gt --mptable $mptable -n GR
+       done
+    done
 
 Make enrichment distribution
 ++++++++++++++++++++++++++++++++++++++++++
 
 
-To make a PDF file of the enrichment distribution for S. cerevisiae, type::
+To make a PDF file of the enrichment distribution for S. cerevisiae with the gene annotation, type::
 
-  $ drompa+ PC_ENRICH -p drompa4 $s1 $s2 $s3 $s4 $s5 $s6 \
-  $ --gt genometable.txt -g SGD_features.tab --gftype 3 --ars ARS-oriDB.txt \
-  $ --scale_ratio 4 --ls 100
+  $ dir=parse2wigdir+
+  $ gene=../data/S_cerevisiae/SGD_features.tab
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast --gt $gt -g $gene --gftype 2 \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
-``--ars`` option is specificied to visualize DNA replication origin (ARS) available for *S. cerevisiae* and *S. pombe*. The annotation data can be obtained from `OriDB <http://cerevisiae.oridb.org/>`_.
+.. image:: img/drompa_yeast.jpg
+   :width: 600px
+   :align: center
 
-Supply ``--showratio 2`` to show logratio::
+Supply ``--ars`` option to visualize DNA replication origin (ARS) available for *S. cerevisiae* and *S. pombe* (The annotation data can be obtained from `OriDB <http://cerevisiae.oridb.org/>`_)::
 
-  $ drompa+ PC_ENRICH -p drompa4 $s1 $s2 $s3 $s4 $s5 $s6 \
-  $ --gt genometable.txt -g SGD_features.tab --gftype 3 --ars ARS-oriDB.txt \
-  $ --scale_ratio 4 --ls 100 --showratio 2
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast-ARS --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
-
-
-If you want to check the enrichment precisely, it is good to adjust the y-axis as follows::
-
-  $ drompa+ PC_ENRICH -p drompa5 $s1 $s2 $s3 $s4 $s5 $s6 \
-  $ --gt genometable.txt -g SGD_features.tab --gftype 3 -ars ARS-oriDB.txt \
-  $ --scale_ratio 4 --ls 100 -bn 5 -ystep 10
-
+.. image:: img/drompa_yeast-ARS.jpg
+   :width: 600px
+   :align: center
