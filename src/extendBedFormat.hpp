@@ -1,8 +1,8 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#ifndef _BEDFORMAT_HPP_
-#define _BEDFORMAT_HPP_
+#ifndef _EXTENDBEDFORMAT_HPP_
+#define _EXTENDBEDFORMAT_HPP_
 
 #include <iostream>
 #include <fstream>
@@ -474,4 +474,4 @@ void printBed_Hash(const std::unordered_map<std::string, std::vector<T>> &mp)
   return;
 }
 
-#endif  // _BEDFORMAT_HPP_
+#endif  // _EXTENDBEDFORMAT_HPP_
