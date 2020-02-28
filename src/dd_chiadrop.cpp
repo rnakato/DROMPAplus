@@ -154,7 +154,8 @@ void add_barcode(std::vector<posivector> &vChIA, const std::vector<int32_t> &v, 
 
 void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
 {
-  DEBUGprint("StrokeChIADrop");
+  DEBUGprint_FUNCStart();
+
   int32_t boxheight(BOXHEIGHT_ChIADROP);
   std::string chr(rmchr(chrname));
 
@@ -235,6 +236,6 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
   }
   par.yaxis_now += boxheight + MERGIN_BETWEEN_READ_BED;
 
-  DEBUGprint("StrokeChIADrop done.");
+  DEBUGprint_FUNCStart();
   return;
 }

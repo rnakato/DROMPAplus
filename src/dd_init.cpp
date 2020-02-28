@@ -81,7 +81,7 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts) {
 }
 
 void Annotation::setValuesPC(const Variables &values) {
-  DEBUGprint("AnnoPC setValues...");
+  DEBUGprint_FUNCStart();
 
   try {
     for (auto x: {"gene", "ars", "ter", "repeat"}) if (values.count(x)) isFile(getVal<std::string>(values, x));
@@ -113,12 +113,11 @@ void Annotation::setValuesPC(const Variables &values) {
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-
-  DEBUGprint("AnnoPC setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void Annotation::setValuesGV(const Variables &values) {
-  DEBUGprint("AnnoGV setValues...");
+  DEBUGprint_FUNCStart();
 
   try {
     if (values.count("inter")) {
@@ -159,28 +158,26 @@ void Annotation::setValuesGV(const Variables &values) {
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("AnnoGV setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void Annotation::InitDumpPC(const Variables &values) const {
+  DEBUGprint_FUNCStart();
+
   std::vector<std::string> str_gftype = {"refFlat", "GTF", "SGD"};
-//  std::vector<std::string> str_gtype = {"Transcript", "Gene"};
-  DEBUGprint("INITDUMP:DrompaCommand::ANNO_PC");
   std::cout << boost::format("\nAnnotations:\n");
   if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype];
-  //      if(arsfile != "")  std::cout << boost::format("   ARS file: %1%\n") % arsfile;
-  //if(terfile != "")  std::cout << boost::format("   TER file: %1%\n") % terfile;
-  //if(repeatfile != "") std::cout << boost::format("   Repeat file: %1%\n") % repeatfile;
   printOpt<std::string>(values, "ars",    "   ARS file");
   printOpt<std::string>(values, "ter",    "   TER file");
-//  if(showars) std::cout << "Display ARS and TER only." << std::endl;
   printOpt<std::string>(values, "repeat", "   Repeat file");
   printOpt<std::string>(values, "region", "   Region file");
   printVOpt<std::string>(values, "bed", "   Bed file");
+  DEBUGprint_FUNCend();
 }
 
 void Annotation::InitDumpGV(const Variables &values) const {
-  DEBUGprint("INITDUMP:DrompaCommand::ANNO_GV");
+  DEBUGprint_FUNCStart();
+
   std::cout << boost::format("\nAnnotations:\n");
   printVOpt<std::string>(values, "inter", "   Interaction file");
   if (mpfile != "") {
@@ -193,10 +190,8 @@ void Annotation::InitDumpGV(const Variables &values) const {
   }
   printOpt<std::string>(values, "gc", "   GCcontents file");
   printOpt<std::string>(values, "gd", "   Gene density file");
-  /*	if(d->GC.argv)     std::cout << boost::format("   GCcontents file: %1%\n")   % values["gc"].as<std::string>();
-	if(d->GD.argv)     std::cout << boost::format("   Gene density file: %1%\n") % values["gd"].as<std::string>();*/
+  DEBUGprint_FUNCend();
 }
-
 
 void Profile::setOpts(MyOpt::Opts &allopts) {
   MyOpt::Opts opt("PROFILE AND HEATMAP",100);
@@ -215,7 +210,7 @@ void Profile::setOpts(MyOpt::Opts &allopts) {
 }
 
 void Profile::setValues(const Variables &values) {
-  DEBUGprint("PROF setValues...");
+  DEBUGprint_FUNCStart();
 
   try {
     ptype = getVal<int32_t>(values, "ptype");
@@ -227,11 +222,12 @@ void Profile::setValues(const Variables &values) {
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("PROF setValues done.");
+
+  DEBUGprint_FUNCend();
 }
 
 void Profile::InitDump() const {
-  DEBUGprint("INITDUMP:DrompaCommand::PROF");
+  DEBUGprint_FUNCStart();
 
   std::vector<std::string> str_ptype = { "TSS", "TTS", "GENE100", "BEDSITES" };
   std::vector<std::string> str_stype = { "ChIP read", "Enrichment ratio", "Enrichment P-value" };
@@ -241,6 +237,8 @@ void Profile::InitDump() const {
   std::cout << boost::format("   Show type: %1%\n")     % str_stype[stype];
   std::cout << boost::format("   Normalization: %1%\n") % str_ntype[ntype];
   std::cout << boost::format("   Width from center: %1%\n") % width_from_center;
+
+  DEBUGprint_FUNCend();
 }
 
 
@@ -261,7 +259,7 @@ void Threshold::setOpts(MyOpt::Opts &allopts) {
 }
 
 void Threshold::setValues(const Variables &values) {
-  DEBUGprint("Threshold setValues...");
+  DEBUGprint_FUNCStart();
   try {
     pthre_inter  = getVal<double>(values, "pthre_internal");
     pthre_enrich = getVal<double>(values, "pthre_enrich");
@@ -273,14 +271,12 @@ void Threshold::setValues(const Variables &values) {
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("Threshold setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void Threshold::InitDump() const {
-//  std::vector<std::string> str_bool = {"OFF", "ON"};
-  DEBUGprint("INITDUMP:DrompaCommand::THRE");
+  DEBUGprint_FUNCStart();
 
-  //  std::cout << boost::format("\nPeak calling by DROMPA+: %1%\n") % str_bool[sigtest];
   if (sigtest) {
     std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
     std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
@@ -289,6 +285,7 @@ void Threshold::InitDump() const {
     std::cout << boost::format("   Peak intensity threshold: %1$.2f\n")               % ipm;
     std::cout << boost::format("   Enrichment threshold: %1$.2f\n")                   % ethre;
   }
+  DEBUGprint_FUNCend();
 }
 
 void DrawRegion::setOpts(MyOpt::Opts &allopts) {
@@ -306,7 +303,8 @@ void DrawRegion::setOpts(MyOpt::Opts &allopts) {
 }
 
 void DrawRegion::setValues(const Variables &values) {
-  DEBUGprint("DrawRegion setValues...");
+  DEBUGprint_FUNCStart();
+
   try {
     for (auto x: {"region", "genelocifile"}) if (values.count(x)) isFile(getVal<std::string>(values, x));
     if (values.count("chr")) chr = getVal<std::string>(values, "chr");
@@ -325,18 +323,18 @@ void DrawRegion::setValues(const Variables &values) {
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("DrawRegion setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void DrawRegion::InitDump(const Variables &values) const {
-//  std::vector<std::string> str_bool = {"OFF", "ON"};
+  DEBUGprint_FUNCStart();
 
-  DEBUGprint("INITDUMP:DrompaCommand::DRAWREGION");
   printOpt<std::string>(values, "region",    "   Region file");
   if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
   if (values.count("genelocifile")) {
     std::cout << boost::format("   Geneloci file: %1%, around %2% bp\n") % getVal<std::string>(values, "genelocifile") % len_geneloci;
   }
+  DEBUGprint_FUNCend();
 }
 
 void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps) {
@@ -361,13 +359,13 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 	opts.add(o);
 	break;
       }
-    case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm); break;
-    case DrompaCommand::THRE:    thre.setOpts(opts); break;
-    case DrompaCommand::ANNO_PC: anno.setOptsPC(opts); break;
-    case DrompaCommand::ANNO_GV: anno.setOptsGV(opts); break;
+    case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm);    break;
+    case DrompaCommand::THRE:    thre.setOpts(opts);           break;
+    case DrompaCommand::ANNO_PC: anno.setOptsPC(opts);         break;
+    case DrompaCommand::ANNO_GV: anno.setOptsGV(opts);         break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
-    case DrompaCommand::REGION:  drawregion.setOpts(opts); break;
-    case DrompaCommand::PROF:    prof.setOpts(opts); break;
+    case DrompaCommand::REGION:  drawregion.setOpts(opts);     break;
+    case DrompaCommand::PROF:    prof.setOpts(opts);           break;
     case DrompaCommand::CG:
       {
 	options_description o("CG",100);
@@ -492,14 +490,14 @@ void Global::setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm) {
 }
 
 void Global::setValuesNorm(const Variables &values) {
-  DEBUGprint("Norm setValues...");
+  DEBUGprint_FUNCStart();
   try {
     norm = getVal<int32_t>(values, "norm");
     smoothing = getVal<int32_t>(values, "sm");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("Norm setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void Global::setOptsOther(MyOpt::Opts &allopts) {
@@ -515,7 +513,7 @@ void Global::setOptsOther(MyOpt::Opts &allopts) {
 }
 
 void Global::setValuesOther(const Variables &values) {
-  DEBUGprint("Other setValues...");
+  DEBUGprint_FUNCStart();
   try {
     includeYM = values.count("includeYM");
     ispng = values.count("png");
@@ -523,38 +521,41 @@ void Global::setValuesOther(const Variables &values) {
   } catch(const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("Other setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void Global::InitDumpChIP() const {
+  DEBUGprint_FUNCStart();
+
   std::vector<std::string> str_wigfiletype = {"BINARY", "COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
-  DEBUGprint("INITDUMP:DrompaCommand::CHIP");
   printf("\nSamples\n");
   for (size_t i=0; i<samplepair.size(); ++i) {
     std::cout << (i+1) << ": ";
     samplepair[i].print();
   }
-  if (iftype < WigType::NONE) std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[static_cast<int32_t>(iftype)];
+  if (iftype < WigType::NONE) {
+    std::cout << boost::format("Input format: %1%\n") % str_wigfiletype[static_cast<int32_t>(iftype)];
+  }
+  DEBUGprint_FUNCend();
 }
 
 void Global::InitDumpNorm() const {
-  std::vector<std::string> str_norm = { "OFF", "TOTALREAD GENOME", "TOTALREAD CHR", "NCIS" };
+  DEBUGprint_FUNCStart();
 
-  DEBUGprint("INITDUMP:DrompaCommand::NORM");
+  std::vector<std::string> str_norm = { "OFF", "TOTALREAD GENOME", "TOTALREAD CHR", "NCIS" };
   std::cout << boost::format("   ChIP/Input normalization: %1%\n") % str_norm[norm];
   if (smoothing) std::cout << boost::format("   smoothing width: %1% bins\n") % smoothing;
+  DEBUGprint_FUNCend();
 }
 
 void Global::InitDumpOther() const {
-//  std::vector<std::string> str_bool = {"OFF", "ON"};
-  std::vector<std::string> str_format = {"PDF", "PNG"};
+  DEBUGprint_FUNCStart();
 
-  DEBUGprint("INITDUMP:DrompaCommand::OTHER");
+  std::vector<std::string> str_format = {"PDF", "PNG"};
   std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
   if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
-  //  if (!showchr) std::cout << boost::format("   remove chr pdfs\n");
+  DEBUGprint_FUNCend();
 }
-
 
 void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
   MyOpt::Opts opt("Drawing",100);
@@ -581,7 +582,8 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
 }
 
 void DrawParam::setValues(const Variables &values, const int32_t n) {
-  DEBUGprint("DrawParam setValues...");
+  DEBUGprint_FUNCStart();
+
   try {
     showctag = getVal<int32_t>(values, "showctag");
     showitag = getVal<int32_t>(values, "showitag");
@@ -606,15 +608,16 @@ void DrawParam::setValues(const Variables &values, const int32_t n) {
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
-  DEBUGprint("DrawParam setValues done.");
+  DEBUGprint_FUNCend();
 }
 
 void DrawParam::InitDump() const {
+  DEBUGprint_FUNCStart();
+
   std::vector<std::string> str_bool = {"OFF", "ON"};
   std::vector<std::string> str_input = {"OFF", "ALL", "FIRST"};
   std::vector<std::string> str_ratio = {"OFF", "Linear", "Logratio"};
 
-  DEBUGprint("INITDUMP:DrompaCommand::DRAW");
   std::cout << boost::format("\nFigure parameter:\n");
   std::cout << boost::format("   Display read: ChIP %1%, Input %2%, y-axis scale: %3%\n") % str_bool[showctag] % str_input[showitag] % scale_tag;
   std::cout << boost::format("   Display enrichment: %1%, y-axis scale: %2%\n")           % str_ratio[showratio] % scale_ratio;
@@ -623,9 +626,13 @@ void DrawParam::InitDump() const {
   std::cout << boost::format("   Width per line: %1% kbp\n")           % (width_per_line/1000);
   std::cout << boost::format("   Y-axis label: %1%\n")                 % str_bool[showylab];
   std::cout << boost::format("   Y-axis memory: %1%\n")                % str_bool[showymem];
+
+  DEBUGprint_FUNCend();
 }
 
-Global::pdSample Global::scan_pdstr(const std::string &str){
+Global::pdSample Global::scan_pdstr(const std::string &str) {
+  DEBUGprint_FUNCStart();
+
   std::vector<std::string> v;
   ParseLine(v, str, ',');
 
@@ -642,5 +649,6 @@ Global::pdSample Global::scan_pdstr(const std::string &str){
   if(v[1] != "") pd.name = v[1];
   else pd.name = v[0];
 
+  DEBUGprint_FUNCend();
   return pd;
 }

@@ -127,7 +127,7 @@ void PDFPage::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
 
 void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
 {
-  DEBUGprint("strokeGeneSGD");
+  DEBUGprint_FUNCStart();
 
   cr->set_line_width(2.5);
   int32_t ycen(ycenter-30);
@@ -195,12 +195,13 @@ void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
     std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
   }
 
+  DEBUGprint_FUNCend();
   return;
 }
 
 void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
 {
-  DEBUGprint("strokeGene");
+  DEBUGprint_FUNCStart();
 
   cr->set_line_width(2.5);
   int32_t ycen(ycenter-20);
@@ -264,12 +265,15 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
   } catch (...) {
     std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
   }
+
+  DEBUGprint_FUNCend();
   return;
 }
 
 void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
 {
-  DEBUGprint("DrawGeneAnnotation");
+  DEBUGprint_FUNCStart();
+
   int32_t boxheight;
   if(p.anno.getgftype() == GFTYPE_SGD) boxheight = BOXHEIGHT_GENEBOX_NOEXON;
   else boxheight = BOXHEIGHT_GENEBOX_EXON;
@@ -280,7 +284,6 @@ void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
   if (p.anno.arsfile != "") {
     DEBUGprint("DrawARS");
     strokeARS(p.anno.arsgmp, ycenter);
-//    showtext_cr(cr, 70, ycenter, "ARS", 12);
   }
   if (p.anno.genefile != "") {
     DEBUGprint("DrawGene");
@@ -301,5 +304,7 @@ void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
   /* memory */
   stroke_xaxis(ycenter);
   par.yaxis_now += boxheight + MERGIN_BETWEEN_DATA;
+
+  DEBUGprint_FUNCend();
   return;
 }

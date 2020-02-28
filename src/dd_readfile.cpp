@@ -44,7 +44,7 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
   std::ifstream in(filename);
   if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
 
-  DEBUGprint("Read bedGraph...");
+  DEBUGprint_FUNCStart();
 
   int32_t on(0);
   std::string lineStr;
@@ -70,6 +70,8 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
   }
 
   in.close();
+
+  DEBUGprint_FUNCend();
   return;
 }
 
@@ -90,26 +92,33 @@ void readBedGraph(WigArray &array, const std::string &filename, const std::strin
 
 void funcWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
-  DEBUGprint("WigType::UNCOMPRESSWIG");
+  DEBUGprint_FUNCStart();
+
   std::ifstream in(filename);
   if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
   readWig(in, array, chrname, binsize);
   in.close();
+
+  DEBUGprint_FUNCend();
 }
 
 void funcCompressWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
-  DEBUGprint("WigType::COMPRESSWIG");
+  DEBUGprint_FUNCStart();
+
   std::string command = "zcat " + filename;
   FILE *fp = popen(command.c_str(), "r");
   __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
   std::istream in(static_cast<std::streambuf *>(p_fb));
   readWig(in, array, chrname, binsize);
+
+  DEBUGprint_FUNCend();
 }
 
 void funcBigWig(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
-  DEBUGprint("WigType::BIGWIG");
+  DEBUGprint_FUNCStart();
+
   int32_t fd(0);
   char tmpfile[] = "/tmp/DROMPAplus_bigWigToBedGraph_XXXXXXXX";
   if ((fd = mkstemp(tmpfile)) < 0) {
@@ -126,11 +135,17 @@ void funcBigWig(WigArray &array, const std::string &filename, const int32_t bins
   readBedGraph(array, std::string(tmpfile), chrname, binsize);
   unlink(tmpfile);
   close(fd);
+
+  DEBUGprint_FUNCend();
 }
+
 void funcBedGraph(WigArray &array, const std::string &filename, const int32_t binsize, const std::string &chrname)
 {
-  DEBUGprint("WigType::BEDGRAPH");
+  DEBUGprint_FUNCStart();
+
   readBedGraph(array, filename, chrname, binsize);
+
+  DEBUGprint_FUNCend();
 }
 
 /*void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin)
@@ -181,7 +196,7 @@ int32_t getNcolReadNum(std::string &lineStr)
 
 void SampleInfo::scanStatsFile(const std::string &filename)
 {
-  DEBUGprint("scanStatsFile...");
+  DEBUGprint_FUNCStart();
 
   std::ifstream in(filename);
   if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
@@ -207,6 +222,8 @@ void SampleInfo::scanStatsFile(const std::string &filename)
       totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
     }
   }
+
+  DEBUGprint_FUNCend();
 }
 
 void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<chrsize> &gt)
@@ -233,26 +250,28 @@ void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<
 
 void SamplePairEach::setratio(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname)
 {
-    DEBUGprint("setSamplePairEachRatio");
-    if (argvInput == "") return; // ratio = 1;
+  DEBUGprint_FUNCStart();
+  if (argvInput == "") return; // ratio = 1;
 
-    switch (normtype) {
-    case 0:  // not normalize
-      ratio = 1;
-      break;
-    case 1:  // total read for genome
-      ratio = getratio(vReadArray.getArray(argvChIP).totalreadnum,
-		       vReadArray.getArray(argvInput).totalreadnum);
-      break;
-    case 2:  // total read for each chromosome
-      ratio = getratio(vReadArray.getArray(argvChIP).totalreadnum_chr.at(chrname),
-		       vReadArray.getArray(argvInput).totalreadnum_chr.at(chrname));
-      break;
-    case 3:  // NCIS
-      ratio = 1;
-      break;
-    }
-#ifdef DEBUG
-    std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << ratio << std::endl;
-#endif
+  switch (normtype) {
+  case 0:  // not normalize
+    ratio = 1;
+    break;
+  case 1:  // total read for genome
+    ratio = getratio(vReadArray.getArray(argvChIP).totalreadnum,
+		     vReadArray.getArray(argvInput).totalreadnum);
+    break;
+  case 2:  // total read for each chromosome
+    ratio = getratio(vReadArray.getArray(argvChIP).totalreadnum_chr.at(chrname),
+		     vReadArray.getArray(argvInput).totalreadnum_chr.at(chrname));
+    break;
+  case 3:  // NCIS
+    ratio = 1;
+    break;
   }
+#ifdef DEBUG
+  std::cout << "ChIP/Input Ratio for chr " << chrname << ": " << ratio << std::endl;
+#endif
+
+  DEBUGprint_FUNCend();
+}

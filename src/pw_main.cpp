@@ -113,7 +113,7 @@ int main(int32_t argc, char* argv[])
 
 void getOpts(Mapfile &p, int32_t argc, char* argv[])
 {
-  DEBUGprint("setOpts...");
+  DEBUGprint_FUNCStart();
 
   MyOpt::Opts allopts("Options");
   p.setOpts(allopts);
@@ -156,7 +156,7 @@ void getOpts(Mapfile &p, int32_t argc, char* argv[])
     PRINTERR_AND_EXIT(e.what());
   }
 
-  DEBUGprint("getOpts done.");
+  DEBUGprint_FUNCend();
   return;
 }
 
@@ -305,7 +305,7 @@ void output_wigstats(const Mapfile &p)
 
 void Mapfile::setValues(const MyOpt::Variables &values)
 {
-  DEBUGprint("Mapfile setValues...");
+  DEBUGprint_FUNCStart();
 
   on_bed = values.count("bed");
   if(on_bed) {
@@ -334,5 +334,5 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   oprefix = MyOpt::getVal<std::string>(values, "odir") + "/" + MyOpt::getVal<std::string>(values, "output");
   obinprefix = oprefix + "." + std::to_string(MyOpt::getVal<int32_t>(values, "binsize"));
 
-  DEBUGprint("Mapfile setValues done.");
+  DEBUGprint_FUNCend();
 }

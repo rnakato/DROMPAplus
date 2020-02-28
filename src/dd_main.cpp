@@ -33,7 +33,7 @@ namespace {
   {
     int32_t cmdid(-1);
 
-    DEBUGprint("setOpts...");
+    DEBUGprint_FUNCStart();
 
     MyOpt::Opts command("Command");
     MyOpt::Opts genopts("Options");
@@ -82,6 +82,8 @@ namespace {
       exit(0);
     }
     return cmdid;
+
+    DEBUGprint_FUNCend();
   }
 
 }
@@ -191,8 +193,6 @@ void exec_PROFILE_asType(DROMPA::Global &p)
     std::cout << "\nchr" << chr.getname() << "..";
 
     profile.WriteTSV_EachChr(p, chr);
-
-    DEBUGprint("WriteTSV_EachChr done.");
   }
 
   profile.printNumOfSites();

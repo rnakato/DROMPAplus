@@ -4,8 +4,6 @@
 
 #include "dd_command.hpp"
 
-//             3DMAP       accumulate read counts in bed regions specified
-
 std::vector<Command> generateCommands()
 {
   std::vector<Command> cmds;

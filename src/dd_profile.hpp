@@ -205,7 +205,8 @@ public:
     ReadProfile(p) {}
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
-    DEBUGprint("ProfileTSS:WriteTSV_EachChr");
+    DEBUGprint_FUNCStart();
+
     if(p.anno.genefile == "") PRINTERR_AND_EXIT("Please specify --gene.");
 
     std::string chrname(rmchr(chr.getname()));
@@ -241,6 +242,8 @@ public:
 
       out.close();
     }
+
+    DEBUGprint_FUNCend();
   }
 };
 
@@ -270,7 +273,8 @@ public:
   {}
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
-    DEBUGprint("ProfileGene100:WriteTSV_EachChr");
+    DEBUGprint_FUNCStart();
+
     if(p.anno.genefile == "") PRINTERR_AND_EXIT("Please specify --gene.");
 
     std::string chrname(rmchr(chr.getname()));
@@ -299,6 +303,8 @@ public:
 	out << std::endl;
       }
     }
+
+    DEBUGprint_FUNCend();
   }
 
   void printHead(const DROMPA::Global &p) {
@@ -321,7 +327,7 @@ public:
     ReadProfile(p) {}
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr) {
-    DEBUGprint("ProfileBedSites:WriteTSV_EachChr");
+    DEBUGprint_FUNCStart();
 
     if(!p.anno.vbedlist.size()) PRINTERR_AND_EXIT("Please specify --bed.");
 
@@ -348,6 +354,7 @@ public:
       out.close();
     }
 
+    DEBUGprint_FUNCend();
   }
 };
 

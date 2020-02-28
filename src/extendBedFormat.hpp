@@ -194,7 +194,7 @@ public:
 template <class T>
 std::vector<T> parseBed(const std::string &fileName)
 {
-  DEBUGprint("parseBed");
+  DEBUGprint_FUNCStart();
 
   std::vector<T> vbed;
   std::ifstream in(fileName);
@@ -214,7 +214,7 @@ std::vector<T> parseBed(const std::string &fileName)
     vbed.emplace_back(v);
   }
 
-  DEBUGprint("parseBed done.");
+  DEBUGprint_FUNCend();
   return vbed;
 }
 
@@ -322,10 +322,10 @@ public:
     if(!in) {
       PRINTERR_AND_EXIT("Error: Interaction file " << fileName << " does not exist.");
     }
-    DEBUGprint("Add InteractionSet.. (--inter)");
-    DEBUGprint(fileName);
-    DEBUGprint(label);
-    DEBUGprint(tool);
+    DEBUGprint("Add InteractionSet.. (--inter)\n"
+	       << fileName << "\n"
+	       << label << "\n"
+	       << tool << "\n");
 
     while (!in.eof()) {
       std::string lineStr;

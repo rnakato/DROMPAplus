@@ -44,12 +44,14 @@ namespace RPM {
     }
 
     void setValues(const MyOpt::Variables &values) {
-      DEBUGprint("Pnorm setValues...");
+      DEBUGprint_FUNCStart();
+
       ntype  = MyOpt::getVal<std::string>(values, "ntype");
       nrpm   = MyOpt::getVal<int32_t>(values, "nrpm");
       ndepth = MyOpt::getVal<double>(values, "ndepth");
       if(ntype != "NONE" && ntype != "GR" && ntype != "GD" && ntype != "CR" && ntype != "CD") PRINTERR_AND_EXIT("invalid --ntype.\n");
-      DEBUGprint("Pnorm setValues done.");
+
+      DEBUGprint_FUNCend();
     }
     void dump() const {
       std::cout << "\nTotal read normalization: " << ntype << std::endl;

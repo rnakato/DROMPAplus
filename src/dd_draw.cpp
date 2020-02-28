@@ -160,7 +160,8 @@ void PDFPage::drawArc_none_to(const Interaction &inter, const int32_t start, con
 
 void PDFPage::drawInteraction(const InteractionSet &vinter)
 {
-  DEBUGprint("drawInteraction");
+  DEBUGprint_FUNCStart();
+
   int32_t boxheight(BOXHEIGHT_INTERACTION);
   std::string chr(rmchr(chrname));
   double ytop(par.yaxis_now);
@@ -202,6 +203,7 @@ void PDFPage::drawInteraction(const InteractionSet &vinter)
   cr->stroke();
   par.yaxis_now += boxheight;
 
+  DEBUGprint_FUNCend();
   return;
 }
 
@@ -227,7 +229,8 @@ void PDFPage::stroke_xaxis(const double y)
 
 void PDFPage::StrokeGraph(const GraphData &graph)
 {
-  DEBUGprint("PDFPage::DrawGraph");
+  DEBUGprint_FUNCStart();
+
   int32_t s(par.xstart/graph.binsize);
   int32_t e(par.xend/graph.binsize +1);
   double diff = graph.binsize * par.dot_per_bp;
@@ -277,12 +280,14 @@ void PDFPage::StrokeGraph(const GraphData &graph)
   }
   par.yaxis_now += graph.boxheight + MERGIN_BETWEEN_GRAPH_DATA;
 
+  DEBUGprint_FUNCend();
   return;
 }
 
 void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
 {
-  DEBUGprint("drawBedAnnotation");
+  DEBUGprint_FUNCStart();
+
   int32_t boxheight(BOXHEIGHT_BEDANNOTATION);
   std::string chr(rmchr(chrname));
   double ycenter(par.yaxis_now + boxheight/2);
@@ -322,6 +327,7 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
   cr->stroke();
   par.yaxis_now += boxheight;
 
+  DEBUGprint_FUNCend();
   return;
 }
 
@@ -376,7 +382,8 @@ void PDFPage::StrokeReadLines(const DROMPA::Global &p)
 
 void PDFPage::DrawIdeogram(const DROMPA::Global &p)
 {
-  DEBUGprint("PDFPage::DrawIdeogram");
+  DEBUGprint_FUNCStart();
+
   int32_t boxheight(BOXHEIGHT_IDEOGRAM);
   int32_t on(0);
   int32_t acen_once(0);
@@ -431,6 +438,7 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
 
   par.yaxis_now += boxheight + MERGIN_BETWEEN_GRAPH_DATA;
 
+  DEBUGprint_FUNCend();
   return;
 }
 
@@ -480,7 +488,8 @@ void PDFPage::MakePage(const DROMPA::Global &p,
 		       const int32_t page_no,
 		       const std::string &pagelabel)
 {
-  DEBUGprint("PDFPage::MakePage");
+  DEBUGprint_FUNCStart();
+
   int32_t line_start, line_end;
   std::tie(line_start, line_end) = get_start_end_linenum(page_no, p.drawparam.getlpp());
 
@@ -510,6 +519,8 @@ void PDFPage::MakePage(const DROMPA::Global &p,
   cr->stroke();
 
   cr->show_page();
+
+  DEBUGprint_FUNCend();
   return;
 }
 
