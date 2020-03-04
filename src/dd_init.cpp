@@ -247,12 +247,12 @@ void Threshold::setOpts(MyOpt::Opts &allopts) {
 
   MyOpt::Opts opt("Threshold",100);
   opt.add_options()
+    ("callpeak",       "Implement peak-calling (default: skip)")
     ("pthre_internal", value<double>()->default_value(1e-3), "p-value for ChIP internal")
     ("pthre_enrich",   value<double>()->default_value(1e-3), "p-value for ChIP/Input enrichment")
     ("qthre",          value<double>()->default_value(1),    "FDR")
     ("ethre",          value<double>()->default_value(2),    "IP/Input fold enrichment")
     ("ipm",            value<double>()->default_value(0),    "Read intensity of peak summit")
-    ("callpeak",       "Call peaks by DROMPA")
     //    (SETOPT_OVER("width4lmd", int32_t, 100000, 0), "Width for calculating local lambda")
     ;
   allopts.add(opt);

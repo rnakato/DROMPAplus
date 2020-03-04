@@ -23,7 +23,7 @@ done
 # Make pdf
 dir=parse2wigdir+
 gene=../data/S_cerevisiae/SGD_features.tab
-
+gt=../data/genometable/genometable.sacCer3.txt
 drompa+ PC_ENRICH \
 	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
 	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
@@ -39,6 +39,24 @@ drompa+ PC_ENRICH \
 	-o drompa-yeast-ARS --gt $gt --ars $ars \
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
+drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	--callpeak \
+	-o drompa-yeast-ARS-peak --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
+
+drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	--callpeak --ethre 1.5 \
+	-o drompa-yeast-ARS-peak2 --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
+
+
+
 exit
 
 drompa+ PC_ENRICH \
@@ -46,11 +64,11 @@ drompa+ PC_ENRICH \
 	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
 	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
 	-o drompa-yeast-logratio --gt $gt --ars $ars \
-	--showratio 2 --scale_ratio 1 --ls 200 --sm 10 --lpp 3 
+	--showratio 2 --scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
 drompa+ PC_ENRICH \
 	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
 	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
 	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
 	-o drompa-yeast-detail --gt $gt --ars $ars \
-	--scale_ratio 1 --bn 5 --ystep 10 --ls 200 --sm 10 --lpp 3 
+	--scale_ratio 1 --bn 5 --ystep 10 --ls 200 --sm 10 --lpp 3

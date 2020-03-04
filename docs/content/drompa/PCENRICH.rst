@@ -1,4 +1,4 @@
-PC ENRICH: Enrichment visualization
+PC_ENRICH: Enrichment visualization
 -----------------------------------------
 
 For a small genome (e.g., yeast), the sequencing depth is generally enough (> 10 fold).
@@ -69,3 +69,37 @@ Supply ``--ars`` option to visualize DNA replication origin (ARS) available for 
 .. image:: img/drompa_yeast-ARS.jpg
    :width: 600px
    :align: center
+
+
+With ``--callpeak`` option, **PC_ENRICH** mode highlights bins in red in which containing ChIP/Input enrichments above the enrichment threshold (2.0 in default)::
+
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	--callpeak \
+	-o drompa-yeast-ARS-peak1 --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
+
+.. image:: img/drompa_yeast-ARS-peak1.jpg
+   :width: 600px
+   :align: center
+
+In this figure the difference of replicated regions between the samples is more pronounced. To change the enrichment threshold, supply ``--ethre`` as follows::
+
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	--callpeak --ethre 1.5 \
+	-o drompa-yeast-ARS-peak2 --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
+
+.. image:: img/drompa_yeast-ARS-peak2.jpg
+   :width: 600px
+   :align: center
+

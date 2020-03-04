@@ -272,7 +272,6 @@ class RatioDataFrame : public DataFrame {
 	cr->set_source_rgba(CLR_BLACK, 1);
 	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
 	showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: orange, 2: purple", 12);
-
       }
     } else {
       cr->set_source_rgba(CLR_BLACK, 1);

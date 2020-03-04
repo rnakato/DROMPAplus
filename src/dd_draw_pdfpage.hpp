@@ -12,7 +12,8 @@
 #include "dd_peakcall.hpp"
 #include "dd_draw_environment_variable.hpp"
 #include "dd_draw_myfunc.hpp"
-#include "color.hpp"
+
+class RGB;
 
 class DParam {
 public:
