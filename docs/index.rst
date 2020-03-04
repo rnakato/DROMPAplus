@@ -4,14 +4,18 @@ DROMPAplus: a pipeline tool for ChIP-seq analysis
 
 DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a ChIP-seq pipeline tool that meets various needs, including quality check, analysis, and visualization of multiple ChIP samples.
 
-The main features of DROMPAplus are:
+DROMPAplus is an update of `DROMPA3 <https://github.com/rnakato/DROMPA3>`_. It is written in C++ and runs from a single launch command on conventional Linux systems.
 
-* Applicable to any species whose genomic sequence is available;
-* Accepts multiple input/output file formats (SAM, BAM, Bowtie, WIG, BED, TagAlign(.gz), bigWig, and bedGraph);
-* Normalization using mappability and GC content;
-* Visualize ChIP/input enrichment and p-value of statistical tests along with the read distribution itself;
-* Output PDF format that is suitable to share the visualization on a cloud;
-* In addtion to typical peak calling, various types of ChIP-seq analysis are available.
+* The main features of DROMPAplus:
+
+    * Accepts multiple map file formats (SAM, BAM, CRAM, Bowtie, TagAlign(.gz)) and read distribution formats (WIG(.gz), bigWig,  bedGraph).
+    * Support spike-in normalization as well as total read normalization. 
+    * Output various quality metrics for ChIP-seq analysis.
+    * Visualize read distribution in conventional PDF format, which is preferable for many users, especially when sharing results (e.g., on a cloud storage) with other collaborators who do not have a strong bioinformatics background, because no additional programs are required.
+    * Automatic estimation of fragment length from single-end reads using `SSP <https://github.com/rnakato/SSP>`_.
+    * Can visualize two samples in one line, which delineates the co-occurrence (e.g., H3K4me3 and H3K27ac) and exclusivity (e.g., H3K27me3 and H3K36me3) of read enrichment. Transparency (alpha) of read color can be specified.
+    * Support chromatin loops from ChIA-PET (Mango format) and Hi-C (HICCUPS format) with colors corresponding to the p-values.
+    * HEATMAP command is now based on Python3, which enables flexible custamization.
 
 .. image:: img/workflow.jpg
    :width: 600px
@@ -19,6 +23,7 @@ The main features of DROMPAplus are:
 
 Contents:
 ---------
+
 .. toctree::
    :numbered:
    :glob:

@@ -7,7 +7,8 @@ drompa+ can visualize multiple ChIP samples with specified genome annotation, us
 * **PC_BROAD** peak-calling (for broad mode)
 * **PC_ENRICH** peak-calling (enrichment ratio)
 * **GV** global-view visualization
-* **PROFILE** make R script of averaged read density
+* **PROFILE** make pdf file and corresponding R script of averaged read density
+* **HEATMAP** make png file and corresponding Python script
 
 Note that the algorithm of **PC_SHARP**, **PC_BROAD** and **PC_ENRICH** is identical. Just the default parameter set is different. 
 

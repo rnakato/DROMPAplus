@@ -9,7 +9,9 @@ technical and biological bias in high throughput sequencing can be minimized.
 Download the data
 +++++++++++++++++++++++++++++++
 
-Download the sample data (CRAM-format map files) from GoogleDrive
+Here we use the data of replication analysis (Repli-seq) for *S. serevisiae*, which can be treated as a same manner with ChIP-seq. The original paper is: `Origin Association of Sld3, Sld7, and Cdc45 Proteins Is a Key Step for Determination of Origin-Firing Timing <https://pubmed.ncbi.nlm.nih.gov/22169533-origin-association-of-sld3-sld7-and-cdc45-proteins-is-a-key-step-for-determination-of-origin-firing-timing/>`_
+
+The CRAM-format map files can be downloaded from our GoogleDrive:
 
 - `YST1019_Gal_0min-n2-k1.sort.cram <https://drive.google.com/open?id=1-T5eq6ZgY5kUmRDlbIfFYNMBuwVCQKkc>`_
 - `YST1019_Gal_60min-n2-k1.sort.cram <https://drive.google.com/open?id=1-ZabbvJdAYxdaH5MD8s-sMKHkNiEsTQu>`_

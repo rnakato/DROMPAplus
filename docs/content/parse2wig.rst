@@ -1,7 +1,7 @@
 Parse2wig
 ============
 
-parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin).
+Parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin).
 
 
 .. contents::
@@ -37,7 +37,7 @@ For bin size 100kbp::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --binsize 100000
 
-To use multiple cpus, supply ``-p``::
+Supply ``-p`` to use multiple CPUs::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt -p 4
 
@@ -80,7 +80,7 @@ Supply ``--pair`` option for paired-end files::
   $ parse2wig+ --pair -i ChIP.paired.bam -o ChIP --gt genometable.txt
 
 In ``--pair`` mode, the fragment length of each read pair is calculated automatically.
-parse2wig+ discards read pairs that are mapped onto different chromosomes or the fragment length is longer than 500bp (in default, specified ``-maxins`` to change).
+parse2wig+ discards read pairs that are mapped onto different chromosomes or the fragment length is longer than 500bp (in default, specified ``--maxins`` to change).
 
 .. note::
 
@@ -91,7 +91,7 @@ PCR bias filtering
 ++++++++++++++++++++++
 
 parse2wig+ filters "redundant reads" (reads starting exactly at the same 5' ends) as "PCR bias".
-This filtering step can be omitted by supplying ``-nofilter`` option.
+This filtering step can be omitted by supplying ``--nofilter`` option.
 
 By default, the threshold of filtering is defined as::
 
@@ -120,12 +120,12 @@ parse2wig+ has the ``-n`` option to normalize the read distribution based on the
 * **-n CR**; for each chromosome, read number
 * **-n CD**; for each chromosome, read depth
 
-``-n GR`` is a typical total read normalization.
-If the mapped read number is quite different among chromosomes (e.g., mapfile contains chrX only), consider to use ``-n CR``. Also, use ``-np`` option to change read number after normalization (default: 10 million). 
+``-n GR`` is recommended that is a typical total read normalization.
+If the mapped read number is quite different among chromosomes (e.g., mapfile contains chrX only), consider to use ``-n CR``. Also, use ``--nrpm`` option to change read number after normalization (default: 20 million). 
 
-For example, the command below scales bin data so that the total number of nonredundant reads is 20 million::
+For example, the command below scales bin data so that the total number of nonredundant reads is 10 million::
 
-    $ parse2wig+ -i sample.sam -o sample --gt genometable.txt -n GR --np 20000000
+    $ parse2wig+ -i sample.sam -o sample --gt genometable.txt -n GR --nrpm 10000000
 
 .. note::
 
@@ -151,23 +151,19 @@ The low mappability regions (``--mpthre`` option, < 0.3 as default) are ignored 
 
 The mappability files for several species are available in /DROMPAplus/data/mptable/ directory.
 
-GC content
+GC content estimation
 -------------------------------
 
-Sometimes the sequenced data has much GC bias.
-In those cases, GC normalization is necessary.
-parse2wig+ can implement a GC normalization by supplying the chromosome FASTA files by ``--GC`` option and the binary mappability files by ``--mpbin`` option.
+parse2wig+ can estimate a GC content in mapped reads by supplying the chromosome FASTA files with ``--GC`` option and the binary mappability files by ``--mpbin`` option.
+
 The command::
 
-  $ parse2wig+ -i sample.sam -o sample --gt genometable.txt \
-  $ --GC <chromosomedir> --mpbin mappability/map
+  $ parse2wig+ -i sample.bam -o sample --gt genometable.txt \
+    --GC <chromosomedir> --mpbin mappability/map
 
 calculates the GC contents of the input file using the central 100 bp of each fragment.
-``<chromosomedir>`` is the directory that contains the FASTA files of all chromosomes described
-in ``genometable.txt`` with corresponding filenames. For example, if ``chr1`` is in ``genometable.txt``,
-there should be ``chr1.fa`` in ``<chromosomedir>``. ``-mpbin`` specifies the binary mappability text
-files (see section 9.1 for details).
+``<chromosomedir>`` is the directory that contains the FASTA files of all chromosomes described in ``genometable.txt`` with corresponding filenames. For example, if ``chr1`` is in ``genometable.txt``, there should be ``chr1.fa`` in ``<chromosomedir>``. ``--mpbin`` specifies the binary mappability text files.
 
 .. note:: 
     
-    Since this GC normalization scheme is under development, if a sample has a GC distribution quite different from other samples, it is better to consider re-preparing the sample rather than using it with GC normalization.
+    The GC normalization in DROMPA3 is deprecated in DROMPAplus because it often overcorrects the true read signals. When samples have a GC distribution quite different from other samples, it is better to re-prepare them rather than using them with GC normalization.
