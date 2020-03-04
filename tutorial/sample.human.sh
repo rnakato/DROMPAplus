@@ -19,7 +19,7 @@ parse2wig+ -i wgEncodeUwHistoneK562InputStdAlnRep1.bam    -o Input    --gt $gt -
 # Make pdf
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
-gene=Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
 drompa+ PC_SHARP \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
@@ -56,7 +56,7 @@ drompa+ PC_SHARP \
 # Visualize specific regions
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
-gene=Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
 
 ### make BED file "HOXA.txt"
 echo -e "chr7\t27100000\t27280000" > HOXA.txt
@@ -85,7 +85,7 @@ drompa+ PC_SHARP \
 # with chromatin loops
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
-gene=Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
 drompa+ PC_SHARP \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
@@ -122,33 +122,34 @@ drompa+ GV \
 # PROFILE
 dir=parse2wigdir+
 gt=../data/genometable/genometable.hg19.txt
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
 drompa+ PROFILE \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
 	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-	-o profile-K562-aroundTSS -g refFlat.txt --gt $gt --ptype 0
+	-o profile-aroundTSS -g $gene --gt $gt --ptype 0
 
 drompa+ PROFILE \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
 	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-	-o profile-K562-aroundGene -g refFlat.txt --gt $gt --ptype 2
+	-o profile-aroundGene -g $gene --gt $gt --ptype 2
 
 drompa+ PROFILE \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
 	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-	-o profile-K562-aroundGene -g refFlat.txt --gt $gt --ptype 2 --stype 1
+	-o profile-aroundGene -g $gene --gt $gt --ptype 2 --stype 1
 
 #HEATMAP
 ../otherbins/drompa.heatmap.py \
     -o heatmap-aroundTSS \
-    profile-K562-aroundTSS.ChIPread.H3K4me3.tsv \
-    profile-K562-aroundTSS.ChIPread.H3K27me3.tsv \
-    profile-K562-aroundTSS.ChIPread.H3K36me3.tsv
+    profile-aroundTSS.ChIPread.H3K4me3.tsv \
+    profile-aroundTSS.ChIPread.H3K27me3.tsv \
+    profile-aroundTSS.ChIPread.H3K36me3.tsv
 
 ../otherbins/drompa.heatmap.py \
     -o heatmap-aroundGene \
-    profile-K562-aroundGene.ChIPread.H3K4me3.tsv \
-    profile-K562-aroundGene.ChIPread.H3K27me3.tsv \
-    profile-K562-aroundGene.ChIPread.H3K36me3.tsv
+    profile-aroundGene.ChIPread.H3K4me3.tsv \
+    profile-aroundGene.ChIPread.H3K27me3.tsv \
+    profile-aroundGene.ChIPread.H3K36me3.tsv
