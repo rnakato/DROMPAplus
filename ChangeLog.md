@@ -4,6 +4,7 @@
 - Draft the manual page
 - Add drompa.heatmap.py for heatmap visualization in otherbins directory
 - Add sample scripts and related annotation data in tutorial directory
+- Add data/geneannotation directory and add Ensembl gene annotations
 - Add scripts link in the root directory
 - Move the source files from submodule/SSP/common to src
 - PROFILE: Bug fix in --stype 2
