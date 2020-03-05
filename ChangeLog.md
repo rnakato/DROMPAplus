@@ -9,6 +9,7 @@
 - Move the source files from submodule/SSP/common to src
 - PROFILE: Bug fix in --stype 2
 - Bug fix in ARS visualiztion for yeast
+- Bug fix in --showratio 2 (logratio)
 - Remove --showars option
 
 ## 1.3.2 (2020-02-14)
