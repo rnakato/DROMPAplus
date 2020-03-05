@@ -302,12 +302,12 @@ class LogRatioDataFrame : public DataFrame {  // log10
   void setColor(const double value, const int32_t nlayer, const double alpha){
     if (!nlayer) {
       if (isGV || sigtest) {
-	if (value < 0) cr->set_source_rgba(CLR_SALMON, 1);
-	else cr->set_source_rgba(CLR_DEEPSKYBLUE, 1);
+	if (value > 0) cr->set_source_rgba(CLR_SALMON, 1);
+	else cr->set_source_rgba(CLR_BLUEPURPLE, 1);
       } else cr->set_source_rgba(CLR_ORANGE, 1);
     } else {
       if (isGV || sigtest) {
-	if (value < 0) cr->set_source_rgba(CLR_RED, par.alpha);
+	if (value > 0) cr->set_source_rgba(CLR_DEEPSKYBLUE, par.alpha);
 	else cr->set_source_rgba(CLR_GRAY2, par.alpha);
       } else cr->set_source_rgba(CLR_PURPLE, par.alpha);
     }
@@ -373,8 +373,8 @@ class LogRatioDataFrame : public DataFrame {  // log10
     else         value = value ? log(value) / log(scale2nd): 0;
 
     int32_t len(0);
-    if (value > 0)      len = std::min(par.ystep*value, len_plus);
-    else if (value < 0) len = std::max(par.ystep*value, -len_minus);
+    if (value > 0)      len = -std::min(par.ystep*value, len_plus);
+    else if (value < 0) len = -std::max(par.ystep*value, -len_minus);
 
     // waku
     setColor(value, nlayer, par.alpha);
