@@ -627,6 +627,8 @@ void DrawParam::InitDump() const {
   std::cout << boost::format("   Y-axis label: %1%\n")                 % str_bool[showylab];
   std::cout << boost::format("   Y-axis memory: %1%\n")                % str_bool[showymem];
 
+  DEBUGprint("barnum " << barnum);
+  DEBUGprint("ystep " << ystep);
   DEBUGprint_FUNCend();
 }
 

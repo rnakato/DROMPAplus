@@ -44,7 +44,7 @@ public:
     num_line(p.drawparam.getNumLine(start, end)),
     num_page(p.drawparam.getNumPage(start, end)),
     width_per_line(p.drawparam.width_per_line),
-    yaxis_now(0), xstart(0), xend(0), ystep(12), barnum(2),
+    yaxis_now(0), xstart(0), xend(0), ystep(p.drawparam.getystep()), barnum(p.drawparam.getbarnum()),
     height_df(p.drawparam.getHeightDf()),
     width_draw(p.drawparam.width_draw_pixel),
     dot_per_bp(getratio(width_draw, width_per_line)),
@@ -76,59 +76,14 @@ public:
   GraphData(): binsize(0), memnum(0), boxheight(0), mmin(0), mmax(0), mwid(0){}
 
   void setValue(const DROMPA::Annotation::GraphDataFileName &g,
-		const std::string &chr,
-		const int32_t chrlen, const std::string &l,
-		const double ymin, const double ymax)
-  {
-    binsize = g.getbinsize();
-    label = l;
-    memnum = MEMNUM_GC;
-    boxheight = BOXHEIGHT_GRAPH;
-    std::string filename(g.getfilename() + "/" + chr + "-bs" + std::to_string(binsize));
-    setArray(filename, chrlen, ymin, ymax);
-  }
-  void setArray(const std::string &filename, const int32_t chrlen,
-		const double ymin, const double ymax)
-  {
-    std::ifstream in(filename);
-    if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
+		const std::string &chr, const int32_t chrlen,
+		const std::string &l,	const double ymin, const double ymax);
 
-    array = std::vector<double>(chrlen/binsize +1);
-
-    double maxtemp(0);
-    std::string lineStr;
-    while (!in.eof()) {
-      getline(in, lineStr);
-      if (lineStr.empty()) continue;
-
-      std::vector<std::string> v;
-      boost::split(v, lineStr, boost::algorithm::is_any_of(" \t"), boost::algorithm::token_compress_on);
-
-      int32_t start(stoi(v[0]));
-      if(start % binsize){
-	printf("%d %d\n", start, binsize);
-	PRINTERR_AND_EXIT("[E]graph: invalid start position or binsize:  " << filename);
-      }
-      double val(stod(v[1]));
-      array[start/binsize] = val;
-      if(maxtemp < val) maxtemp = val;
-    }
-    if (ymax) {
-      mmin = ymin;
-      mmax = ymax;
-    } else {
-      mmin = 0;
-      if(MEM_MAX_DEFAULT > maxtemp) mmax = MEM_MAX_DEFAULT;
-      else mmax = maxtemp;
-    }
-    mwid = mmax - mmin;
-  }
   double getylen(const int32_t i) const {
     return boxheight * (array[i] - mmin)/mwid;
   }
-  double getBoxHeight4mem() const {
-    return boxheight/memnum;
-  }
+  double getBoxHeight4mem() const { return boxheight/memnum; }
+
   const std::string getmemory(const int32_t i) const {
     std::string str;
     double mem(mwid/memnum);

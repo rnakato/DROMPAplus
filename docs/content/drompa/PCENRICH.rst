@@ -71,6 +71,25 @@ Supply ``--ars`` option to visualize DNA replication origin (ARS) available for 
    :align: center
 
 
+To check the enrichment level precisely, specify the number of y-axis memories with ``--bn`` and height of it with ``--ystep`` as follows::
+
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast-detail --gt $gt --ars $ars \
+	--scale_ratio 1 --ls 200 --sm 10 --lpp 3 \
+        --bn 5 --ystep 10 
+
+.. image:: img/drompa-yeast-detail.jpg
+   :width: 600px
+   :align: center
+
+Highlight peaks
++++++++++++++++++++++++++
+
 With ``--callpeak`` option, **PC_ENRICH** mode highlights bins in red in which containing ChIP/Input enrichments above the enrichment threshold (2.0 in default)::
 
   $ dir=parse2wigdir+
@@ -102,4 +121,6 @@ In this figure the difference of replicated regions between the samples is more 
 .. image:: img/drompa_yeast-ARS-peak2.jpg
    :width: 600px
    :align: center
+
+In this figure the difference of replicated regions between the samples is more pronounced. To change the enrichment threshold, supply ``--ethre`` as follows::
 

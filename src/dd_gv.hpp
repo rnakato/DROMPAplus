@@ -487,6 +487,8 @@ namespace DROMPA {
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
 
+    int32_t getbarnum() const { return barnum; }
+    double getystep() const { return ystep; }
     double getHeightDf() const { return ystep * barnum; }
 
     int32_t getNumLine(const int32_t s, const int32_t e) const{
