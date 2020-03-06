@@ -25,7 +25,7 @@ class DataFrame {
 			     const int32_t nlayer);
 
 protected:
-  enum {POSI_XLABEL=50};
+  enum { POSI_ASSAYLABEL=6, POSI_XLABEL=66 };
   const Cairo::RefPtr<Cairo::Context> cr;
   const DParam &par;
   double scale, scale2nd;
@@ -64,22 +64,37 @@ protected:
   void HighlightPeaks(const SamplePairOverlayed &pair){ (void)(pair); return; }
   int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
 
-  virtual void StrokeYlab(const SamplePairOverlayed &pair)=0;
-  virtual void setColor(const double value, const int32_t nlayer, const double alpha)=0;
+  virtual void getColor1st(const double alpha)=0;
+  virtual void getColor2nd(const double alpha)=0;
+  virtual void setColor(const double value, const int32_t nlayer, const double alpha);
   virtual double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)=0;
+  virtual const std::string getAssayName() const =0;
+
+  void StrokeYlab(const SamplePairOverlayed &pair) {
+    cr->set_source_rgba(CLR_BLACK, 1);
+    showtext_cr(cr, POSI_ASSAYLABEL, par.yaxis_now - height_df/2, getAssayName(), 10);
+
+    if (pair.OverlayExists()) {
+      getColor1st(1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
+      getColor2nd(1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
+    } else {
+      cr->set_source_rgba(CLR_BLACK, 1);
+      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
+    }
+  }
 };
 
 
 class ChIPDataFrame : public DataFrame {
-  void setColor(const double value, const int32_t nlayer, const double alpha) {
-    (void)(value);
-    if (!nlayer) cr->set_source_rgba(CLR_GREEN3, alpha);
-    else cr->set_source_rgba(CLR_ORANGE, alpha);
-  }
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     return vReadArray.getArray(pair.argvChIP).array[i];
   }
-  void StrokeYlab(const SamplePairOverlayed &pair);
+
+  void getColor1st(const double alpha) { cr->set_source_rgba(CLR_GREEN3, alpha); }
+  void getColor2nd(const double alpha) { cr->set_source_rgba(CLR_ORANGE, alpha); }
+  const std::string getAssayName() const { return "Reads"; }
 
  public:
   ChIPDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
@@ -89,8 +104,7 @@ class ChIPDataFrame : public DataFrame {
 		const std::string &chrname):
     DataFrame(cr_, pair.first.label, pair.second.label,
 	      p.drawparam.scale_tag, pair.first.scale.tag, pair.second.scale.tag,
-	      refparam,
-	      p.thre.sigtest, p.thre.ipm, chrname,
+	      refparam, p.thre.sigtest, p.thre.ipm, chrname,
 	      p.drawparam.width_draw_pixel)
   {}
 
@@ -108,21 +122,19 @@ class ChIPDataFrame : public DataFrame {
 };
 
 class InputDataFrame : public DataFrame {
-  void setColor(const double value, const int32_t nlayer, const double alpha) {
-    (void)(value);
-    if (!nlayer) cr->set_source_rgba(CLR_BLUE, alpha);
-    else cr->set_source_rgba(CLR_OLIVE, alpha);
-  }
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     return vReadArray.getArray(pair.argvInput).array[i];
   }
-  void StrokeYlab(const SamplePairOverlayed &pair);
+
+  void getColor1st(const double alpha) { cr->set_source_rgba(CLR_BLUE, alpha); }
+  void getColor2nd(const double alpha) { cr->set_source_rgba(CLR_OLIVE, alpha); }
+  const std::string getAssayName() const { return "Input"; }
 
  public:
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
 		 const SamplePairOverlayed &pair, const DParam &refparam,
 		 const std::string &chrname):
-    DataFrame(cr_, "Input", "",
+    DataFrame(cr_, pair.first.label, pair.second.label, //"Input", "",
 	      p.drawparam.scale_tag, pair.first.scale.tag, pair.second.scale.tag,
 	      refparam, false, 0, chrname,
 	      p.drawparam.width_draw_pixel)
@@ -143,21 +155,15 @@ class RatioDataFrame : public DataFrame {
 		     pair.ratio);
   }
 
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag) return "IP/Input";
-    else return pair.first.label;
-  }
-  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag) return "";
-    else return pair.second.label;
-  }
-  void StrokeYlab(const SamplePairOverlayed &pair);
+  void getColor1st(const double alpha) { cr->set_source_rgba(CLR_ORANGE, alpha); }
+  void getColor2nd(const double alpha) { cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha); }
+  const std::string getAssayName() const { return "ChIP/Input"; }
 
 public:
   RatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
 		 const SamplePairOverlayed &pair, const DParam &refparam,
 		 const std::string &chrname):
-    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
+    DataFrame(cr_, pair.first.label, pair.second.label,
 	      p.drawparam.scale_ratio, pair.first.scale.ratio, pair.second.scale.ratio,
 	      refparam, p.thre.sigtest, getEthre(p), chrname,
 	      p.drawparam.width_draw_pixel),
@@ -173,19 +179,13 @@ class LogRatioDataFrame : public DataFrame {
 
   void setColor(const double value, const int32_t nlayer, const double alpha);
 
+  void getColor1st(const double alpha) { cr->set_source_rgba(CLR_ORANGE, alpha); }
+  void getColor2nd(const double alpha) { cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha); }
+  const std::string getAssayName() const { return "ChIP/Input"; }
+
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)  // not used
   {
     return vReadArray.getArray(pair.argvChIP).array[i];
-  }
-
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag) return "IP/Input";
-    else return pair.first.label;
-  }
-
-  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag) return "";
-    else return pair.second.label;
   }
 
   void StrokeYmem(const int32_t nlayer) {
@@ -206,16 +206,15 @@ class LogRatioDataFrame : public DataFrame {
     }
   }
 
-  void StrokeYlab(const SamplePairOverlayed &pair);
-
   void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
-		     const int32_t i, const double xcen, const int32_t yaxis, const int32_t nlayer);
+		     const int32_t i, const double xcen, const int32_t yaxis,
+		     const int32_t nlayer);
 
  public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
 		    const SamplePairOverlayed &pair, const DParam &refparam,
 		    const std::string &chrname):
-    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
+    DataFrame(cr_, pair.first.label, pair.second.label,
 	      p.drawparam.scale_ratio, pair.first.scale.ratio, pair.second.scale.ratio,
 	      refparam, p.thre.sigtest, getEthre(p), chrname,
 	      p.drawparam.width_draw_pixel),
@@ -227,79 +226,59 @@ class LogRatioDataFrame : public DataFrame {
   {}
 };
 
-class PinterDataFrame : public DataFrame {
-  void setColor(const double value, const int32_t nlayer, const double alpha)
-  {
-    if (!nlayer) { // first layer
-      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
-      else cr->set_source_rgba(CLR_GRAY, alpha);
-    } else {    // second layer
-      if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
-      else cr->set_source_rgba(CLR_GRAY2, alpha);
-    }
-  }
+class PvalueDataFrame : public DataFrame {
+  void setColor(const double value, const int32_t nlayer, const double alpha);
+  virtual double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)=0;
+  void getColor1st(const double alpha) { cr->set_source_rgba(CLR_RED, alpha); }
+  void getColor2nd(const double alpha) { cr->set_source_rgba(CLR_BLUE, alpha); }
+  virtual const std::string getAssayName() const =0;
+
+public:
+  PvalueDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
+		  const SamplePairOverlayed &pair, const DParam &refparam,
+		  const std::string &chrname,
+		  double pvalue):
+    DataFrame(cr_,
+	      pair.first.label, pair.second.label,
+	      p.drawparam.scale_pvalue,
+	      pair.first.scale.pvalue,
+	      pair.second.scale.pvalue,
+	      refparam, p.thre.sigtest,
+	      -log10(pvalue),
+	      chrname,
+	      p.drawparam.width_draw_pixel)
+  {}
+};
+
+class PinterDataFrame : public PvalueDataFrame {
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     const ChrArray &a = vReadArray.getArray(pair.argvChIP);
     return a.stats.getlogp(a.array[i]);
   }
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if (p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP)";
-    else return pair.first.label;
-  }
-  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if (p.drawparam.showctag || p.drawparam.showratio) return "";
-    else return pair.second.label;
-  }
-  void StrokeYlab(const SamplePairOverlayed &pair);
+  const std::string getAssayName() const { return "logp(ChIP)"; }
 
 public:
   PinterDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
 		  const SamplePairOverlayed &pair, const DParam &refparam,
 		  const std::string &chrname):
-    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
-	      p.drawparam.scale_pvalue, pair.first.scale.pvalue, pair.second.scale.pvalue,
-	      refparam, p.thre.sigtest, -log10(p.thre.pthre_inter), chrname,
-	      p.drawparam.width_draw_pixel)
+    PvalueDataFrame(cr_, p, pair, refparam, chrname, p.thre.pthre_inter)
   {}
-
 };
 
-class PenrichDataFrame : public DataFrame {
-  void setColor(const double value, const int32_t nlayer, const double alpha)
-  {
-    if (!nlayer) {
-      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
-      else cr->set_source_rgba(CLR_GRAY, alpha);
-    } else {
-      if (value > threshold) cr->set_source_rgba(CLR_YELLOW2, alpha);
-      else cr->set_source_rgba(CLR_GRAY2, alpha);
-    }
-  }
+class PenrichDataFrame : public PvalueDataFrame {
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     return binomial_test(vReadArray.getArray(pair.argvChIP).array[i],
 			 vReadArray.getArray(pair.argvInput).array[i],
 			 pair.ratio);
   }
-  const std::string getlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "log10(p) (ChIP/Input)";
-    else return pair.first.label;
-  }
-  const std::string get2ndlabel(const DROMPA::Global &p, const SamplePairOverlayed &pair) const {
-    if(p.drawparam.showctag || p.drawparam.showratio) return "";
-    else return pair.second.label;
-  }
-  void StrokeYlab(const SamplePairOverlayed &pair);
+  const std::string getAssayName() const { return "logp(Enrich)"; }
 
  public:
   PenrichDataFrame(const Cairo::RefPtr<Cairo::Context> cr_,
 		   const DROMPA::Global &p, const SamplePairOverlayed &pair,
 		   const DParam &refparam, const std::string &chrname):
-    DataFrame(cr_, getlabel(p, pair), get2ndlabel(p, pair),
-	      p.drawparam.scale_pvalue, pair.first.scale.pvalue, pair.second.scale.pvalue,
-	      refparam, p.thre.sigtest, -log10(p.thre.pthre_enrich), chrname,
-	      p.drawparam.width_draw_pixel)
+    PvalueDataFrame(cr_, p, pair, refparam, chrname, p.thre.pthre_enrich)
   {}
-
 };
 
 #endif /* _DD_DRAW_DATAFRAME_H_ */

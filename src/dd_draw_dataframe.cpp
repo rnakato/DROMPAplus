@@ -84,39 +84,6 @@ void DataFrame::Draw(const DROMPA::Global &p, const SamplePairOverlayed &pair, c
   if (p.drawparam.isshowylab()) StrokeYlab(pair);
 }
 
-void RatioDataFrame::setColor(const double value, const int32_t nlayer, const double alpha)
-{
-  if (!nlayer) { // first layer
-    if(isGV || sigtest) {
-      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
-      else cr->set_source_rgba(CLR_GRAY, alpha);
-    } else {
-      cr->set_source_rgba(CLR_ORANGE, alpha);
-    }
-  } else {    // second layer
-    if(isGV || sigtest) {
-      if (value > threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
-      else cr->set_source_rgba(CLR_GRAY2, alpha);
-    } else {
-      cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha);
-    }
-  }
-}
-
-void LogRatioDataFrame::setColor(const double value, const int32_t nlayer, const double alpha){
-  if (!nlayer) {
-    if (isGV || sigtest) {
-      if (value > 0) cr->set_source_rgba(CLR_SALMON, 1);
-      else cr->set_source_rgba(CLR_BLUEPURPLE, 1);
-    } else cr->set_source_rgba(CLR_ORANGE, 1);
-  } else {
-    if (isGV || sigtest) {
-      if (value > 0) cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha);
-      else cr->set_source_rgba(CLR_GRAY2, alpha);
-    } else cr->set_source_rgba(CLR_PURPLE, alpha);
-  }
-}
-
 void LogRatioDataFrame::StrokeEachBin(const SamplePairEach &pair,
 				      const vChrArray &vReadArray,
 				      const int32_t i,
@@ -147,9 +114,58 @@ void LogRatioDataFrame::StrokeEachBin(const SamplePairEach &pair,
   }
 }
 
-// StrokeYlab
+// SetColor
+void DataFrame::setColor(const double value, const int32_t nlayer, const double alpha)
+{
+  (void)(value);
+  if (!nlayer) getColor1st(alpha);
+  else getColor2nd(alpha);
+}
 
-void ChIPDataFrame::StrokeYlab(const SamplePairOverlayed &pair) {
+void RatioDataFrame::setColor(const double value, const int32_t nlayer, const double alpha)
+{
+  if (!nlayer) { // first layer
+    if(isGV || sigtest) {
+      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+      else cr->set_source_rgba(CLR_GRAY, alpha);
+    } else getColor1st(alpha);
+  } else {    // second layer
+    if(isGV || sigtest) {
+      if (value > threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
+      else cr->set_source_rgba(CLR_GRAY2, alpha);
+    } else getColor2nd(alpha);
+  }
+}
+
+void LogRatioDataFrame::setColor(const double value, const int32_t nlayer, const double alpha)
+{
+  if (!nlayer) {
+    if (isGV || sigtest) {
+      if (value > 0) cr->set_source_rgba(CLR_SALMON, 1);
+      else cr->set_source_rgba(CLR_BLUEPURPLE, 1);
+    } else getColor1st(alpha);
+  } else {
+    if (isGV || sigtest) {
+      if (value > 0) cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha);
+      else cr->set_source_rgba(CLR_GRAY2, alpha);
+    } else getColor2nd(alpha);
+  }
+}
+
+void PvalueDataFrame::setColor(const double value, const int32_t nlayer, const double alpha)
+{
+  if (!nlayer) { // first layer
+    if (value > threshold) getColor1st(alpha);
+    else cr->set_source_rgba(CLR_GRAY, alpha);
+  } else {    // second layer
+    if (value > threshold) getColor2nd(alpha);
+    else cr->set_source_rgba(CLR_GRAY, alpha);
+  }
+}
+
+// StrokeYlab
+/*void ChIPDataFrame::StrokeYlab(const SamplePairOverlayed &pair)
+{
   if (pair.OverlayExists()) {
     cr->set_source_rgba(CLR_GREEN3, 1);
     showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
@@ -210,7 +226,7 @@ void LogRatioDataFrame::StrokeYlab(const SamplePairOverlayed &pair) {
   }
 }
 
-void PinterDataFrame::StrokeYlab(const SamplePairOverlayed &pair)
+void PvalueDataFrame::StrokeYlab(const SamplePairOverlayed &pair)
 {
   if (pair.OverlayExists()) {
     if (label2nd != "") {
@@ -228,22 +244,4 @@ void PinterDataFrame::StrokeYlab(const SamplePairOverlayed &pair)
     showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
   }
 }
-
-void PenrichDataFrame::StrokeYlab(const SamplePairOverlayed &pair)
-{
-  if (pair.OverlayExists()) {
-    if (label2nd != "") {
-      cr->set_source_rgba(CLR_RED, 1);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
-      cr->set_source_rgba(CLR_YELLOW2, 1);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
-    } else {
-      cr->set_source_rgba(CLR_BLACK, 1);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, "1: red, 2: yellow", 12);
-    }
-  } else {
-    cr->set_source_rgba(CLR_BLACK, 1);
-    showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
-  }
-}
+*/
