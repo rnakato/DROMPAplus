@@ -11,18 +11,14 @@ A sample script file for tutorial is in "tutorial" derectory.
 Data
 ----------------
 
-The "data" directory contains several types of data:
+The *data* directory contains several types of data:
 
-- Genometable files for several species. To generate genometable files for other species (abd genome builds), use ``makegenometable.pl`` in the "scripts" directory as follows::
+- Genometable files for several species. To generate genometable files for other species (abd genome builds), use ``makegenometable.pl`` in the *scripts* directory as follows::
 
         makegenometable.pl genome.fa > genometable.txt
 
 - Ideogram files for visualization of chromosomes in **GV** command.
 - Mptable files that describe the mappable bases of each chromsome.
-
-
-
-
 
 
 Make mappability and gap files
@@ -34,44 +30,43 @@ Using the MOSAiCS scripts with the appropriate fragment length
 and binsize (here 150 bp and 100 bp, respectively), you can obtain the
 following files:
 
-- binary mappability files ``chr*\_map\_binary.txt``;
-- bin-level mappability files ``chr*\_map\_fragL150\_bin100.txt``;
+- binary mappability files ``chr*_map_binary.txt``;
+- bin-level mappability files ``chr*_map_fragL150_bin100.txt``;
 - gap files ``chr*_N_binary.txt``.
 
-\end{itemize}
 See the `MOSAiCS website <http://www.stat.wisc.edu/\~{}keles/Software/mosaics>`_ for more details.
-The bin-level mappability files are used for the ``-mp`` option of arse2wig}+
+The bin-level mappability files are used for the ``--mp`` option of parse2wig+
 
 After generateing those files, change their names for DROMPAplus::
 
-    $ for i in $(seq 1 22) X Y M; do
-    $ mv chr$\{i\}_map_binary.txt map_chr$\{i\}_binary.txt
-    $ mv chr$\{i\}_map_fragL150\_bin100.txt map_fragL150_chr$\{i\}_bin100.txt
-    $ mv chr$\{i\}_N_fragL150\_bin100.txt N_fragL150_chr$\{i\}_bin100.txt
-    $ done
+    for i in $(seq 1 22) X Y M; do
+       mv chr${i}_map_binary.txt map_chr${i\}_binary.txt
+       mv chr${i}_map_fragL150_bin100.txt map_fragL150_chr${i}_bin100.txt
+       mv chr${i}_N_fragL150_bin100.txt N_fragL150_chr${i}_bin100.txt
+    done
 
-After this, make the ``mappability table``, a tab-delimited file describing
+After this, make the "mappability table", a tab-delimited file describing
 the number of mappable bases for each chromosome, using
-``makemappabilitytable.pl`` in the "scripts" directory::
+``makemappabilitytable.pl`` in the *scripts* directory::
 
     # specify the prefix of binary mappability files for the second arguments
-    $ scripts/makemappabilitytable.pl genome_table.txt map > map_fragL150_genome.txt
+    $ makemappabilitytable.pl genometable.txt map > map_fragL150_genome.txt
 
 
-The prefix of the ``mappability table`` should be identical to the bin-level mappability files.
+The prefix of the mappability table should be identical to the bin-level mappability files.
 
 Finally, DROMPAplus can adopt these files as follows::
 
-    $ -mp map_fragL150  # means map_fragL150_chr*_bin100.txt
-    $ -mpbin map        # means map_chr*_binary.txt
-    $ -gap N_fragL150   # means N_fragL150_chr*_bin100.txt
+    --mp map_fragL150  # means map_fragL150_chr*_bin100.txt
+    --mpbin map        # means map_chr*_binary.txt
+    --gap N_fragL150   # means N_fragL150_chr*_bin100.txt
 
 
 Gene-density files
 --------------------------
 
 Gene density files can be generated through the
-``makegenedensity.pl`` in the "scripts" directory.
+``makegenedensity.pl`` in the *scripts* directory.
 To use a 500 kbp window, type::
 
      $ makegenedensity.pl genometable.txt refFlat.txt 500000
@@ -86,7 +81,7 @@ Next make a new directory for gene-density files::
 
 and the gene-density files can be specified as follows::
  
-    $ drompa+ GV $s1 $s2 $s3 $s4 -p ChIPseq-wholegenome -gt genometable.txt \
-    $ -GD gene_density_hg19/ -gdsize 500000
+    $ drompa+ GV $s1 $s2 $s3 $s4 -o ChIPseq-wholegenome --gt genometable.txt \
+    $ --GD gene_density_hg19/ --gdsize 500000
 
 

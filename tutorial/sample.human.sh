@@ -74,7 +74,7 @@ drompa+ PC_SHARP \
 # Overlayed pdf
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
-gene=Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
 drompa+ PC_SHARP \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
 	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
@@ -153,3 +153,16 @@ drompa+ PROFILE \
     profile-aroundGene.ChIPread.H3K4me3.tsv \
     profile-aroundGene.ChIPread.H3K27me3.tsv \
     profile-aroundGene.ChIPread.H3K36me3.tsv
+
+exit
+# Overlayed pdf
+gt=../data/genometable/genometable.hg19.txt
+dir=parse2wigdir+
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
+	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa-overlay -g $gene --gt $gt \
+        --showratio 1 --showpinter 1 --showpenrich 1 \
+	--lpp 1 --chr 20 \
+	--alpha 0.6 \

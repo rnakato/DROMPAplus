@@ -124,3 +124,65 @@ In this figure the difference of replicated regions between the samples is more 
 
 In this figure the difference of replicated regions between the samples is more pronounced. To change the enrichment threshold, supply ``--ethre`` as follows::
 
+
+Logratio distribution
++++++++++++++++++++++++++
+
+Log-scaled ChIP/Input enrichment can be visualized by supplying ``--showratio 2``::
+
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast-log2ratio \
+        --gt $gt --ars $ars \
+	--showratio 2 --scale_ratio 2 \
+        --ls 200 --sm 10 --bn 4 --lpp 3 \
+        --chr I
+
+where ``--chr I`` is supplied to make pdf for chrI only. ``--bn 4`` is supplied to increase the number of y-axis memory.
+
+.. image:: img/drompa-yeast-log2ratio.jpg
+   :width: 600px
+   :align: center
+
+In this mode, ``--scale_ratio`` indicates the base of a logarithm. Specify ``--scale_ratio 10`` to use log10::
+
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast-log10ratio \
+        --gt $gt --ars $ars \
+	--showratio 2 --scale_ratio 10 \
+        --ls 200 --sm 10 --bn 4 --lpp 3 \
+        --chr I
+
+where ``--chr I`` is supplied to make pdf for chrI only. ``--bn 4`` is supplied to increase the number of y-axis memory.
+
+.. image:: img/drompa-yeast-log10ratio.jpg
+   :width: 600px
+   :align: center
+
+Use ``--callpeak`` option to change colors between >1 and <1::
+
+  $ dir=parse2wigdir+
+  $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
+  $ drompa+ PC_ENRICH \
+	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
+	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
+	-i $dir/YST1053_Gal_60min.100.bw,$dir/YST1053_Gal_0min.100.bw,YST1053_Gal,,,200 \
+	-o drompa-yeast-log2ratio2 \
+        --gt $gt --ars $ars \
+	--showratio 2 --scale_ratio 2 \
+        --ls 200 --sm 10 --bn 4 --lpp 3 \
+        --callpeak \
+        --chr I
+
+.. image:: img/drompa-yeast-log2ratio2.jpg
+   :width: 600px
+   :align: center

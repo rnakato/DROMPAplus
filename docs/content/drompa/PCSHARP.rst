@@ -23,6 +23,11 @@ generates the PDF files ``drompa1.pdf`` for three ChIP samples (ChIP1, 2, 3 and 
 By default, **drompa+ PC_SHARP** visualizes ChIP-read lines only. The ``--showitag 1`` option displays input lines for all ChIP samples while the ``--show itag 2`` option displays only the line for first input.
 The latter is recommended when the same input sample is used for all ChIP samples. ``--lpp 2`` output 2 raws per one pdf page. ``--chr 1`` option output the pdf file for chromosome 1 only.
 
+.. note::
+
+   ``--chr`` option takes a string (not an integer) of chromosome name described in genometable.txt. Therefore supply ``--chr X`` for chromosome X, for instance.
+
+
 Supply ``--scale_tag`` to change the scale of y-axis::
 
   $ dir=parse2wigdir+
