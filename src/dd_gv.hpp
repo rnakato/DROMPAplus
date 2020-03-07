@@ -445,6 +445,7 @@ namespace DROMPA {
     int32_t linenum_per_page;
     int32_t barnum;
     double ystep;
+    bool shownegative;
     bool showymem;
     bool showylab;
 
@@ -484,6 +485,7 @@ namespace DROMPA {
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
     void setValues(const MyOpt::Variables &values, const int32_t n);
     void InitDump() const;
+    bool isshownegative() const { return shownegative; };
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
 

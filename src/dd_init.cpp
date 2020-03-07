@@ -330,7 +330,7 @@ void DrawRegion::InitDump(const Variables &values) const {
   DEBUGprint_FUNCStart();
 
   printOpt<std::string>(values, "region",    "   Region file");
-  if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
+//  if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
   if (values.count("genelocifile")) {
     std::cout << boost::format("   Geneloci file: %1%, around %2% bp\n") % getVal<std::string>(values, "genelocifile") % len_geneloci;
   }
@@ -575,6 +575,7 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
     (SETOPT_OVER("width_page", int32_t, 1088, 1), "Width(pixel) of pdf page")
     (SETOPT_OVER("width_draw", int32_t, 750, 1), "Width(pixel) of read line")
     (SETOPT_RANGE("alpha", double, 1,  0, 1), "Transparency of read distribution")
+    ("shownegative", "allow negative values in historgram")
     ("offymem", "Omit Y memory")
     ("offylabel", "Omit Y label")
     ;
@@ -596,6 +597,7 @@ void DrawParam::setValues(const Variables &values, const int32_t n) {
     linenum_per_page = getVal<int32_t>(values, "lpp");
     barnum = getVal<int32_t>(values, "bn");
     ystep  = getVal<double>(values, "ystep");
+    shownegative = values.count("shownegative");
     showymem = !values.count("offymem");
     showylab = !values.count("offylabel");
     alpha = getVal<double>(values, "alpha");

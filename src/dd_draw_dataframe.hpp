@@ -19,30 +19,34 @@ class DataFrame {
   }
 
   void StrokeBins(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t nlayer);
-
   virtual void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
 			     const int32_t i, const double xcen, const int32_t yaxis,
 			     const int32_t nlayer);
 
 protected:
-  enum { POSI_ASSAYLABEL=6, POSI_XLABEL=66 };
+  enum { POSI_ASSAYLABEL=6, POSI_XLABEL=66, LEN_EDGE=2};
   const Cairo::RefPtr<Cairo::Context> cr;
   const DParam &par;
   double scale, scale2nd;
   std::string label, label2nd;
   double width_df;
   double height_df;
-  double len_binedge;
+
+  int32_t barnum_minus;
+  int32_t barnum_plus;
+  double len_minus, len_plus;
 
   bool sigtest;
   double threshold;
   std::string chrname;
+  bool shownegative;
 
-  double getEthre(const DROMPA::Global &p) {
-    double thre(0);
-    if (p.isGV) thre = p.drawparam.scale_ratio;
-    else thre = p.thre.ethre;
-    return thre;
+  bool bothdirection;
+  uint32_t ndigit;
+
+  double getEthre(const DROMPA::Global &p) const {
+    if (p.isGV) return p.drawparam.scale_ratio;
+    else return p.thre.ethre;
   }
 
  public:
@@ -52,8 +56,13 @@ protected:
 	    const DParam &refparam, const bool sig, const double thre,
 	    const std::string &_chrname, const int32_t width_draw):
     cr(cr_), par(refparam), label(l), label2nd(l2),
-    width_df(width_draw), height_df(refparam.get_height_df()), len_binedge(2),
-    sigtest(sig), threshold(thre), chrname(_chrname)
+    width_df(width_draw), height_df(refparam.get_height_df()),
+    barnum_minus(refparam.barnum/2),
+    barnum_plus(refparam.barnum - barnum_minus),
+    len_minus(barnum_minus*par.ystep),
+    len_plus(barnum_plus*par.ystep),
+    sigtest(sig), threshold(thre), chrname(_chrname),
+    shownegative(false), bothdirection(false), ndigit(1)
   {
     if (slocal1) scale    = slocal1; else scale    = sglobal;
     if (slocal2) scale2nd = slocal2; else scale2nd = sglobal;
@@ -62,28 +71,18 @@ protected:
   void Draw(const DROMPA::Global &p, const SamplePairOverlayed &pair, const vChrArray &vReadArray);
 
   void HighlightPeaks(const SamplePairOverlayed &pair){ (void)(pair); return; }
-  int32_t getbinlen(const double value) const { return -std::min(par.ystep*value, height_df); }
 
   virtual void getColor1st(const double alpha)=0;
   virtual void getColor2nd(const double alpha)=0;
   virtual void setColor(const double value, const int32_t nlayer, const double alpha);
   virtual double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)=0;
   virtual const std::string getAssayName() const =0;
-
-  void StrokeYlab(const SamplePairOverlayed &pair) {
-    cr->set_source_rgba(CLR_BLACK, 1);
-    showtext_cr(cr, POSI_ASSAYLABEL, par.yaxis_now - height_df/2, getAssayName(), 10);
-
-    if (pair.OverlayExists()) {
-      getColor1st(1);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 - 7, label, 12);
-      getColor2nd(1);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2 + 7, label2nd, 12);
-    } else {
-      cr->set_source_rgba(CLR_BLACK, 1);
-      showtext_cr(cr, POSI_XLABEL, par.yaxis_now - height_df/2, label, 12);
-    }
+  virtual double get_yscale_num(int32_t i, double scale) const {
+    if (shownegative) return (i - barnum_minus) * scale;
+    else return i*scale;
   }
+
+  void StrokeYlab(const SamplePairOverlayed &pair);
 };
 
 
@@ -106,7 +105,9 @@ class ChIPDataFrame : public DataFrame {
 	      p.drawparam.scale_tag, pair.first.scale.tag, pair.second.scale.tag,
 	      refparam, p.thre.sigtest, p.thre.ipm, chrname,
 	      p.drawparam.width_draw_pixel)
-  {}
+  {
+    shownegative = p.drawparam.isshownegative();
+  }
 
   void HighlightPeaks(const SamplePairOverlayed &pair) {
     cr->set_source_rgba(CLR_RED, 0.4);
@@ -134,12 +135,13 @@ class InputDataFrame : public DataFrame {
   InputDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
 		 const SamplePairOverlayed &pair, const DParam &refparam,
 		 const std::string &chrname):
-    DataFrame(cr_, pair.first.label, pair.second.label, //"Input", "",
+    DataFrame(cr_, pair.first.label, pair.second.label,
 	      p.drawparam.scale_tag, pair.first.scale.tag, pair.second.scale.tag,
 	      refparam, false, 0, chrname,
 	      p.drawparam.width_draw_pixel)
   {
     (void)(pair);
+    shownegative = p.drawparam.isshownegative();
   }
 };
 
@@ -168,42 +170,29 @@ public:
 	      refparam, p.thre.sigtest, getEthre(p), chrname,
 	      p.drawparam.width_draw_pixel),
     isGV(p.isGV)
-  {}
+  {
+    shownegative = p.drawparam.isshownegative();
+  }
 };
 
 class LogRatioDataFrame : public DataFrame {
   bool isGV;
-  int32_t barnum_minus;
-  int32_t barnum_plus;
-  double len_minus, len_plus;
 
   void setColor(const double value, const int32_t nlayer, const double alpha);
 
   void getColor1st(const double alpha) { cr->set_source_rgba(CLR_ORANGE, alpha); }
   void getColor2nd(const double alpha) { cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha); }
-  const std::string getAssayName() const { return "ChIP/Input"; }
+  const std::string getAssayName() const { return "Enrichment"; }
 
-  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)  // not used
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)
   {
-    return vReadArray.getArray(pair.argvChIP).array[i];
+    return CalcRatio(vReadArray.getArray(pair.argvChIP).array[i],
+		     vReadArray.getArray(pair.argvInput).array[i],
+		     pair.ratio);
   }
 
-  void StrokeYmem(const int32_t nlayer) {
-    cr->set_source_rgba(CLR_BLACK, 0.5);
-    for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, par.getXaxisLen());
-    cr->stroke();
-
-    cr->set_source_rgba(CLR_BLACK, 1);
-    double x(0);
-    if (!nlayer) x = OFFSET_X + par.getXaxisLen() + 7;
-    else x = OFFSET_X - 20;
-
-    for(int32_t i=0; i<=par.barnum; ++i) {
-      double y_value;
-      if (!nlayer) y_value = std::pow(scale, i - barnum_minus);
-      else         y_value = std::pow(scale2nd, i - barnum_minus);
-      showtext_cr(cr, x, par.yaxis_now - i*(par.ystep - 1.5), float2string(y_value, 2), 9);
-    }
+  double get_yscale_num(int32_t i, double scale) const {
+    return std::pow(scale, i - barnum_minus);
   }
 
   void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
@@ -218,12 +207,11 @@ class LogRatioDataFrame : public DataFrame {
 	      p.drawparam.scale_ratio, pair.first.scale.ratio, pair.second.scale.ratio,
 	      refparam, p.thre.sigtest, getEthre(p), chrname,
 	      p.drawparam.width_draw_pixel),
-    isGV(p.isGV),
-    barnum_minus(refparam.barnum/2),
-    barnum_plus(refparam.barnum - barnum_minus),
-    len_minus(barnum_minus*par.ystep),
-    len_plus(barnum_plus*par.ystep)
-  {}
+    isGV(p.isGV)
+  {
+    bothdirection = true;
+    ndigit = 2;
+  }
 };
 
 class PvalueDataFrame : public DataFrame {
