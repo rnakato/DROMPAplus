@@ -97,6 +97,7 @@ void DataFrame::StrokeEachBin(const SamplePairEach &pair,
     if (value > 0)      len = -std::min(len,  (int32_t)len_plus);
     else if (value < 0) len = -std::max(len, -(int32_t)len_minus);
   } else                len = -std::min(len,  (int32_t)height_df);
+  if (!len) return;
 
 
 /*  DEBUGprint("value " << value
