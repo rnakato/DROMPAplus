@@ -21,8 +21,7 @@ void DataFrame::Draw(const DROMPA::Global &p,
     if (p.drawparam.isshowymem()) StrokeYmem(nlayer);
   }
 
-  // Sample Label
-  if (p.drawparam.isshowylab()) StrokeYlab(pair);
+  if (p.drawparam.isshowylab()) StrokeSampleLabel(pair);
 }
 
 void DataFrame::StrokeYmem(const int32_t nlayer)
@@ -45,7 +44,7 @@ void DataFrame::StrokeYmem(const int32_t nlayer)
   }
 }
 
-void DataFrame::StrokeYlab(const SamplePairOverlayed &pair) {
+void DataFrame::StrokeSampleLabel(const SamplePairOverlayed &pair) {
   cr->set_source_rgba(CLR_BLACK, 1);
   showtext_cr(cr, POSI_ASSAYLABEL, par.yaxis_now - height_df/2, getAssayName(), 10);
 

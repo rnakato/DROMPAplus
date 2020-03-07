@@ -13,7 +13,8 @@ class DataFrame {
   void StrokeFrame() {
     cr->set_line_width(0.4);
     cr->set_source_rgba(CLR_BLACK, 1);
-    rel_xline(cr, OFFSET_X, par.yaxis_now, par.getXaxisLen());
+    if(bothdirection || shownegative) rel_xline(cr, OFFSET_X, par.yaxis_now - len_minus, par.getXaxisLen());
+    else rel_xline(cr, OFFSET_X, par.yaxis_now - height_df, par.getXaxisLen());
     rel_yline(cr, OFFSET_X, par.yaxis_now - height_df, height_df);
     cr->stroke();
   }
@@ -82,7 +83,7 @@ protected:
     else return i*scale;
   }
 
-  void StrokeYlab(const SamplePairOverlayed &pair);
+  void StrokeSampleLabel(const SamplePairOverlayed &pair);
 };
 
 
