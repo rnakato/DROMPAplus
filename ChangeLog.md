@@ -6,6 +6,7 @@
 - Add sample scripts and related annotation data in tutorial directory
 - Add data/geneannotation directory and add Ensembl gene annotations
 - Add scripts link in the root directory
+- Add --shownegative option
 - Move the source files from submodule/SSP/common to src
 - PROFILE: Bug fix in --stype 2
 - Bug fix in ARS visualiztion for yeast
