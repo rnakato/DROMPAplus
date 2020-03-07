@@ -237,6 +237,8 @@ void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<
       totalreadnum_chr[chr.getname()] = array.getArraySum();
       totalreadnum += totalreadnum_chr[chr.getname()];
     }
+
+    // Stats file sakusei!!!!!!
   }
 
 #ifdef DEBUG

@@ -59,7 +59,7 @@ public:
 
 class SampleInfo {
   double lambda;
-  double nb_p, nb_n, nb_p0;
+//  double nb_p, nb_n, nb_p0;
   WigType iftype;
   int32_t binsize;
   int32_t totalreadnum;
@@ -116,6 +116,7 @@ public:
   int32_t gettotalreadnum() const { return totalreadnum; }
   const std::unordered_map<std::string, int32_t>& gettotalreadnum_chr() const& { return totalreadnum_chr; }
 };
+
 
 class vSampleInfo {
   std::unordered_map<std::string, SampleInfo> vsinfo;

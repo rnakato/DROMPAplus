@@ -14,9 +14,10 @@ using namespace DROMPA;
 #define NOTIFY_OVER(type,val,name)      notifier(boost::bind(&MyOpt::over<type>, _1, val, name))
 #define NOTIFY_RANGE(type,min,max,name) notifier(boost::bind(&MyOpt::range<type>, _1, min, max, name))
 
-inline std::string addDoubleQuotes (const std::string &str) { return "\"" + str + "\"";}
-
-void vSampleInfo::addSampleInfo(const std::string &str, const std::vector<chrsize> &gt, const WigType iftype) {
+void vSampleInfo::addSampleInfo(const std::string &str,
+				const std::vector<chrsize> &gt,
+				const WigType iftype)
+{
   int32_t binsize(0);
   std::vector<std::string> v;
   ParseLine(v, str, ',');
