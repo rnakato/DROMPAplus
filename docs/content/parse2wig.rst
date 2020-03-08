@@ -1,7 +1,7 @@
 Parse2wig
 ============
 
-Parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin).
+Parse2wig preprocesses an input mapfile into bin data (the number of mapped read per bin). A sample script file for tutorial is in “tutorial” derectory.
 
 
 .. contents::

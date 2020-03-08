@@ -3,8 +3,6 @@ GV: chromosome-wide overview
 
 100k-bp bin is recommended for **GV** mode. Run parse2wig+ to make bigWig files for 100k-bp bin::
 
-
-
     $ parse2wig+ -i H3K4me3.bam  -o H3K4me3  --gt genometable.txt -n GR --binsize 100000
     $ parse2wig+ -i H3K27me3.bam -o H3K27me3 --gt genometable.txt -n GR --binsize 100000
     $ parse2wig+ -i H3K36me3.bam -o H3K36me3 --gt genometable.txt -n GR --binsize 100000

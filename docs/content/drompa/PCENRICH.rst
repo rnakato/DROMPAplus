@@ -5,6 +5,7 @@ For a small genome (e.g., yeast), the sequencing depth is generally enough (> 10
 In such cases, the genome-wide ChIP/Input enrichment distribution is informative because the
 technical and biological bias in high throughput sequencing can be minimized.
 
+Here we show an example according to the sample script ``sample.yeast.sh`` in "tutorial" derectory.
 
 Download the data
 +++++++++++++++++++++++++++++++

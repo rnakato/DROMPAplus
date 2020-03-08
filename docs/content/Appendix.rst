@@ -1,13 +1,6 @@
 Appendix
 =================
 
-
-Sample scripts
---------------------
-
-A sample script file for tutorial is in "tutorial" derectory.
-``sample.human.sh`` includes the drompa+ **PC_SHARP**, **GV** and **PROFILE** commands for histone modification data of human K562 cells.
-
 Data
 ----------------
 
