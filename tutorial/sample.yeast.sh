@@ -66,6 +66,11 @@ drompa+ PC_ENRICH \
 	-o drompa-yeast-ARS-peak2 --gt $gt --ars $ars \
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
+
+# logratio
+dir=parse2wigdir+
+gt=../data/genometable/genometable.sacCer3.txt
+ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
 drompa+ PC_ENRICH \
 	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
 	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \
@@ -73,7 +78,6 @@ drompa+ PC_ENRICH \
 	-o drompa-yeast-log2ratio --gt $gt --ars $ars \
 	--showratio 2 --scale_ratio 2 --ls 200 --sm 10 --bn 4 --lpp 3 --chr I
 
-# logratio
 drompa+ PC_ENRICH \
 	-i $dir/YST1019_Gal_60min.100.bw,$dir/YST1019_Gal_0min.100.bw,YST1019_Gal,,,200 \
 	-i $dir/YST1019_Raf_60min.100.bw,$dir/YST1019_Raf_0min.100.bw,YST1019_Raf,,,200 \

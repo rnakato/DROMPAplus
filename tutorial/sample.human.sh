@@ -165,4 +165,4 @@ drompa+ PC_SHARP \
 	-o drompa-overlay -g $gene --gt $gt \
         --showratio 1 --showpinter 1 --showpenrich 1 \
 	--lpp 1 --chr 20 \
-	--alpha 0.6 \
+	--alpha 0.6
