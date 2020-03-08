@@ -413,8 +413,6 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
       {
 	DEBUGprint("ChIP setValues...");
 	try {
-//	  if (!values.count("input")) PRINTERR_AND_EXIT("specify --input option.");
-
 	  // SamplePairOverlayed first
 	  if (values.count("input")) {
 	    std::vector<std::string> v(getVal<std::vector<std::string>>(values, "input"));

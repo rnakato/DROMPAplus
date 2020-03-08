@@ -58,7 +58,7 @@ public:
 };
 
 class SampleInfo {
-  double lambda;
+//  double lambda;
 //  double nb_p, nb_n, nb_p0;
   WigType iftype;
   int32_t binsize;
@@ -175,7 +175,7 @@ public:
     //    printBed_Hash(peaks);
   }
 
-  void setratio(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
+  void setScalingFactor(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
 
   std::vector<bed> getpeaksChr(const std::string &chrname) const {
     if (peak_argv != "") return peaks.at(rmchr(chrname));

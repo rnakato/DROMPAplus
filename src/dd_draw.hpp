@@ -23,8 +23,8 @@ public:
   {
     int32_t normtype(p.getChIPInputNormType());
     for (auto &x: vsamplepairoverlayed) {
-      x.first.setratio(normtype, vReadArray, chr.getname());
-      if (x.OverlayExists()) x.second.setratio(normtype, vReadArray, chr.getname());
+      x.first.setScalingFactor(normtype, vReadArray, chr.getname());
+      if (x.OverlayExists()) x.second.setScalingFactor(normtype, vReadArray, chr.getname());
     }
   }
 
