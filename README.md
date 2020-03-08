@@ -9,6 +9,8 @@ DROMPAplus is written in C++ and has many valuable features:
 * highly customizable for track heights, axis limits, and display features
 * output the visualization in conventional PDF format, which is preferable for many users, especially when sharing results (e.g., on a cloud storage)
 
+See http://drompaplus.readthedocs.io/ for the detailed Manual.
+
 # 2. Requirements
 DROMPAplus requires the following programs and libraries:
 * [Boost C++ library](http://www.boost.org/)
@@ -65,10 +67,7 @@ For example, if you downloaded DROMPAplus into $HOME directory, type:
 
 Add these lines to ~/.bashrc to permanently set PATH.
 
-# 4. Usage
- See http://drompaplus.readthedocs.io/ for detail.
-
-# 5. Reference
+# 4. Reference
 For DROMPAplus:
 * Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *submitted*.
 
