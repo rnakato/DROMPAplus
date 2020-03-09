@@ -54,7 +54,7 @@ class WigStats {
 
   double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
 
-  double getPoisson(const int32_t i) const {
+  double getPoisson(const int32_t i, const double ave) const {
     if(ave) return _getPoisson(i, ave);
     else return 0;
   }
