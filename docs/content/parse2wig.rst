@@ -139,8 +139,8 @@ For example, the command below considers only 50 bp around the center of each fr
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --rcenter 50
 
-Mappability
--------------------------------
+Mappability information
+-----------------------------------------
 
 When supplying ``--mptable`` option, parse2wig+ uses the number of mappable bases as the genome/chromosome length.::
 
@@ -148,7 +148,7 @@ When supplying ``--mptable`` option, parse2wig+ uses the number of mappable base
 
 The mappability files for several species are available in "data/mptable" directory. When ``--mptable`` is not supplied, all bases are considered as mappable.
 
-Additionally, parse2wig+ can normalize reads based on the genome mappability by supplying mappability files with ``--mp`` option::
+parse2wig+ can normalize read distribution based on the mappability by supplying mappability files with ``--mp`` option::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mp mpbldirectory
 
