@@ -104,7 +104,7 @@ namespace {
   void GCdist::calcGCdist(const SeqStats &chr, const GCnorm &gc, const std::string &mpdir, const int32_t isBedOn, const std::vector<bed> &vbed)
   {
     auto mparray = readMpblBpArray(mpdir, ("chr" + chr.getname()), chr.getlen());
-    if(isBedOn) OverrideBedToArray(mparray, chr.getname(), vbed);
+    if(isBedOn) setPeak_to_MpblBpArray(mparray, chr.getname(), vbed);
 
     std::string fastaname = gc.getGCdir() + "/chr" + chr.getname() + ".fa";
     auto FastaArray = makeFastaArray(fastaname, chr.getlen(), flen4gc);

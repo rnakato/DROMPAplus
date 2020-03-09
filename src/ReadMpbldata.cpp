@@ -70,9 +70,9 @@ std::vector<BpStatus> readMpblBpArray(const std::string &mpfile,
   return mparray;
 }
 
-void OverrideBedToArray(std::vector<BpStatus> &array,
-			const std::string &chrname,
-			const std::vector<bed> &vbed)
+void setPeak_to_MpblBpArray(std::vector<BpStatus> &array,
+			    const std::string &chrname,
+			    const std::vector<bed> &vbed)
 {
   int32_t chrlen(array.size());
   for(auto &bed: vbed) {

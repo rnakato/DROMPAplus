@@ -13,7 +13,7 @@ namespace GenomeCov {
     int32_t chrlen(chr.getlen());
 
     auto array = readMpblBpArray(p.getMpDir(), ("chr" + chr.getname()), chrlen);
-    if(p.isBedOn()) OverrideBedToArray(array, chr.getname(), p.getvbedref());
+    if(p.isBedOn()) setPeak_to_MpblBpArray(array, chr.getname(), p.getvbedref());
 
     for (auto strand: {Strand::FWD, Strand::REV}) {
       for (auto &x: chr.getvReadref(strand)) {
@@ -36,5 +36,4 @@ namespace GenomeCov {
     }
     return array;
   }
-
 }
