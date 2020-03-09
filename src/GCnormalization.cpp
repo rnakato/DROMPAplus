@@ -2,6 +2,7 @@
  * All rights reserved.
  */
 #include "GCnormalization.hpp"
+#include "ReadMpbldata.hpp"
 #include "../submodules/SSP/src/Mapfile.hpp"
 #include "../submodules/SSP/common/util.hpp"
 

@@ -4,20 +4,21 @@
 #include <algorithm>
 #include "GenomeCoverage.hpp"
 #include "pw_gv.hpp"
+#include "ReadMpbldata.hpp"
 #include "../submodules/SSP/src/SeqStats.hpp"
 
 namespace GenomeCov {
   std::vector<BpStatus> makeGcovArray(const Mapfile &p, const SeqStats &chr, const double r4cmp)
   {
     int32_t chrlen(chr.getlen());
-    
+
     std::vector<BpStatus> array = readMpbl_binary(p.getMpDir(), ("chr" + chr.getname()), chrlen);
     if(p.isBedOn()) OverrideBedToArray(array, chr.getname(), p.getvbedref());
 
     for (auto strand: {Strand::FWD, Strand::REV}) {
       for (auto &x: chr.getvReadref(strand)) {
 	if(x.duplicate) continue;
-      
+
 	BpStatus val;
 	if(rand() >= r4cmp) val = BpStatus::COVREAD_ALL;
 	else                val = BpStatus::COVREAD_NORM;
