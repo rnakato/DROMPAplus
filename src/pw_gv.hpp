@@ -169,7 +169,7 @@ class Mapfile: private Uncopyable {
   }
 
   /*  void printPeak() const {
-    std::string filename = getbinprefix() + ".peak.xls";
+    std::string filename = getbinprefix() + ".peak.tsv";
     std::ofstream out(filename);
 
     vPeak[0].printHead(out);
@@ -205,7 +205,7 @@ class Mapfile: private Uncopyable {
       d.calcGCdist(genome.chr[id_longestChr], gc, getMpDir(), isBedOn(), vbed);
       maxGC = d.getmaxGC();
 
-      std::string filename = getprefix() + ".GCdist.xls";
+      std::string filename = getprefix() + ".GCdist.tsv";
       d.outputGCweightDist(filename);
 
       weightRead(genome, d, gc.getGCdir());

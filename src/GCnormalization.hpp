@@ -16,7 +16,7 @@ class SeqStatsGenome;
 
 class GCnorm {
   MyOpt::Opts opt;
-  
+
   int32_t on_GCnorm;
   std::string GCdir;
   int32_t flen4gc;
@@ -37,7 +37,7 @@ public:
       ("gcdepthoff", "ignore to consider depth of GC contents")
       ;
   }
-  
+
   void setOpts(MyOpt::Opts &allopts) {
     allopts.add(opt);
   }
@@ -47,7 +47,7 @@ public:
     flen4gc    = MyOpt::getVal<int32_t>(values, "flen4gc");
     gcdepthoff = values.count("gcdepthoff");
   }
-  
+
   const std::string & getGCdir() const { return GCdir; }
   int32_t isGcNormOn()   const { return on_GCnorm; }
   int32_t getflen4gc()   const { return flen4gc; }
@@ -84,7 +84,7 @@ public:
   int32_t getmaxGC() const { return getmaxi(DistRead); }
   double getGCweight(const int32_t i) const { return GCweight[i]; }
   void outputGCweightDist(const std::string &filename);
-  
+
   int32_t getflen() const { return flen; }
   int32_t getflen4gc() const { return flen4gc; }
 };

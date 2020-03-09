@@ -251,7 +251,7 @@ public:
     genome.estimateZINB(chr[id].nb_p, chr[id].nb_n);
    }*/
   void printPeak(const std::string &prefix) const {
-    std::string filename = prefix + ".peak.xls";
+    std::string filename = prefix + ".peak.tsv";
     std::ofstream out(filename);
 
     Peak v;
