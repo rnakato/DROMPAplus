@@ -142,18 +142,36 @@ For example, the command below considers only 50 bp around the center of each fr
 Mappability information
 -----------------------------------------
 
-When supplying ``--mptable`` option, parse2wig+ uses the number of mappable bases as the genome/chromosome length.::
+parse2wig+ utilizes three types of genome mappability information.
+See **Appendix** for the detail how to generate mappability data.
+
+mappable chromosome length
++++++++++++++++++++++++++++++
+
+With ``--mptable`` option, parse2wig+ considers the number of mappable bases as the genome/chromosome length.::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mptable mptable.UCSC.hg19.36mer.flen150.txt
 
 The mappability files for several species are available in "data/mptable" directory. When ``--mptable`` is not supplied, all bases are considered as mappable.
 
-parse2wig+ can normalize read distribution based on the mappability by supplying mappability files with ``--mp`` option::
+Bin-level mappability
++++++++++++++++++++++++++++++
+
+``--mp`` option specifies the mappability data of genomic bins.
+parse2wig+ normalizes read distribution based on the mappability::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mp mpbldirectory
 
-The low mappability regions (``--mpthre`` option, < 0.3 as default) are ignored in mappability normalization (and GC normalization). See **Appendix** for the detail how to generate mappability data.
+The bins in which the mappability is lower than the threshold (``--mpthre`` option, < 0.3 as default) are ignored in mappability normalization (and GC normalization).
 
+Base-pair level mappability
++++++++++++++++++++++++++++++
+
+``--mpbin`` option specifies the Base-pair resolution mappability. This option is used in calculating precise genome coverage and GC normalization.::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mpbin mpbldirectory
+
+``--mpbin`` option is mutually independent on ``--mp`` option in wig normalizatoion.
 
 GC content estimation
 ------------------------------
