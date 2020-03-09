@@ -54,10 +54,10 @@ class WigStats {
 
   double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
 
-  double getPoisson(const int32_t i, const double ave) const {
+/*  double getPoisson(const int32_t i) const {
     if(ave) return _getPoisson(i, ave);
     else return 0;
-  }
+  }*/
   double getNegativeBinomial(const int32_t i) const {
     return _getNegativeBinomial(i, nb_p, nb_n);
   }
@@ -87,7 +87,12 @@ class WigStats {
   // Peakcall
   void peakcall(const WigArray &wigarray, const std::string &chrname);
   double getpthre() const { return pthre; }
-  double getlogp(const double val) const { return getlogpZINB(val, nb_p, nb_n); }
+  double getlogp_Poisson(const double val, const double myu) const {
+    if(myu) return _getPoisson(val, myu);
+    else return 0;
+  }
+
+
   /*  void setZINBParam(const std::vector<int32_t> &ar) {
     MyStatistics::moment<int32_t> mm(ar, 0);
     ave = mm.getmean();
@@ -113,12 +118,14 @@ class WigStats {
 class WigArray {
   std::vector<int32_t> array;
   double geta;
+  enum {LENGTH_FOR_LOCALPOISSON=100000}; // 100 kbp
 
   template <class T> double rmGeta(const T val)  const { return val/geta; }
   template <class T> double addGeta(const T val) const { return val*geta; }
 
   void checki(const size_t i) const {
-    if(i>=array.size()) PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " > " << array.size());
+    if (i>=array.size())
+      PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " > " << array.size());
   }
 
  public:
@@ -146,9 +153,7 @@ class WigArray {
     array[i] *= val;
   }
 
-  void Smoothing(const int32_t nsmooth) {
-    GaussianSmoothing(array, nsmooth);
-  }
+  void Smoothing(const int32_t nsmooth) { GaussianSmoothing(array, nsmooth); }
 
   int64_t getArraySum() const {
     int64_t sum(0);
@@ -158,6 +163,19 @@ class WigArray {
   double getMinValue() const {
     int32_t min(*std::min_element(array.begin(), array.end()));
     return rmGeta(min);
+  }
+  double getLocalAverage(const int32_t i) const {
+    int32_t length(LENGTH_FOR_LOCALPOISSON);
+    checki(i);
+    if (i<0) PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " < 0.");
+
+    int64_t ave(0);
+    int32_t lenhalf(length/2);
+    int32_t left(std::max(i-lenhalf, 0));
+    int32_t right(std::min(i+lenhalf, (int32_t)array.size()));
+    for (int32_t j=left; j<right; ++j) ave += array[i];
+    ave /= right - left;
+    return rmGeta(ave);
   }
   double getPercentile(double per) const {
     int32_t v95(MyStatistics::getPercentile(array, per));

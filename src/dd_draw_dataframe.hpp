@@ -242,7 +242,8 @@ public:
 class PinterDataFrame : public PvalueDataFrame {
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     const ChrArray &a = vReadArray.getArray(pair.argvChIP);
-    return a.stats.getlogp(a.array[i]);
+    double myu(a.array.getLocalAverage(i));
+    return a.stats.getlogp_Poisson(a.array[i], myu);
   }
   const std::string getAssayName() const { return "logp(ChIP)"; }
 

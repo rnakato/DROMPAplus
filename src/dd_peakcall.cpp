@@ -66,7 +66,9 @@ void calc_ratio_and_pvalues(double *ratio, double *pval_inter, double *pval_enr,
   double nb_n = sample->ChIP->nb_n;
   double r = sample->comp->genome->ratio;
 
-  *pval_inter = zero_inflated_binomial_test(WIGARRAY2VALUE(sample->ChIP->data[i]), nb_p, nb_n);
+  *pval_inter = _getPoisson(i, ave)
+
+zero_inflated_binomial_test(WIGARRAY2VALUE(sample->ChIP->data[i]), nb_p, nb_n);
   if(sample->Input->argv){   // with Input
 
     *ratio = CALCRATIO(sample->ChIP->data[i], sample->Input->data[i], r);

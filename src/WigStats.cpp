@@ -45,7 +45,8 @@ void WigStats::peakcall(const WigArray &wigarray, const std::string &chrname)
 
   for (size_t i=0; i<wigarray.size(); ++i) {
     double val(wigarray[i]);
-    double logp(getlogp(val));
+    double myul(wigarray.getLocalAverage(i));
+    double logp(getlogp_Poisson(val,val));
 
     if (!ext) {
       if (logp > pthre) {
