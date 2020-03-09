@@ -169,7 +169,7 @@ namespace {
 
 void weightRead(SeqStatsGenome &genome, GCdist &dist, const std::string &GCdir)
 {
-  std::cout << "add weight to reads..." << std::flush;
+  std::cout << "Scaling reads based on GC content..." << std::flush;
 
   boost::thread_group agroup;
   boost::mutex mtx;
