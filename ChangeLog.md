@@ -5,6 +5,7 @@
 - Add drompa.heatmap.py for heatmap visualization in otherbins directory
 - Add sample scripts and related annotation data in tutorial directory
 - Add data/geneannotation directory and add Ensembl gene annotations
+- Add parsestats4DROMPAplus.pl in otherbins directory
 - Add scripts link in the root directory
 - Add --shownegative option
 - Move the source files from submodule/SSP/common to src
