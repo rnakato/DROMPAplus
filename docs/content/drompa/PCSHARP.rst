@@ -1,8 +1,12 @@
 PC_SHARP: Read distribution visualization
 ---------------------------------------------
 
-(Optional) Run parse2wig+ to make bigWig files for 100-bp bin::
+(Optional) Download bam files and run parse2wig+ to make bigWig files for 100-bp bin::
 
+    $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam
+    $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam
+    $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam
+    $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562InputStdAlnRep1.bam
     $ parse2wig+ -i H3K4me3.bam  -o H3K4me3  --gt genometable.txt -n GR --binsize 100000
     $ parse2wig+ -i H3K27me3.bam -o H3K27me3 --gt genometable.txt -n GR --binsize 100000
     $ parse2wig+ -i H3K36me3.bam -o H3K36me3 --gt genometable.txt -n GR --binsize 100000

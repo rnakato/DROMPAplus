@@ -43,7 +43,7 @@ Supply ``-p`` to use multiple CPUs::
 
 .. note::
 
-    * Multithreading is activated only in strand-shift profile for estimating frangment length. When suppying ``--nomodel`` option, multithreading will make no differece.
+    * Multithreading is activated in strand-shift profile for estimating frangment length and GC content estimation. When suppying ``--nomodel`` option and not using ``--chrdir`` option, multithreading will make no differece.
 
 
 Quality check
@@ -142,28 +142,58 @@ For example, the command below considers only 50 bp around the center of each fr
 Mappability
 -------------------------------
 
-parse2wig+ can normalize reads based on the genome mappability by supplying mappability files::
+When supplying ``--mptable`` option, parse2wig+ uses the number of mappable bases as the genome/chromosome length.::
 
-  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mp mappability/map_fragL150
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mptable mptable.UCSC.hg19.36mer.flen150.txt
 
-When ``--mp`` is not supplied, all bases are considered as mappable.
-The low mappability regions (``--mpthre`` option, < 0.3 as default) are ignored in mappability normalization (and GC normalization).
+The mappability files for several species are available in "data/mptable" directory. When ``--mptable`` is not supplied, all bases are considered as mappable.
 
-The mappability files for several species are available in /DROMPAplus/data/mptable/ directory.
+Additionally, parse2wig+ can normalize reads based on the genome mappability by supplying mappability files with ``--mp`` option::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mp mpbldirectory
+
+The low mappability regions (``--mpthre`` option, < 0.3 as default) are ignored in mappability normalization (and GC normalization). See **Appendix** for the detail how to generate mappability data.
+
 
 GC content estimation
--------------------------------
+------------------------------
 
-parse2wig+ can estimate a GC content in mapped reads by supplying the chromosome FASTA files with ``--GC`` option and the binary mappability files by ``--mpbin`` option.
+parse2wig+ can estimate and normalize based on GC contents of mapped reads as follows::
 
-The command::
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt \
+    --chrdir <chromosomedir>
 
-  $ parse2wig+ -i sample.bam -o sample --gt genometable.txt \
-    --GC <chromosomedir> --mpbin mappability/map
+where ``--chrdir`` option that indicates the directory of the reference chromosome FASTA files. ``<chromosomedir>`` is the directory that contains the FASTA files of all chromosomes described in ``genometable.txt`` with corresponding filenames.
+For example, if ``chr1`` is in ``genometable.txt``, there should be ``chr1.fa`` in ``<chromosomedir>``.
+parse2wig+ uses the longest chromosome described in "mptable.txt" or "genometable.txt" for GC content estimation.
 
-calculates the GC contents of the input file using the central 100 bp of each fragment.
-``<chromosomedir>`` is the directory that contains the FASTA files of all chromosomes described in ``genometable.txt`` with corresponding filenames. For example, if ``chr1`` is in ``genometable.txt``, there should be ``chr1.fa`` in ``<chromosomedir>``. ``--mpbin`` specifies the binary mappability text files.
+In GC content estimation, parse2wig+ consider 120 bp except for 5 bases of 5' edge (i.e. from 6 bp to 125 bp of each fragment) because the 5' edge often contains biased GC distribution. Use ``--flen4gc`` to change the length to be considered.
 
-.. note:: 
-    
-    The GC normalization in DROMPA3 is deprecated in DROMPAplus because it often overcorrects the true read signals. When samples have a GC distribution quite different from other samples, it is better to re-prepare them rather than using them with GC normalization.
+GC stats file
++++++++++++++++++++++
+
+The command above outputs the GC distribution file "ChIP.GCdist.tsv" in the output directory (*parse2wig+dir*). 
+Using this GC distribution file, the user can draw GC contents/weight distribution of the input file and the genome sequence like below.
+
+.. image:: img/GCdist.H3K4me3.jpg
+   :width: 500px
+   :align: center
+
+The contents are the following:
+
+- GC: the GC content;
+- genome prop: the proportion of the mappable bases containing the GC contents, then :math:`prop^{genome}_{GC} = n^{genome}_{GC}/G`, where :math:`n^{genome}_{GC}` is the number of positions containing the GC contents and :math:`G` is the total number of mappable bases;
+- read prop: the proportion of the reads (fragments) containing the GC contents, then :math:`prop^{reads}_{GC} = n^{reads}_{GC}/N`, where :math:`n^{reads}_{GC}` are the number of reads containing the GC contents and :math:`N` is the total number of mapped reads;
+- depth: the ratio of GC contents between reads and genome sequence, namely, :math:`depth_{GC} = n^{reads}_{GC}/n^{genome}_{GC}`;
+- Scaling weight: the ratio of the proportion between reads and genome sequence, namely, :math:`weight = prop^{genome}_{GC}/prop^{reads}_{GC}`;
+
+      - Note: because the weight estimated from very low :math:`depth_{GC}` causes false-positive peaks, by default parse2wig+ sets a weight of 1 to the GC content with :math:`depth_{GC}` less than 0.001, and a weight of 0 to the GC content having :math:`prop^{genome}_{GC}` less than 0.00001. The former threshold is ignored when supplying the ``--gcdepthoff`` option.
+
+
+The summit of GC content distribution for reads (orange, GC% = 61 in this figure) is important for assessing GC bias. This score is also outputted in the stats file (e.g., H3K4me3.100.tsv).
+
+
+GC normalization
++++++++++++++++++++++++++++++++++
+
+When supplying ``--chrdir`` option, the output wig data describes the read distribution normalized by GC contents, in which each read is scaled based on its GC content. However, it should be noted that GC normalization often overcorrects the true read signals. When samples have a GC distribution quite different from other samples, it is preferable to re-prepare them rather than using them with GC normalization.
