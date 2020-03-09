@@ -9,6 +9,7 @@
 #include "WigStats.hpp"
 #include "GenomeCoverage.hpp"
 #include "GCnormalization.hpp"
+#include "ReadMpbldata.hpp"
 #include "../submodules/SSP/src/MThread.hpp"
 #include "../submodules/SSP/src/LibraryComplexity.hpp"
 #include "../submodules/SSP/src/Mapfile.hpp"

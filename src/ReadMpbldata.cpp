@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include "ReadMpbldata.hpp"
+#include "../submodules/SSP/common/seq.hpp"
 
 std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
 				     const std::string &chrname,
