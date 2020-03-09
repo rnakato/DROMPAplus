@@ -6,10 +6,10 @@
 #include <vector>
 #include "ReadMpbldata.hpp"
 
-std::vector<int32_t> readMpbl(const std::string &mpfile,
-			      const std::string &chrname,
-			      const int32_t binsize,
-			      const int32_t nbin)
+std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
+				     const std::string &chrname,
+				     const int32_t binsize,
+				     const int32_t nbin)
 {
   std::string filename = mpfile + "/map_fragL150_" + chrname + "_bin" + std::to_string(binsize) +".txt";
   std::vector<int32_t> mparray(nbin, 0);
@@ -32,7 +32,7 @@ std::vector<int32_t> readMpbl(const std::string &mpfile,
   return mparray;
 }
 
-std::vector<BpStatus> readMpbl_binary(const std::string &mpfile,
+std::vector<BpStatus> readMpblBpArray(const std::string &mpfile,
 				      const std::string &chrname,
 				      const int32_t chrlen)
 {

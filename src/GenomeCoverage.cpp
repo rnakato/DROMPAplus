@@ -12,7 +12,7 @@ namespace GenomeCov {
   {
     int32_t chrlen(chr.getlen());
 
-    std::vector<BpStatus> array = readMpbl_binary(p.getMpDir(), ("chr" + chr.getname()), chrlen);
+    auto array = readMpblBpArray(p.getMpDir(), ("chr" + chr.getname()), chrlen);
     if(p.isBedOn()) OverrideBedToArray(array, chr.getname(), p.getvbedref());
 
     for (auto strand: {Strand::FWD, Strand::REV}) {

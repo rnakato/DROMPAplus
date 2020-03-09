@@ -7,8 +7,8 @@
 #include "../submodules/SSP/common/BedFormat.hpp"
 #include "../submodules/SSP/src/BpStatus.hpp"
 
-std::vector<int32_t> readMpbl(const std::string &, const std::string &, const int32_t, const int32_t);
-std::vector<BpStatus> readMpbl_binary(const std::string &, const std::string &, const int32_t);
+std::vector<int32_t> readMpblWigArray(const std::string &, const std::string &, const int32_t, const int32_t);
+std::vector<BpStatus> readMpblBpArray(const std::string &, const std::string &, const int32_t);
 void OverrideBedToArray(std::vector<BpStatus> &array, const std::string &chrname, const std::vector<bed> &vbed);
 
 #endif // _READMPBLDATA_HPP_
