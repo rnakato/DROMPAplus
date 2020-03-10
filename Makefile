@@ -83,7 +83,7 @@ clean:
 HEADS_UTIL = $(SSPSRCDIR)/MThread.hpp $(SSPCMNDIR)/BoostOptions.hpp $(SSPCMNDIR)/inline.hpp $(SSPCMNDIR)/seq.hpp $(SSPCMNDIR)/util.hpp $(SRCDIR)/WigStats.hpp $(SSPSRCDIR)/SeqStats.hpp
 
 $(OBJDIR)/ReadAnnotation.o: $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp
-$(OBJDIR)/ReadMpbldata.o: $(SRCDIR)/ReadMpbldata.hpp
+$(OBJDIR)/ReadMpbldata.o: $(SRCDIR)/ReadMpbldata.hpp $(SRCDIR)/BpStatus.hpp
 $(OBJDIR)/pw_main.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/GCnormalization.hpp $(SRCDIR)/GenomeCoverage.hpp
 $(OBJDIR)/pw_makefile.o: $(SRCDIR)/pw_makefile.hpp $(SRCDIR)/ReadMpbldata.hpp
 $(OBJDIR)/dd_main.o: $(SRCDIR)/dd_command.hpp $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_profile.hpp
@@ -95,5 +95,5 @@ $(OBJDIR)/dd_chiadrop.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(S
 $(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp $(SRCDIR)/color.hpp $(SRCDIR)/dd_draw_dataframe.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SRCDIR)/ReadMpbldata.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
-$(OBJS_PW): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/pw_gv.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp $(SRCDIR)/peakcall.hpp
+$(OBJS_PW): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/pw_gv.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp $(SRCDIR)/peakcall.hpp $(SRCDIR)/BpStatus.hpp
 $(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/peakcall.hpp $(SSPCMNDIR)/BedFormat.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp

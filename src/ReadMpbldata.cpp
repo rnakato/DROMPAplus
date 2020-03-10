@@ -6,6 +6,39 @@
 #include <vector>
 #include "ReadMpbldata.hpp"
 #include "../submodules/SSP/common/seq.hpp"
+#include "../submodules/SSP/src/SeqStats.hpp"
+
+void SeqStats::setFRiP(const std::vector<bed> &vbed)
+{
+  std::vector<BpStatus> array(getlen(), BpStatus::MAPPABLE);
+  //    OverrideBedToArray(array, getname(), vbed);
+
+  int32_t chrlen(array.size());
+  for(auto &bed: vbed) {
+    if(bed.chr == getname()) {
+      size_t s(std::max(0, bed.start));
+      size_t e(std::min(bed.end, chrlen-1));
+      for(size_t i=s; i<=e; ++i) array[i] = BpStatus::INBED;
+    }
+  }
+
+  for (auto strand: {Strand::FWD, Strand::REV}) {
+    for (auto &x: seq[strand].vRead) {
+      if(x.duplicate) continue;
+      int32_t s(std::min(x.F3, x.F5));
+      int32_t e(std::max(x.F3, x.F5));
+      for(int32_t i=s; i<=e; ++i) {
+	if(array[i] == BpStatus::INBED) {
+	  x.inpeak = 1;
+	  ++nread_inbed;
+	  break;
+	}
+      }
+    }
+  }
+  return;
+}
+
 
 std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
 				     const std::string &chrname,

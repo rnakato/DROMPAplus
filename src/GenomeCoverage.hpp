@@ -8,8 +8,8 @@
 #include <fstream>
 #include <stdint.h>
 #include <boost/format.hpp>
+#include "BpStatus.hpp"
 #include "../submodules/SSP/common/inline.hpp"
-#include "../submodules/SSP/src/BpStatus.hpp"
 
 class SeqStats;
 class Mapfile;
