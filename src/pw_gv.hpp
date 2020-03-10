@@ -153,12 +153,12 @@ class Mapfile: private Uncopyable {
   bool isverbose () const { return verbose; }
   const std::string & getbedfilename() const { return bedfilename; }
   const std::string & getSampleName() const { return samplename; }
-  const std::string & getMpDir()      const { return mpdir; }
+  const std::string & getMpblBinaryDir()      const { return mpdir; }
 
   int32_t getmaxGC() const {return maxGC; }
 
   void calcGenomeCoverage() {
-    std::cout << "calculate genome coverage.." << std::flush;
+    std::cout << "Calculate genome coverage.." << std::flush;
 
     gcov.setr4cmp(genome.getnread_nonred(Strand::BOTH), genome.getnread_inbed());
 
@@ -203,7 +203,7 @@ class Mapfile: private Uncopyable {
 		<< genome.chr[id_longestChr].getname() << std::endl;
       GCdist d(genome.dflen.getflen(), gc);
 
-      d.calcGCdist(genome.chr[id_longestChr], gc, getMpDir(), isBedOn(), vbed);
+      d.calcGCdist(genome.chr[id_longestChr], gc, getMpblBinaryDir(), isBedOn(), vbed, wsGenome.getbinsize());
       maxGC = d.getmaxGC();
 
       std::string filename = getprefix() + ".GCdist.tsv";

@@ -99,10 +99,10 @@ WigArray count_and_normalize_Wigarray(Mapfile &p, const int32_t id)
   }
 
   // Mappability normalization
-  if (p.getMpDir() != "") {
+  if (p.getMpblBinaryDir() != "") {
     int32_t binsize(p.wsGenome.getbinsize());
     int32_t mpthre = p.getmpthre() * binsize;
-    auto mparray = readMpblWigArray(p.getMpDir(), ("chr" + p.genome.chr[id].getname()), binsize, p.wsGenome.chr[id].getnbin());
+    auto mparray = readMpblWigArray(p.getMpblBinaryDir(), ("chr" + p.genome.chr[id].getname()), binsize, p.wsGenome.chr[id].getnbin());
     for (int32_t i=0; i<p.wsGenome.chr[id].getnbin(); ++i) {
 //      std::cout << "mparray[i]: " << mparray[i] << std::endl;
       if (mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));

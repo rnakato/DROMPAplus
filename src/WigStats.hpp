@@ -58,14 +58,14 @@ class WigStats {
   double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
 
 /*  double getPoisson(const int32_t i) const {
-    if(ave) return _getPoisson(i, ave);
+    if (ave) return _getPoisson(i, ave);
     else return 0;
   }*/
 /*  double getNegativeBinomial(const int32_t i) const {
     return _getNegativeBinomial(i, nb_p, nb_n);
   }
   double getZINB(const int32_t i) const {
-    if(ave) return _getZINB(i, nb_p, nb_n, nb_p0);
+    if (ave) return _getZINB(i, nb_p, nb_n, nb_p0);
     else return 0;
   }
   void printPoispar(std::ofstream &out) const {
@@ -78,7 +78,7 @@ class WigStats {
   int32_t getWigDistsize() const { return wigDist.size(); }
 
   int32_t printPeak(std::ofstream &out, const int32_t num) const {
-    for(uint32_t i=0; i<vPeak.size(); ++i) {
+    for (uint32_t i=0; i<vPeak.size(); ++i) {
       vPeak[i].print(out, num+i, binsize);
     }
     return vPeak.size();
@@ -97,14 +97,14 @@ class WigStats {
     if (nb_p<=0) nb_p = 0.1;
     nb_n = ave * nb_p /(1 - nb_p);
     //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
-    //    if(ave) estimateZINB(nb_p, nb_n);
+    //    if (ave) estimateZINB(nb_p, nb_n);
     }*/
 
   /*  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
     uint32_t thre = getWigDistThre(wigDist, nbin);
     double parray[thre+1];
     parray[0] = thre;
-    for(uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
+    for (uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
     iterateZINB(&parray, nb_p_pre, nb_n_pre, nb_p, nb_n, nb_p0);
     return;
     }*/
@@ -154,7 +154,7 @@ class WigArray {
 
   int64_t getArraySum() const {
     int64_t sum(0);
-    for(auto x: array) sum += x;
+    for (auto x: array) sum += x;
     return rmGeta(sum);
   }
   double getMinValue() const {
@@ -180,23 +180,23 @@ class WigArray {
   }
 
   void outputAsWig(FILE *File, const int32_t binsize, const int32_t showzero) const {
-    for(size_t i=0; i<array.size(); ++i) {
-      if(array[i] || showzero) fprintf(File, "%zu\t%.0f\n", i*binsize +1, rmGeta(array[i]));
+    for (size_t i=0; i<array.size(); ++i) {
+      if (array[i] || showzero) fprintf(File, "%zu\t%.0f\n", i*binsize +1, rmGeta(array[i]));
     }
   }
   void outputAsBedGraph(FILE *File, const int32_t binsize, const std::string &name, const uint64_t chrend, const int32_t showzero) {
-    for(size_t i=0; i<array.size()-1; ++i) {
-      if(array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, (i+1) * binsize, rmGeta(array[i]));
+    for (size_t i=0; i<array.size()-1; ++i) {
+      if (array[i] || showzero) fprintf(File, "%s %zu %zu %.0f\n", name.c_str(), i*binsize, (i+1) * binsize, rmGeta(array[i]));
     }
     size_t i = array.size()-1;
-    if(array[i] || showzero) fprintf(File, "%s %zu %lu %.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
+    if (array[i] || showzero) fprintf(File, "%s %zu %lu %.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
 
   }
   /*  void outputAsBinary(std::ofstream &out) const {
-    for(size_t i=0; i<array.size(); ++i) out.write((char *)&array[i], sizeof(int32_t));
+    for (size_t i=0; i<array.size(); ++i) out.write((char *)&array[i], sizeof(int32_t));
   }
   void readBinary(std::ifstream &in, const int32_t nbin) const {
-    for(int32_t i=0; i<nbin; ++i) in.read((char *)&array[i], sizeof(int32_t));
+    for (int32_t i=0; i<nbin; ++i) in.read((char *)&array[i], sizeof(int32_t));
     }*/
   void dump() const {
     for (auto &x: array) std::cout << x << std::endl;

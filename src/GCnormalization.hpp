@@ -79,7 +79,7 @@ class GCdist {
 
 public:
   GCdist(const int32_t l, GCnorm &gc);
-  void calcGCdist(const SeqStats &chr, const GCnorm &gc, const std::string &mpdir, const int32_t isBedOn, const std::vector<bed> &vbed);
+  void calcGCdist(const SeqStats &chr, const GCnorm &gc, const std::string &mpdir, const int32_t isBedOn, const std::vector<bed> &vbed, const int32_t binsize);
 
   int32_t getmaxGC() const { return getmaxi(DistRead); }
   double getGCweight(const int32_t i) const { return GCweight[i]; }
