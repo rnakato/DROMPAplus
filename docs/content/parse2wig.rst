@@ -143,35 +143,30 @@ Mappability information
 -----------------------------------------
 
 parse2wig+ utilizes three types of genome mappability information.
-See **Appendix** for the detail how to generate mappability data.
+See :doc:`Appendix`  for the detail how to generate the mappability files.
 
-mappable chromosome length
+Mappable chromosome length
 +++++++++++++++++++++++++++++
 
 With ``--mptable`` option, parse2wig+ considers the number of mappable bases as the genome/chromosome length.::
 
-  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mptable mptable.UCSC.hg19.36mer.flen150.txt
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mptable mptable.txt
 
 The mappability files for several species are available in "data/mptable" directory. When ``--mptable`` is not supplied, all bases are considered as mappable.
-
-Bin-level mappability
-+++++++++++++++++++++++++++++
-
-``--mp`` option specifies the mappability data of genomic bins.
-parse2wig+ normalizes read distribution based on the mappability::
-
-  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mp mpbldirectory
-
-The bins in which the mappability is lower than the threshold (``--mpthre`` option, < 0.3 as default) are ignored in mappability normalization (and GC normalization).
 
 Base-pair level mappability
 +++++++++++++++++++++++++++++
 
-``--mpbin`` option specifies the Base-pair resolution mappability. This option is used in calculating precise genome coverage and GC normalization.::
+To precisely calculate genome coverage and/or GC content distribution in base-pair resolution, suppy ``--mpdir`` option as follows::
 
-  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mpbin mpbldirectory
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mpdir <mpdir>
 
-``--mpbin`` option is mutually independent on ``--mp`` option in wig normalizatoion.
+where "<mpdir>" indicates the directory that contains the gzipped binary mappability files (**map_chr*_binary.txt.gz**).
+
+Bin-level mappability
++++++++++++++++++++++++++++++
+
+When supplying ``--mpdir`` option, parse2wig+ automatically generates bin-level mappability files (**map_chr*.<binsize>.wig.gz**) first time and use them from then. These files are used to normalize wig data based on the mappability. The bins in which the mappability is lower than the threshold (``--mpthre`` option, < 0.3 as default) are excluded from mappability normalization (and GC normalization).
 
 GC content estimation
 ------------------------------
