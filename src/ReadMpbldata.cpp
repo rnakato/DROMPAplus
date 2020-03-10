@@ -11,16 +11,7 @@
 void SeqStats::setFRiP(const std::vector<bed> &vbed)
 {
   std::vector<BpStatus> array(getlen(), BpStatus::MAPPABLE);
-  //    OverrideBedToArray(array, getname(), vbed);
-
-  int32_t chrlen(array.size());
-  for(auto &bed: vbed) {
-    if(bed.chr == getname()) {
-      size_t s(std::max(0, bed.start));
-      size_t e(std::min(bed.end, chrlen-1));
-      for(size_t i=s; i<=e; ++i) array[i] = BpStatus::INBED;
-    }
-  }
+  setPeak_to_MpblBpArray(array, getname(), vbed);
 
   for (auto strand: {Strand::FWD, Strand::REV}) {
     for (auto &x: seq[strand].vRead) {
