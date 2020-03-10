@@ -27,7 +27,7 @@ public:
 	   const chrsize &chr):
     binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
     array(loadWigData(x.first, x.second, chr)),
-    stats(nbin, p.thre.pthre_inter),
+    stats(nbin, binsize, p.thre.pthre_inter),
     totalreadnum(x.second.gettotalreadnum()),
     totalreadnum_chr(x.second.gettotalreadnum_chr())
   {

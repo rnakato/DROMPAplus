@@ -242,8 +242,9 @@ public:
 class PinterDataFrame : public PvalueDataFrame {
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     const ChrArray &a = vReadArray.getArray(pair.argvChIP);
-    double myu(a.array.getLocalAverage(i));
-    return a.stats.getlogp_Poisson(a.array[i], myu);
+    double myu(a.array.getLocalAverage(i, a.binsize));
+
+    return getlogp_Poisson(a.array[i], myu);
   }
   const std::string getAssayName() const { return "logp(ChIP)"; }
 
@@ -257,9 +258,9 @@ public:
 
 class PenrichDataFrame : public PvalueDataFrame {
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
-    return binomial_test(vReadArray.getArray(pair.argvChIP).array[i],
-			 vReadArray.getArray(pair.argvInput).array[i],
-			 pair.ratio);
+    return getlogp_BinomialTest(vReadArray.getArray(pair.argvChIP).array[i],
+				vReadArray.getArray(pair.argvInput).array[i],
+				pair.ratio);
   }
   const std::string getAssayName() const { return "logp(Enrich)"; }
 

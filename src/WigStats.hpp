@@ -10,7 +10,6 @@
 #include "../submodules/SSP/common/util.hpp"
 #include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
-//#include "../submodules/SSP/common/BedFormat.hpp"
 #include "extendBedFormat.hpp"
 #include "../submodules/SSP/src/SeqStats.hpp"
 
@@ -38,12 +37,14 @@ class WigStats {
 
  public:
   int32_t nbin;
+  int32_t binsize;
   double nb_p, nb_n;
-  WigStats(const int32_t _nbin=0, double thre=0):
+  WigStats(const int32_t _nbin=0, const int32_t _binsize=0, const double thre=0):
     ave(0), var(0), nb_p0(0),
     wigDist(WIGDISTNUM, 0),
     pthre(-log10(thre)),
-    nbin(_nbin), nb_p(0), nb_n(0)
+    nbin(_nbin), binsize(_binsize),
+    nb_p(0), nb_n(0)
   {}
 
   void setWigStats(const WigArray &wigarray);
@@ -51,33 +52,32 @@ class WigStats {
   void addWigDist(const WigStats &chr) {
     for (size_t i=0; i<wigDist.size(); ++i) wigDist[i] += chr.wigDist[i];
   }
-
+  void printWigDist(std::ofstream &out, const int32_t i) const {
+    out << boost::format("%1%\t%2%\t") % wigDist[i] % getpWig(i);
+  }
   double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
 
 /*  double getPoisson(const int32_t i) const {
     if(ave) return _getPoisson(i, ave);
     else return 0;
   }*/
-  double getNegativeBinomial(const int32_t i) const {
+/*  double getNegativeBinomial(const int32_t i) const {
     return _getNegativeBinomial(i, nb_p, nb_n);
   }
   double getZINB(const int32_t i) const {
     if(ave) return _getZINB(i, nb_p, nb_n, nb_p0);
     else return 0;
   }
-  void printWigDist(std::ofstream &out, const int32_t i) const {
-    out << boost::format("%1%\t%2%\t") % wigDist[i] % getpWig(i);
-  }
   void printPoispar(std::ofstream &out) const {
     out << boost::format("%1$.3f\t%2$.3f\t") % ave % var;
   }
   void printZINBpar(std::ofstream &out) const {
     out << boost::format("%1%\t%2%\t%3%") % nb_p % nb_n % nb_p0;
-  }
+  }*/
   int32_t getnbin() const { return nbin; }
   int32_t getWigDistsize() const { return wigDist.size(); }
 
-  int32_t printPeak(std::ofstream &out, const int32_t num, const int32_t binsize) const {
+  int32_t printPeak(std::ofstream &out, const int32_t num) const {
     for(uint32_t i=0; i<vPeak.size(); ++i) {
       vPeak[i].print(out, num+i, binsize);
     }
@@ -87,11 +87,6 @@ class WigStats {
   // Peakcall
   void peakcall(const WigArray &wigarray, const std::string &chrname);
   double getpthre() const { return pthre; }
-  double getlogp_Poisson(const double val, const double myu) const {
-    if(myu) return _getPoisson(val, myu);
-    else return 0;
-  }
-
 
   /*  void setZINBParam(const std::vector<int32_t> &ar) {
     MyStatistics::moment<int32_t> mm(ar, 0);
@@ -153,7 +148,9 @@ class WigArray {
     array[i] *= val;
   }
 
-  void Smoothing(const int32_t nsmooth) { GaussianSmoothing(array, nsmooth); }
+  void Smoothing(const int32_t nsmooth) {
+    GaussianSmoothing(array, nsmooth);
+  }
 
   int64_t getArraySum() const {
     int64_t sum(0);
@@ -164,16 +161,16 @@ class WigArray {
     int32_t min(*std::min_element(array.begin(), array.end()));
     return rmGeta(min);
   }
-  double getLocalAverage(const int32_t i) const {
-    int32_t length(LENGTH_FOR_LOCALPOISSON);
+  double getLocalAverage(const int32_t i, const int32_t binsize) const {
+    int32_t length_bin(LENGTH_FOR_LOCALPOISSON / binsize);
     checki(i);
     if (i<0) PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " < 0.");
 
     int64_t ave(0);
-    int32_t lenhalf(length/2);
+    int32_t lenhalf(length_bin/2);
     int32_t left(std::max(i-lenhalf, 0));
     int32_t right(std::min(i+lenhalf, (int32_t)array.size()));
-    for (int32_t j=left; j<right; ++j) ave += array[i];
+    for (int32_t j=left; j<right; ++j) ave += array[j];
     ave /= right - left;
     return rmGeta(ave);
   }
@@ -275,7 +272,7 @@ public:
     Peak v;
     v.printHead(out);
     int32_t num(0);
-    for (auto &x: chr) num += x.printPeak(out, num, binsize);
+    for (auto &x: chr) num += x.printPeak(out, num);
   }
 };
 

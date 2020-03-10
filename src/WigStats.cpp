@@ -3,6 +3,8 @@
  */
 #include "WigStats.hpp"
 
+double getlogp_Poisson(const double val, const double myu);
+
 uint32_t getWigDistThre(const std::vector<uint64_t> &wigDist, const uint64_t sum) {
   uint32_t thre(9);
   uint64_t num;
@@ -45,8 +47,8 @@ void WigStats::peakcall(const WigArray &wigarray, const std::string &chrname)
 
   for (size_t i=0; i<wigarray.size(); ++i) {
     double val(wigarray[i]);
-    double myul(wigarray.getLocalAverage(i));
-    double logp(getlogp_Poisson(val,val));
+    double myu(wigarray.getLocalAverage(i, binsize));
+    double logp(getlogp_Poisson(val, myu));
 
     if (!ext) {
       if (logp > pthre) {
