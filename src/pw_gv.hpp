@@ -117,7 +117,7 @@ class Mapfile: private Uncopyable {
     opt.add_options()
       ("bed", boost::program_options::value<std::string>(),
        "specify the BED file of enriched regions (e.g., peak regions)")
-      ("mp",  boost::program_options::value<std::string>(), "directory of mappability file")
+      ("mpdir",  boost::program_options::value<std::string>(), "directory of mappability file")
       ("mpthre",
        boost::program_options::value<double>()->default_value(0.3)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--mpthre")),
        "Threshold of low mappability regions")

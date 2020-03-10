@@ -314,7 +314,7 @@ void Mapfile::setValues(const MyOpt::Variables &values)
     vbed = parseBed<bed>(bedfilename);
   }
 
-  if (values.count("mp")) mpdir = MyOpt::getVal<std::string>(values, "mp");
+  if (values.count("mpdir")) mpdir = MyOpt::getVal<std::string>(values, "mpdir");
   mpthre = MyOpt::getVal<double>(values, "mpthre");
 
   genome.setValues(values);
