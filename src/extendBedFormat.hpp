@@ -124,20 +124,23 @@ class Peak : public bed {
   Peak(){}
   Peak(const std::string &c, const int32_t s, const int32_t e, const double val, const double p):
     bed(c,s,e), pileup(val), enrich(0), p_inter(p), p_enr(0), q(0) {}
-  void renew(const int32_t i, const double val, const double p) {
+
+  void renew(const int32_t i, const double val, const double _p_inter) {
     end = i;
     pileup += val;
-    if(p_inter > p) {
-      p_inter = p;
+    if(p_inter > _p_inter) {
+      p_inter = _p_inter;
       summit = i;
     }
   }
+
   void print(std::ofstream &out, const int32_t id, const int32_t binsize) const {
     out << chr << "\t" << start*binsize << "\t" << end*binsize << "\t"
 	<< ((end - start +1)*binsize-1) << "\t"
 	<< (summit*binsize -binsize/2) << "\t" << pileup << "\t"
 	<< p_inter << "\t" << enrich << "\t" << q << "\tpeak " << id << std::endl;
   }
+
   void printHead (std::ofstream &out) const {
     out << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\t-log10(qvalue)\tname" << std::endl;
   }

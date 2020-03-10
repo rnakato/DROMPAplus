@@ -39,24 +39,20 @@ void WigStats::setWigStats(const WigArray &wigarray)
   //  setZINBParam(ar);
 }
 
-void WigStats::peakcall(const WigArray &wigarray, const std::string &chrname)
+void WigStats::peakcall_onlyChIP(const WigArray &wigarray, const std::string &chrname)
 {
-  if (!ave) return;
-
   int32_t ext(0);
-
   for (size_t i=0; i<wigarray.size(); ++i) {
     double val(wigarray[i]);
-    double myu(wigarray.getLocalAverage(i, binsize));
-    double logp(getlogp_Poisson(val, myu));
+    double logp_inter(getlogp_Poisson(val, wigarray.getLocalAverage(i, binsize)));
 
     if (!ext) {
-      if (logp > pthre) {
-	vPeak.emplace_back(Peak(chrname, i, i, val, logp));
+      if (logp_inter > pthre) {
+	vPeak.emplace_back(Peak(chrname, i, i, val, logp_inter));
 	ext=1;
       }
     } else {
-      if (logp > pthre) vPeak[vPeak.size()-1].renew(i, val,logp);
+      if (logp_inter > pthre) vPeak[vPeak.size()-1].renew(i, val, logp_inter);
       else ext=0;
     }
   }

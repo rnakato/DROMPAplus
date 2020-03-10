@@ -85,7 +85,7 @@ class WigStats {
   }
 
   // Peakcall
-  void peakcall(const WigArray &wigarray, const std::string &chrname);
+  void peakcall_onlyChIP(const WigArray &wigarray, const std::string &chrname);
   double getpthre() const { return pthre; }
 
   /*  void setZINBParam(const std::vector<int32_t> &ar) {

@@ -40,10 +40,16 @@ public:
     stats.setWigStats(array);
     t2 = clock();
     PrintTime(t1, t2, "WigStats");
-    t1 = clock();
-    stats.peakcall(array, chr.getname());
+/*     t1 = clock();
+    stats.peakcall_onlyChIP(array, chr.getname());
     t2 = clock();
     PrintTime(t1, t2, "peakcall");
+
+   std::string filename = "test.peak.tsv";
+    std::ofstream out(filename);
+
+    int32_t num(0);
+    stats.printPeak(out, num);*/
   }
 };
 

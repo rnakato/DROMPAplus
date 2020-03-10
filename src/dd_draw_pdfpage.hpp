@@ -9,7 +9,7 @@
 #include <cairomm/surface.h>
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
-#include "peakcall.hpp"
+#include "significancetest.hpp"
 #include "dd_draw_environment_variable.hpp"
 #include "dd_draw_myfunc.hpp"
 
