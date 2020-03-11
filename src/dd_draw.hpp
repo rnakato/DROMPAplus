@@ -24,12 +24,6 @@ public:
     for (auto &x: vsamplepairoverlayed) {
       x.first.setScalingFactor(normtype, vReadArray, chr.getname());
       if (x.OverlayExists()) x.second.setScalingFactor(normtype, vReadArray, chr.getname());
-
-      if (p.thre.sigtest) {
-	if (x.first.InputExists()) {
-	  x.first.peakcall_withInput(vReadArray, chr.getname(), -log10(p.thre.pthre_inter), -log10(p.thre.pthre_enrich));
-	} else x.first.peakcall_onlyChIP(vReadArray, chr.getname(), -log10(p.thre.pthre_inter));
-      }
     }
   }
 
@@ -50,6 +44,15 @@ public:
 
     DEBUGprint_FUNCend();
     return 1;
+  }
+
+  void peakcall(DROMPA::Global &p, const std::string &chrname) {
+    for (auto &x: vsamplepairoverlayed) {
+      if (x.first.InputExists()) {
+	x.first.peakcall_withInput(vReadArray, chrname, -log10(p.thre.pthre_inter), -log10(p.thre.pthre_enrich));
+      }
+      else x.first.peakcall_onlyChIP(vReadArray, chrname, -log10(p.thre.pthre_inter));
+    }
   }
 
   void Draw_SpecificRegion(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);

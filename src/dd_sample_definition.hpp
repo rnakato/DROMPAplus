@@ -93,7 +93,9 @@ public:
   void peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname, const double pthre_inter);
 
   void printPeak(const std::string &prefix) const {
-    std::string filename = prefix + ".peak.tsv";
+    std::string filename = prefix + "." + label + ".peak.tsv";
+
+    DEBUGprint("Peakfile name: " << filename);
     std::ofstream out(filename);
 
     Peak v;

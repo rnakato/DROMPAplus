@@ -124,6 +124,11 @@ void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
   return;
 }
 
+
+void printPeak(DROMPA::Global &p) {
+  for (auto &x: p.samplepair) x.first.printPeak(p.getPrefixName());
+}
+
 void exec_PCSHARP(DROMPA::Global &p)
 {
   std::string StrAllPdf("");
@@ -151,10 +156,14 @@ void exec_PCSHARP(DROMPA::Global &p)
 
     std::cout << "chr" << chr.getname() << ": " << std::flush;
     Figure fig(p, chr);
+
+    if (p.thre.sigtest) fig.peakcall(p, chr.getname());
     if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
   }
 
+  if (p.thre.sigtest) printPeak(p);
   MergePdf(p, StrAllPdf);
+
   return;
 }
 
