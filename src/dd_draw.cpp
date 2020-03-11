@@ -7,6 +7,7 @@
 #include "dd_draw.hpp"
 #include "dd_draw_pdfpage.hpp"
 #include "dd_draw_dataframe.hpp"
+#include "color.hpp"
 #include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
@@ -568,7 +569,7 @@ void PDFPage::MakePage(const DROMPA::Global &p,
   return;
 }
 
-void Figure::Draw_Region(DROMPA::Global &p,
+void Figure::Draw_SpecificRegion(DROMPA::Global &p,
 			 std::string &pdffilename,
 			 int32_t width,
 			 int32_t height)
@@ -588,7 +589,7 @@ void Figure::Draw_Region(DROMPA::Global &p,
   }
 }
 
-void Figure::Draw_GeneLoci(DROMPA::Global &p,
+void Figure::Draw_SpecificGene(DROMPA::Global &p,
 			   std::string &pdffilename,
 			   int32_t width,
 			   int32_t height)
@@ -611,7 +612,7 @@ void Figure::Draw_GeneLoci(DROMPA::Global &p,
   }
 }
 
-void Figure::Draw_Whole(DROMPA::Global &p,
+void Figure::Draw_WholeGenome(DROMPA::Global &p,
 			std::string &pdffilename,
 			int32_t width,
 			int32_t height)

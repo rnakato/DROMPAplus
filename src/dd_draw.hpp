@@ -6,7 +6,6 @@
 
 #include "dd_gv.hpp"
 #include "dd_readfile.hpp"
-#include "color.hpp"
 
 class Figure {
   vChrArray vReadArray;
@@ -29,25 +28,27 @@ public:
   }
 
   int32_t Draw(DROMPA::Global &p) {
+    DEBUGprint_FUNCStart();
+
     if (p.drawregion.isRegionBed() && !regionBed.size()) return 0;
     std::cout << "Drawing.." << std::endl;
 
-    DEBUGprint("Figure::DrawData");
     std::string pdffilename(p.getFigFileNameChr(vReadArray.getchr().getrefname()));
     int32_t width(p.drawparam.width_page_pixel);
     int32_t height(p.drawparam.getPageHeight(p, vsamplepairoverlayed));
 
-    if (p.drawregion.isRegionBed()) Draw_Region(p, pdffilename, width, height);
-    else if (p.drawregion.isGeneLociFile()) Draw_GeneLoci(p, pdffilename, width, height);
-    else  Draw_Whole(p, pdffilename, width, height);
-
+    if (p.drawregion.isRegionBed())         Draw_SpecificRegion(p, pdffilename, width, height);
+    else if (p.drawregion.isGeneLociFile()) Draw_SpecificGene(p, pdffilename, width, height);
+    else                                    Draw_WholeGenome(p, pdffilename, width, height);
     std::cout << "Wrote PDF file \"" << pdffilename << "\"" << std::endl;
+
+    DEBUGprint_FUNCend();
     return 1;
   }
 
-  void Draw_Region(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
-  void Draw_GeneLoci(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
-  void Draw_Whole(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
+  void Draw_SpecificRegion(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
+  void Draw_SpecificGene(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
+  void Draw_WholeGenome(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);
 };
 
 #endif /* _DD_DRAW_H_ */

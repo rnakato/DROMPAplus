@@ -35,8 +35,9 @@ endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/ReadMpbldata.o $(OBJDIR)/significancetest.o
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/dd_sample_definition.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/dd_sample_definition.o $(OBJDIR)/dd_profile.o
 OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
+OBJS_CAIRO = $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/dd_chiadrop.o
 
 .PHONY: all clean
 
@@ -54,21 +55,18 @@ $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO) $(CFLAGS)
 
-$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
-
-$(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw_dataframe.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
-
-$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_drawgenes.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
-
-$(OBJDIR)/dd_chiadrop.o: $(SRCDIR)/dd_chiadrop.cpp
-	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
+#$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
+#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
+#$(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw_dataframe.cpp
+#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
+#$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_drawgenes.cpp
+#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
+#$(OBJDIR)/dd_chiadrop.o: $(SRCDIR)/dd_chiadrop.cpp
+#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(CC) -o $@ -c $< $(CFLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
 
 $(SSPOBJDIR)/%.o: $(SSPSRCDIR)/%.cpp
 	$(MAKE) -C $(SSPDIR) $(OBJDIR)/$(notdir $@) $(OFLAGS)

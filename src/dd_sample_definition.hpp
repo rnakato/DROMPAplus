@@ -63,7 +63,7 @@ public:
 
 class SamplePairEach {
   int32_t binsize;
-  std::unordered_map<std::string, std::vector<bed>> peaks;
+  std::unordered_map<std::string, std::vector<bed>> vbedregions;
   std::unordered_map<std::string, std::vector<Peak>> vPeak;
 
   class yScale {

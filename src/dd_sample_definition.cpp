@@ -181,13 +181,13 @@ SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo
   if (v.size() >=2 && v[1] != "") argvInput = v[1];
   if (v.size() >=3 && v[2] != "") label     = v[2];
   if (v.size() >=4 && v[3] != "") peak_argv = v[3];
-  if (peak_argv != "") peaks = parseBed_Hash<bed>(peak_argv);
+  if (peak_argv != "") vbedregions = parseBed_Hash<bed>(peak_argv);
   binsize = vsinfo.getbinsize(argvChIP);
   if (v.size() >=6 && v[5] != "") scale.tag = stod(v[5]);
   if (v.size() >=7 && v[6] != "") scale.ratio = stod(v[6]);
   if (v.size() >=8 && v[7] != "") scale.pvalue = stod(v[7]);
 
-  //    printBed_Hash(peaks);
+  //    printBed_Hash(vbedregions);
 }
 
 
@@ -222,7 +222,7 @@ void SamplePairEach::setScalingFactor(const int32_t normtype,
 
 std::vector<bed> SamplePairEach::getpeaksChr(const std::string &chrname) const
 {
-  if (peak_argv != "") return peaks.at(rmchr(chrname));
+  if (peak_argv != "") return vbedregions.at(rmchr(chrname));
   else return std::vector<bed>();
 }
 
