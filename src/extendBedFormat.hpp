@@ -5,6 +5,7 @@
 #define _EXTENDBEDFORMAT_HPP_
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -110,7 +111,7 @@ class macsxls : public bed {
 	<< p << "\t" << enrich << "\t" << q << "\t" << name;
  }
  void printHead () const {
-   std::cout << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\t-log10(qvalue)\tname";
+   std::cout << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t -log10(pvalue)\tfold_enrichment\t -log10(qvalue)\tname";
  }
 };
 
@@ -142,12 +143,25 @@ class Peak : public bed {
   void print(std::ofstream &out, const int32_t id, const int32_t binsize) const {
     out << chr << "\t" << start*binsize << "\t" << end*binsize << "\t"
 	<< ((end - start +1)*binsize-1) << "\t"
-	<< (summit*binsize -binsize/2) << "\t" << pileup << "\t"
-	<< p_inter << "\t" << getenrichment() << "\tpeak " << id << std::endl;
+	<< (summit*binsize -binsize/2) << "\t"
+	<< std::fixed << std::setprecision(2)
+	<< pileup << "\t" << pileup_input << "\t" << getenrichment() << "\t"
+	<< p_inter << "\t" << p_enr << "\tpeak " << id << std::endl;
+  }
+
+  void print(const int32_t binsize) const {
+    std::cout << chr << "\t" << start*binsize << "\t" << end*binsize << "\t"
+	     << ((end - start +1)*binsize-1) << "\t"
+	     << (summit*binsize -binsize/2) << "\t"
+	     << std::fixed << std::setprecision(2)
+	     << pileup << "\t" << pileup_input << "\t" << getenrichment() << "\t"
+	     << p_inter << "\t" << p_enr << "\tpeak " << std::endl;
   }
 
   void printHead (std::ofstream &out) const {
-    out << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t-log10(pvalue)\tfold_enrichment\tname" << std::endl;
+    out << "chromosome\tstart\tend\tlength\tsummit\t"
+        << "pileup (ChIP)\tpileup (Input)\tEnrichment\t"
+        << "-log10(p_internal)\t-log10(p_enrichment)\tname" << std::endl;
   }
 };
 
@@ -434,7 +448,6 @@ std::unordered_map<std::string, std::vector<T>> parseBed_Hash(const std::string 
 
     if(lineStr.empty() || lineStr[0] == '#') continue;
     ParseLine(v, lineStr, '\t');
-      //    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
     if(v[1] == "start") continue;
     bedmap[rmchr(v[0])].emplace_back(bed(v));
   }

@@ -86,6 +86,10 @@ namespace {
     DEBUGprint_FUNCend();
   }
 
+  void printPeak(DROMPA::Global &p) {
+    for (auto &x: p.samplepair) x.first.printPeak(p.getPrefixName());
+  }
+
 }
 
 int main(int argc, char* argv[])
@@ -125,10 +129,6 @@ void MergePdf(DROMPA::Global &p, const std::string &StrAllPdf)
 }
 
 
-void printPeak(DROMPA::Global &p) {
-  for (auto &x: p.samplepair) x.first.printPeak(p.getPrefixName());
-}
-
 void exec_PCSHARP(DROMPA::Global &p)
 {
   std::string StrAllPdf("");
@@ -157,8 +157,13 @@ void exec_PCSHARP(DROMPA::Global &p)
     std::cout << "chr" << chr.getname() << ": " << std::flush;
     Figure fig(p, chr);
 
-    if (p.thre.sigtest) fig.peakcall(p, chr.getname());
+    if (p.thre.sigtest) fig.peakcall(p, chr.getrefname());
+
+    clock_t t1,t2;
+    t1 = clock();
     if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
+    t2 = clock();
+    PrintTime(t1, t2, "MakePdf");
   }
 
   if (p.thre.sigtest) printPeak(p);

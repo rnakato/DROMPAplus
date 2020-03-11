@@ -71,7 +71,7 @@ protected:
 
   void Draw(const DROMPA::Global &p, const SamplePairOverlayed &pair, const vChrArray &vReadArray);
 
-  void HighlightPeaks(const SamplePairOverlayed &pair){ (void)(pair); return; }
+  virtual void HighlightPeaks(const SamplePairOverlayed &pair){ (void)(pair); return; }
 
   virtual void getColor1st(const double alpha)=0;
   virtual void getColor2nd(const double alpha)=0;
@@ -110,15 +110,29 @@ class ChIPDataFrame : public DataFrame {
     shownegative = p.drawparam.isshownegative();
   }
 
+  template <class T>
+  void strokePeaks(T &bed) {
+    if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) return;
+
+    cr->set_line_width(bed.length() * par.dot_per_bp);
+    double x(BP2PIXEL(bed.summit - par.xstart));
+    rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
+  }
+
   void HighlightPeaks(const SamplePairOverlayed &pair) {
     cr->set_source_rgba(CLR_RED, 0.4);
 
-    for (auto &bed: pair.first.getpeaksChr(chrname)) {
-      if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) continue;
-      cr->set_line_width(bed.length() * par.dot_per_bp);
-      double x(BP2PIXEL(bed.summit - par.xstart));
-      rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
+    if (pair.first.BedExists()) { // specified BED
+      for (auto &peak: pair.first.getBedChr(chrname)) {
+	strokePeaks<bed>(peak);
+      }
+    } else {     // peak calling by DROMPA+
+      for (auto &peak: pair.first.getPeakChr(chrname)) {
+//	peak.print(100);
+	strokePeaks<Peak>(peak);
+      }
     }
+
     cr->stroke();
   }
 };

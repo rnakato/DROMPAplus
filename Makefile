@@ -94,4 +94,4 @@ $(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.h
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SRCDIR)/ReadMpbldata.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
 $(OBJS_PW): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/pw_gv.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp $(SRCDIR)/significancetest.hpp $(SRCDIR)/BpStatus.hpp
-$(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/dd_sample_definition.hpp $(SRCDIR)/significancetest.hpp $(SSPCMNDIR)/BedFormat.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp
+$(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/extendBedFormat.hpp $(SRCDIR)/dd_sample_definition.hpp $(SRCDIR)/significancetest.hpp $(SSPCMNDIR)/BedFormat.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp

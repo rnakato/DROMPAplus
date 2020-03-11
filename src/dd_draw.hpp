@@ -47,12 +47,17 @@ public:
   }
 
   void peakcall(DROMPA::Global &p, const std::string &chrname) {
+    clock_t t1,t2;
+    t1 = clock();
+
     for (auto &x: vsamplepairoverlayed) {
       if (x.first.InputExists()) {
 	x.first.peakcall_withInput(vReadArray, chrname, -log10(p.thre.pthre_inter), -log10(p.thre.pthre_enrich));
       }
       else x.first.peakcall_onlyChIP(vReadArray, chrname, -log10(p.thre.pthre_inter));
     }
+    t2 = clock();
+    PrintTime(t1, t2, "peakcall");
   }
 
   void Draw_SpecificRegion(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);

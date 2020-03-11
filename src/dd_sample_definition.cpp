@@ -274,12 +274,6 @@ void SamplePairEach::peakcall_onlyChIP(const vChrArray &vReadArray, const std::s
   return;
 }
 
-std::vector<bed> SamplePairEach::getpeaksChr(const std::string &chrname) const
-{
-  if (peak_argv != "") return vbedregions.at(rmchr(chrname));
-  else return std::vector<bed>();
-}
-
 void SamplePairEach::print() const
 {
   std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % label % peak_argv;

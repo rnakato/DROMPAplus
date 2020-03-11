@@ -268,7 +268,6 @@ void Threshold::setValues(const Variables &values) {
     ethre        = getVal<double>(values, "ethre");
     ipm          = getVal<double>(values, "ipm");
     if(values.count("callpeak")) sigtest = true;
-    //    width4lmd    = getVal<int32_t>(values, "width4lmd");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }

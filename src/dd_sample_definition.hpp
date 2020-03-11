@@ -106,9 +106,17 @@ public:
     }
   }
 
-  std::vector<bed> getpeaksChr(const std::string &chrname) const;
+  std::vector<bed> getBedChr(const std::string &chrname) const {
+    if (!vbedregions.count(rmchr(chrname))) return vbedregions.at(rmchr(chrname));
+    else return std::vector<bed>();
+  }
+  std::vector<Peak> getPeakChr(const std::string &chrname) const {
+    if (!vPeak.count(chrname)) return vPeak.at(chrname);
+    else return std::vector<Peak>();
+  }
   void print() const;
   int32_t getbinsize() const { return binsize; }
+  bool BedExists() const { return peak_argv != ""; }
   bool InputExists() const { return argvInput != ""; }
 
 };
