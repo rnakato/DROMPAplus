@@ -53,41 +53,12 @@ public:
   }
 };
 
-using ChrArrayMap = std::unordered_map<std::string, ChrArray>;
-
 class vChrArray {
   const chrsize &chr;
-  ChrArrayMap arrays;
-
-  void loadvChrArray(const DROMPA::Global &p) {
-    std::cout << "Load sample data..";
-    for (auto &x: p.vsinfo.getarray()) {
-      clock_t t1,t2;
-      t1 = clock();
-      arrays[x.first] = ChrArray(p, x, chr);
-      t2 = clock();
-      PrintTime(t1, t2, "ChrArray new");
-    }
-  }
+  std::unordered_map<std::string, ChrArray> arrays;
 
 public:
-  vChrArray(const DROMPA::Global &p, const chrsize &_chr):
-    chr(_chr)
-  {
-    loadvChrArray(p);
-
-#ifdef DEBUG
-    std::cout << "all WigArray:" << std::endl;
-    for (auto &x: arrays) {
-      std::cout << x.first << ", binsize " << x.second.binsize << std::endl;
-    }
-    std::cout << "all SamplePair:" << std::endl;
-    for (auto &x: p.samplepair) {
-	std::cout << x.first.argvChIP << "," << x.first.argvInput
-		  << ", binsize " << x.first.getbinsize() << std::endl;
-    }
-#endif
-  }
+  vChrArray(const DROMPA::Global &p, const chrsize &_chr);
 
   const ChrArray & getArray(const std::string &str) const {
     return arrays.at(str);
@@ -95,6 +66,5 @@ public:
   const chrsize & getchr() const { return chr; }
   int32_t getchrlen() const { return chr.getlen(); }
 };
-
 
 #endif /* _DD_READFILE_H_ */

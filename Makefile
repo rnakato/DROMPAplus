@@ -35,7 +35,7 @@ endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/ReadMpbldata.o $(OBJDIR)/significancetest.o
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(SRCDIR)/dd_sample_definition.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/dd_sample_definition.o
 OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
 
 .PHONY: all clean
