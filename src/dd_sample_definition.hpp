@@ -107,11 +107,11 @@ public:
   }
 
   std::vector<bed> getBedChr(const std::string &chrname) const {
-    if (!vbedregions.count(rmchr(chrname))) return vbedregions.at(rmchr(chrname));
+    if (vbedregions.find(rmchr(chrname)) != vbedregions.end()) return vbedregions.at(rmchr(chrname));
     else return std::vector<bed>();
   }
   std::vector<Peak> getPeakChr(const std::string &chrname) const {
-    if (!vPeak.count(chrname)) return vPeak.at(chrname);
+    if (vPeak.find(chrname) != vPeak.end()) return vPeak.at(chrname);
     else return std::vector<Peak>();
   }
   void print() const;
