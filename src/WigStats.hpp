@@ -25,91 +25,6 @@ enum class WigType {
   WIGTYPENUM
 };
 
-class WigArray;
-
-class WigStats {
-  enum {WIGDISTNUM=200};
-
-  double ave, var, nb_p0;
-  std::vector<uint64_t> wigDist;
-  std::vector<Peak> vPeak;
-  double pthre;
-
- public:
-  int32_t nbin;
-  int32_t binsize;
-  double nb_p, nb_n;
-  WigStats(const int32_t _nbin=0, const int32_t _binsize=0, const double thre=0):
-    ave(0), var(0), nb_p0(0),
-    wigDist(WIGDISTNUM, 0),
-    pthre(-log10(thre)),
-    nbin(_nbin), binsize(_binsize),
-    nb_p(0), nb_n(0)
-  {}
-
-  void setWigStats(const WigArray &wigarray);
-
-  void addWigDist(const WigStats &chr) {
-    for (size_t i=0; i<wigDist.size(); ++i) wigDist[i] += chr.wigDist[i];
-  }
-  void printWigDist(std::ofstream &out, const int32_t i) const {
-    out << boost::format("%1%\t%2%\t") % wigDist[i] % getpWig(i);
-  }
-  double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
-
-/*  double getPoisson(const int32_t i) const {
-    if (ave) return _getPoisson(i, ave);
-    else return 0;
-  }*/
-/*  double getNegativeBinomial(const int32_t i) const {
-    return _getNegativeBinomial(i, nb_p, nb_n);
-  }
-  double getZINB(const int32_t i) const {
-    if (ave) return _getZINB(i, nb_p, nb_n, nb_p0);
-    else return 0;
-  }
-  void printPoispar(std::ofstream &out) const {
-    out << boost::format("%1$.3f\t%2$.3f\t") % ave % var;
-  }
-  void printZINBpar(std::ofstream &out) const {
-    out << boost::format("%1%\t%2%\t%3%") % nb_p % nb_n % nb_p0;
-  }*/
-  int32_t getnbin() const { return nbin; }
-  int32_t getWigDistsize() const { return wigDist.size(); }
-
-  int32_t printPeak(std::ofstream &out, const int32_t num) const {
-    for (uint32_t i=0; i<vPeak.size(); ++i) {
-      vPeak[i].print(out, num+i, binsize);
-    }
-    return vPeak.size();
-  }
-
-  // Peakcall
-  void peakcall_onlyChIP(const WigArray &wigarray, const std::string &chrname);
-  double getpthre() const { return pthre; }
-
-  /*  void setZINBParam(const std::vector<int32_t> &ar) {
-    MyStatistics::moment<int32_t> mm(ar, 0);
-    ave = mm.getmean();
-    var = mm.getvar();
-    nb_p = var ? ave/var : 0;
-    if (nb_p>=1) nb_p = 0.9;
-    if (nb_p<=0) nb_p = 0.1;
-    nb_n = ave * nb_p /(1 - nb_p);
-    //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
-    //    if (ave) estimateZINB(nb_p, nb_n);
-    }*/
-
-  /*  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
-    uint32_t thre = getWigDistThre(wigDist, nbin);
-    double parray[thre+1];
-    parray[0] = thre;
-    for (uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
-    iterateZINB(&parray, nb_p_pre, nb_n_pre, nb_p, nb_n, nb_p0);
-    return;
-    }*/
-};
-
 class WigArray {
   std::vector<int32_t> array;
   double geta;
@@ -204,12 +119,80 @@ class WigArray {
 
 };
 
+class WigStats {
+  enum {WIGDISTNUM=200};
+
+  double ave, var, nb_p0;
+  std::vector<uint64_t> wigDist;
+
+ public:
+  int32_t nbin;
+  int32_t binsize;
+  double nb_p, nb_n;
+  WigStats(const int32_t _nbin=0, const int32_t _binsize=0):
+    ave(0), var(0), nb_p0(0),
+    wigDist(WIGDISTNUM, 0),
+    nbin(_nbin), binsize(_binsize),
+    nb_p(0), nb_n(0)
+  {}
+
+  void setWigStats(const WigArray &wigarray);
+
+  void addWigDist(const WigStats &chr) {
+    for (size_t i=0; i<wigDist.size(); ++i) wigDist[i] += chr.wigDist[i];
+  }
+  void printWigDist(std::ofstream &out, const int32_t i) const {
+    out << boost::format("%1%\t%2%\t") % wigDist[i] % getpWig(i);
+  }
+  double getpWig(const int32_t i) const { return getratio(wigDist[i], nbin); }
+
+/*  double getPoisson(const int32_t i) const {
+    if (ave) return _getPoisson(i, ave);
+    else return 0;
+  }*/
+/*  double getNegativeBinomial(const int32_t i) const {
+    return _getNegativeBinomial(i, nb_p, nb_n);
+  }
+  double getZINB(const int32_t i) const {
+    if (ave) return _getZINB(i, nb_p, nb_n, nb_p0);
+    else return 0;
+  }
+  void printPoispar(std::ofstream &out) const {
+    out << boost::format("%1$.3f\t%2$.3f\t") % ave % var;
+  }
+  void printZINBpar(std::ofstream &out) const {
+    out << boost::format("%1%\t%2%\t%3%") % nb_p % nb_n % nb_p0;
+  }*/
+  int32_t getnbin() const { return nbin; }
+  int32_t getWigDistsize() const { return wigDist.size(); }
+
+  /*  void setZINBParam(const std::vector<int32_t> &ar) {
+    MyStatistics::moment<int32_t> mm(ar, 0);
+    ave = mm.getmean();
+    var = mm.getvar();
+    nb_p = var ? ave/var : 0;
+    if (nb_p>=1) nb_p = 0.9;
+    if (nb_p<=0) nb_p = 0.1;
+    nb_n = ave * nb_p /(1 - nb_p);
+    //    std::cout << ave << "\t" << var << "\t" << nb_p << "\t" << nb_n << std::endl;
+    //    if (ave) estimateZINB(nb_p, nb_n);
+    }*/
+
+  /*  void estimateZINB(const double nb_p_pre, const double nb_n_pre) {
+    uint32_t thre = getWigDistThre(wigDist, nbin);
+    double parray[thre+1];
+    parray[0] = thre;
+    for (uint32_t i=0; i<thre; ++i) parray[i+1] = getpWig(i);
+    iterateZINB(&parray, nb_p_pre, nb_n_pre, nb_p, nb_n, nb_p0);
+    return;
+    }*/
+};
+
 class WigStatsGenome {
   int32_t binsize;
   int32_t rcenter;
   WigType type;
   bool outputzero;
-//  double pthre_inter;
 
 public:
   std::vector<WigStats> chr;
@@ -230,7 +213,6 @@ public:
       ("rcenter",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcenter")),
        "consider length around the center of fragment")
-//      ("pthre", boost::program_options::value<double>()->default_value(1e-3), "p-value threshold for peak calling")
       ;
     allopts.add(opt);
   }
@@ -239,9 +221,7 @@ public:
     rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
     outputzero  = values.count("outputzero");
-//    pthre_inter = MyOpt::getVal<double>(values, "pthre");
 
-//    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1, pthre_inter);
     for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1);
     for (auto &x: chr) genome.nbin += x.getnbin();
   }
@@ -249,7 +229,6 @@ public:
     std::vector<std::string> strType = {"COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
     std::cout << "Output format: " << strType[static_cast<int32_t>(type)] << std::endl;
     std::cout << "Binsize: " << binsize << " bp" << std::endl;
-//    std::cout << "Peak calling threshold: " << pthre_inter << std::endl;
   }
 
   int32_t getbinsize() const { return binsize; }
@@ -265,15 +244,6 @@ public:
   /*  void estimateZINB(const int32_t id) {
     genome.estimateZINB(chr[id].nb_p, chr[id].nb_n);
    }*/
-  void printPeak(const std::string &prefix) const {
-    std::string filename = prefix + ".peak.tsv";
-    std::ofstream out(filename);
-
-    Peak v;
-    v.printHead(out);
-    int32_t num(0);
-    for (auto &x: chr) num += x.printPeak(out, num);
-  }
 };
 
 #endif /* _WIGSTATS_HPP_ */

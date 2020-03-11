@@ -24,6 +24,12 @@ public:
     for (auto &x: vsamplepairoverlayed) {
       x.first.setScalingFactor(normtype, vReadArray, chr.getname());
       if (x.OverlayExists()) x.second.setScalingFactor(normtype, vReadArray, chr.getname());
+
+      if (p.thre.sigtest) {
+	if (x.first.InputExists()) {
+	  x.first.peakcall_withInput(vReadArray, chr.getname(), -log10(p.thre.pthre_inter), -log10(p.thre.pthre_enrich));
+	} else x.first.peakcall_onlyChIP(vReadArray, chr.getname(), -log10(p.thre.pthre_inter));
+      }
     }
   }
 

@@ -39,7 +39,7 @@ void WigStats::setWigStats(const WigArray &wigarray)
   //  setZINBParam(ar);
 }
 
-void WigStats::peakcall_onlyChIP(const WigArray &wigarray, const std::string &chrname)
+/*void WigStats::peakcall_onlyChIP(const WigArray &wigarray, const std::string &chrname)
 {
   int32_t ext(0);
   for (size_t i=0; i<wigarray.size(); ++i) {
@@ -58,3 +58,4 @@ void WigStats::peakcall_onlyChIP(const WigArray &wigarray, const std::string &ch
   }
   return;
 }
+*/

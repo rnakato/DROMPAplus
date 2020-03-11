@@ -426,7 +426,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	  if (values.count("ioverlay")) {
 	    std::vector<std::string> v(getVal<std::vector<std::string>>(values, "ioverlay"));
 	    int32_t num(0);
-	    for (auto &x:v) {
+	    for (auto &x: v) {
 	      vsinfo.addSampleInfo(x, gt, iftype);
 	      samplepair[num].setSecondSample(x, vsinfo);
 	      ++num;

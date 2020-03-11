@@ -27,7 +27,7 @@ public:
 	   const chrsize &chr):
     binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
     array(loadWigData(x.first, x.second, chr)),
-    stats(nbin, binsize, p.thre.pthre_inter),
+    stats(nbin, binsize),
     totalreadnum(x.second.gettotalreadnum()),
     totalreadnum_chr(x.second.gettotalreadnum_chr())
   {
@@ -40,16 +40,6 @@ public:
     stats.setWigStats(array);
     t2 = clock();
     PrintTime(t1, t2, "WigStats");
-/*     t1 = clock();
-    stats.peakcall_onlyChIP(array, chr.getname());
-    t2 = clock();
-    PrintTime(t1, t2, "peakcall");
-
-   std::string filename = "test.peak.tsv";
-    std::ofstream out(filename);
-
-    int32_t num(0);
-    stats.printPeak(out, num);*/
   }
 };
 

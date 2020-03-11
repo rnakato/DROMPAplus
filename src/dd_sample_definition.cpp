@@ -3,6 +3,7 @@
  */
 #include "dd_sample_definition.hpp"
 #include "dd_readfile.hpp"
+#include "significancetest.hpp"
 #include "version.hpp"
 
 namespace {
@@ -170,7 +171,8 @@ void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<
 
 
 SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo):
-  binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
+  binsize(0),
+  argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
 {
   std::vector<std::string> v;
   ParseLine(v, str, ',');
@@ -218,6 +220,58 @@ void SamplePairEach::setScalingFactor(const int32_t normtype,
   DEBUGprint("ChIP/Input Ratio for chr " << chrname << ": " << ratio);
 
   DEBUGprint_FUNCend();
+}
+
+void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
+					const double pthre_inter, const double pthre_enrich)
+{
+  int32_t ext(0);
+
+  const WigArray &ChIParray  = vReadArray.getArray(argvChIP).array;
+  const WigArray &Inputarray = vReadArray.getArray(argvInput).array;
+
+  for (size_t i=0; i<ChIParray.size(); ++i) {
+    double logp_inter(getlogp_Poisson(ChIParray[i], ChIParray.getLocalAverage(i, binsize)));
+    double logp_enrich(getlogp_BinomialTest(ChIParray[i], Inputarray[i], ratio));
+
+    if (!ext) {
+      if (logp_inter > pthre_inter && logp_enrich > pthre_enrich) {
+	vPeak[chrname].emplace_back(Peak(chrname, i, i, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
+	ext=1;
+      }
+    } else {
+      if (logp_inter > pthre_inter && logp_enrich > pthre_enrich) {
+	vPeak[chrname][vPeak[chrname].size()-1].renew(i, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
+      } else ext=0;
+    }
+
+  }
+
+  return;
+}
+
+void SamplePairEach::peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname,
+				       const double pthre_inter)
+{
+  int32_t ext(0);
+
+  const WigArray &ChIParray = vReadArray.getArray(argvChIP).array;
+
+  for (size_t i=0; i<ChIParray.size(); ++i) {
+    double val(ChIParray[i]);
+    double logp_inter(getlogp_Poisson(val, ChIParray.getLocalAverage(i, binsize)));
+
+    if (!ext) {
+      if (logp_inter > pthre_inter) {
+	vPeak[chrname].emplace_back(Peak(chrname, i, i, val, logp_inter));
+	ext=1;
+      }
+    } else {
+      if (logp_inter > pthre_inter) vPeak[chrname][vPeak[chrname].size()-1].renew(i, val, logp_inter);
+      else ext=0;
+    }
+  }
+  return;
 }
 
 std::vector<bed> SamplePairEach::getpeaksChr(const std::string &chrname) const

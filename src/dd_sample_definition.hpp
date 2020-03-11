@@ -60,9 +60,9 @@ public:
   }
 };
 
-
 class SamplePairEach {
   int32_t binsize;
+
   std::unordered_map<std::string, std::vector<bed>> vbedregions;
   std::unordered_map<std::string, std::vector<Peak>> vPeak;
 
@@ -88,12 +88,28 @@ public:
 
   void setScalingFactor(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
 
+  void peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
+			  const double pthre_inter, const double pthre_enrich);
+  void peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname, const double pthre_inter);
+
+  void printPeak(const std::string &prefix) const {
+    std::string filename = prefix + ".peak.tsv";
+    std::ofstream out(filename);
+
+    Peak v;
+    v.printHead(out);
+    int32_t num(0);
+    for (auto &x: vPeak) {
+      for (auto &peak: x.second) peak.print(out, num++, binsize);
+    }
+  }
+
   std::vector<bed> getpeaksChr(const std::string &chrname) const;
   void print() const;
   int32_t getbinsize() const { return binsize; }
   bool InputExists() const { return argvInput != ""; }
-};
 
+};
 
 class SamplePairOverlayed {
   bool overlay;
