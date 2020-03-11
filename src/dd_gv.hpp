@@ -4,30 +4,17 @@
 #ifndef _DD_GV_H_
 #define _DD_GV_H_
 
-#include <unordered_map>
 #include <boost/algorithm/string.hpp>
-#include "WigStats.hpp"
-#include "../submodules/SSP/common/BoostOptions.hpp"
-#include "extendBedFormat.hpp"
+#include "dd_sample_definition.hpp"
 #include "ReadAnnotation.hpp"
 #include "../submodules/SSP/common/util.hpp"
+#include "../submodules/SSP/common/BoostOptions.hpp"
 
 class chrsize;
-class vChrArray;
 
 enum class DrompaCommand {
-  CHIP,
-  NORM,
-  THRE,
-  ANNO_PC,
-  ANNO_GV,
-  DRAW,
-  REGION,
-  CG,
-  PD,
-  TR,
-  PROF,
-  OTHER
+  CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
+  DRAW, REGION, CG, PD, TR, PROF, OTHER
 };
 
 class CommandParamSet {
@@ -57,171 +44,11 @@ public:
   {}
 };
 
-class SampleInfo {
-//  double lambda;
-//  double nb_p, nb_n, nb_p0;
-  WigType iftype;
-  int32_t binsize;
-  int32_t totalreadnum;
-  std::unordered_map<std::string, int32_t> totalreadnum_chr;
-  std::string prefix;
-
-public:
-  std::vector<int> data;
-
-  void setbinsize(std::string &v, const int32_t b) {
-    if(b>0) binsize = b;
-    else {
-      try {
-	binsize = stoi(v);
-      }catch (...) {
-	binsize = 0;
-      }
-    }
-    if(binsize <= 0) PRINTERR_AND_EXIT("invalid binsize: " << v);
-  }
-
-  SampleInfo() {}
-  SampleInfo(const std::string &filename,
-	     const std::vector<chrsize> &gt,
-	     const int32_t b,
-	     const WigType &type):
-    binsize(0), totalreadnum(0), prefix("")
-  {
-   std::vector<std::string> v;
-   ParseLine(v, filename, '.');
-   int32_t last(v.size()-1);
-
-   if (type != WigType::NONE) iftype = type;
-   else {
-     if(v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;
-     else if(v[last] == "gz" && v[last-1] == "wig") {
-       iftype = WigType::COMPRESSWIG;
-       --last;
-     } else if(v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
-     else if(v[last] == "bw")         iftype = WigType::BIGWIG;
-     //     else if(v[last] == "bin")        iftype = WigType::BINARY;
-     else PRINTERR_AND_EXIT("invalid postfix: " << filename);
-   }
-   setbinsize(v[last-1], b);
-   for (int32_t i=0; i<last; ++i) prefix += v[i] + ".";
-   gettotalreadnum(filename, gt);
-  }
-
-  void scanStatsFile(const std::string &filename);
-  void gettotalreadnum(const std::string &filename, const std::vector<chrsize> &gt);
-  int32_t getbinsize() const { return binsize; }
-  WigType getiftype() const { return iftype; }
-
-  int32_t gettotalreadnum() const { return totalreadnum; }
-  const std::unordered_map<std::string, int32_t>& gettotalreadnum_chr() const& { return totalreadnum_chr; }
-};
-
-
-class vSampleInfo {
-  std::unordered_map<std::string, SampleInfo> vsinfo;
-
-public:
-  vSampleInfo(){}
-
-  void addSampleInfo(const std::string &str, const std::vector<chrsize> &gt, const WigType iftype);
-  bool Exists(const std::string &str) const { return vsinfo.find(str) != vsinfo.end(); }
-  int32_t getbinsize(const std::string &str) const { return vsinfo.at(str).getbinsize(); }
-
-  const SampleInfo& operator[](const std::string &str) const& { return vsinfo.at(str); }
-  const std::unordered_map<std::string, SampleInfo> &getarray() const & { return vsinfo; }
-};
-
-class SamplePairEach {
-  int32_t binsize;
-  std::unordered_map<std::string, std::vector<bed>> peaks;
-
-  class yScale {
-  public:
-    double tag;
-    double ratio;
-    double pvalue;
-    yScale(): tag(0), ratio(0), pvalue(0) {}
-  };
-
-public:
-  std::string argvChIP, argvInput;
-  std::string peak_argv;
-  std::string label;
-  double ratio;
-  yScale scale;
-
-  SamplePairEach():
-    binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
-  {}
-  SamplePairEach(const std::string &str, const vSampleInfo &vsinfo):
-    binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
-  {
-    std::vector<std::string> v;
-    ParseLine(v, str, ',');
-
-    /* 1:ChIP   2:Input   3:label   4:peaklist   5:binsize
-       6:scale_tag   7:scale_ratio   8:scale_pvalue */
-    if(v[0] != "") argvChIP = v[0];
-    if(v.size() >=2 && v[1] != "") argvInput = v[1];
-    if(v.size() >=3 && v[2] != "") label     = v[2];
-    if(v.size() >=4 && v[3] != "") peak_argv = v[3];
-    if(peak_argv != "") peaks = parseBed_Hash<bed>(peak_argv);
-    binsize = vsinfo.getbinsize(argvChIP);
-    if(v.size() >=6 && v[5] != "") scale.tag = stod(v[5]);
-    if(v.size() >=7 && v[6] != "") scale.ratio = stod(v[6]);
-    if(v.size() >=8 && v[7] != "") scale.pvalue = stod(v[7]);
-
-    //    printBed_Hash(peaks);
-  }
-
-  void setScalingFactor(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
-
-  std::vector<bed> getpeaksChr(const std::string &chrname) const {
-    if (peak_argv != "") return peaks.at(rmchr(chrname));
-    else return std::vector<bed>();
-  }
-  void print() const {
-    std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % label % peak_argv;
-    std::cout << boost::format("   Input: %1%\n") % argvInput;
-    std::cout << boost::format("   binsize: %1%\n") % binsize;
-  }
-  int32_t getbinsize() const { return binsize; }
-  bool InputExists() const { return argvInput != ""; }
-};
-
-class SamplePairOverlayed {
-  bool overlay;
-
- public:
-  SamplePairEach first;
-  SamplePairEach second;
-
-  SamplePairOverlayed(const std::string &str, const vSampleInfo &vsinfo):
-    overlay(false), first(str, vsinfo)
-  {}
-
-  void setSecondSample(const std::string &str, const vSampleInfo &vsinfo) {
-    second = SamplePairEach(str, vsinfo);
-    overlay = true;
-  }
-
-  void print() const {
-    first.print();
-    if (overlay) {
-      printf("Overlay ");
-      second.print();
-    }
-  }
-  bool OverlayExists() const { return overlay; }
-};
-
 namespace DROMPA {
   class Global;
 
   class Annotation {
     bool isUCSC;
-//    bool showars;
     bool isIdeogram;
     bool isChIADrop;
 
@@ -229,21 +56,21 @@ namespace DROMPA {
     void readBedFile(const std::vector<std::string> &v) {
       auto vbed = parseBed<T>(v[0]);
       //    printBed(vbed);
-      if(v.size()>1) vbedlist.emplace_back(vbed, v[1]);
+      if (v.size()>1) vbedlist.emplace_back(vbed, v[1]);
       else vbedlist.emplace_back(vbed, "Bed");
     }
 
     void parse_ChIADropData(const std::string &fileName)
     {
       std::ifstream in(fileName);
-      if(!in) PRINTERR_AND_EXIT("Error: ChIADrop file " << fileName << " does not exist.");
+      if (!in) PRINTERR_AND_EXIT("Error: ChIADrop file " << fileName << " does not exist.");
 
       std::unordered_map<std::string, std::vector<GenomePosition>> mp;
       while (!in.eof()) {
 	std::string lineStr;
 	getline(in, lineStr);
 
-	if(lineStr.empty() || lineStr[0] == '#') continue;
+	if (lineStr.empty() || lineStr[0] == '#') continue;
 	std::vector<std::string> v;
 	ParseLine(v, lineStr, ',');
 
@@ -252,7 +79,7 @@ namespace DROMPA {
 
       for (auto &pair: mp) {
 	int32_t nbed(pair.second.size());
-	if(nbed == 1) continue;
+	if (nbed == 1) continue;
 	for (auto &x: pair.second) {
 	  mp_ChIADrop[x.chr][pair.first].emplace_back(x.start);
 	}
@@ -283,7 +110,7 @@ namespace DROMPA {
       const std::string & getfilename() const { return filename; }
       int32_t getbinsize() const { return binsize; }
       bool isOn() const {
-	if(filename != "") return true;
+	if (filename != "") return true;
 	else return false;
       }
     };
@@ -328,9 +155,9 @@ namespace DROMPA {
 
     HashOfGeneDataMap getGMP() {
       HashOfGeneDataMap tmp;
-      if(!gftype)        tmp = parseRefFlat(genefile);
-      else if(gftype==1) tmp = parseGtf(genefile);
-      else if(gftype==2) tmp = parseSGD(genefile);
+      if (!gftype)        tmp = parseRefFlat(genefile);
+      else if (gftype==1) tmp = parseGtf(genefile);
+      else if (gftype==2) tmp = parseSGD(genefile);
       else PRINTERR_AND_EXIT("invalid --gftype: " << gftype);
 
       isUCSC = isGeneUCSC(tmp);
@@ -427,7 +254,7 @@ namespace DROMPA {
 
     std::vector<bed> getRegionBedChr(const std::string &chrname) const {
       std::vector<bed> vbed;
-      for(auto &x: regionBed) {
+      for (auto &x: regionBed) {
 	if (x.chr == chrname || x.chr == "chr" + chrname) vbed.emplace_back(x);
       }
       return vbed;
@@ -569,7 +396,6 @@ namespace DROMPA {
     }
     bool isincludeYM() const { return includeYM; }
     bool isshowchr() const { return showchr; }
-//    bool isshowars() const {return anno.isshowars(); }
 
     pdSample scan_pdstr(const std::string &str);
   };
