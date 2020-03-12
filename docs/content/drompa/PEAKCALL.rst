@@ -64,7 +64,7 @@ Accordingly, there are multiple thresholds for peak calling as below:
      - ``--ethre``: ChIP/Input enrichment
      - ``--ipm``: normalized intensity (height) of peak summit
 
-We recommend ``--pthre_enrich`` option as the main threshold for peak calling.
+See ``--help`` for the default values for each drompa+ mode. We recommend ``--pthre_enrich`` option as the main threshold for peak calling.
 
 Peak calling without the input sample
 ++++++++++++++++++++++++++++++++++++++++++
