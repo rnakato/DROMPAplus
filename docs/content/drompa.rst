@@ -25,6 +25,7 @@ A sample script file for tutorial is in "tutorial" derectory.
 
    drompa/PCSHARP
    drompa/PCENRICH
+   drompa/PEAKCALL
    drompa/GV
    drompa/Profile
    drompa/Heatmap

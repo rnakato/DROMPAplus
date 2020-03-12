@@ -25,7 +25,6 @@ The CRAM-format map files can be downloaded from our GoogleDrive:
 Parse2wig
 ++++++++++++++++++++++++++++++
 
-
 The command below generates a bigWig data for the six cram files::
 
     gt=../data/genometable/genometable.sacCer3.txt
@@ -39,7 +38,6 @@ The command below generates a bigWig data for the six cram files::
 
 Make enrichment distribution
 ++++++++++++++++++++++++++++++++++++++++++
-
 
 To make a PDF file of the enrichment distribution for S. cerevisiae with the gene annotation, type::
 
@@ -122,8 +120,6 @@ In this figure the difference of replicated regions between the samples is more 
 .. image:: img/drompa_yeast-ARS-peak2.jpg
    :width: 600px
    :align: center
-
-In this figure the difference of replicated regions between the samples is more pronounced. To change the enrichment threshold, supply ``--ethre`` as follows::
 
 
 Logratio distribution

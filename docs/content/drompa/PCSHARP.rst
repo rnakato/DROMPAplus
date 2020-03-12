@@ -95,6 +95,26 @@ For example::
 explicitly specifies binsize of bigWig files are 1,000 bp, max value of y_axis is 60, and "peak.bed" as a peak list.
 When a peak list (BED format) is specified, drompa+ highlights the peak regions instead of using the internal peak-calling engine.
 
+Peak calling
+++++++++++++++++++++++++++++
+Suppy ``--callpeak`` option to call peaks in drompa+::
+
+  $ dir=parse2wigdir+
+  $ drompa+ PC_SHARP \
+           -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
+           -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+           -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+           -o drompa4 -g refFlat.txt --gt genometable.txt \
+           --lpp 2 --showitag 2 --chr 1 \
+           --callpeak
+
+.. image:: img/drompa4.jpg
+   :width: 600px
+   :align: center
+
+Peak regions are highlighted in orange.
+The peak list for each sample pair is also outputted as "drompa4.<label>.peak.tsv".
+
 Visualize specific regions
 ++++++++++++++++++++++++++++
 
@@ -121,7 +141,7 @@ To focus on specific regions (in this example, the HOX A cluster region), supply
 P-value visualization
 +++++++++++++++++++++++
 
-To display the p-value and ChIP/input enrichment lines, supply ``--showratio 1``, ``--showpinter 1`` and ``--showpenrich 1`` options as follows::
+P-value visualization can be used to define appropriate threshold for peak-calling for each study and samples. To display the p-value and ChIP/input enrichment lines, supply ``--showratio 1``, ``--showpinter 1`` and ``--showpenrich 1`` options as follows::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -134,6 +154,7 @@ To display the p-value and ChIP/input enrichment lines, supply ``--showratio 1``
            --chr 1
 
 where ``--scale_ratio`` and ``--scale_pvalue`` options change the maximum values for the y axis of the corresponding lines.
+In p-value lines ("ChIP internal" and "ChIP/Input enrichment"), regions in which the p-value exceeds the threshold are highlighted in red.
 
 .. image:: img/drompa_pvalue.jpg
    :width: 600px

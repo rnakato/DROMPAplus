@@ -179,7 +179,6 @@ void Annotation::InitDumpPC(const Variables &values) const {
 void Annotation::InitDumpGV(const Variables &values) const {
   DEBUGprint_FUNCStart();
 
-  std::cout << boost::format("\nAnnotations:\n");
   printVOpt<std::string>(values, "inter", "   Interaction file");
   if (mpfile != "") {
     std::cout << boost::format("Mappability file directory: %1%\n") % mpfile;
@@ -249,12 +248,10 @@ void Threshold::setOpts(MyOpt::Opts &allopts) {
   MyOpt::Opts opt("Threshold",100);
   opt.add_options()
     ("callpeak",       "Implement peak-calling (default: skip)")
-    ("pthre_internal", value<double>()->default_value(1e-3), "p-value for ChIP internal")
-    ("pthre_enrich",   value<double>()->default_value(1e-3), "p-value for ChIP/Input enrichment")
-    ("qthre",          value<double>()->default_value(1),    "FDR")
-    ("ethre",          value<double>()->default_value(2),    "IP/Input fold enrichment")
-    ("ipm",            value<double>()->default_value(0),    "Read intensity of peak summit")
-    //    (SETOPT_OVER("width4lmd", int32_t, 100000, 0), "Width for calculating local lambda")
+    ("pthre_internal", value<double>()->default_value(5), "p-value threshold (-log10) for ChIP internal ")
+    ("pthre_enrich",   value<double>()->default_value(4), "p-value threshold (-log10) for ChIP/Input enrichment")
+    ("ethre",          value<double>()->default_value(2), "IP/Input fold enrichment")
+    ("ipm",            value<double>()->default_value(0), "Read intensity of peak summit")
     ;
   allopts.add(opt);
 }
@@ -264,10 +261,9 @@ void Threshold::setValues(const Variables &values) {
   try {
     pthre_inter  = getVal<double>(values, "pthre_internal");
     pthre_enrich = getVal<double>(values, "pthre_enrich");
-    qthre        = getVal<double>(values, "qthre");
     ethre        = getVal<double>(values, "ethre");
     ipm          = getVal<double>(values, "ipm");
-    if(values.count("callpeak")) sigtest = true;
+    sigtest      = values.count("callpeak");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
@@ -278,10 +274,9 @@ void Threshold::InitDump() const {
   DEBUGprint_FUNCStart();
 
   if (sigtest) {
-    std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
-    std::cout << boost::format("   p-value threshold (internal, -log10): %1$.2e\n")   % pthre_inter;
-    std::cout << boost::format("   p-value threshold (enrichment, -log10): %1$.2e\n") % pthre_enrich;
-    std::cout << boost::format("   FDR threshold: %1$.2e\n")                          % qthre;
+    std::cout << boost::format("\nThreshold:\n");
+    std::cout << boost::format("   p-value threshold (internal, -log10): %1$.1f\n")   % pthre_inter;
+    std::cout << boost::format("   p-value threshold (enrichment, -log10): %1$.1f\n") % pthre_enrich;
     std::cout << boost::format("   Peak intensity threshold: %1$.2f\n")               % ipm;
     std::cout << boost::format("   Enrichment threshold: %1$.2f\n")                   % ethre;
   }
@@ -550,7 +545,8 @@ void Global::InitDumpOther() const {
   DEBUGprint_FUNCStart();
 
   std::vector<std::string> str_format = {"PDF", "PNG"};
-  std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
+  if (drawparam.isshowpdf()) std::cout << boost::format("   Output format: %1%\n") % str_format[ispng];
+  else std::cout << boost::format("   Output format: do not depict figure files.\n");
   if (includeYM) std::cout << boost::format("   include chromosome Y and M\n");
   DEBUGprint_FUNCend();
 }
@@ -576,6 +572,7 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
     ("shownegative", "allow negative values in historgram")
     ("offymem", "Omit Y memory")
     ("offylabel", "Omit Y label")
+    ("offpdf", "Omit pdf generation (for peak calling)")
     ;
   allopts.add(opt);
 }
@@ -598,6 +595,7 @@ void DrawParam::setValues(const Variables &values, const int32_t n) {
     shownegative = values.count("shownegative");
     showymem = !values.count("offymem");
     showylab = !values.count("offylabel");
+    showpdf  = !values.count("offpdf");
     alpha = getVal<double>(values, "alpha");
 
     scale_tag    = getVal<double>(values, "scale_tag");

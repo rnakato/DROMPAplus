@@ -116,43 +116,47 @@ class macsxls : public bed {
 };
 
 class Peak : public bed {
+  int32_t binsize;
+
  public:
   double pileup, pileup_input;
   double p_inter, p_enr;
 
   Peak(){}
-  Peak(const std::string &c, const int32_t s, const int32_t e,
+  Peak(const std::string &c, const int32_t _binsize,
+       const int32_t s, const int32_t e,
        const double val, const double _p_inter,
        const double val_input=0, const double _p_enr=0):
-    bed(c,s,e), pileup(val), pileup_input(val_input), p_inter(_p_inter), p_enr(_p_enr) {}
+    bed(c, s, e), binsize(_binsize), pileup(val), pileup_input(val_input),
+    p_inter(_p_inter), p_enr(_p_enr)
+  {}
 
-  void renew(const int32_t i, const double val, const double _p_inter, const double val_input=0, const double _p_enr=0) {
-    end = i;
+  void renew(const int32_t e, const double val, const double _p_inter, const double val_input=0, const double _p_enr=0) {
+    end = e;
     pileup += val;
     pileup_input += val_input;
 
     if(p_inter < _p_inter) {
       p_inter = _p_inter;
-      summit = i;
+      summit = e - binsize/2;
     }
     if(p_enr < _p_enr) p_enr = _p_enr;
   }
 
   double getenrichment() const { return getratio(pileup, pileup_input); }
 
-  void print(std::ofstream &out, const int32_t id, const int32_t binsize) const {
-    out << chr << "\t" << start*binsize << "\t" << end*binsize << "\t"
-	<< ((end - start +1)*binsize-1) << "\t"
-	<< (summit*binsize -binsize/2) << "\t"
+  void print(std::ofstream &out, const int32_t id) const {
+    out << chr << "\t" << start << "\t" << end << "\t"
+	<< length() << "\t" << summit << "\t"
 	<< std::fixed << std::setprecision(2)
 	<< pileup << "\t" << pileup_input << "\t" << getenrichment() << "\t"
 	<< p_inter << "\t" << p_enr << "\tpeak " << id << std::endl;
   }
 
-  void print(const int32_t binsize) const {
-    std::cout << chr << "\t" << start*binsize << "\t" << end*binsize << "\t"
-	     << ((end - start +1)*binsize-1) << "\t"
-	     << (summit*binsize -binsize/2) << "\t"
+  void print() const {
+    std::cout << chr << "\t" << start << "\t" << end << "\t"
+	     << length() << "\t"
+	     << summit << "\t"
 	     << std::fixed << std::setprecision(2)
 	     << pileup << "\t" << pileup_input << "\t" << getenrichment() << "\t"
 	     << p_inter << "\t" << p_enr << "\tpeak " << std::endl;

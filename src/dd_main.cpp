@@ -157,17 +157,23 @@ void exec_PCSHARP(DROMPA::Global &p)
     std::cout << "chr" << chr.getname() << ": " << std::flush;
     Figure fig(p, chr);
 
-    if (p.thre.sigtest) fig.peakcall(p, chr.getrefname());
+    if (p.thre.sigtest) {
+      std::cout << "call peak.." << std::flush;
+      fig.peakcall(p, chr.getrefname());
+    }
 
-    clock_t t1,t2;
-    t1 = clock();
-    if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
-    t2 = clock();
-    PrintTime(t1, t2, "MakePdf");
+    if (p.drawparam.isshowpdf()) {
+      clock_t t1,t2;
+      t1 = clock();
+      if (fig.Draw(p)) StrAllPdf += p.getFigFileNameChr(chr.getrefname()) + " ";
+      t2 = clock();
+      PrintTime(t1, t2, "MakePdf");
+    }
   }
 
   if (p.thre.sigtest) printPeak(p);
-  MergePdf(p, StrAllPdf);
+  if (p.drawparam.isshowpdf()) MergePdf(p, StrAllPdf);
+  else printf("done.\n");
 
   return;
 }

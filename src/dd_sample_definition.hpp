@@ -102,7 +102,7 @@ public:
     v.printHead(out);
     int32_t num(0);
     for (auto &x: vPeak) {
-      for (auto &peak: x.second) peak.print(out, num++, binsize);
+      for (auto &peak: x.second) peak.print(out, num++);
     }
   }
 

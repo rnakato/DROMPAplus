@@ -236,12 +236,12 @@ void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::
 
     if (!ext) {
       if (logp_inter > pthre_inter && logp_enrich > pthre_enrich) {
-	vPeak[chrname].emplace_back(Peak(chrname, i, i, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
+	vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
 	ext=1;
       }
     } else {
       if (logp_inter > pthre_inter && logp_enrich > pthre_enrich) {
-	vPeak[chrname][vPeak[chrname].size()-1].renew(i, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
+	vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
       } else ext=0;
     }
 
@@ -263,11 +263,11 @@ void SamplePairEach::peakcall_onlyChIP(const vChrArray &vReadArray, const std::s
 
     if (!ext) {
       if (logp_inter > pthre_inter) {
-	vPeak[chrname].emplace_back(Peak(chrname, i, i, val, logp_inter));
+	vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, val, logp_inter));
 	ext=1;
       }
     } else {
-      if (logp_inter > pthre_inter) vPeak[chrname][vPeak[chrname].size()-1].renew(i, val, logp_inter);
+      if (logp_inter > pthre_inter) vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, val, logp_inter);
       else ext=0;
     }
   }

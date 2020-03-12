@@ -114,13 +114,21 @@ class ChIPDataFrame : public DataFrame {
   void strokePeaks(T &bed) {
     if (!my_overlap(bed.start, bed.end, par.xstart, par.xend)) return;
 
-    cr->set_line_width(bed.length() * par.dot_per_bp);
-    double x(BP2PIXEL(bed.summit - par.xstart));
-    rel_yline(cr, x, par.yaxis_now - height_df -5, height_df +10);
+    int32_t s(std::max(bed.start, par.xstart) - par.xstart);
+    int32_t e(std::min(bed.end, par.xend)     - par.xstart);
+    double x(BP2PIXEL(s));
+    double len((e-s)* par.dot_per_bp);
+/*    DEBUGprint("bed.start " << bed.start << " bed.end "  << bed.end
+	       << " bed.len "  << bed.length()
+	       << " par.xstart " << par.xstart << " par.xend "  << par.xend
+	       << " s " << s << " e " << e << " x " <<x << " len " << len);*/
+    rel_xline(cr, x, par.yaxis_now - height_df/2, len);
+    cr->stroke();
   }
 
   void HighlightPeaks(const SamplePairOverlayed &pair) {
-    cr->set_source_rgba(CLR_RED, 0.4);
+    cr->set_source_rgba(CLR_ORANGE, 0.4);
+    cr->set_line_width(height_df + 6);
 
     if (pair.first.BedExists()) { // specified BED
       for (auto &peak: pair.first.getBedChr(chrname)) {
@@ -128,7 +136,7 @@ class ChIPDataFrame : public DataFrame {
       }
     } else {     // peak calling by DROMPA+
       for (auto &peak: pair.first.getPeakChr(chrname)) {
-//	peak.print(100);
+//	peak.print();
 	strokePeaks<Peak>(peak);
       }
     }
@@ -247,7 +255,7 @@ public:
 	      pair.first.scale.pvalue,
 	      pair.second.scale.pvalue,
 	      refparam, p.thre.sigtest,
-	      -log10(pvalue),
+	      pvalue,
 	      chrname,
 	      p.drawparam.width_draw_pixel)
   {}

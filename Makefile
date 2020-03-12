@@ -45,7 +45,6 @@ all: $(TARGET) prnt
 
 prnt: $(TARGET)
 	@echo "\nAdd '$(CURDIR)/bin:$(CURDIR)/otherbins:$(CURDIR)/submodules/cpdf/Linux-Intel-64bit/' to your PATH."
-#	@if [ ! -e scripts ]; then ln -s submodules/SSP/scripts/ .; fi
 
 $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
@@ -54,15 +53,6 @@ $(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
 $(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(LIBS_CAIRO) $(CFLAGS)
-
-#$(OBJDIR)/dd_draw.o: $(SRCDIR)/dd_draw.cpp
-#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
-#$(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw_dataframe.cpp
-#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
-#$(OBJDIR)/dd_drawgenes.o: $(SRCDIR)/dd_drawgenes.cpp
-#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
-#$(OBJDIR)/dd_chiadrop.o: $(SRCDIR)/dd_chiadrop.cpp
-#	$(CC) -o $@ -c $< $(CFLAGS) $(LIBS_CAIRO)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi

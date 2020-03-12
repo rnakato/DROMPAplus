@@ -206,14 +206,12 @@ namespace DROMPA {
   public:
     double pthre_inter;
     double pthre_enrich;
-    double qthre;
     double ethre;
     double ipm;
     bool sigtest;
 
     Threshold(): pthre_inter(0), pthre_enrich(0),
-      qthre(0), ethre(0), ipm(0),
-      sigtest(false)
+      ethre(0), ipm(0), sigtest(false)
     {}
 
     void setOpts(MyOpt::Opts &allopts);
@@ -276,6 +274,7 @@ namespace DROMPA {
     bool shownegative;
     bool showymem;
     bool showylab;
+    bool showpdf;
 
     int32_t samplenum;
 
@@ -294,7 +293,7 @@ namespace DROMPA {
     double alpha;
 
     DrawParam(): linenum_per_page(0), barnum(0), ystep(0),
-		 showymem(true), showylab(true),
+		 showymem(true), showylab(true), showpdf(true),
 		 samplenum(0),
 		 width_page_pixel(0),
 		 width_draw_pixel(0),
@@ -316,6 +315,7 @@ namespace DROMPA {
     bool isshownegative() const { return shownegative; };
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
+    bool isshowpdf() const { return showpdf; };
 
     int32_t getbarnum() const { return barnum; }
     double getystep() const { return ystep; }

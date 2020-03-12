@@ -52,9 +52,9 @@ public:
 
     for (auto &x: vsamplepairoverlayed) {
       if (x.first.InputExists()) {
-	x.first.peakcall_withInput(vReadArray, chrname, -log10(p.thre.pthre_inter), -log10(p.thre.pthre_enrich));
+	x.first.peakcall_withInput(vReadArray, chrname, p.thre.pthre_inter, p.thre.pthre_enrich);
       }
-      else x.first.peakcall_onlyChIP(vReadArray, chrname, -log10(p.thre.pthre_inter));
+      else x.first.peakcall_onlyChIP(vReadArray, chrname, p.thre.pthre_inter);
     }
     t2 = clock();
     PrintTime(t1, t2, "peakcall");

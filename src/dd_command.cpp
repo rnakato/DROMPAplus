@@ -66,13 +66,21 @@ void Command::InitDump()
 
   for (auto x: vopts) {
     switch(x) {
-    case DrompaCommand::CHIP:    p.InitDumpChIP(); break;
-    case DrompaCommand::NORM:    p.InitDumpNorm(); break;
-    case DrompaCommand::THRE:    p.thre.InitDump(); break;
-    case DrompaCommand::ANNO_PC: p.anno.InitDumpPC(values); break;
-    case DrompaCommand::ANNO_GV: p.anno.InitDumpGV(values); break;
-    case DrompaCommand::DRAW:    p.drawparam.InitDump(); break;
-    case DrompaCommand::REGION:  p.drawregion.InitDump(values); break;
+    case DrompaCommand::CHIP: p.InitDumpChIP(); break;
+    case DrompaCommand::NORM: p.InitDumpNorm(); break;
+    case DrompaCommand::THRE: p.thre.InitDump(); break;
+    case DrompaCommand::ANNO_PC:
+      if (p.drawparam.isshowpdf()) p.anno.InitDumpPC(values);
+      break;
+    case DrompaCommand::ANNO_GV:
+      if (p.drawparam.isshowpdf()) p.anno.InitDumpGV(values);
+      break;
+    case DrompaCommand::DRAW:
+      if (p.drawparam.isshowpdf()) p.drawparam.InitDump();
+      break;
+    case DrompaCommand::REGION:
+      if (p.drawparam.isshowpdf()) p.drawregion.InitDump(values);
+      break;
     case DrompaCommand::CG:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CG");
