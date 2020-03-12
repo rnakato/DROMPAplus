@@ -35,10 +35,12 @@ The peak list is tab-delimited text format and can be opened in a text editor or
 - P-value (ChIP/Input enrichment)
 - peak name.
 
-| By default, chromosomes Y and M (Mt) are ignored for the analysis. Supply the ``--includeYM`` option to include these chromosomes.
-| When supplying ``--chr`` option, peaks for only the specified chromosome are called.
-| Supply ``--offpdf`` option to omit pdf file generatoin and obtain peak lists only.
+.. note::
 
+    - If a bed file is specified in ``-i`` option, drompa+ does not internally call peaks but highlights the specified regions instead.
+    - By default, chromosomes Y and M (Mt) are ignored for the analysis. Supply the ``--includeYM`` option to include these chromosomes.
+    - When supplying ``--chr`` option, peaks for only the specified chromosome are called.
+    - Supply ``--offpdf`` option to omit pdf file generatoin and obtain peak lists only.
 
 Detail of significance test
 ++++++++++++++++++++++++++++++++++++
@@ -64,16 +66,17 @@ Accordingly, there are multiple thresholds for peak calling as below:
      - ``--ethre``: ChIP/Input enrichment
      - ``--ipm``: normalized intensity (height) of peak summit
 
-We recommend ``--pthre_enrich`` option as the main threshold for peak calling.
 See ``--help`` for the default value of these threholds for each drompa+ mode. 
+We recommend ``--pthre_enrich`` option as the main threshold for peak calling.
 
 Peak calling without the input sample
-++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++
 
-When the input sample is omitted, drompa+ calls peaks using the ChIP sample only. The second step is omitted. However, we strongly recommend that the ChIP sample is compared with the corresponding input data to decrease the number of false-positive sites derived from repetitive regions.
+If the the input sample is not specified, drompa+ calls peaks using the ChIP sample (``--pthre_internal``) and skips the second step ( ``--pthre_enrich``).
+However, we strongly recommend that the ChIP sample is compared with the corresponding input data to decrease the number of false-positive sites derived from repetitive regions.
 
 
 Peak calling in **PC_ENRICH** mode
 ++++++++++++++++++++++++++++++++++++
 
-**PC_ENRICH** mode does not use significance test but simply call regions in which containing ChIP/Input enrichments above the enrichment threshold (``-ethre``, 2.0 in default) and the peak intensity threshold (``--ipm``, 5.0 in default). 
+By default, **PC_ENRICH** mode does not implement significance test but simply calls regions in which containing ChIP/Input enrichments above the enrichment threshold (``-ethre``, 2.0 in default) and the peak intensity threshold (``--ipm``, 5.0 in default). 

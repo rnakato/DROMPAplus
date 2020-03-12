@@ -1,13 +1,16 @@
 # Changelog
 
 ## 1.4.0 (2020-02-22)
-- Draft the manual page
+- Draft the manual page (http://drompaplus.readthedocs.io/)
 - Add drompa.heatmap.py for heatmap visualization in otherbins directory
 - Add sample scripts and related annotation data in tutorial directory
 - Add data/geneannotation directory and add Ensembl gene annotations
 - Add parsestats4DROMPAplus.pl in otherbins directory
 - Add scripts link in the root directory
 - Add --shownegative option
+- Add --offpdf option
+- Set default threshold values for peak calling in each mode
+- Add function for highlighting peak regions
 - Move the source files from submodule/SSP/common to src
 - PROFILE: Bug fix in --stype 2
 - Bug fix in ARS visualiztion for yeast
