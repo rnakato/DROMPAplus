@@ -13,6 +13,9 @@ PC_SHARP: Read distribution visualization
     $ parse2wig+ -i Input.bam    -o Input    --gt genometable.txt -n GR --binsize 100000
 
 
+Example usage
++++++++++++++++++++++++++
+
 drompa+ can take multiple ChIP-input pairs as input. Each pair should be specified with the option ``-i``.
 For example, the command::
 
