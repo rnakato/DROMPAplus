@@ -56,7 +56,6 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
     ("showtranscriptname", "Show transcript name (default: gene name)")
     ("ars",    value<std::string>(), "ARS list (for yeast)")
     ("ter",    value<std::string>(), "TER list (for S.cerevisiae)")
-//    ("showars", "Display ARS and TER and do not display genes")
     ("bed",    value<std::vector<std::string>>(), "<bedfile>,<label>: BED file (<label> can be omited)")
     ("repeat", value<std::string>(), "Display repeat annotation (RepeatMasker format)")
     ;
@@ -85,7 +84,9 @@ void Annotation::setValuesPC(const Variables &values) {
   DEBUGprint_FUNCStart();
 
   try {
-    for (auto x: {"gene", "ars", "ter", "repeat"}) if (values.count(x)) isFile(getVal<std::string>(values, x));
+    for (auto x: {"gene", "ars", "ter", "repeat"}) {
+      if (values.count(x)) isFile(getVal<std::string>(values, x));
+    }
     if (values.count("gene")) {
       genefile = getVal<std::string>(values, "gene");
       gftype   = getVal<int32_t>(values, "gftype");
@@ -95,7 +96,6 @@ void Annotation::setValuesPC(const Variables &values) {
       arsfile = getVal<std::string>(values, "ars");
       parseARSOriDB(arsfile, arsgmp);
     }
-//    showars = values.count("showars");
     if (values.count("ter")) {
       terfile = getVal<std::string>(values, "ter");
       parseTER(terfile, arsgmp);
@@ -105,7 +105,7 @@ void Annotation::setValuesPC(const Variables &values) {
     if (values.count("repeat")) repeatfile = getVal<std::string>(values, "repeat");
 
     if (values.count("bed")) {
-      for(auto &x: getVal<std::vector<std::string>>(values, "bed")) {
+      for (auto &x: getVal<std::vector<std::string>>(values, "bed")) {
 	std::vector<std::string> v;
 	ParseLine(v, x, ',');
 	readBedFile<bed12>(v);
@@ -410,7 +410,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	  // SamplePairOverlayed first
 	  if (values.count("input")) {
 	    std::vector<std::string> v(getVal<std::vector<std::string>>(values, "input"));
-	    for (auto &x:v) {
+	    for (auto &x: v) {
 	      vsinfo.addSampleInfo(x, gt, iftype);
 	      samplepair.emplace_back(x, vsinfo);
 	    }
@@ -427,7 +427,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	    }
 	  }
 
-	  if (values.count("if")) iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
+	  iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
 
 	} catch(const boost::bad_any_cast& e) {
 	  PRINTERR_AND_EXIT(e.what());

@@ -94,9 +94,7 @@ void Command::InitDump()
     case DrompaCommand::DRAW:
       if (p.drawparam.isshowpdf()) p.drawparam.InitDump();
       break;
-    case DrompaCommand::REGION:
-      if (p.drawparam.isshowpdf()) p.drawregion.InitDump(values);
-      break;
+    case DrompaCommand::REGION: p.drawregion.InitDump(values); break;
     case DrompaCommand::CG:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CG");
