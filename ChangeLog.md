@@ -1,11 +1,11 @@
 # Changelog
 
-## 1.4.0 (2020-02-22)
+## 1.4.0 (2020-03-12)
 - Draft the manual page (http://drompaplus.readthedocs.io/)
 - Add drompa.heatmap.py for heatmap visualization in otherbins directory
 - Add sample scripts and related annotation data in tutorial directory
 - Add data/geneannotation directory and add Ensembl gene annotations
-- Add parsestats4DROMPAplus.pl in otherbins directory
+- Add parsestats4DROMPAplus.pl and makemappabilitytable.pl in otherbins directory
 - Add scripts link in the root directory
 - Add --shownegative option
 - Add --offpdf option
