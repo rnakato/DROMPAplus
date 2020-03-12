@@ -58,7 +58,7 @@ The statistics file ``parse2wigdir+/ChIP.100.tsv`` describes various quality val
 - **Non-redundant reads**: the number of reads remaining after PCR-bias filtering
 - **Redundant reads**: the number of reads filtered by PCR-bias filtering (mapped on forward, reverse and both strands are outputted)
 - **Reads (GCnormed)** (when supplying ``--GC`` option): read number after GC normalization
-- **Read depth**: the expected number of mapped reads per base pair
+- **Read depth**: the expected number of mapped reads per base pair. Namely, :math:`depth = n^{reads} * fragment_length/genome_length`;
 - **Scaling weight**: scaling weight for the read normalization
 - **Normalized read number**: read number after the normalization
 - **FRiP score** (when supplying ``--bed`` option): fraction of reads in peaks. .
