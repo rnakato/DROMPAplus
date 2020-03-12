@@ -111,7 +111,7 @@ class macsxls : public bed {
 	<< p << "\t" << enrich << "\t" << q << "\t" << name;
  }
  void printHead () const {
-   std::cout << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t -log10(pvalue)\tfold_enrichment\t -log10(qvalue)\tname";
+   std::cout << "chromosome\tstart\tend\tlength\tabs_summit\tpileup\t log10(pvalue)\tfold_enrichment\t log10(qvalue)\tname";
  }
 };
 

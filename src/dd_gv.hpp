@@ -25,7 +25,10 @@ public:
   double scaletag;
   double scaleratio;
   double scalepvalue;
-  bool sigtest;
+  double thre_pinter;
+  double thre_penrich;
+  double thre_ethre;
+  double thre_ipm;
 
   CommandParamSet(const int32_t defsm,
 		  const int32_t defshowctag,
@@ -33,14 +36,20 @@ public:
 		  const double defscaletag,
 		  const double defscaleratio,
 		  const double defscalepvalue,
-		  const bool defsigtest):
+		  const double defthre_pinter,
+		  const double defthre_penrich,
+		  const double defthre_ethre,
+		  const double defthre_ipm):
     sm(defsm),
     showctag(defshowctag),
     showratio(defshowratio),
     scaletag(defscaletag),
     scaleratio(defscaleratio),
     scalepvalue(defscalepvalue),
-    sigtest(defsigtest)
+    thre_pinter(defthre_pinter),
+    thre_penrich(defthre_penrich),
+    thre_ethre(defthre_ethre),
+    thre_ipm(defthre_ipm)
   {}
 };
 
@@ -214,7 +223,7 @@ namespace DROMPA {
       ethre(0), ipm(0), sigtest(false)
     {}
 
-    void setOpts(MyOpt::Opts &allopts);
+    void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
     void setValues(const MyOpt::Variables &values);
     void InitDump() const;
   };

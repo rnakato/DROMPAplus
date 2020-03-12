@@ -99,7 +99,6 @@ void DataFrame::StrokeEachBin(const SamplePairEach &pair,
   } else                len = -std::min(len,  (int32_t)height_df);
   if (!len) return;
 
-
 /*  DEBUGprint("value " << value
 	     << " ystep:" << par.ystep
 	     << " scale:" << scale

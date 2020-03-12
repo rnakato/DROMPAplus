@@ -4,6 +4,18 @@
 
 #include "dd_command.hpp"
 
+// CommandParamSet
+//  int32_t sm;
+//  int32_t showctag;
+//  int32_t showratio;
+//  double scaletag;
+//  double scaleratio;
+//  double scalepvalue;
+//  double thre_pinter;
+//  double thre_penrich;
+//  double thre_ethre;
+//  double thre_ipm;
+
 std::vector<Command> generateCommands()
 {
   std::vector<Command> cmds;
@@ -11,37 +23,41 @@ std::vector<Command> generateCommands()
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			    CommandParamSet(5, 1, 0, 30, 3, 5, true)));
+			    CommandParamSet(5, 1, 0, 30, 3, 5,
+					    5, 4, 0, 0)
+			    ));
   cmds.emplace_back(Command("PC_BROAD", "Visualization: for broad mark parameter set",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			    CommandParamSet(10, 1, 0, 30, 3, 5, true)));
+			    CommandParamSet(20, 1, 0, 30, 3, 5,
+					    4, 3, 0, 0)
+			    ));
   cmds.emplace_back(Command("PC_ENRICH","Visualization: ChIP/Input enrichment",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::THRE, DrompaCommand::ANNO_PC, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::REGION, DrompaCommand::OTHER},
-			    CommandParamSet(5, 0, 1, 30, 3, 5, false)));
+			    CommandParamSet(5, 0, 1, 30, 3, 5,
+					    0, 0, 2, 5)
+			    ));
   cmds.emplace_back(Command("GV", "Visualization: global-view enrichment",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_GV,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::ANNO_GV, DrompaCommand::DRAW, DrompaCommand::OTHER},
-			    CommandParamSet(0, 0, 1, 2000, 1, 10, false)));
+			    CommandParamSet(0, 0, 1, 2000, 1, 10,
+					    0, 0, 2, 0)
+			    ));
   cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_PROFILE,
 			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
-			    CommandParamSet(5, 0, 0, 0, 0, 0, false)));
+			    CommandParamSet(5, 0, 0, 0, 0, 0,
+					    0, 0, 0, 0)));
 /*  cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			    "-i <ChIP>,,<label> -i <ChIP>,,<label> -bed <bedfile>",
 			    exec_PCSHARP,
 			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::OTHER},
 			    CommandParamSet(0, 0, 0, 0, 0, 0, false)));*/
-/*  cmds.emplace_back(Command("HEATMAP", "make heatmap of multiple samples",
-			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
-			    exec_PCSHARP,
-			    {DrompaCommand::CHIP, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
-			    CommandParamSet(0, 0, 0, 30, 4, 5, false)));*/
 /*  cmds.emplace_back(Command("CG", "output ChIP-reads in each gene body",
 			    "-i <ChIP>,,<label> [-i <ChIP>,,<label> ...]",
 			    exec_PCSHARP,

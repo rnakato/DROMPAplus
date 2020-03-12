@@ -174,7 +174,8 @@ class RatioDataFrame : public DataFrame {
 
   void setColor(const double value, const int32_t nlayer, const double alpha);
 
-  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
+  double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i)
+  {
     return CalcRatio(vReadArray.getArray(pair.argvChIP).array[i],
 		     vReadArray.getArray(pair.argvInput).array[i],
 		     pair.ratio);

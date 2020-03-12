@@ -89,7 +89,8 @@ public:
   void setScalingFactor(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
 
   void peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
-			  const double pthre_inter, const double pthre_enrich);
+			  const double pthre_inter, const double pthre_enrich,
+			  const double ethre, const double ipm);
   void peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname, const double pthre_inter);
 
   void printPeak(const std::string &prefix) const {

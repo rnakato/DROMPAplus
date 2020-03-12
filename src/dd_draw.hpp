@@ -52,7 +52,9 @@ public:
 
     for (auto &x: vsamplepairoverlayed) {
       if (x.first.InputExists()) {
-	x.first.peakcall_withInput(vReadArray, chrname, p.thre.pthre_inter, p.thre.pthre_enrich);
+	x.first.peakcall_withInput(vReadArray, chrname,
+				   p.thre.pthre_inter, p.thre.pthre_enrich,
+				   p.thre.ethre, p.thre.ipm);
       }
       else x.first.peakcall_onlyChIP(vReadArray, chrname, p.thre.pthre_inter);
     }

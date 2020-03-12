@@ -223,7 +223,8 @@ void SamplePairEach::setScalingFactor(const int32_t normtype,
 }
 
 void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
-					const double pthre_inter, const double pthre_enrich)
+					const double pthre_inter, const double pthre_enrich,
+					const double ethre, const double ipm)
 {
   int32_t ext(0);
 
@@ -235,14 +236,22 @@ void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::
     double logp_enrich(getlogp_BinomialTest(ChIParray[i], Inputarray[i], ratio));
 
     if (!ext) {
-      if (logp_inter > pthre_inter && logp_enrich > pthre_enrich) {
-	vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
-	ext=1;
-      }
+      if (logp_inter > pthre_inter
+	  && logp_enrich > pthre_enrich
+	  && getratio(ChIParray[i], Inputarray[i]) > ethre
+	  && ChIParray[i] > ipm)
+	{
+	  vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
+	  ext=1;
+	}
     } else {
-      if (logp_inter > pthre_inter && logp_enrich > pthre_enrich) {
-	vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
-      } else ext=0;
+      if (logp_inter > pthre_inter
+	  && logp_enrich > pthre_enrich
+	  && getratio(ChIParray[i], Inputarray[i]) > ethre
+	  && ChIParray[i] > ipm)
+	{
+	  vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
+	} else ext=0;
     }
 
   }

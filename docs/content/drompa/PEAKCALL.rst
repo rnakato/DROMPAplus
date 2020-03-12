@@ -18,8 +18,9 @@ In **PC_SHARP** and **PC_BROAD** mode, drompa+ can call peaks by suppying ``--ca
 Peak regions are highlighted in orange.
 The peak list for each sample pair is also outputted as "<outputname>.<label>.peak.tsv"::
 
-  $ ls drompa4.*.tsv
-  drompa4.H3K27me3.peak.tsv  drompa4.H3K36me3.peak.tsv  drompa4.H3K4me3.peak.tsv
+   $ ls drompa4.*.tsv
+   drompa4.H3K27me3.peak.tsv  drompa4.H3K36me3.peak.tsv  drompa4.H3K4me3.peak.tsv
+
 The peak list is tab-delimited text format and can be opened in a text editor or Microsoft Excel. It has the following columns:
 
 - chromosome name
@@ -74,4 +75,4 @@ When the input sample is omitted, drompa+ calls peaks using the ChIP sample only
 Peak calling in **PC_ENRICH** mode
 ++++++++++++++++++++++++++++++++++++
 
-**PC_ENRICH** mode does not use significance test but simply call regions in which containing ChIP/Input enrichments above the enrichment threshold (``-ethre``, 2.0 in default). This is same with the regions highlighted in red in the figure.
+**PC_ENRICH** mode does not use significance test but simply call regions in which containing ChIP/Input enrichments above the enrichment threshold (``-ethre``, 2.0 in default) and the peak intensity threshold (``--ipm``, 5.0 in default). 

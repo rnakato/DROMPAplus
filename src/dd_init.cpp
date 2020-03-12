@@ -242,16 +242,16 @@ void Profile::InitDump() const {
 }
 
 
-void Threshold::setOpts(MyOpt::Opts &allopts) {
+void Threshold::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
   sigtest = false;
 
   MyOpt::Opts opt("Threshold",100);
   opt.add_options()
     ("callpeak",       "Implement peak-calling (default: skip)")
-    ("pthre_internal", value<double>()->default_value(5), "p-value threshold (-log10) for ChIP internal ")
-    ("pthre_enrich",   value<double>()->default_value(4), "p-value threshold (-log10) for ChIP/Input enrichment")
-    ("ethre",          value<double>()->default_value(2), "IP/Input fold enrichment")
-    ("ipm",            value<double>()->default_value(0), "Read intensity of peak summit")
+    ("pthre_internal", value<double>()->default_value(cps.thre_pinter), "p-value threshold (-log10) for ChIP internal ")
+    ("pthre_enrich",   value<double>()->default_value(cps.thre_penrich), "p-value threshold (-log10) for ChIP/Input enrichment")
+    ("ethre",          value<double>()->default_value(cps.thre_ethre), "IP/Input fold enrichment")
+    ("ipm",            value<double>()->default_value(cps.thre_ipm), "Read intensity of peak summit")
     ;
   allopts.add(opt);
 }
@@ -355,7 +355,7 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 	break;
       }
     case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm);    break;
-    case DrompaCommand::THRE:    thre.setOpts(opts);           break;
+    case DrompaCommand::THRE:    thre.setOpts(opts, cps);      break;
     case DrompaCommand::ANNO_PC: anno.setOptsPC(opts);         break;
     case DrompaCommand::ANNO_GV: anno.setOptsGV(opts);         break;
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
