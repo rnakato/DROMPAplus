@@ -158,12 +158,15 @@ To precisely calculate genome coverage and/or GC content distribution in base-pa
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt --mpdir <mpdir>
 
-where "<mpdir>" indicates the directory that contains the gzipped binary mappability files (**map_chr*_binary.txt.gz**).
+where "<mpdir>" indicates the directory that contains the gzipped binary mappability files (**map_chr*_binary.txt.gz**). The mappability files for several species are available on our `GoogleDrive <https://drive.google.com/drive/folders/1GfKZkq3HIcMLQt-pZ_4bfwh21NyS2O-5?usp=sharing>`_.
 
 Bin-level mappability
 +++++++++++++++++++++++++++++
 
 When supplying ``--mpdir`` option, parse2wig+ automatically generates bin-level mappability files (**map_chr*.<binsize>.wig.gz**) first time and use them from then. These files are used to normalize wig data based on the mappability. The bins in which the mappability is lower than the threshold (``--mpthre`` option, < 0.3 as default) are excluded from mappability normalization (and GC normalization).
+
+The base-pair level 
+
 
 GC content estimation
 ------------------------------
