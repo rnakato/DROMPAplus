@@ -47,6 +47,7 @@ public:
   }
 
   void peakcall(DROMPA::Global &p, const std::string &chrname) {
+    DEBUGprint_FUNCStart();
     clock_t t1,t2;
     t1 = clock();
 
@@ -60,6 +61,7 @@ public:
     }
     t2 = clock();
     PrintTime(t1, t2, "peakcall");
+    DEBUGprint_FUNCend();
   }
 
   void Draw_SpecificRegion(DROMPA::Global &p, std::string &pdffilename, int32_t width, int32_t height);

@@ -24,6 +24,6 @@ HashOfGeneDataMap construct_gmp(const HashOfGeneDataMap &);
 void printMap(const HashOfGeneDataMap &);
 bool isGeneUCSC(const HashOfGeneDataMap &);
 void printRefFlat(const HashOfGeneDataMap &, const int32_t nameflag);
-std::vector<chrsize> read_genometable(const std::string&);
+std::vector<chrsize> readGenomeTable(const std::string&);
 
 #endif  // _READANNOTATION_HPP_

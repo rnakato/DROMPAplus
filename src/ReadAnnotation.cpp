@@ -402,7 +402,7 @@ void printRefFlat(const HashOfGeneDataMap &mp, const int32_t nameflag)
   return;
 }
 
-std::vector<chrsize> read_genometable(const std::string& fileName)
+std::vector<chrsize> readGenomeTable(const std::string& fileName)
 {
   std::ifstream in(fileName);
   if(!in) PRINTERR_AND_EXIT("genometable file does not exist.");

@@ -146,7 +146,7 @@ class Peak : public bed {
   double getenrichment() const { return getratio(pileup, pileup_input); }
 
   void print(std::ofstream &out, const int32_t id) const {
-    out << chr << "\t" << start << "\t" << end << "\t"
+    out << "chr" << chr << "\t" << start << "\t" << end << "\t"
 	<< length() << "\t" << summit << "\t"
 	<< std::fixed << std::setprecision(2)
 	<< pileup << "\t" << pileup_input << "\t" << getenrichment() << "\t"
@@ -154,7 +154,7 @@ class Peak : public bed {
   }
 
   void print() const {
-    std::cout << chr << "\t" << start << "\t" << end << "\t"
+    std::cout << "chr"<< chr << "\t" << start << "\t" << end << "\t"
 	     << length() << "\t"
 	     << summit << "\t"
 	     << std::fixed << std::setprecision(2)

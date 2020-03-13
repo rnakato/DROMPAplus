@@ -53,6 +53,15 @@ drompa+ PC_SHARP \
         --scale_ratio 3 --scale_pvalue 3 \
         --chr 1
 
+# Peak calling
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa4 -g $gene --gt $gt \
+	--lpp 2 --showitag 2 \
+	--chr 1 --callpeak
+
 # Visualize specific regions
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
@@ -154,8 +163,25 @@ drompa+ PROFILE \
     profile-aroundGene.ChIPread.H3K27me3.tsv \
     profile-aroundGene.ChIPread.H3K36me3.tsv
 
+# Visualize negative values
+gt=../data/genometable/genometable.hg19.txt
+dir=parse2wigdir+
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+	-o drompa1withnegative -g $gene --gt $gt \
+	--shownegative --bn 4 --chr 1
+
 exit
-# Overlayed pdf
+
+### for test
+
+gt=../data/genometable/genometable.hg19.txt
+mptable=../data/mptable/mptable.UCSC.hg19.36mer.flen150.txt
+parse2wig+ -i wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam  -o H3K4me3  --gt $gt --mptable $mptable -n GR --mp /work/Database/UCSC/hg19/mappability_Mosaics_36mer/
+
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
 gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
@@ -166,3 +192,12 @@ drompa+ PC_SHARP \
         --showratio 1 --showpinter 1 --showpenrich 1 \
 	--lpp 1 --chr 20 \
 	--alpha 0.6
+
+gt=../data/genometable/genometable.hg19.txt
+dir=parse2wigdir+
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+	-o test --gt $gt --showpinter 1 --showpenrich 1 \
+	--lpp 2 \
+	--chr 22 --ls 100 --callpeak

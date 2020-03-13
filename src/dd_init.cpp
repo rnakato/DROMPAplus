@@ -399,7 +399,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
   for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
 
   oprefix = getVal<std::string>(values, "output");
-  gt = read_genometable(getVal<std::string>(values, "gt"));
+  gt = readGenomeTable(getVal<std::string>(values, "gt"));
 
   for (auto op: vopts) {
     switch(op) {
@@ -409,7 +409,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 	try {
 	  // SamplePairOverlayed first
 	  if (values.count("input")) {
-	    std::vector<std::string> v(getVal<std::vector<std::string>>(values, "input"));
+	    auto v(getVal<std::vector<std::string>>(values, "input"));
 	    for (auto &x: v) {
 	      vsinfo.addSampleInfo(x, gt, iftype);
 	      samplepair.emplace_back(x, vsinfo);
@@ -418,7 +418,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
 
 	  // SamplePairOverlayed second
 	  if (values.count("ioverlay")) {
-	    std::vector<std::string> v(getVal<std::vector<std::string>>(values, "ioverlay"));
+	    auto v(getVal<std::vector<std::string>>(values, "ioverlay"));
 	    int32_t num(0);
 	    for (auto &x: v) {
 	      vsinfo.addSampleInfo(x, gt, iftype);

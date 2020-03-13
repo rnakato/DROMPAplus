@@ -133,7 +133,7 @@ void exec_PCSHARP(DROMPA::Global &p)
 {
   std::string StrAllPdf("");
   for(auto &chr: p.gt) {
-    if (!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
+    if (!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M" || chr.getname() == "Mt")) continue;
     if (p.drawregion.getchr() != "" && p.drawregion.getchr() != chr.getname()) continue;
 
     // when --genefile is supplied
@@ -144,7 +144,7 @@ void exec_PCSHARP(DROMPA::Global &p)
       }
 #ifdef DEBUG
       printf("DEBUG geneloci\n");
-      std::cout << "chr" << chr.getname() << ": " << std::flush;
+      std::cout << chr.getrefname() << ": " << std::flush;
       printf("n=%d\n",0);
 #endif
       if(!n) continue;
@@ -154,7 +154,7 @@ void exec_PCSHARP(DROMPA::Global &p)
     std::vector<bed> regionBed(p.drawregion.getRegionBedChr(chr.getname()));
     if (p.drawregion.isRegionBed() && !regionBed.size()) continue;
 
-    std::cout << "chr" << chr.getname() << ": " << std::flush;
+    std::cout << chr.getrefname() << ": " << std::flush;
     Figure fig(p, chr);
 
     if (p.thre.sigtest) {

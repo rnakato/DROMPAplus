@@ -1,3 +1,6 @@
 docs/_build/
 bin/
 obj/
+*bam
+*cram
+*pdf
