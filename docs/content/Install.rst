@@ -4,7 +4,7 @@ Installation
 Docker image
 ---------------------------------
 
-We recommend to use the latest Docker image of DROMPAplus from DockerHub as follows:
+We recommend using the latest Docker image of DROMPAplus from DockerHub as follows:
 
 .. code-block:: bash
 
@@ -66,12 +66,8 @@ Install DROMPAplus
 Add the PATH
 +++++++++++++++++++++++++
 
-If you downloaded DROMPAplus into $HOME/ directory, type:
+Permanently set the path to the DROMPAplus download directory by updating your **~/.bashrc** file. For example, if you downloaded DROMPAplus into the **$HOME** directory, add the following lines to **~/.bashrc**:
 
 .. code-block:: bash
 
-   export PATH = $PATH:$HOME/DROMPAplus/bin
-   export PATH = $PATH:$HOME/DROMPAplus/otherbins
-   export PATH = $PATH:$HOME/DROMPAplus/submodules/cpdf/Linux-Intel-64bit
-
-Add these lines to ~/.bashrc to permanently set PATH.
+   export PATH = $PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins

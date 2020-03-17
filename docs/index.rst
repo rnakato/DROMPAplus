@@ -17,9 +17,12 @@ DROMPAplus is an update of `DROMPA3 <https://github.com/rnakato/DROMPA3>`_. It i
     * Supports chromatin loops from ChIA-PET (Mango format) and Hi-C (HICCUPS format) with colors corresponding to the p-values.
     * Bases the HEATMAP command on Python3, which enables flexible customization.
 
-.. image:: img/workflow.jpg
+.. figure:: img/workflow.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Schematic representation of DROMPA+ features and functionality.
 
 Contents:
 ---------

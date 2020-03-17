@@ -7,6 +7,7 @@
 - Add data/geneannotation directory and add Ensembl gene annotations
 - Add parsestats4DROMPAplus.pl and makemappabilitytable.pl in otherbins directory
 - Add scripts link in the root directory
+- Add symbolic link to cpdf binary file in otherbins/
 - Add --shownegative option
 - Add --offpdf option
 - Set default threshold values for peak calling in each mode

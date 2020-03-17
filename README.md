@@ -33,7 +33,7 @@ We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https
 
     docker pull rnakato/ssp_drompa
     docker run -it --rm rnakato/ssp_drompa drompa+
-    
+
 For Singularity:
 
     singularity pull ssp_drompa.img docker://rnakato/ssp_drompa
@@ -59,13 +59,10 @@ For CentOS:
 If you get an installation error, make sure that all required libraries are successfully installed.
 
 #### 3.2.3. Add the PATH environment variable
-For example, if you downloaded DROMPAplus into $HOME directory, type:
+Permanently set the path to the DROMPAplus download directory by updating your **~/.bashrc** file. For example, if you downloaded DROMPAplus into $HOME directory, add the following lines to **~/.bashrc**:
 
-    export PATH = $PATH:$HOME/DROMPAplus/bin
-    export PATH = $PATH:$HOME/DROMPAplus/otherbins
-    export PATH = $PATH:$HOME/DROMPAplus/submodules/cpdf/Linux-Intel-64bit
+    export PATH = $PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
 
-Add these lines to ~/.bashrc to permanently set PATH.
 
 # 4. Reference
 For DROMPAplus:
