@@ -1,18 +1,18 @@
 PC_ENRICH: Enrichment visualization
 -----------------------------------------
 
-For a small genome (e.g., yeast), the sequencing depth is generally enough (> 10 fold).
-In such cases, the genome-wide ChIP/Input enrichment distribution is informative because the
-technical and biological bias in high throughput sequencing can be minimized.
+For a small genome (e.g., yeast), the sequencing depth is generally enough (> 10-fold). In such cases, the genome-wide ChIP/Input enrichment distribution is informative because the technical and biological bias in high throughput sequencing can be minimized.
 
-Here we show an example according to the sample script ``sample.yeast.sh`` in "tutorial" derectory.
+Here, we show an example according to the sample script ``sample.yeast.sh``, which can be found in the "tutorial" directory.
 
-Download the data
+
+Downloading data
 +++++++++++++++++++++++++++++++
 
-Here we use the data of replication analysis (Repli-seq) for *S. serevisiae*, which can be treated as a same manner with ChIP-seq. The original paper is: `Origin Association of Sld3, Sld7, and Cdc45 Proteins Is a Key Step for Determination of Origin-Firing Timing <https://pubmed.ncbi.nlm.nih.gov/22169533-origin-association-of-sld3-sld7-and-cdc45-proteins-is-a-key-step-for-determination-of-origin-firing-timing/>`_
+Here, we use the data of replication analysis (Repli-seq) for *S. cerevisiae*, which can be treated in the same manner as ChIP-seq.
+The original paper is: `Origin Association of Sld3, Sld7, and Cdc45 Proteins Is a Key Step for Determination of Origin-Firing Timing <https://pubmed.ncbi.nlm.nih.gov/22169533-origin-association-of-sld3-sld7-and-cdc45-proteins-is-a-key-step-for-determination-of-origin-firing-timing/>`_
 
-The CRAM-format map files can be downloaded from our GoogleDrive:
+The CRAM-format map files can be downloaded from our Google Drive account:
 
 - `YST1019_Gal_0min-n2-k1.sort.cram <https://drive.google.com/open?id=1-T5eq6ZgY5kUmRDlbIfFYNMBuwVCQKkc>`_
 - `YST1019_Gal_60min-n2-k1.sort.cram <https://drive.google.com/open?id=1-ZabbvJdAYxdaH5MD8s-sMKHkNiEsTQu>`_
@@ -25,7 +25,7 @@ The CRAM-format map files can be downloaded from our GoogleDrive:
 Parse2wig
 ++++++++++++++++++++++++++++++
 
-The command below generates a bigWig data for the six cram files::
+The command below generates a bigWig data for the six CRAM files::
 
     gt=../data/genometable/genometable.sacCer3.txt
     mptable=../data/mptable/mptable.UCSC.sacCer3.50mer.flen150.txt
@@ -36,10 +36,10 @@ The command below generates a bigWig data for the six cram files::
        done
     done
 
-Make enrichment distribution
+Generating the enrichment distribution
 ++++++++++++++++++++++++++++++++++++++++++
 
-To make a PDF file of the enrichment distribution for S. cerevisiae with the gene annotation, type::
+To generate a PDF file of the enrichment distribution for *S. cerevisiae* with the gene annotation, type::
 
   $ dir=parse2wigdir+
   $ gene=../data/S_cerevisiae/SGD_features.tab
@@ -50,11 +50,15 @@ To make a PDF file of the enrichment distribution for S. cerevisiae with the gen
 	-o drompa-yeast --gt $gt -g $gene --gftype 2 \
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
-.. image:: img/drompa_yeast.jpg
+.. figure:: img/drompa_yeast.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
-Supply ``--ars`` option to visualize DNA replication origin (ARS) available for *S. cerevisiae* and *S. pombe* (The annotation data can be obtained from `OriDB <http://cerevisiae.oridb.org/>`_)::
+   Generation of the enrichment distribution of *S. cerevisiae*.
+
+Supply the ``--ars`` option to visualize the DNA replication origin (ARS) available for *S. cerevisiae* and *S. pombe*. 
+The annotation data can be obtained from `OriDB <http://cerevisiae.oridb.org/>`_.::
 
   $ dir=parse2wigdir+
   $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
@@ -65,12 +69,14 @@ Supply ``--ars`` option to visualize DNA replication origin (ARS) available for 
 	-o drompa-yeast-ARS --gt $gt --ars $ars \
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
-.. image:: img/drompa_yeast-ARS.jpg
+.. figure:: img/drompa_yeast-ARS.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
+   Visualization of the DNA replication origin available for *S. cerevisiae*.
 
-To check the enrichment level precisely, specify the number of y-axis memories with ``--bn`` and height of it with ``--ystep`` as follows::
+To check the enrichment level accurately, specify the number of y-axis memories and y-axis height using the ``--bn`` and ``--ystep`` options, respectively::
 
   $ dir=parse2wigdir+
   $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
@@ -82,14 +88,18 @@ To check the enrichment level precisely, specify the number of y-axis memories w
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3 \
         --bn 5 --ystep 10 
 
-.. image:: img/drompa-yeast-detail.jpg
+.. figure:: img/drompa-yeast-detail.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Checking the enrichment level by specifying the number of y-axis memories and y-axis height.
+
 
 Highlight peaks
 +++++++++++++++++++++++++
 
-With ``--callpeak`` option, **PC_ENRICH** mode highlights bins in red in which containing ChIP/Input enrichments above the enrichment threshold (2.0 in default)::
+With the ``--callpeak`` option, **PC_ENRICH** mode highlights in red the bins containing ChIP/Input enrichments above the enrichment threshold (2.0 by default)::
 
   $ dir=parse2wigdir+
   $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
@@ -101,11 +111,15 @@ With ``--callpeak`` option, **PC_ENRICH** mode highlights bins in red in which c
 	-o drompa-yeast-ARS-peak1 --gt $gt --ars $ars \
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
-.. image:: img/drompa_yeast-ARS-peak1.jpg
+.. figure:: img/drompa_yeast-ARS-peak1.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
-In this figure the difference of replicated regions between the samples is more pronounced. To change the enrichment threshold, supply ``--ethre`` as follows::
+   Highlighting peaks for the default enrichment threshold.
+
+In Fig. 3.12, the difference of replicated regions between the samples is more pronounced. 
+To change the enrichment threshold, supply ``--ethre`` as follows::
 
   $ dir=parse2wigdir+
   $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
@@ -117,12 +131,15 @@ In this figure the difference of replicated regions between the samples is more 
 	-o drompa-yeast-ARS-peak2 --gt $gt --ars $ars \
 	--scale_ratio 1 --ls 200 --sm 10 --lpp 3
 
-.. image:: img/drompa_yeast-ARS-peak2.jpg
+.. figure:: img/drompa_yeast-ARS-peak2.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Highlighting peaks for a specified enrichment threshold.
 
 
-Logratio distribution
+Log-ratio distribution
 +++++++++++++++++++++++++
 
 Log-scaled ChIP/Input enrichment can be visualized by supplying ``--showratio 2``::
@@ -139,13 +156,16 @@ Log-scaled ChIP/Input enrichment can be visualized by supplying ``--showratio 2`
         --ls 200 --sm 10 --bn 4 --lpp 3 \
         --chr I
 
-where ``--chr I`` is supplied to make pdf for chrI only. ``--bn 4`` is supplied to increase the number of y-axis memory.
+where ``--chr I`` is supplied to generate the PDF file for chrI only. ``--bn 4`` is supplied to increase the number of y-axis memories.
 
-.. image:: img/drompa-yeast-log2ratio.jpg
+.. figure:: img/drompa-yeast-log2ratio.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
-In this mode, ``--scale_ratio`` indicates the base of a logarithm. Specify ``--scale_ratio 10`` to use log10::
+   Visualization of log-scaled enrichment.
+
+In this mode, ``--scale_ratio`` indicates the base of the logarithm. To use log10, specify ``--scale_ratio 10``::
 
   $ dir=parse2wigdir+
   $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
@@ -159,13 +179,14 @@ In this mode, ``--scale_ratio`` indicates the base of a logarithm. Specify ``--s
         --ls 200 --sm 10 --bn 4 --lpp 3 \
         --chr I
 
-where ``--chr I`` is supplied to make pdf for chrI only. ``--bn 4`` is supplied to increase the number of y-axis memory.
-
-.. image:: img/drompa-yeast-log10ratio.jpg
+.. figure:: img/drompa-yeast-log10ratio.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
-Use ``--callpeak`` option to change colors between >1 and <1::
+   Visualization of log-scaled enrichment for log10.
+
+Use the ``--callpeak`` option to change colors between >1 and <1::
 
   $ dir=parse2wigdir+
   $ ars=../data/S_cerevisiae/ARS-oriDB_scer.txt
@@ -180,6 +201,9 @@ Use ``--callpeak`` option to change colors between >1 and <1::
         --callpeak \
         --chr I
 
-.. image:: img/drompa-yeast-log2ratio2.jpg
+.. figure:: img/drompa-yeast-log2ratio2.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Visualization of log-scaled enrichment using the ``--callpeak`` option.

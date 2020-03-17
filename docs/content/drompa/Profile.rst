@@ -1,7 +1,7 @@
 PROFILE: Aggregation plot (using R)
 -----------------------------------------
 
-**PROFILE** mode makes an aggregation plot by supplying:
+The **PROFILE** mode makes an aggregation plot by supplying:
 
 -  ``--ptype 0``: around transcription start sites (TSS)
 -  ``--ptype 1``: around transcription termination sites (TTS)
@@ -19,9 +19,12 @@ The following command outputs a PDF file (aroundtss.pdf) and a corresponding R s
        -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
        -o aroundtss -g refFlat.txt --gt genometable.txt
 
-.. image:: img/aroundtss.jpg
+.. figure:: img/aroundtss.jpg
    :width: 400px
    :align: center
+   :alt: Alternate
+
+   The read density as a function of the distance from the TSS.
 
 
 The following command outputs a PDF file (aroundgene.pdf) and a corresponding R script (aroundgene.R)::
@@ -33,28 +36,31 @@ The following command outputs a PDF file (aroundgene.pdf) and a corresponding R 
        -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
        -o aroundgene -g refFlat.txt --gt genometable.txt
 
-.. image:: img/aroundgene.jpg
+.. figure:: img/aroundgene.jpg
    :width: 400px
    :align: center
+   :alt: Alternate
+
+   The read density as a function of the percentage of the gene length from the TSS.
 
 The shaded regions indicate the 95% confidence interval.
 
-Modify the parameter for plot
+
+Modifying the plot parameters
 ++++++++++++++++++++++++++++++++
 
-If you want to modify the parameters of the plot (e.g., max value of y-axis),
-change the parameters in the generated R script and remake the PDF file as follows::
+To modify the plot parameters (e.g., max value of y-axis), change the parameters in the generated R script and remake the PDF file as follows::
 
     $ R --vanilla < aroundtss.R
     $ R --vanilla < aroundgene.R
 
+The generated TSV files (aroundtss.tsv and aroundgene.tsv) describe the read number of each site and can be used for further analysis, e.g., hierarchical clustering.
 
-The generated tsv files (aroundtss.tsv and aroundgene.tsv) describe the read number of each site and can be used to further analysis such as hierarchical Clustering.
 
-Normalize read number for the specified regions
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Normalizing the read number for the specified regions
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-The averaged read number in the background regions sometimes varies among samples. The option ``--ntype 1`` normalizes the read number so that the number of reads mapped within the specified regions::
+The averaged read number in the background regions sometimes varies among samples. The option ``--ntype 1`` normalizes the read number::
 
     dir=parse2wigdir+
     drompa+ PROFILE --ptype 2 --ntype 1 \
@@ -63,11 +69,14 @@ The averaged read number in the background regions sometimes varies among sample
        -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
        -o aroundgene2 -g refFlat.txt --gt genometable.txt
 
-.. image:: img/aroundgene2.jpg
+.. figure:: img/aroundgene2.jpg
    :width: 400px
    :align: center
+   :alt: Alternate
 
-With ``--stype 1`` option drompa+ plots the averaged ChIP/Input enrichment (note that this is the averaged enrichment for all sites, not the enrichment of averaged read density.)::
+   The read enrichment with ``--ntype 1`` option.
+
+Using the ``--stype 1`` option, drompa+ plots the averaged ChIP/Input enrichment (note that this is the averaged enrichment for all sites, not the enrichment of the averaged read density.)::
 
     dir=parse2wigdir+
     drompa+ PROFILE --ptype 2 --stype 1 \
@@ -76,6 +85,9 @@ With ``--stype 1`` option drompa+ plots the averaged ChIP/Input enrichment (note
        -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
        -o aroundgene.enrich -g refFlat.txt --gt genometable.txt
 
-.. image:: img/aroundgene.enrich.jpg
+.. figure:: img/aroundgene.enrich.jpg
    :width: 400px
    :align: center
+   :alt: Alternate
+
+   The read enrichment as a function of the percentage of the gene length from the TSS.

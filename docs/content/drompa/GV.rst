@@ -1,7 +1,7 @@
 GV: chromosome-wide overview
 -----------------------------------------
 
-100k-bp bin is recommended for **GV** mode. Run parse2wig+ to make bigWig files for 100k-bp bin::
+A 100k-bp bin is recommended for the **GV** mode. Run parse2wig+ to make bigWig files for a 100k-bp bin::
 
     $ parse2wig+ -i H3K4me3.bam  -o H3K4me3  --gt genometable.txt -n GR --binsize 100000
     $ parse2wig+ -i H3K27me3.bam -o H3K27me3 --gt genometable.txt -n GR --binsize 100000
@@ -9,7 +9,7 @@ GV: chromosome-wide overview
     $ parse2wig+ -i Input.bam    -o Input    --gt genometable.txt -n GR --binsize 100000
 
 
-Then run drompa+::
+Then, run drompa+::
 
     $ dir=parse2wigdir+
     $ drompa+ GV \
@@ -18,18 +18,20 @@ Then run drompa+::
 	-i $dir/H3K36me3.100000.bw,$dir/Input.100000.bw,H3K36me3 \
 	-o drompaGV --gt genometable.txt
 
-.. image:: img/drompaGV1.jpg
+.. figure:: img/drompaGV1.jpg
    :width: 700px
    :align: center
+   :alt: Alternate
 
+   Chromosome-wide overview.
 
-**GV** mode simply highlights the bins containing ChIP/Input enrichments above the middle of y axis (specified with ``--scale_ratio``) in red.
+The **GV** mode simply highlights in red the bins containing ChIP/Input enrichments above the middle of the y-axis (specified via the ``--scale_ratio``).
 
 
 Visualization with annotation
 ++++++++++++++++++++++++++++++++++
 
-**GV** mode can include various annotations::
+The **GV** mode can include various annotations:::
 
     $ dir=parse2wigdir+
     $ drompa+ GV \
@@ -41,11 +43,16 @@ Visualization with annotation
 	--GD genedensity --gdsize 500000 \  # Gene-density directory and window size (500 kbp)
 	--ideogram ../data/ideogram/hg19.tsv  # ideogram
 
-where ``--GC`` ``-gcsize`` and ``--GD`` ``--gdsize`` specify directories of GC content and gene density with window size (500 kbp), respectively.
-This command can work in "tutorial" directory. Ideogram data for several species is available in "data/ideogram" directory. 
+where options ``--GC`` ``-gcsize`` and ``--GD`` ``--gdsize`` specify the GC content directories and gene density with window size (500 kbp), respectively.
+This command can work in the "tutorial" directory.
+Ideogram data for several species are available in the "data/ideogram" directory.
+The result is shown in :numref:`GV2`.
 
-The result is shown below:
 
-.. image:: img/drompaGV2.jpg
+.. figure:: img/drompaGV2.jpg
+   :name: GV2
    :width: 700px
    :align: center
+   :alt: Alternate
+
+   Visualization with annotation.

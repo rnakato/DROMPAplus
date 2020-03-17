@@ -30,7 +30,7 @@ Contents:
 .. toctree::
    :numbered:
    :glob:
-   :maxdepth: 1
+   :maxdepth: 2
 
    content/Install
    content/parse2wig

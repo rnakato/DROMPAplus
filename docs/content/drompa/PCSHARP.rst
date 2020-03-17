@@ -1,16 +1,16 @@
 PC_SHARP: Read distribution visualization
 ---------------------------------------------
 
-(Optional) Download bam files and run parse2wig+ to make bigWig files for 100-bp bin::
+(Optional) Download the BAM files and run parse2wig+ to make the bigWig files for the 100-bp bin::
 
     $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam
     $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k27me3StdAlnRep1.bam
     $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562H3k36me3StdAlnRep1.bam
     $ wget -nc http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeUwHistone/wgEncodeUwHistoneK562InputStdAlnRep1.bam
-    $ parse2wig+ -i H3K4me3.bam  -o H3K4me3  --gt genometable.txt -n GR --binsize 100000
-    $ parse2wig+ -i H3K27me3.bam -o H3K27me3 --gt genometable.txt -n GR --binsize 100000
-    $ parse2wig+ -i H3K36me3.bam -o H3K36me3 --gt genometable.txt -n GR --binsize 100000
-    $ parse2wig+ -i Input.bam    -o Input    --gt genometable.txt -n GR --binsize 100000
+    $ parse2wig+ -i H3K4me3.bam  -o H3K4me3  --gt genometable.txt -n GR
+    $ parse2wig+ -i H3K27me3.bam -o H3K27me3 --gt genometable.txt -n GR
+    $ parse2wig+ -i H3K36me3.bam -o H3K36me3 --gt genometable.txt -n GR
+    $ parse2wig+ -i Input.bam    -o Input    --gt genometable.txt -n GR
 
 
 Example usage
@@ -27,24 +27,29 @@ For example, the command::
            -o drompa1 -g refFlat.txt --gt genometable.txt \
            --lpp 2 --showitag 2 --chr 1
 
-generates the PDF files ``drompa1.pdf`` for three ChIP samples (ChIP1, 2, 3 and 4) using the same Input sample (Input), as shown below.
+generates the PDF file ``drompa1.pdf`` for three ChIP samples (ChIP1, 2, 3, and 4) using the same input sample (Input), as shown in Fig. 3.1.
 
-.. image:: img/drompa1.jpg
+.. figure:: img/drompa1.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
+   Generating the ``drompa1.pdf`` file for three ChIP samples using the same input sample.
 
-By default, **drompa+ PC_SHARP** visualizes ChIP-read lines only. DROMPAplus accepts the GTF or refFlat formats as gene annotation (``-g`` option and ``--gftype`` option if necessary). For *S. serevisiae*, SGD features.tab obtained from the Saccharomyces Genome Database (SGD) can be used.
+By default, **PC_SHARP** visualizes ChIP-read lines only. 
+DROMPAplus accepts the GTF or refFlat formats as gene annotation (use ``-g`` and ``--gftype`` options, if necessary). For *S. serevisiae*, ``SGD_features.tab`` obtained from the Saccharomyces Genome Database (SGD) can be used.
 
-The ``--showitag 1`` option displays input lines for all ChIP samples while the ``--show itag 2`` option displays only the line for first input.
-The latter is recommended when the same input sample is used for all ChIP samples. ``--lpp 2`` output 2 raws per one pdf page. ``--chr 1`` option output the pdf file for chromosome 1 only.
+The ``--showitag 1`` option displays the input lines for all ChIP samples, while the ``--showitag 2`` option displays only the line for the first input.
+The latter is recommended when the same input sample is used for all ChIP samples.
+Option ``--lpp 2`` outputs 2 rows per one PDF page.
+Option ``--chr 1`` outputs the PDF file for chromosome 1 only.
 
 .. note::
 
-   ``--chr`` option takes a string (not an integer) of chromosome name described in genometable.txt. Therefore supply ``--chr X`` for chromosome X, for instance.
+   The ``--chr`` option takes a string (not an integer) of chromosome names, as described in the genometable.txt. Therefore, add ``--chr X`` for chromosome X.
 
 
-Supply ``--scale_tag`` to change the scale of y-axis::
+Add ``--scale_tag`` to change the scale of the y-axis::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -54,11 +59,14 @@ Supply ``--scale_tag`` to change the scale of y-axis::
            -o drompa2 -g refFlat.txt --gt genometable.txt \
            --lpp 2 --showitag 2 --scale_tag 10 --chr 1
 
-.. image:: img/drompa2.jpg
+.. figure:: img/drompa2.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
-It is also possible to specify sample-specific y-axis scales by supplying it in ``-i`` as follows::
+   Generating the ``drompa2.pdf`` file for a specified y-axis scale.
+
+It is also possible to specify the sample-specific y-axis scales by supplying it in option ``-i`` as follows::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -68,9 +76,12 @@ It is also possible to specify sample-specific y-axis scales by supplying it in 
            -o drompa3 -g refFlat.txt --gt genometable.txt \
            --lpp 2 --showitag 2 --chr 1
 
-.. image:: img/drompa3.jpg
+.. figure:: img/drompa3.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Generating the drompa3.pdf file for a specified sample-specific y-axis scale.
 
 
 Parameter setting for each sample pair ``-i``
@@ -81,11 +92,11 @@ For drompa draw, the option ``-i`` can take the following comma-separated multip
 1. ChIP sample (required);
 2. Input sample;
 3. Sample label to be shown in figure;
-4. peak list to be highlighted;
-5. binsize;
-6. scale tag;
-7. scale ratio;
-8. scale pvalue.
+4. Peak list to be highlighted;
+5. Binsize;
+6. Scale tag;
+7. Scale ratio;
+8. Scale pvalue.
 
 Except for the ``ChIP sample``, all the other fields can be omitted.
 These options can be used to specify different parameters for each sample pair.
@@ -95,20 +106,20 @@ For example::
 
     -i H3K4me3.bw,Input.bw,H3K4me3,peak.bed,1000,60
 
-explicitly specifies binsize of bigWig files are 1,000 bp, max value of y_axis is 60, and "peak.bed" as a peak list.
-When a peak list (BED format) is specified, drompa+ highlights the peak regions instead of using the internal peak-calling engine.
+explicitly specifies that the bin size of the bigWig files is 1,000 bp, the maximum value of the y-axis is 60, and "peak.bed" is the peak list.
+When the peak list (in BED format) is specified, drompa+ highlights the peak regions instead of using the internal peak-calling engine.
 
 Visualize specific regions
 ++++++++++++++++++++++++++++
 
-To focus on specific regions (in this example, the HOX A cluster region), supply a BED file describing the regions to be shown with the option ``-r`` as follows::
+To focus on specific regions (in this example, the HOX A cluster region), supply a BED file describing the regions to be shown using the option ``-r`` as follows::
 
-  # make BED file "HOXA.txt"
+  # Make BED file "HOXA.txt"
   $ echo -e "chr7\t27100000\t27280000" > HOXA.txt   
   $ cat HOXA.txt
   chr7    27100000        27280000
 
-  # supply "HOXA.txt" with -r option
+  # Specify "HOXA.txt" with -r option
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
            -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
@@ -117,14 +128,18 @@ To focus on specific regions (in this example, the HOX A cluster region), supply
            -o drompa_HOXA -g refFlat.txt --gt genometable.txt \
            --showitag 2 -r HOXA.txt
 
-.. image:: img/drompa_hoxa.jpg
+.. figure:: img/drompa_hoxa.jpg
    :width: 400px
    :align: center
+   :alt: Alternate
+
+   Visualization of specific regions.
 
 P-value visualization
 +++++++++++++++++++++++
 
-P-value visualization can be used to define appropriate threshold for peak-calling for each study and samples. To display the p-value and ChIP/input enrichment lines, supply ``--showratio 1``, ``--showpinter 1`` and ``--showpenrich 1`` options as follows::
+P-value visualization can be used to define the appropriate peak-calling threshold for each study and samples.
+To display the p-value and ChIP/input enrichment lines, supply the ``--showratio 1``, ``--showpinter 1`` and ``--showpenrich 1`` options as follows::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -136,17 +151,20 @@ P-value visualization can be used to define appropriate threshold for peak-calli
            --scale_ratio 3 --scale_pvalue 3 \
            --chr 1
 
-where ``--scale_ratio`` and ``--scale_pvalue`` options change the maximum values for the y axis of the corresponding lines.
-In p-value lines ("ChIP internal" and "ChIP/Input enrichment"), regions in which the p-value exceeds the threshold are highlighted in red.
+where the ``--scale_ratio`` and ``--scale_pvalue`` options change the maximum values of the y-axis of the corresponding lines.
+In the p-value lines ("ChIP internal" and "ChIP/Input enrichment"), regions in which the p-value exceeds the threshold are highlighted in red.
 
-.. image:: img/drompa_pvalue.jpg
+.. figure:: img/drompa_pvalue.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   P-value visualization.
 
 Overlay read distribution
 ++++++++++++++++++++++++++++
 
-DROMAplus can overlay two samples in one line by specifying the second one with ``--ioverlay`` in the same manner of ``-i``::
+DROMAplus can overlay two samples in a single line by specifying the second sample with ``--ioverlay`` in the same manner as ``-i``::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -158,18 +176,21 @@ DROMAplus can overlay two samples in one line by specifying the second one with 
 
 where ``--alpha`` indicates the transparency of read histogram.
 
-.. image:: img/drompa_overlay.jpg
+.. figure:: img/drompa_overlay.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Overlay read distribution.
 
 BED annotation and long-range interactions
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 drompa+ accepts annotation data in BED or BED12 format (e.g., chromatin state file by ChromHMM) with the ``--bed`` option.
-The long-range interactions file such as ChIA-PET results are also allowed
+Long-range interactions files such as ChIA-PET results, are also allowed
 with the ``--inter`` option, which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end. The intra- and inter-chromosomal interactions are shown in red and green, respectively.
 
-For example, the following command generates the PDF file shown in Figure 6::
+For example, the following command generates the PDF file shown in Figure 3.7::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -181,23 +202,27 @@ For example, the following command generates the PDF file shown in Figure 6::
 	--inter HICCUPS_looplist.txt,Hi-C,hiccups \
 	--lpp 2 --chr 20 --ls 5000
 
-.. image:: img/drompa_loop.jpg
+.. figure:: img/drompa_loop.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   BED annotation and long-range interactions.
 
 
 Additional information
 +++++++++++++++++++++++++++++++++++++
 
 Wig/bedGraph/bigWig data generated by other tools
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When applying wig data (**H3K4me3.100.bw** for example), drompa+ also uses information in the corresponding stats file (**H3K4me3.100.tsv** for example) to reduce the execution time.
-If the stats file is lacked (i.e. when applying data generated by other tools), drompa+ automaticaly generates a light stats file at the first round, and use it from then.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+When applying wig data (**H3K4me3.100.bw** for example), drompa+ also uses information from the corresponding stats file (**H3K4me3.100.tsv** for example) to reduce the execution time.
+If the stats file is lacked (i.e., when applying data generated by other tools), drompa+ automatically generates a light stats file and uses it thereafter.
 
-Visualize negative values
+Visualizing negative values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Generally Wig/bedGraph/bigWig data of ChIP-seq data do not take negative values and therefore drompa+ does not have the line for negative values. In case that the users want to visualize negative values (e.g., log-scale data values or principal component data), supply ``--shownegative`` option as follows::
+
+Generally, Wig/bedGraph/bigWig data of ChIP-seq data do not take negative values. Therefore, drompa+ does not have the line for negative values. If the users want to visualize negative values (e.g., log-scale data values or principal component data), the ``--shownegative`` option can be used as follows::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -207,7 +232,9 @@ Generally Wig/bedGraph/bigWig data of ChIP-seq data do not take negative values 
            -o drompa1withnegative -g refFlat.txt --gt genometable.txt \
            --shownegative --bn 4 --chr 1
 
-.. image:: img/drompa1withnegative.jpg
+.. figure:: img/drompa1withnegative.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
 
+   Visualization of negative numbers.

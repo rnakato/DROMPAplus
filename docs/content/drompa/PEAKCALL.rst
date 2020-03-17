@@ -1,7 +1,7 @@
-Peak calling
+Peak-calling
 ---------------------------------------------
 
-In **PC_SHARP** and **PC_BROAD** mode, drompa+ can call peaks by suppying ``--callpeak`` option::
+In the **PC_SHARP** and **PC_BROAD** modes, drompa+ can call peaks by supplying the ``--callpeak`` option::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -11,17 +11,21 @@ In **PC_SHARP** and **PC_BROAD** mode, drompa+ can call peaks by suppying ``--ca
            -o drompa4 -g refFlat.txt --gt genometable.txt \
            --lpp 2 --showitag 2 --callpeak
 
-.. image:: img/drompa4.jpg
+.. figure:: img/drompa4.jpg
    :width: 600px
    :align: center
+   :alt: Alternate
+
+   Highlighting peaks.
 
 Peak regions are highlighted in orange.
-The peak list for each sample pair is also outputted as "<outputname>.<label>.peak.tsv"::
+The peak list for each sample pair is also outputted as "<output-name>.<label>.peak.tsv"::
 
    $ ls drompa4.*.tsv
    drompa4.H3K27me3.peak.tsv  drompa4.H3K36me3.peak.tsv  drompa4.H3K4me3.peak.tsv
 
-The peak list is tab-delimited text format and can be opened in a text editor or Microsoft Excel. It has the following columns:
+The peak list is in tab-delimited text format and can be opened in a text editor or Microsoft Excel.
+It contains the following columns:
 
 - chromosome name
 - start position
@@ -37,46 +41,50 @@ The peak list is tab-delimited text format and can be opened in a text editor or
 
 .. note::
 
-    - If a bed file is specified in ``-i`` option, drompa+ does not internally call peaks but highlights the specified regions instead.
-    - By default, chromosomes Y and M (Mt) are ignored for the analysis. Supply the ``--includeYM`` option to include these chromosomes.
-    - When supplying ``--chr`` option, peaks for only the specified chromosome are called.
-    - Supply ``--offpdf`` option to omit pdf file generatoin and obtain peak lists only.
+    - If a BED file is specified using the ``-i`` option, drompa+ does not internally call peaks but highlights the specified regions instead.
+    - By default, chromosomes Y and M (Mt) are ignored during analysis. Supply the ``--includeYM`` option to include these chromosomes.
+    - When supplying the ``--chr`` option, peaks for only the specified chromosome are called.
+    - Supply the ``--offpdf`` option to omit PDF file generation and obtain peak lists only.
 
 Detail of significance test
 ++++++++++++++++++++++++++++++++++++
 
-**PC_SHARP** and **PC_BROAD** mode adopt a two-step procedure for significance testing of peak calling.
+The **PC_SHARP** and **PC_BROAD** modes adopt a two-step procedure for the significance testing of peak-calling.
 
-- The first step identifies significantly enriched sites compared to a background null model, assuming a Poisson distribution with local background region (100 kbp).
-- From these candidate sites, the second step identifies significantly enriched ones compared to the input control based on the binomial distribution.
+- In the first step, they identify significantly enriched sites compared to a background null model, assuming a Poisson distribution in local background region (100 kbp).
+- In the second step, from these candidate sites, they identify significantly enriched ones compared to the input control based on the binomial distribution.
 
-.. image:: img/significancetest.png
+.. figure:: img/significancetest.png
    :width: 500px
    :align: center
+   :alt: Alternate
 
-Accordingly, there are multiple thresholds for peak calling as below:
+   Schematic representation of the peak-calling thresholds.
+
+
+Accordingly, there are multiple thresholds for peak-calling, as discussed below:
 
 - Main thresholds:
 
-     - ``--pthre_internal``: p-value of the first step (ChIP-internal enrichment)
-     - ``--pthre_enrich``: p-value of the second step (ChIP/Input enrichment)
+     - ``--pthre_internal``: the p-value of the first step (ChIP-internal enrichment)
+     - ``--pthre_enrich``: the p-value of the second step (ChIP/Input enrichment)
 
 - Optional thresholds:
 
-     - ``--ethre``: ChIP/Input enrichment
-     - ``--ipm``: normalized intensity (height) of peak summit
+     - ``--ethre``: the ChIP/Input enrichment
+     - ``--ipm``: the normalized intensity (height) of the peak summit
 
-See ``--help`` for the default value of these threholds for each drompa+ mode. 
-We recommend ``--pthre_enrich`` option as the main threshold for peak calling.
+See ``--help`` for the default threshold values for each drompa+ mode.
+We recommend using the ``--pthre_enrich`` option as the main threshold for peak-calling.
 
-Peak calling without the input sample
+
+Peak-calling without the input sample
 +++++++++++++++++++++++++++++++++++++++++++++
 
-If the the input sample is not specified, drompa+ calls peaks using the ChIP sample (``--pthre_internal``) and skips the second step ( ``--pthre_enrich``).
-However, we strongly recommend that the ChIP sample is compared with the corresponding input data to decrease the number of false-positive sites derived from repetitive regions.
+If the input sample is not specified, drompa+ calls peaks using the ChIP sample (``--pthre_internal``) and skips the second step (``--pthre_enrich``) of the peak-calling procedure.
+However, we strongly recommend that the ChIP sample is compared with the corresponding input data to decrease the number of false positive sites derived from repeated regions.
 
-
-Peak calling in **PC_ENRICH** mode
+Peak-calling in **PC_ENRICH** mode
 ++++++++++++++++++++++++++++++++++++
 
-By default, **PC_ENRICH** mode does not implement significance test but simply calls regions in which containing ChIP/Input enrichments above the enrichment threshold (``-ethre``, 2.0 in default) and the peak intensity threshold (``--ipm``, 5.0 in default). 
+By default, the **PC_ENRICH** mode does not implement a significance test but simply calls regions containing ChIP/Input enrichments above the enrichment threshold (``--ethre``, 2.0 by default) and the peak intensity threshold (``--ipm``, 5.0 by default).

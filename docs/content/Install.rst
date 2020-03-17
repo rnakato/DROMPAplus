@@ -42,13 +42,13 @@ and also contains two submodules:
 Install required libraries
 ++++++++++++++++++++++++++++++
 
-For Ubuntu:
+On Ubuntu:
 
 .. code-block:: bash
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev libgsl-dev libz-dev samtools
 
-For CentOS:
+On CentOS:
 
 .. code-block:: bash
 
