@@ -104,24 +104,27 @@ void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::st
 
   int32_t s = std::max(v[0], par.xstart);
   int32_t e = std::min(v[v.size()-1], par.xend);
-//  cr->set_source_rgba(CLR_GRAY2, 1);
-  cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+
+  //  cr->set_source_rgba(CLR_GRAY2, 1);
+  cr->set_source_rgba(color.r, color.g, color.b, 0.4);
   cr->set_line_width(ywidth*0.1);
   rel_xline_double(cr, BP2PIXEL(s - par.xstart), ycenter, (e-s) * par.dot_per_bp);
   cr->stroke();
 
   // barcode number
   cr->set_source_rgba(CLR_BLACK, 1);
-  showtext_cr(cr, BP2PIXEL(s - par.xstart) - 1.5, yaxis + ywidth, nbarcode, 1.0);
+  showtext_cr(cr, BP2PIXEL(s - par.xstart) - 3.5, yaxis + ywidth, nbarcode, 1.0);
   cr->stroke();
 
-  cr->set_line_width(ywidth*0.8);
-  cr->set_source_rgba(color.r, color.g, color.b, 0.8);
+  // barcode
+  cr->set_line_width(ywidth * 2);
+  cr->set_source_rgba(color.r, color.g, color.b, 1);
   for (auto &posi: v) {
     if(posi >= par.xstart && posi <= par.xend) {
       double x1 = BP2PIXEL(posi - par.xstart);
-      double len = std::max(1000 * par.dot_per_bp, 0.02);
-      rel_xline_double(cr, x1, ycenter, len);
+//      double len = std::max(1000 * par.dot_per_bp, 0.05);
+      double len = std::max(1000 * par.dot_per_bp, 4.0);
+      rel_xline_double(cr, x1 - len/2, ycenter, len);
       cr->stroke();
     }
   }
@@ -172,13 +175,6 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
     for (auto &x: p.anno.mp_ChIADrop.at(chr)) {
       const std::vector<int32_t> &v = x.second;
 //      std::vector<int32_t> v{100, 200, 300, 100000, 300000, 400000, 450000, 700000, 10000000};
-#ifdef DEBUG
-//      printf("vector:  ");
-     // for (auto &y: v) {
-//	std::cout << y << " ";
-    //  }
-  //    printf("\n");
-#endif
       if (v.size() ==1) continue;
       if (v[v.size()-1] < par.xstart || v[0] > par.xend) continue;
       if (v[0] < par.xstart && v[v.size()-1] > par.xend) continue;
