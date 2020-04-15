@@ -70,7 +70,7 @@ Permanently set the path to the DROMPAplus download directory by updating your *
 
 # 4. Reference
 For DROMPAplus:
-* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *submitted*.
+* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *Methods*, 2020.
 
 For DROMPA:
 * Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, *Methods in Molecular Biology*, 2018.
