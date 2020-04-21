@@ -5,7 +5,7 @@ The **PROFILE** mode makes an aggregation plot by supplying:
 
 -  ``--ptype 0``: around transcription start sites (TSS)
 -  ``--ptype 1``: around transcription termination sites (TTS)
--  ``--ptype 2``: divide genes into 100 subregions 
+-  ``--ptype 2``: divide genes into 100 subregions
 -  ``--ptype 3``: around peaks
 
 In **PROFILE** mode, short genes (< 1kbp) are ignored.
@@ -13,7 +13,7 @@ In **PROFILE** mode, short genes (< 1kbp) are ignored.
 The following command outputs a PDF file (aroundtss.pdf) and a corresponding R script (aroundtss.R)::
 
     dir=parse2wigdir+
-    drompa+ PROFILE --ptype 2 \
+    drompa+ PROFILE --ptype 0 \
        -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
        -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
        -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
