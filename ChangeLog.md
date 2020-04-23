@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1 (2020-04-23)
+- Add parsestats4DROMPAplus.pl in scripts directory
+
 ## 1.4.0 (2020-03-12)
 - Draft the manual page (http://drompaplus.readthedocs.io/)
 - Add drompa.heatmap.py for heatmap visualization in otherbins directory
