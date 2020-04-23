@@ -14,10 +14,12 @@
 gt=../data/genometable/genometable.sacCer3.txt
 mptable=../data/mptable/mptable.UCSC.sacCer3.50mer.flen150.txt
 for cell in YST1019_Gal YST1019_Raf YST1053_Gal; do
-for min in 0min 60min; do
-cram=${cell}_${min}-n2-k1.sort.cram
-parse2wig+ -i $cram  -o ${cell}_${min} --gt $gt --mptable $mptable -n GR
-done
+    for min in 0min 60min; do
+	cram=${cell}_${min}-n2-k1.sort.cram
+	parse2wig+ -i $cram -o ${cell}_${min} --gt $gt --mptable $mptable -n GR
+	# parse statsfile
+#	parsestats4DROMPAplus.pl parse2wigdir+/${cell}_${min}.100.tsv
+    done
 done
 
 # Make pdf
