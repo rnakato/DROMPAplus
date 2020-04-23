@@ -70,12 +70,14 @@ Summarize stats of multiple files
   ChIP	22938522	11471385	11467137	>19	21219975 (92.5%)	1718547 (7.5%)	0.968	295.746	0.998	9675745/9999144
 
 
-To summarize stats of multiple files::
+To summarize stats of multiple files, for instance (assume the four ChIP samples "ChIP1-4")::
 
+    rm stats.tsv
     for sample in ChIP1 ChIP2 ChIP3 ChIP4; do
        parsestats4DROMPAplus.pl parse2wigdir+/$sample.100.tsv >> stats.tsv
     done
 
+This summarization is useful to view by Excel or ``libreoffice --calc`` command.
 
 Fragment length estimation
 +++++++++++++++++++++++++++++++++++
