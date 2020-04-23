@@ -71,14 +71,14 @@ Summarize statistics files of multiple files
 
 The first raw is a header line (outputted to stderr) and the seconda one is the parsed statistics values of the data (outputted to stdout).
 
-To summarize stats of multiple files, for instance (assume the four ChIP samples "ChIP1-4")::
+To summarize stats of multiple files to a single tsv file, type for instance (assume the four ChIP samples "ChIP1-ChIP4")::
 
-    rm stats.tsv
-    for sample in ChIP1 ChIP2 ChIP3 ChIP4; do
-       parsestats4DROMPAplus.pl parse2wigdir+/$sample.100.tsv >> stats.tsv
-    done
+    $ rm stats.tsv
+    $ for sample in ChIP1 ChIP2 ChIP3 ChIP4; do
+    $    parsestats4DROMPAplus.pl parse2wigdir+/$sample.100.tsv >> stats.tsv
+    $ done
 
-This summarization is useful to view by Excel or ``libreoffice --calc`` command.
+This summarization is useful to view a quality statistics summary by Excel or ``libreoffice --calc`` command.
 
 Fragment length estimation
 +++++++++++++++++++++++++++++++++++
