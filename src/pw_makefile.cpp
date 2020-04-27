@@ -177,7 +177,8 @@ void outputWig(Mapfile &p, const std::string &filename)
     WigArray array = count_and_normalize_Wigarray(p, i);
 
     fprintf(File, "variableStep\tchrom=%s\tspan=%d\n", p.genome.chr[i].getrefname().c_str(), binsize);
-    array.outputAsWig(File, binsize, p.wsGenome.isoutputzero());
+    bool isfloat(false);
+    array.outputAsWig(File, binsize, p.wsGenome.isoutputzero(), isfloat);
   }
   fclose(File);
 
@@ -208,7 +209,13 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
     t2 = clock();
     PrintTime(t1, t2, "count_and_normalize_Wigarray");
     t1 = clock();
-    array.outputAsBedGraph(File, binsize, p.genome.chr[i].getrefname(), p.genome.chr[i].getlen() -1, p.wsGenome.isoutputzero());
+    bool isfloat(false);
+    array.outputAsBedGraph(File,
+			   binsize,
+			   p.genome.chr[i].getrefname(),
+			   p.genome.chr[i].getlen() -1,
+			   p.wsGenome.isoutputzero(),
+			   isfloat);
     t2 = clock();
     PrintTime(t1, t2, "outputAsBedGraph");
   }

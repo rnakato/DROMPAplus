@@ -222,21 +222,30 @@ void SamplePairEach::setScalingFactor(const int32_t normtype,
   DEBUGprint_FUNCend();
 }
 
-
-
-void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string &chrname)
+void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string &chrname, const int32_t chrlen)
 {
-    const WigArray &ChIParray  = vReadArray.getArray(argvChIP).array;
-    const WigArray &Inputarray = vReadArray.getArray(argvInput).array;
+  DEBUGprint_FUNCStart();
 
-    WigArray wigarray(ChIParray.size(), 0);
+  const WigArray &ChIParray  = vReadArray.getArray(argvChIP).array;
+  const WigArray &Inputarray = vReadArray.getArray(argvInput).array;
 
-    for (size_t i=0; i<ChIParray.size(); ++i) {
-      wigarray.addval(i, getratio(ChIParray[i], Inputarray[i]));
-    }
+  WigArray wigarray(ChIParray.size(), 0);
 
+  for (size_t i=0; i<ChIParray.size(); ++i) {
+    wigarray.setval(i, getratio(ChIParray[i], (double)Inputarray[i]));
+  }
+
+  bool showzero(true);
+  bool isfloat(true);
+  if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
     fprintf(File, "variableStep\tchrom=%s\tspan=%d\n", chrname.c_str(), binsize);
-    wigarray.outputAsWig(File, binsize, true);
+    wigarray.outputAsWig(File, binsize, showzero, isfloat);
+  } else if (oftype==WigType::BEDGRAPH || oftype==WigType::BIGWIG) {
+    wigarray.outputAsBedGraph(File, binsize, chrname, chrlen-1, showzero, isfloat);
+  }
+
+
+  DEBUGprint_FUNCend();
 }
 
 void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
@@ -304,4 +313,82 @@ void SamplePairEach::print() const
   std::cout << boost::format("ChIP: %1% label: %2% peaklist: %3%\n") % argvChIP % label % peak_argv;
   std::cout << boost::format("   Input: %1%\n") % argvInput;
   std::cout << boost::format("   binsize: %1%\n") % binsize;
+}
+
+void SamplePairEach::genwig_openfilestream(const std::string &prefix, WigType _oftype)
+{
+  genwig_filename = prefix + "." + label + ".enrich";
+  oftype = _oftype;
+  if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
+    genwig_filename += ".wig";
+    File = fopen(genwig_filename.c_str(), "w");
+    fprintf(File, "track type=wiggle_0\tname=\"%s\"\tdescription=\"Merged tag counts for every %d bp\"\n",
+	    genwig_filename.c_str(), binsize);
+  } else if (oftype==WigType::BEDGRAPH) {
+    genwig_filename += ".bedGraph";
+
+    File = fopen(genwig_filename.c_str(), "w");
+
+  } else if (oftype==WigType::BIGWIG) {
+    genwig_filename += ".bw";
+    int32_t fd(0);
+    char tmpfile[] = "/tmp/drompa+_bedGraph_XXXXXX";
+    if ((fd = mkstemp(tmpfile)) < 0){
+      perror("mkstemp");
+    }
+    File = fopen(tmpfile, "w");
+    genwig_tmpfile = std::string(tmpfile);
+  } else {
+    PRINTERR_AND_EXIT("Invalid genwig_oftype.");
+  }
+
+  std::cout << "Output filename: " << genwig_filename << std::endl;
+  return;
+}
+
+void SamplePairEach::sort_bedGraph(const std::string &filename)
+{
+  printf("sort bedGraph...\n");
+  std::string tempfile = filename + ".tmpfile";
+  std::string command = "mv " + filename + " " + tempfile;
+  if (system(command.c_str())) PRINTERR_AND_EXIT("mv " + filename + " " + tempfile + " failed.");
+
+  std::ofstream out(filename);
+  //      out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getrefname() % 0 % (p.genome.chr[1].getlen()/100);
+  out << "browser hide all" << std::endl;
+  out << "browser pack refGene encodeRegions" << std::endl;
+  out << "browser full altGraph" << std::endl;
+  out << boost::format("track type=bedGraph name=\"%1%\" description=\"Merged tag counts for every %2% bp\" visibility=full\n")
+    % genwig_filename % binsize;
+  out.close();
+
+  command = "sort -k1,1 -k2,2n " + tempfile + " >> " + filename;
+  if (system(command.c_str())) PRINTERR_AND_EXIT("sorting bedGraph failed.");
+  remove(tempfile.c_str());
+}
+
+void SamplePairEach::genwig_closefilestream(WigType oftype, const std::string &genometablefilename)
+{
+  if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
+    fclose(File);
+    if (oftype==WigType::COMPRESSWIG) {
+      std::string command = "gzip -f " + genwig_filename;
+      if (system(command.c_str())) PRINTERR_AND_EXIT("gzip .wig failed.");
+    }
+  } else if (oftype==WigType::BEDGRAPH) {
+    fclose(File);
+    sort_bedGraph(genwig_filename);
+
+  } else if (oftype==WigType::BIGWIG) {
+    fclose(File);
+    sort_bedGraph(genwig_tmpfile);
+
+    std::string command = "bedGraphToBigWig " + genwig_tmpfile + " " + genometablefilename + " " + genwig_filename;
+    if (system(command.c_str())) {
+      unlink(genwig_tmpfile.c_str());
+      std::cerr << "Error: command " << command << "return nonzero status. "
+		<< "Add the PATH to 'DROMPAplus/otherbins'." << std::endl;
+    }
+    unlink(genwig_tmpfile.c_str());
+  }
 }

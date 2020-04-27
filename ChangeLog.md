@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.0 (2020-05-XX)
+- Add GENWIG command to generate wig data of ChIP/Input enrichment and p-value distributions
+
 ## 1.4.1 (2020-04-23)
 - Add parsestats4DROMPAplus.pl in scripts directory
 

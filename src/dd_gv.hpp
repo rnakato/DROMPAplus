@@ -355,6 +355,7 @@ namespace DROMPA {
     int32_t smoothing;
 
     WigType genwig_oftype;
+    std::string genometablefilename;
 
 /*    class pdSample {
     public:
@@ -401,6 +402,7 @@ namespace DROMPA {
     int32_t getChIPInputNormType() const { return norm; }
     const std::string getPrefixName() const { return oprefix; }
     const std::string getFigFileName() const { return oprefix + ".pdf"; }
+    const std::string getGenomeTableFileName() const { return genometablefilename; }
     const std::string getFigFileNameChr(const std::string &chr) const
     {
       return oprefix + "_" + chr + ".pdf";
@@ -416,7 +418,7 @@ namespace DROMPA {
       for (auto &x: samplepair) x.first.genwig_openfilestream(getPrefixName(), genwig_oftype);
     }
     void genwig_closefilestream() {
-      for (auto &x: samplepair) x.first.genwig_closefilestream(genwig_oftype);
+      for (auto &x: samplepair) x.first.genwig_closefilestream(genwig_oftype, getGenomeTableFileName());
     }
 
 //    pdSample scan_pdstr(const std::string &str);

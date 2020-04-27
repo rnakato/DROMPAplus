@@ -240,8 +240,7 @@ void exec_GENWIG(DROMPA::Global &p)
     Figure fig(p, chr);
 
     std::cout << "Generate wigfile.." << std::flush;
-    fig.generateWig(p, chr.getrefname());
-
+    fig.generateWig(p, chr.getrefname(), chr.getlen());
   }
 
   p.genwig_closefilestream();

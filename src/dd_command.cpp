@@ -57,7 +57,7 @@ std::vector<Command> generateCommands()
   cmds.emplace_back(Command("GENWIG", "generate wig data of enrichment or p-value distribution",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_GENWIG,
-			    {DrompaCommand::CHIP, DrompaCommand::NORM},
+			    {DrompaCommand::CHIP, DrompaCommand::GENWIG, DrompaCommand::NORM},
 			    CommandParamSet(5, 0, 0, 0, 0, 0,
 					    0, 0, 0, 0)
 			    ));

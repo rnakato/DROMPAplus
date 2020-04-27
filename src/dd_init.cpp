@@ -399,7 +399,8 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
   for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
 
   oprefix = getVal<std::string>(values, "output");
-  gt = readGenomeTable(getVal<std::string>(values, "gt"));
+  genometablefilename = getVal<std::string>(values, "gt");
+  gt = readGenomeTable(genometablefilename);
 
   for (auto op: vopts) {
     switch(op) {

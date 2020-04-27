@@ -64,6 +64,7 @@ class SamplePairEach {
   FILE* File;
   std::string genwig_filename;
   std::string genwig_tmpfile;
+  WigType oftype;
 
   int32_t binsize;
 
@@ -86,13 +87,13 @@ public:
   yScale scale;
 
   SamplePairEach():
-    genwig_filename(""), binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
+    genwig_filename(""), oftype(WigType::BEDGRAPH), binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
   {}
   SamplePairEach(const std::string &str, const vSampleInfo &vsinfo);
 
   void setScalingFactor(const int32_t normtype, const vChrArray &vReadArray, const std::string &chrname);
 
-  void genEnrichWig(const vChrArray &vReadArray, const std::string &chrname);
+  void genEnrichWig(const vChrArray &vReadArray, const std::string &chrname, const int32_t chrlen);
 
   void peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
 			  const double pthre_inter, const double pthre_enrich,
@@ -126,48 +127,9 @@ public:
   bool BedExists() const { return peak_argv != ""; }
   bool InputExists() const { return argvInput != ""; }
 
-  void genwig_openfilestream(const std::string &prefix, WigType oftype) {
-    genwig_filename = prefix + "." + label + ".enrich";
-    if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
-      genwig_filename += ".wig";
-      File = fopen(genwig_filename.c_str(), "w");
-      fprintf(File, "track type=wiggle_0\tname=\"%s\"\tdescription=\"Merged tag counts for every %d bp\"\n",
-	      genwig_filename.c_str(), binsize);
-
-    } else if (oftype==WigType::BEDGRAPH) {
-      genwig_filename += ".bedGraph";
-      File = fopen(genwig_filename.c_str(), "w");
-    } else if (oftype==WigType::BIGWIG) {
-      genwig_filename += ".bw";
-      int32_t fd(0);
-      char tmpfile[] = "/tmp/drompa+_bedGraph_XXXXXX";
-      if ((fd = mkstemp(tmpfile)) < 0){
-	perror("mkstemp");
-      }
-      File = fopen(tmpfile, "w");
-      genwig_tmpfile = std::string(tmpfile);
-    }
-  }
-
-  void genwig_closefilestream(WigType oftype) {
-    if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
-      fclose(File);
-      if (oftype==WigType::COMPRESSWIG) {
-	std::string command = "gzip -f " + genwig_filename;
-	if (system(command.c_str())) PRINTERR_AND_EXIT("gzip .wig failed.");
-      }
-    } else if (oftype==WigType::BEDGRAPH) {
-      fclose(File);
-    } else if (oftype==WigType::BIGWIG) {
-      std::string command = "bedGraphToBigWig " + genwig_tmpfile + " " + genwig_filename;
-      if (system(command.c_str())) {
-	unlink(genwig_tmpfile.c_str());
-	std::cerr << "Error: command " << command << "return nonzero status. "
-		  << "Add the PATH to 'DROMPAplus/otherbins'." << std::endl;
-      }
-      unlink(genwig_tmpfile.c_str());
-    }
-  }
+  void genwig_openfilestream(const std::string &prefix, WigType _oftype);
+  void sort_bedGraph(const std::string &filename);
+  void genwig_closefilestream(WigType oftype, const std::string &genometablefilename);
 
 };
 
