@@ -41,7 +41,8 @@ namespace {
     command.add_options()
       ("command", boost::program_options::value<std::string>(), "command to run");
     genopts.add_options()
-      ("version,v", "print version");
+      ("version,v", "print version")
+      ("help,h", "show help message");
 
     boost::program_options::positional_options_description pd;
     pd.add("command", 1);
@@ -59,6 +60,10 @@ namespace {
       store(parsed, values);
 
       if (values.count("version")) printVersion();
+      if (values.count("help")) {
+	help_global(cmds);
+	exit(0);
+      }
 
       // check command and param
       int32_t on(0);
