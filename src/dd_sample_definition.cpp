@@ -222,6 +222,23 @@ void SamplePairEach::setScalingFactor(const int32_t normtype,
   DEBUGprint_FUNCend();
 }
 
+
+
+void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string &chrname)
+{
+    const WigArray &ChIParray  = vReadArray.getArray(argvChIP).array;
+    const WigArray &Inputarray = vReadArray.getArray(argvInput).array;
+
+    WigArray wigarray(ChIParray.size(), 0);
+
+    for (size_t i=0; i<ChIParray.size(); ++i) {
+      wigarray.addval(i, getratio(ChIParray[i], Inputarray[i]));
+    }
+
+    fprintf(File, "variableStep\tchrom=%s\tspan=%d\n", chrname.c_str(), binsize);
+    wigarray.outputAsWig(File, binsize, true);
+}
+
 void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
 					const double pthre_inter, const double pthre_enrich,
 					const double ethre, const double ipm)
@@ -253,7 +270,6 @@ void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::
 	  vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
 	} else ext=0;
     }
-
   }
 
   return;

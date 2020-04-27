@@ -52,7 +52,15 @@ std::vector<Command> generateCommands()
 			    exec_PROFILE,
 			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
 			    CommandParamSet(5, 0, 0, 0, 0, 0,
-					    0, 0, 0, 0)));
+					    0, 0, 0, 0)
+			    ));
+  cmds.emplace_back(Command("GENWIG", "generate wig data of enrichment or p-value distribution",
+			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
+			    exec_GENWIG,
+			    {DrompaCommand::CHIP, DrompaCommand::NORM},
+			    CommandParamSet(5, 0, 0, 0, 0, 0,
+					    0, 0, 0, 0)
+			    ));
 /*  cmds.emplace_back(Command("CI", "compare peak-intensity between two samples",
 			    "-i <ChIP>,,<label> -i <ChIP>,,<label> -bed <bedfile>",
 			    exec_PCSHARP,
@@ -95,6 +103,13 @@ void Command::InitDump()
       if (p.drawparam.isshowpdf()) p.drawparam.InitDump();
       break;
     case DrompaCommand::REGION: p.drawregion.InitDump(values); break;
+    case DrompaCommand::GENWIG:
+      {
+	DEBUGprint("INITDUMP:DrompaCommand::GENWIG");
+	std::cout << boost::format("Output format %1%\n")
+	  % p.genwig_getOutputFileTypeStr();
+	break;
+      }
     case DrompaCommand::CG:
       {
 	DEBUGprint("INITDUMP:DrompaCommand::CG");
@@ -105,15 +120,6 @@ void Command::InitDump()
       {
 	DEBUGprint("INITDUMP:DrompaCommand::TR");
 	//	for (auto x: {"tssthre"}) chkminus<int32_t>(values, x, -1);
-	break;
-      }
-    case DrompaCommand::PD:
-      {
-	DEBUGprint("INITDUMP:DrompaCommand::PD");
-	std::cout << boost::format("\nSamples\n");
-	for(uint i=0; i<p.pd.size(); ++i) {
-	  std::cout << boost::format("   IP%1%: %2%\tlabel: %3%\n") % (i+1) % p.pd[i].argv % p.pd[i].name;
-	}
 	break;
       }
     case DrompaCommand::PROF: p.prof.InitDump(); break;

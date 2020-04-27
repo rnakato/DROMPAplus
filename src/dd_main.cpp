@@ -217,6 +217,7 @@ void exec_PROFILE_asType(DROMPA::Global &p)
 
   profile.printNumOfSites();
   profile.MakeFigure(p);
+
   return;
 }
 
@@ -225,6 +226,26 @@ void exec_PROFILE(DROMPA::Global &p)
   if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) exec_PROFILE_asType<ProfileTSS>(p);
   else if (p.prof.isPtypeGene100()) exec_PROFILE_asType<ProfileGene100>(p);
   else if (p.prof.isPtypeBed())     exec_PROFILE_asType<ProfileBedSites>(p);
+
+  return;
+}
+
+void exec_GENWIG(DROMPA::Global &p)
+{
+  p.genwig_openfilestream();
+
+  for(auto &chr: p.gt) {
+
+    std::cout << chr.getrefname() << ": " << std::flush;
+    Figure fig(p, chr);
+
+    std::cout << "Generate wigfile.." << std::flush;
+    fig.generateWig(p, chr.getrefname());
+
+  }
+
+  p.genwig_closefilestream();
+  printf("done.\n");
 
   return;
 }

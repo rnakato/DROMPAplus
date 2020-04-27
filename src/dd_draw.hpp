@@ -46,6 +46,19 @@ public:
     return 1;
   }
 
+  void generateWig(DROMPA::Global &p, const std::string &chrname) {
+    DEBUGprint_FUNCStart();
+
+    for (auto &x: vsamplepairoverlayed) {
+      WigArray wigarray;
+      if (x.first.InputExists()) {
+	x.first.genEnrichWig(vReadArray, chrname);
+      }
+
+    }
+    DEBUGprint_FUNCend();
+  }
+
   void peakcall(DROMPA::Global &p, const std::string &chrname) {
     DEBUGprint_FUNCStart();
     clock_t t1,t2;

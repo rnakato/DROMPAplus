@@ -14,7 +14,7 @@ class chrsize;
 
 enum class DrompaCommand {
   CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
-  DRAW, REGION, CG, PD, TR, PROF, OTHER
+  DRAW, REGION, CG, GENWIG, TR, PROF, OTHER
 };
 
 class CommandParamSet {
@@ -354,12 +354,14 @@ namespace DROMPA {
     int32_t norm;
     int32_t smoothing;
 
-    class pdSample {
+    WigType genwig_oftype;
+
+/*    class pdSample {
     public:
       std::string argv;
       std::string name;
       pdSample(){}
-    };
+    };*/
 
   public:
     MyOpt::Opts opts;
@@ -372,7 +374,7 @@ namespace DROMPA {
     std::vector<chrsize> gt;
     vSampleInfo vsinfo;
     std::vector<SamplePairOverlayed> samplepair;
-    std::vector<pdSample> pd;
+//    std::vector<pdSample> pd;
 
     bool isGV;
 
@@ -403,10 +405,21 @@ namespace DROMPA {
     {
       return oprefix + "_" + chr + ".pdf";
     }
+    const std::string genwig_getOutputFileTypeStr() const {
+      std::vector<std::string> strType = {"COMPRESSED WIG", "WIG", "BEDGRAPH", "BIGWIG"};
+      return strType[static_cast<int32_t>(genwig_oftype)];
+    }
     bool isincludeYM() const { return includeYM; }
     bool isshowchr() const { return showchr; }
 
-    pdSample scan_pdstr(const std::string &str);
+    void genwig_openfilestream() {
+      for (auto &x: samplepair) x.first.genwig_openfilestream(getPrefixName(), genwig_oftype);
+    }
+    void genwig_closefilestream() {
+      for (auto &x: samplepair) x.first.genwig_closefilestream(genwig_oftype);
+    }
+
+//    pdSample scan_pdstr(const std::string &str);
   };
 }
 

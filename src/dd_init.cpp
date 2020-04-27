@@ -172,7 +172,7 @@ void Annotation::InitDumpPC(const Variables &values) const {
   printOpt<std::string>(values, "ter",    "   TER file");
   printOpt<std::string>(values, "repeat", "   Repeat file");
   printOpt<std::string>(values, "region", "   Region file");
-  printVOpt<std::string>(values, "bed", "   Bed file");
+  printVOpt<std::string>(values, "bed",   "   Bed file");
   DEBUGprint_FUNCend();
 }
 
@@ -361,6 +361,17 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
     case DrompaCommand::REGION:  drawregion.setOpts(opts);     break;
     case DrompaCommand::PROF:    prof.setOpts(opts);           break;
+    case DrompaCommand::GENWIG:
+      {
+	options_description o("GENWIG",100);
+	o.add_options()
+	  ("outputformat",
+	   boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
+	   "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
+	  ;
+	opts.add(o);
+	break;
+      }
     case DrompaCommand::CG:
       {
 	options_description o("CG",100);
@@ -375,17 +386,6 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 	options_description o("TR",100);
 	o.add_options()
 	  ("tssthre",    value<double>(), "")
-	  ;
-	opts.add(o);
-	break;
-      }
-    case DrompaCommand::PD:
-      {
-	options_description o("PD",100);
-	o.add_options()
-	  ("pd",   value<std::vector<std::string>>(), "Peak density file and name\n(separated by ',' <name> can be omited)")
-	  ("prop",   value<double>(),  "scale_tag")
-	  (SETOPT_OVER("pdsize", int32_t, 100000, 1), "windowsize for peak density")
 	  ;
 	opts.add(o);
 	break;
@@ -443,6 +443,12 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::PROF: prof.setValues(values); break;
     case DrompaCommand::DRAW: drawparam.setValues(values, samplepair.size()); break;
     case DrompaCommand::REGION: drawregion.setValues(values); break;
+    case DrompaCommand::GENWIG:
+      {
+	DEBUGprint("Global::setValues::GENWIG");
+	genwig_oftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
+	break;
+      }
     case DrompaCommand::CG:
       {
 	DEBUGprint("Global::setValues::CG");
@@ -453,16 +459,6 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
       {
 	DEBUGprint("Global::setValues::TR");
 	//	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
-	break;
-      }
-    case DrompaCommand::PD:
-      {
-	DEBUGprint("Global::setValues::PD");
-	for (auto x: {"pd"}) if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
-	//	for (auto x: {"pdsize"}) chkminus<int>(values, x, 0);
-
-	std::vector<std::string> v(getVal<std::vector<std::string>>(values, "pd"));
-	for(auto &x: v) pd.emplace_back(scan_pdstr(x));
 	break;
       }
     case DrompaCommand::OTHER: setValuesOther(values); break;
@@ -630,7 +626,7 @@ void DrawParam::InitDump() const {
   DEBUGprint_FUNCend();
 }
 
-Global::pdSample Global::scan_pdstr(const std::string &str) {
+/*Global::pdSample Global::scan_pdstr(const std::string &str) {
   DEBUGprint_FUNCStart();
 
   std::vector<std::string> v;
@@ -651,4 +647,4 @@ Global::pdSample Global::scan_pdstr(const std::string &str) {
 
   DEBUGprint_FUNCend();
   return pd;
-}
+}*/
