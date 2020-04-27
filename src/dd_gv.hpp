@@ -355,6 +355,7 @@ namespace DROMPA {
     int32_t smoothing;
 
     WigType genwig_oftype;
+    int32_t genwig_ofvalue;
     std::string genometablefilename;
 
 /*    class pdSample {
@@ -415,10 +416,10 @@ namespace DROMPA {
     bool isshowchr() const { return showchr; }
 
     void genwig_openfilestream() {
-      for (auto &x: samplepair) x.first.genwig_openfilestream(getPrefixName(), genwig_oftype);
+      for (auto &x: samplepair) x.first.genwig_openfilestream(getPrefixName(), genwig_oftype, genwig_ofvalue);
     }
     void genwig_closefilestream() {
-      for (auto &x: samplepair) x.first.genwig_closefilestream(genwig_oftype, getGenomeTableFileName());
+      for (auto &x: samplepair) x.first.genwig_closefilestream(getGenomeTableFileName());
     }
 
 //    pdSample scan_pdstr(const std::string &str);

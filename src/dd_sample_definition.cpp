@@ -232,7 +232,12 @@ void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string
   WigArray wigarray(ChIParray.size(), 0);
 
   for (size_t i=0; i<ChIParray.size(); ++i) {
-    wigarray.setval(i, getratio(ChIParray[i], (double)Inputarray[i]));
+    if      (ofvaluetype == 0) wigarray.setval(i, getratio(ChIParray[i], (double)Inputarray[i]));
+    else if (ofvaluetype == 1) wigarray.setval(i, getlogp_Poisson(ChIParray[i], ChIParray.getLocalAverage(i, binsize)));
+    else if (ofvaluetype == 2) wigarray.setval(i, getlogp_BinomialTest(ChIParray[i], Inputarray[i], ratio));
+    else {
+      PRINTERR_AND_EXIT("Invalid outputvaluetype: " << ofvaluetype);
+    }
   }
 
   bool showzero(true);
@@ -243,7 +248,6 @@ void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string
   } else if (oftype==WigType::BEDGRAPH || oftype==WigType::BIGWIG) {
     wigarray.outputAsBedGraph(File, binsize, chrname, chrlen-1, showzero, isfloat);
   }
-
 
   DEBUGprint_FUNCend();
 }
@@ -315,10 +319,15 @@ void SamplePairEach::print() const
   std::cout << boost::format("   binsize: %1%\n") % binsize;
 }
 
-void SamplePairEach::genwig_openfilestream(const std::string &prefix, WigType _oftype)
+void SamplePairEach::genwig_openfilestream(const std::string &prefix, WigType _oftype, int32_t _ofvaluetype)
 {
-  genwig_filename = prefix + "." + label + ".enrich";
   oftype = _oftype;
+  ofvaluetype = _ofvaluetype;
+
+  if (ofvaluetype == 0)      genwig_filename = prefix + "." + label + ".enrich."  + std::to_string(binsize);
+  else if (ofvaluetype == 1) genwig_filename = prefix + "." + label + ".pinter."  + std::to_string(binsize);
+  else if (ofvaluetype == 2) genwig_filename = prefix + "." + label + ".penrich." + std::to_string(binsize);
+
   if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
     genwig_filename += ".wig";
     File = fopen(genwig_filename.c_str(), "w");
@@ -326,7 +335,6 @@ void SamplePairEach::genwig_openfilestream(const std::string &prefix, WigType _o
 	    genwig_filename.c_str(), binsize);
   } else if (oftype==WigType::BEDGRAPH) {
     genwig_filename += ".bedGraph";
-
     File = fopen(genwig_filename.c_str(), "w");
 
   } else if (oftype==WigType::BIGWIG) {
@@ -367,7 +375,7 @@ void SamplePairEach::sort_bedGraph(const std::string &filename)
   remove(tempfile.c_str());
 }
 
-void SamplePairEach::genwig_closefilestream(WigType oftype, const std::string &genometablefilename)
+void SamplePairEach::genwig_closefilestream(const std::string &genometablefilename)
 {
   if (oftype==WigType::COMPRESSWIG || oftype==WigType::UNCOMPRESSWIG) {
     fclose(File);

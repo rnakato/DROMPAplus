@@ -65,6 +65,7 @@ class SamplePairEach {
   std::string genwig_filename;
   std::string genwig_tmpfile;
   WigType oftype;
+  int32_t ofvaluetype;
 
   int32_t binsize;
 
@@ -127,9 +128,9 @@ public:
   bool BedExists() const { return peak_argv != ""; }
   bool InputExists() const { return argvInput != ""; }
 
-  void genwig_openfilestream(const std::string &prefix, WigType _oftype);
+  void genwig_openfilestream(const std::string &prefix, WigType _oftype, int32_t _ofvaluetype);
   void sort_bedGraph(const std::string &filename);
-  void genwig_closefilestream(WigType oftype, const std::string &genometablefilename);
+  void genwig_closefilestream(const std::string &genometablefilename);
 
 };
 

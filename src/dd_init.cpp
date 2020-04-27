@@ -368,6 +368,9 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
 	  ("outputformat",
 	   boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
 	   "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
+	  ("outputvalue",
+	   boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--outputvalue")),
+	   "Output value\n   0: ChIP/Input enrichment\n   1: P-value (ChIP internal)\n   2: P-value (ChIP/Input enrichment)")
 	  ;
 	opts.add(o);
 	break;
@@ -448,6 +451,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
       {
 	DEBUGprint("Global::setValues::GENWIG");
 	genwig_oftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
+	genwig_ofvalue = MyOpt::getVal<int32_t>(values, "outputvalue");
 	break;
       }
     case DrompaCommand::CG:

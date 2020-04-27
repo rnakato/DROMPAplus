@@ -46,11 +46,10 @@ public:
     return 1;
   }
 
-  void generateWig(DROMPA::Global &p, const std::string &chrname, const int32_t chrlen) {
+  void generateWig(const std::string &chrname, const int32_t chrlen) {
     DEBUGprint_FUNCStart();
 
     for (auto &x: vsamplepairoverlayed) {
-      WigArray wigarray;
       if (x.first.InputExists()) {
 	x.first.genEnrichWig(vReadArray, chrname, chrlen -1);
       }
