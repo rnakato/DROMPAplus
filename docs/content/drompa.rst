@@ -10,7 +10,7 @@ drompa+ can visualize multiple ChIP samples with specified genome annotation, us
 * **PROFILE**: makes a PDF file and corresponding R script of the averaged read density (also used to make a PNG file and corresponding Python script)
 
 Note that the algorithms for **PC_SHARP**, **PC_BROAD** and **PC_ENRICH** are identical. Only the default parameter sets differ.
-A sample script file can be found in the "tutorial" directory. 
+A sample script file can be found in the "tutorial" directory.
 ``sample.human.sh`` describes the tutorial of these commands of drompa+ for the histone modification data of human K562 cells.
 
 
@@ -24,3 +24,4 @@ A sample script file can be found in the "tutorial" directory.
    drompa/GV
    drompa/Profile
    drompa/Heatmap
+   drompa/GENWIG
