@@ -12,6 +12,7 @@
 void exec_PCSHARP(DROMPA::Global &p);
 void exec_GV(DROMPA::Global &p);
 void exec_PROFILE(DROMPA::Global &p);
+void exec_MULTICI(DROMPA::Global &p);
 void exec_GENWIG(DROMPA::Global &p);
 
 class Command {

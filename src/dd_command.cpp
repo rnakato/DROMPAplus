@@ -47,14 +47,21 @@ std::vector<Command> generateCommands()
 			    CommandParamSet(0, 0, 1, 2000, 1, 10,
 					    0, 0, 2, 0)
 			    ));
-  cmds.emplace_back(Command("PROFILE", "make R script of averaged read density",
+  cmds.emplace_back(Command("PROFILE", "Visualize averaged read density in specified regions",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_PROFILE,
 			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
 			    CommandParamSet(5, 0, 0, 0, 0, 0,
 					    0, 0, 0, 0)
 			    ));
-  cmds.emplace_back(Command("GENWIG", "generate wig data of enrichment or p-value distribution",
+  cmds.emplace_back(Command("MULTICI", "Generate matrix of averaged read density in specified BED sites",
+			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
+			    exec_MULTICI,
+			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
+			    CommandParamSet(5, 0, 0, 0, 0, 0,
+					    0, 0, 0, 0)
+			    ));
+  cmds.emplace_back(Command("GENWIG", "Generate wig data of enrichment or p-value distribution",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_GENWIG,
 			    {DrompaCommand::CHIP, DrompaCommand::GENWIG, DrompaCommand::NORM},

@@ -35,7 +35,8 @@ void ReadProfile::WriteValAroundPosi(std::ofstream &out,
 double ReadProfile::getSumVal(const SamplePairOverlayed &pair,
 			      const vChrArray &vReadArray,
 			      const int32_t sbin,
-			      const int32_t ebin) {
+			      const int32_t ebin)
+{
   double value(-1);
   if (!stype) { // ChIP read
     double sumIP(0);
@@ -71,8 +72,10 @@ ReadProfile::ReadProfile(const DROMPA::Global &p, const int32_t _nbin):
   for (auto &x: p.samplepair) binsize = x.first.getbinsize();
   binwidth_from_center = width_from_center / binsize;
   if (binwidth_from_center <= 1) {
-    PRINTERR_AND_EXIT("please specify larger size for --widthfromcenter:" << width_from_center
-		      << " than binsize:" << binsize << ".");
+    PRINTERR_AND_EXIT("please specify larger size for --widthfromcenter:"
+		      << width_from_center
+		      << " than binsize:"
+		      << binsize << ".");
   }
 
   if (_nbin) nbin = _nbin;
@@ -84,9 +87,9 @@ ReadProfile::ReadProfile(const DROMPA::Global &p, const int32_t _nbin):
 
 void ReadProfile::setOutputFilename(const DROMPA::Global &p)
 {
-  std::string prefix;
-  if (stype==0)      prefix = p.getPrefixName() + ".ChIPread";
-  else if (stype==1) prefix = p.getPrefixName() + ".Enrichment";
+  std::string prefix(p.getPrefixName());
+  if      (stype==0) prefix += ".ChIPread";
+  else if (stype==1) prefix += ".Enrichment";
   Rscriptname = prefix + ".R";
   RDataname   = prefix;    //  prefix + ".tsv";
   Rfigurename = prefix + ".pdf";
@@ -136,10 +139,9 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
       << vcol[0] << "," << vcol[1] << "," << vcol[2] << ",0.3), border=NA)" << std::endl;
 
   for (size_t i=1; i<p.samplepair.size(); ++i) {
-    std::string colstr =
-      std::to_string(vcol[i*3]) + ","
-      + std::to_string(vcol[i*3 +1]) + ","
-      + std::to_string(vcol[i*3 +2]) + "";
+    std::string colstr = std::to_string(vcol[i*3]) + ","
+                       + std::to_string(vcol[i*3 +1]) + ","
+                       + std::to_string(vcol[i*3 +2]) + "";
     out << boost::format("lines(x,p%1%,col=rgb(%2%))\n") % (i+1) % colstr;
     out << boost::format("polygon(c(x, rev(x)), c(p%1%_lower, rev(p%1%_upper)), col=rgb(%2%,0.3), border=NA)\n") % (i+1) % colstr;
   }
@@ -158,6 +160,7 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
   std::string command("R --vanilla < " + Rscriptname);
   if(system(command.c_str())) PRINTERR_AND_EXIT("Rscript execution failed.");
 }
+
 
 void ProfileTSS::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
 {
@@ -284,6 +287,52 @@ void ProfileBedSites::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &c
 
     out.close();
   }
+
+  DEBUGprint_FUNCend();
+}
+
+namespace {
+  double getSumIP(bed12 &bed, const SamplePairOverlayed &pair, const vChrArray &vReadArray, const int32_t binsize)
+  {
+    double sumIP(0);
+    int32_t sbin(bed.start/binsize);
+    int32_t ebin((bed.end-1)/binsize);
+    for (int32_t i=sbin; i<=ebin; ++i) sumIP += vReadArray.getArray(pair.first.argvChIP).array[i];
+    return sumIP;
+  }
+
+}
+
+void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
+{
+  DEBUGprint_FUNCStart();
+
+  if(!p.anno.vbedlist.size()) PRINTERR_AND_EXIT("Please specify --bed.");
+
+  vChrArray vReadArray(p, chr);
+
+  std::string file(RDataname + ".tsv");
+  std::ofstream out(file, std::ios::app);
+
+  for (auto &vbed: p.anno.vbedlist) {
+    for (auto &bed: vbed.getvBed()) {
+//      std::cout << bed.chr << "\t" << bed.start << "\t" << bed.end << "\n";
+      if (bed.chr != rmchr(chr.getname())) continue;
+      ++nsites;
+
+      if (bed.start < 0 || bed.end >= chr.getlen()) {
+	++nsites_skipped;
+	continue;
+      }
+      out << bed.getSiteStr();
+      int32_t sbin(bed.start/binsize);
+      int32_t ebin((bed.end-1)/binsize);
+      for (auto &x: p.samplepair) out << "\t" << getSumVal(x, vReadArray, sbin, ebin);
+//      for (auto &x: p.samplepair) out << "\t" << getSumIP(bed, x, vReadArray, binsize);
+      out << std::endl;
+    }
+  }
+  out.close();
 
   DEBUGprint_FUNCend();
 }

@@ -9,8 +9,7 @@ namespace {
   void help_global(std::vector<Command> &cmds)
   {
     auto helpmsg = R"(
-    ===============
-
+    ================
     For the detailed information on the options for each command, use the -h flag along with the command.
 
     Usage: drompa+ <Command> [options]
@@ -206,10 +205,18 @@ void exec_GV(DROMPA::Global &p)
   return;
 }
 
-template <class T>
-void exec_PROFILE_asType(DROMPA::Global &p)
+void exec_PROFILE(DROMPA::Global &p)
 {
-  T profile(p);
+  if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) exec_PROFILE_asType<ProfileTSS>(p);
+  else if (p.prof.isPtypeGene100()) exec_PROFILE_asType<ProfileGene100>(p);
+  else if (p.prof.isPtypeBed())     exec_PROFILE_asType<ProfileBedSites>(p);
+
+  return;
+}
+
+void exec_MULTICI(DROMPA::Global &p)
+{
+  ProfileMULTICI profile(p);
   profile.setOutputFilename(p);
   profile.printHead(p);
 
@@ -221,16 +228,7 @@ void exec_PROFILE_asType(DROMPA::Global &p)
   }
 
   profile.printNumOfSites();
-  profile.MakeFigure(p);
-
-  return;
-}
-
-void exec_PROFILE(DROMPA::Global &p)
-{
-  if (p.prof.isPtypeTSS() || p.prof.isPtypeTTS()) exec_PROFILE_asType<ProfileTSS>(p);
-  else if (p.prof.isPtypeGene100()) exec_PROFILE_asType<ProfileGene100>(p);
-  else if (p.prof.isPtypeBed())     exec_PROFILE_asType<ProfileBedSites>(p);
+//  profile.MakeFigure(p);
 
   return;
 }

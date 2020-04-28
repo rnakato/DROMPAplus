@@ -2,6 +2,7 @@
 
 ## 1.5.0 (2020-05-XX)
 - Add GENWIG command to generate wig data of ChIP/Input enrichment and p-value distributions
+- Add MULTICI command to generate matrix of averaged read density in specified BED sites
 
 ## 1.4.1 (2020-04-23)
 - Add parsestats4DROMPAplus.pl in scripts directory

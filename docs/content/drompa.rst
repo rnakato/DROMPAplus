@@ -24,4 +24,5 @@ A sample script file can be found in the "tutorial" directory.
    drompa/GV
    drompa/Profile
    drompa/Heatmap
+   drompa/MULTICI
    drompa/GENWIG

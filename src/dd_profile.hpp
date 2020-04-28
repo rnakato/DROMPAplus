@@ -8,12 +8,12 @@
 #include "dd_readfile.hpp"
 
 class ReadProfile {
-  int32_t stype;
   std::string xlabel;
   std::string Rscriptname;
   std::string Rfigurename;
 
 protected:
+  int32_t stype;
   int32_t binsize;
   int32_t nbin;
   int32_t width_from_center;
@@ -45,7 +45,7 @@ public:
   void MakeFigure(const DROMPA::Global &p);
   virtual void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)=0;
 
-  void printHead(const DROMPA::Global &p) {
+  virtual void printHead(const DROMPA::Global &p) {
     for (auto &x: p.samplepair) {
       std::string file(RDataname + "." + x.first.label + ".tsv");
       std::ofstream out(file);
@@ -82,8 +82,7 @@ class ProfileGene100: public ReadProfile {
 
 public:
   explicit ProfileGene100(const DROMPA::Global &p):
-    ReadProfile(p, GENEBLOCKNUM * 3)
-  {}
+    ReadProfile(p, GENEBLOCKNUM * 3) {}
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr);
 
@@ -107,5 +106,43 @@ public:
 
   void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr);
 };
+
+class ProfileMULTICI: public ReadProfile {
+public:
+  explicit ProfileMULTICI(const DROMPA::Global &p):
+    ReadProfile(p) {}
+
+  void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr);
+
+  void printHead(const DROMPA::Global &p) {
+    std::string file(RDataname + ".tsv");
+    std::ofstream out(file);
+
+    for (auto &x: p.samplepair) out << "\t" << x.first.label;
+    out << std::endl;
+    out.close();
+  }
+};
+
+
+template <class T>
+void exec_PROFILE_asType(DROMPA::Global &p)
+{
+  T profile(p);
+  profile.setOutputFilename(p);
+  profile.printHead(p);
+
+  for(auto &chr: p.gt) {
+    if(!p.isincludeYM() && (chr.getname() == "Y" || chr.getname() == "M")) continue;
+    std::cout << "\nchr" << chr.getname() << "..";
+
+    profile.WriteTSV_EachChr(p, chr);
+  }
+
+  profile.printNumOfSites();
+  profile.MakeFigure(p);
+
+  return;
+}
 
 #endif /* _DD_PROFILE_H_ */

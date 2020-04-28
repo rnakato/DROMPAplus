@@ -169,7 +169,7 @@ class Peak : public bed {
   }
 };
 
-template <class T=bed>
+template <class T>
 class vbed {
   std::vector<T> bed;
   std::string label;

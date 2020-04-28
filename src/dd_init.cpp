@@ -14,38 +14,6 @@ using namespace DROMPA;
 #define NOTIFY_OVER(type,val,name)      notifier(boost::bind(&MyOpt::over<type>, _1, val, name))
 #define NOTIFY_RANGE(type,min,max,name) notifier(boost::bind(&MyOpt::range<type>, _1, min, max, name))
 
-void vSampleInfo::addSampleInfo(const std::string &str,
-				const std::vector<chrsize> &gt,
-				const WigType iftype)
-{
-  int32_t binsize(0);
-  std::vector<std::string> v;
-  ParseLine(v, str, ',');
-
-  if(v.size() >8) {
-    PRINTERR_AND_EXIT("error: sample std::string has ',' more than 8: " << str);
-  }
-  if(v[0] == "") {
-    PRINTERR_AND_EXIT("please specify ChIP sample: " << str);
-  }
-  isFile(v[0]);
-
-  if(v.size() >4 && v[4] != "") {
-    try { binsize = stoi(v[4]); }
-    catch (...) { std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl; }
-  }
-
-  // ChIP sample
-  if(!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
-  if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR_AND_EXIT("please specify binsize.\n");
-
-  // Input sample
-  if(v.size() >=2 && v[1] != "") {
-    if(!Exists(v[1])) vsinfo[v[1]] = SampleInfo(v[1], gt, binsize, iftype);
-    if(vsinfo[v[0]].getbinsize() != vsinfo[v[1]].getbinsize()) PRINTERR_AND_EXIT("binsize of ChIP and Input should be same. " << str);
-  }
-}
-
 void Annotation::setOptsPC(MyOpt::Opts &allopts)
 {
   MyOpt::Opts opt("Annotation",100);
