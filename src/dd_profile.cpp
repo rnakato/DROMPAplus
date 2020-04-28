@@ -291,7 +291,7 @@ void ProfileBedSites::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &c
   DEBUGprint_FUNCend();
 }
 
-namespace {
+/*namespace {
   double getSumIP(bed12 &bed, const SamplePairOverlayed &pair, const vChrArray &vReadArray, const int32_t binsize)
   {
     double sumIP(0);
@@ -300,8 +300,7 @@ namespace {
     for (int32_t i=sbin; i<=ebin; ++i) sumIP += vReadArray.getArray(pair.first.argvChIP).array[i];
     return sumIP;
   }
-
-}
+}*/
 
 void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
 {
