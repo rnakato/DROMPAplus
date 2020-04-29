@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -std=c++11 -O2 -Wall -W -fuse-ld=gold
 LDFLAGS =
-LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams
+LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams -lpthread
 LIBS_DP += -lz -lgsl -lgslcblas -lboost_thread
 LIBS_CAIRO += `pkg-config gtkmm-3.0 --cflags --libs`
 
