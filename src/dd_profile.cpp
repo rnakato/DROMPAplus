@@ -47,9 +47,9 @@ double ReadProfile::getSumVal(const SamplePairOverlayed &pair,
     for (int32_t i=sbin; i<=ebin; ++i) {
       double r = getratio(vReadArray.getArray(pair.first.argvChIP).array[i],
 			  vReadArray.getArray(pair.first.argvInput).array[i]);
-      //	printf("%f, %f, r=%f\n",vReadArray.getArray(pair.first.argvChIP).array[i],
-      //	       vReadArray.getArray(pair.first.argvInput).array[i],
-      //	       r);
+/*      printf("%f, %f, r=%f\n",vReadArray.getArray(pair.first.argvChIP).array[i],
+	     vReadArray.getArray(pair.first.argvInput).array[i],
+	     r);*/
       sumRatio += r;
     }
     value = getratio(sumRatio, (ebin - sbin + 1));
