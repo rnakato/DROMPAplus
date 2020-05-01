@@ -8,6 +8,8 @@ drompa+ can visualize multiple ChIP samples with specified genome annotation, us
 * **PC_ENRICH**: peak-calling (enrichment ratio)
 * **GV**: global-view visualization
 * **PROFILE**: makes a PDF file and corresponding R script of the averaged read density (also used to make a PNG file and corresponding Python script)
+* **MULTICI**: generate matrix of averaged read density
+* **GENWIG**: generates wig data of ChIP/Input enrichment and p-value distributions
 
 Note that the algorithms for **PC_SHARP**, **PC_BROAD** and **PC_ENRICH** are identical. Only the default parameter sets differ.
 A sample script file can be found in the "tutorial" directory.
