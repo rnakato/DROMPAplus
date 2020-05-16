@@ -55,6 +55,11 @@ On CentOS:
 
     sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
 
+On Mac:
+
+     brew tap brewsci/bio
+     brew install gsl gtk gtkmm cairo pkgconfig boost samtools
+     
 #### 3.2.2. Install DROMPAplus
     git clone --recursive https://github.com/rnakato/DROMPAplus
     cd DROMPAplus
