@@ -111,8 +111,8 @@ class WigArray {
     }
     size_t i = array.size()-1;
     if (array[i] || showzero) {
-      if (isfloat) fprintf(File, "%s\t%zu\t%lu\t%.3f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
-      else         fprintf(File, "%s\t%zu\t%lu\t%.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
+      if (isfloat) fprintf(File, "%s\t%zu\t%llu\t%.3f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
+      else         fprintf(File, "%s\t%zu\t%llu\t%.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
     }
   }
   /*  void outputAsBinary(std::ofstream &out) const {
@@ -130,7 +130,7 @@ class WigArray {
 class WigStats {
   enum {WIGDISTNUM=200};
 
-  double ave, var, nb_p0;
+//  double ave, var, nb_p0;
   std::vector<uint64_t> wigDist;
 
  public:
@@ -138,7 +138,7 @@ class WigStats {
   int32_t binsize;
   double nb_p, nb_n;
   WigStats(const int32_t _nbin=0, const int32_t _binsize=0):
-    ave(0), var(0), nb_p0(0),
+//    ave(0), var(0), nb_p0(0),
     wigDist(WIGDISTNUM, 0),
     nbin(_nbin), binsize(_binsize),
     nb_p(0), nb_n(0)

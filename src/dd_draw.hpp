@@ -11,14 +11,14 @@ class Figure {
   vChrArray vReadArray;
   std::vector<SamplePairOverlayed> &vsamplepairoverlayed;
   std::vector<bed> regionBed;
-  int32_t pagewidth;
+//  int32_t pagewidth;
 
 public:
   Figure(DROMPA::Global &p, const chrsize &chr):
     vReadArray(p, chr),
     vsamplepairoverlayed(p.samplepair),
-    regionBed(p.drawregion.getRegionBedChr(chr.getname())),
-    pagewidth(p.drawparam.width_draw_pixel)
+    regionBed(p.drawregion.getRegionBedChr(chr.getname()))
+//    pagewidth(p.drawparam.width_draw_pixel)
   {
     int32_t normtype(p.getChIPInputNormType());
     for (auto &x: vsamplepairoverlayed) {

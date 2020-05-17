@@ -83,7 +83,7 @@ class Mapfile: private Uncopyable {
   std::string mpdir;
   double mpthre;
 
-  bool Greekchr;
+//  bool Greekchr;
   bool verbose;
 
   //  std::vector<Peak> vPeak;
@@ -107,7 +107,7 @@ class Mapfile: private Uncopyable {
     opt("Fragment",100),
     on_bed(0),
     mpdir(""), mpthre(0),
-    Greekchr(false),
+//    Greekchr(false),
     verbose(false),
     id_longestChr(0),
     maxGC(0), genome(),

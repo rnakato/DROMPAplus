@@ -274,9 +274,9 @@ class InteractionSet {
       return;
     }
     try {
-      double val, val_tmp(0);
+      double val(0), val_tmp(0);
       if(v.size() > 8) val_tmp = stod(v[15]); else val_tmp = stod(v[7]); // P
-      if(val) val = -log10(val_tmp); else val = -log10(1e-12);
+      if(val_tmp) val = -log10(val_tmp); else val = -log10(1e-12);
 
       vinter.emplace_back(bed({v[0], v[1], v[2]}),
 			  bed({v[3], v[4], v[5]}),
