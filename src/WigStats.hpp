@@ -111,8 +111,8 @@ class WigArray {
     }
     size_t i = array.size()-1;
     if (array[i] || showzero) {
-      if (isfloat) fprintf(File, "%s\t%zu\t%llu\t%.3f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
-      else         fprintf(File, "%s\t%zu\t%llu\t%.0f\n", name.c_str(), i*binsize, chrend, rmGeta(array[i]));
+      if (isfloat) fprintf(File, "%s\t%zu\t%lu\t%.3f\n", name.c_str(), i*binsize, (uint64_t)chrend, rmGeta(array[i]));
+      else         fprintf(File, "%s\t%zu\t%lu\t%.0f\n", name.c_str(), i*binsize, (uint64_t)chrend, rmGeta(array[i]));
     }
   }
   /*  void outputAsBinary(std::ofstream &out) const {
