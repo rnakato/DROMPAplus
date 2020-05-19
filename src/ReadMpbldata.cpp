@@ -10,7 +10,7 @@
 #include "../submodules/SSP/common/seq.hpp"
 #include "../submodules/SSP/src/SeqStats.hpp"
 
-void SeqStats::setFRiP(const std::vector<bed> &vbed)
+void SeqStatsDROMPA::setFRiP(const std::vector<bed> &vbed)
 {
   std::vector<BpStatus> array(getlen(), BpStatus::MAPPABLE);
   setPeak_to_MpblBpArray(array, getname(), vbed);
