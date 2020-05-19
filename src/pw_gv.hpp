@@ -200,7 +200,7 @@ class Mapfile: private Uncopyable {
   void normalizeByGCcontents() {
     if(gc.isGcNormOn()) {
       std::cout << "chromosome for GC distribution: chr"
-		<< genome.chr[id_longestChr].getname() << std::endl;
+		<< genome.chr[id_longestChr].seqstatsssp.getname() << std::endl;
       GCdist d(genome.dflen.getflen(), gc);
 
       d.calcGCdist(genome.chr[id_longestChr], gc, getMpblBinaryDir(), isBedOn(), vbed, wsGenome.getbinsize());

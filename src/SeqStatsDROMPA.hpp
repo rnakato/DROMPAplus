@@ -5,17 +5,21 @@
 #define _SEQSTATSDROMPA_HPP_
 
 #include "../submodules/SSP/src/SeqStats.hpp"
+#include "../submodules/SSP/src/MThread.hpp"
+#include "../submodules/SSP/src/Mapfile.hpp"
 
-class SeqStats : public SeqStatsSSP {
+class SeqStats {
  public:
+  SeqStatsSSP seqstatsssp;
 
  SeqStats(std::string &s, int32_t l):
-   SeqStatsSSP(s, l) {}
+   seqstatsssp(s, l) {}
 
   void setFRiP(const std::vector<bed> &vbed);
-  
+
   double getFRiP() const {
-    return getratio(nread_inbed, getnread_nonred(Strand::BOTH));
+    return getratio(seqstatsssp.getnread_inbed(),
+		    seqstatsssp.getnread_nonred(Strand::BOTH));
   }
 };
 
@@ -72,12 +76,12 @@ class SeqStatsGenome {
   std::string getname() const { return name; }
   uint64_t getlen() const {
     uint64_t len(0);
-    for(auto &x:chr) len += x.getlen();
+    for (auto &x: chr) len += x.seqstatsssp.getlen();
     return len;
   }
   uint64_t getlenmpbl() const {
     uint64_t len_mpbl(0);
-    for(auto &x:chr) len_mpbl += x.getlenmpbl();
+    for (auto &x:chr) len_mpbl += x.seqstatsssp.getlenmpbl();
     return len_mpbl;
   }
   double getpmpbl() const {
@@ -85,32 +89,32 @@ class SeqStatsGenome {
   }
   uint64_t getnread (const Strand::Strand strand) const {
     uint64_t nread(0);
-    for(auto &x:chr) nread += x.getnread(strand);
+    for (auto &x:chr) nread += x.seqstatsssp.getnread(strand);
     return nread;
   }
   uint64_t getnread_nonred (const Strand::Strand strand) const {
     uint64_t nread(0);
-    for(auto &x:chr) nread += x.getnread_nonred(strand);
+    for (auto &x:chr) nread += x.seqstatsssp.getnread_nonred(strand);
     return nread;
   }
   uint64_t getnread_red (const Strand::Strand strand) const {
     uint64_t nread(0);
-    for(auto &x:chr) nread += x.getnread_red(strand);
+    for (auto &x:chr) nread += x.seqstatsssp.getnread_red(strand);
     return nread;
   }
   uint64_t getnread_rpm (const Strand::Strand strand) const {
     uint64_t nread(0);
-    for(auto &x:chr) nread += x.getnread_rpm(strand);
+    for (auto &x:chr) nread += x.seqstatsssp.getnread_rpm(strand);
     return nread;
   }
   uint64_t getnread_afterGC (const Strand::Strand strand) const {
     uint64_t nread(0);
-    for(auto &x:chr) nread += x.getnread_afterGC(strand);
+    for (auto &x:chr) nread += x.seqstatsssp.getnread_afterGC(strand);
     return nread;
   }
   uint64_t getnread_inbed() const {
     uint64_t nread(0);
-    for(auto &x:chr) nread += x.getnread_inbed();
+    for (auto &x:chr) nread += x.seqstatsssp.getnread_inbed();
     return nread;
   }
   double getFRiP() const {
@@ -125,7 +129,7 @@ class SeqStatsGenome {
   void printReadstats() const {
     std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
     printSeqStats(*this);
-    for(auto &x: chr) printSeqStats(x);
+    for (auto &x: chr) printSeqStats(x);
   }
 };
 

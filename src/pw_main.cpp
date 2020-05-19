@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include "../submodules/SSP/src/ParseMapfile.hpp"
+#include "../submodules/SSP/src/ShiftProfile.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
 #include "pw_makefile.hpp"
 #include "version.hpp"
@@ -45,15 +46,70 @@ void CalcDepth(T &obj, const int32_t flen)
   obj.setdepth(d);
 }
 
+int32_t setIdLongestChr(SeqStatsGenome &genome)
+{
+  int32_t id(0);
+  uint64_t lenmax(0);
+  for(size_t i=0; i<genome.chr.size(); ++i) {
+    if(lenmax < genome.chr[i].seqstatsssp.getlenmpbl()) {
+      lenmax = genome.chr[i].seqstatsssp.getlenmpbl();
+      id = i;
+    }
+  }
+  return id;
+}
+
+template <class T>
+void makeProfile_forDROMPA(SSPstats &sspst, SeqStatsGenome &genome, const std::string &head, const std::string &typestr)
+{
+  DEBUGprint("makeProfile: " + typestr);
+  T dist(sspst, genome);
+  dist.printStartMessage();
+
+  int32_t id_longestChr = setIdLongestChr(genome);
+
+  std::string prefix(head + "." + typestr);
+  genThread(dist, genome, id_longestChr, id_longestChr, prefix, sspst.isEachchr(), sspst.getNgTo());
+
+  for (size_t i=0; i<genome.chr.size(); ++i) {
+    if (genome.chr[i].seqstatsssp.isautosome()) dist.addmp2genome(i);
+  }
+
+  dist.setflen(dist.name);
+  genome.dflen.setflen_ssp(dist.getnsci());
+
+  if(sspst.getNgTo() < 0) return;
+
+  std::string prefix2 = head + "." + typestr;
+  dist.outputmpGenome(prefix2);
+
+  if (typestr == "jaccard") setSSPstats(sspst, dist.getbackgroundUniformity(), dist.getnsc(), dist.getrlsc(), dist.getrsc());
+
+  DEBUGprint("makeProfile: " + typestr + " done.");
+  return;
+}
+
+class shiftJacBit;
+void strShiftProfile(SSPstats &sspst, SeqStatsGenome &genome,
+		     const std::string &head, const std::string &typestr)
+{
+  DEBUGprint("strShiftProfile...");
+  if (genome.dflen.isallchr()) makeProfile<shiftJacBit>(sspst, genome, head, "jaccard");
+  else makeProfile_forDROMPA<shiftJacBit>(sspst, genome, head, "jaccard");
+
+  DEBUGprint("strShiftProfile done.");
+  return;
+}
+
 void DefineFragmentLength(Mapfile &p)
 {
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
     strShiftProfile(p.sspst, p.genome, p.getprefix(), "drompa");
   }
   for (auto &x: p.genome.chr) {
-    std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
-    x.setF5ToRead(p.genome.dflen.getflen());
-    x.printvRead();
+    std::cout << x.seqstatsssp.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
+    x.seqstatsssp.setF5ToRead(p.genome.dflen.getflen());
+    x.seqstatsssp.printvRead();
   }
 }
 
