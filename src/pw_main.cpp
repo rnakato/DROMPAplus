@@ -322,8 +322,6 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   sspst.setValues(values);
   gc.setValues(values);
 
-  verbose = values.count("verbose");
-
   samplename = MyOpt::getVal<std::string>(values, "output");
   id_longestChr = setIdLongestChr(genome);
   oprefix = MyOpt::getVal<std::string>(values, "odir") + "/" + MyOpt::getVal<std::string>(values, "output");
