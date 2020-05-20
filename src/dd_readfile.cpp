@@ -1,7 +1,7 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#include <ext/stdio_filebuf.h>
+#include "../submodules/SSP/common/gzstream.h"
 #include "dd_readfile.hpp"
 
 namespace {
@@ -76,21 +76,6 @@ namespace {
     return;
   }
 
-  /*void readBinary(WigArray &array, const std::string &filename, const int32_t nbin)
-    {
-    static int nbinsum(0);
-    std::ifstream in(filename, std::ios::in | std::ios::binary);
-    if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
-
-    in.seekg(nbinsum * sizeof(int32_t));
-
-    array.readBinary(in, nbin);
-    // array.printArray();
-
-    nbinsum += nbin;
-    return;
-    }*/
-
   void funcWig(WigArray &array, const std::string &filename,
 	       const int32_t binsize, const std::string &chrname)
   {
@@ -109,10 +94,7 @@ namespace {
   {
     DEBUGprint_FUNCStart();
 
-    std::string command = "zcat " + filename;
-    FILE *fp = popen(command.c_str(), "r");
-    __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
-    std::istream in(static_cast<std::streambuf *>(p_fb));
+    igzstream in(filename.c_str());
     readWig(in, array, chrname, binsize);
 
     DEBUGprint_FUNCend();
@@ -132,9 +114,9 @@ namespace {
     std::string command = "bigWigToBedGraph -chrom=chr" + rmchr(chrname) + " " + filename + " " + std::string(tmpfile);
     int32_t return_code = system(command.c_str());
     if (WEXITSTATUS(return_code)) {
-      std::cerr << "Error: command " << command << "return nonzero status. "
-		<< "Add the PATH to 'DROMPAplus/otherbins'." << std::endl;
-      exit(0);
+      PRINTERR_AND_EXIT("Error: command " << command
+			<< "return nonzero status. "
+		       << "Add the PATH to 'DROMPAplus/otherbins'.");
     }
     readBedGraph(array, std::string(tmpfile), chrname, binsize);
     unlink(tmpfile);
@@ -152,12 +134,6 @@ namespace {
 
     DEBUGprint_FUNCend();
   }
-
-  /*void funcBinary(WigArray &array, const std::string &filename, const int32_t nbin)
-    {
-    DEBUGprint("WigType::BINARY");
-    readBinary(array, filename, nbin);
-    }*/
 }
 
 WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr)
@@ -174,7 +150,6 @@ WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chr
   else if (iftype == WigType::COMPRESSWIG)   funcCompressWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BIGWIG)        funcBigWig(array, filename, binsize, chrname);
   else if (iftype == WigType::BEDGRAPH)      funcBedGraph(array, filename, binsize, chrname);
-  //  else if (iftype == WigType::BINARY)        funcBinary(array, filename, nbin);
 
   //array.dump();
 
