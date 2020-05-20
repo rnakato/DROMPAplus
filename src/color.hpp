@@ -57,4 +57,4 @@ public:
 RGB HSVtoRGB(const HSV &hsv);
 HSV RGBtoHSV(const RGB &rgb);
 
-#endif
+#endif /* _COLOR_H_ */

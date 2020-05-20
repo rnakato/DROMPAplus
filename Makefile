@@ -1,7 +1,7 @@
 CC = clang++
 CFLAGS = -std=c++11 -O2 -Wall -W
 LIBS += -lboost_program_options -lboost_system -lboost_filesystem -lboost_iostreams -lpthread
-LIBS_DP += -lz -lgsl -lgslcblas -lboost_thread
+LIBS_DP += -lz -lgsl -lgslcblas -lboost_thread -lcurl -llzma -lbz2
 LIBS_CAIRO = `pkg-config gtkmm-3.0 --cflags --silence-errors` `pkg-config gtkmm-2.4 --cflags --silence-errors`
 FLAG_CAIRO = `pkg-config gtkmm-3.0 --libs --silence-errors` `pkg-config gtkmm-2.4 --libs --silence-errors`
 
@@ -13,6 +13,7 @@ SSPSRCDIR = $(SSPDIR)/src
 SSPCMNDIR = $(SSPDIR)/common
 SSPOBJDIR = $(SSPDIR)/obj
 SSPCMNOBJDIR = $(SSPDIR)/cobj
+HTSLIBDIR = $(SSPDIR)/src/htslib-1.10.2
 
 PROGRAMS = parse2wig+ drompa+
 TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
@@ -32,10 +33,10 @@ ifdef PRINTREAD
 CFLAGS += -DPRINTREAD
 endif
 
-OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o
-OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/ReadMpbldata.o $(OBJDIR)/significancetest.o
+OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/gzstream.o
+OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/ReadMpbldata.o $(OBJDIR)/significancetest.o $(OBJDIR)/pw_strShiftProfile.o
 OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/dd_sample_definition.o $(OBJDIR)/dd_profile.o
-OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(SSPCMNOBJDIR)/gzstream.o
+OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o
 
 .PHONY: all clean
 
@@ -44,11 +45,11 @@ all: $(TARGET) prnt
 prnt: $(TARGET)
 	@echo "\nAdd '$(CURDIR)/bin:$(CURDIR)/otherbins:$(CURDIR)/submodules/cpdf/Linux-Intel-64bit/' to your PATH."
 
-$(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP)
+$(BINDIR)/parse2wig+: $(OBJS_PW) $(OBJS_UTIL) $(OBJS_SSP) $(HTSLIBDIR)/libhts.a
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(CFLAGS)
 
-$(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL) $(OBJS_SSP)
+$(BINDIR)/drompa+: $(OBJS_DD) $(OBJS_UTIL)
 	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(CC) -o $@ $^ $(LIBS) $(LIBS_DP) $(FLAG_CAIRO) $(CFLAGS)
 
@@ -81,6 +82,9 @@ $(SSPCMNOBJDIR)/gzstream.o: $(SSPCMNDIR)/gzstream.C $(SSPCMNDIR)/gzstream.h
 $(SSPCMNOBJDIR)/%.o: $(SSPCMNDIR)/%.cpp
 	$(MAKE) -C $(SSPDIR) cobj/$(notdir $@) $(OFLAGS)
 
+$(HTSLIBDIR)/libhts.a:
+	$(MAKE) -C $(HTSLIBDIR)
+
 clean:
 	rm -rf bin obj
 	make -C $(SSPDIR) clean
@@ -100,5 +104,5 @@ $(OBJDIR)/dd_chiadrop.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(S
 $(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.hpp $(SRCDIR)/dd_draw_myfunc.hpp $(SRCDIR)/dd_draw_environment_variable.hpp $(SRCDIR)/color.hpp $(SRCDIR)/dd_draw_dataframe.hpp
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SRCDIR)/ReadMpbldata.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
-$(OBJS_PW): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/pw_gv.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp $(SRCDIR)/significancetest.hpp $(SRCDIR)/BpStatus.hpp
-$(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/extendBedFormat.hpp $(SRCDIR)/dd_sample_definition.hpp $(SRCDIR)/significancetest.hpp $(SSPCMNDIR)/BedFormat.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp
+$(OBJS_PW): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/pw_gv.hpp $(SSPSRCDIR)/ParseMapfile.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp $(SRCDIR)/significancetest.hpp $(SRCDIR)/BpStatus.hpp $(SRCDIR)/pw_strShiftProfile.hpp $(SRCDIR)/SeqStatsDROMPA.hpp
+$(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/extendBedFormat.hpp $(SRCDIR)/dd_sample_definition.hpp $(SRCDIR)/significancetest.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp

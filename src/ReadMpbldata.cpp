@@ -10,29 +10,6 @@
 #include "../submodules/SSP/common/seq.hpp"
 #include "../submodules/SSP/src/SeqStats.hpp"
 
-void SeqStatsDROMPA::setFRiP(const std::vector<bed> &vbed)
-{
-  std::vector<BpStatus> array(getlen(), BpStatus::MAPPABLE);
-  setPeak_to_MpblBpArray(array, getname(), vbed);
-
-  for (auto strand: {Strand::FWD, Strand::REV}) {
-    for (auto &x: seq[strand].vRead) {
-      if(x.duplicate) continue;
-      int32_t s(std::min(x.F3, x.F5));
-      int32_t e(std::max(x.F3, x.F5));
-      for(int32_t i=s; i<=e; ++i) {
-	if(array[i] == BpStatus::INBED) {
-	  x.inpeak = 1;
-	  ++nread_inbed;
-	  break;
-	}
-      }
-    }
-  }
-  return;
-}
-
-
 std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
 				      const std::string &chrname,
 				      const int32_t binsize,

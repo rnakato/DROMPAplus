@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.5.0 (2020-05-XX)
+## 1.6.0 (2020-05-XX)
+- Adopt htslib API for parsing SAM/BAM/CRAM format
+- Now available to use on Mac
+
+## 1.5.0 (2020-05-12)
 - Add GENWIG command to generate wig data of ChIP/Input enrichment and p-value distributions
 - Add MULTICI command to generate matrix of averaged read density in specified BED sites
 

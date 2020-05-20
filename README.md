@@ -22,7 +22,7 @@ DROMPAplus requires the following programs and libraries:
 * [GTK library](http://www.gtk.org/)
 * [GNU Scientific Library](http://www.gnu.org/software/gsl/)
 * [zlib](http://www.zlib.net/)
-* [SAMtools](http://samtools.sourceforge.net/) (for BAM/CRAM formatted input)
+* [HTSlib (1.10.2)](https://github.com/samtools/htslib) (for SAM/BAM/CRAM formatted input)
 
 and also contains two submodules:
 
@@ -49,7 +49,7 @@ For Singularity:
 On Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
-    libgsl-dev libz-dev samtools r-base
+    libgsl-dev libz-dev
 
 On CentOS:
 
@@ -57,12 +57,22 @@ On CentOS:
 
 On Mac:
 
-     brew tap brewsci/bio
-     brew install gsl gtk gtkmm cairo pkgconfig boost samtools
-     
+     brew install gsl gtk gtkmm cairo pkgconfig curl xz zlib boost
+
 #### 3.2.2. Install DROMPAplus
+On Linux:
+
     git clone --recursive https://github.com/rnakato/DROMPAplus
     cd DROMPAplus
+    make
+
+On Mac:
+
+    git clone --recursive https://github.com/rnakato/DROMPAplus
+    cd DROMPAplus
+    # change name from "-lboost_thread" to "-lboost_thread-mt"
+    sed -i -e 's/-lboost_thread/-lboost_thread-mt/g' Makefile
+    sed -i -e 's/-lboost_thread/-lboost_thread-mt/g' submodules/SSP/Makefile
     make
 
 If you get an installation error, make sure that all required libraries are successfully installed.

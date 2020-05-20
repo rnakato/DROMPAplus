@@ -19,10 +19,8 @@ namespace {
 }
 
 WigArray count_and_normalize_Wigarray(Mapfile &, int32_t);
-void normalize_wigaray_for_totalreads(Mapfile &p, SeqStats &chr, WigArray &wigarray);
 void outputWig(Mapfile &, const std::string &);
 void outputBedGraph(Mapfile &, const std::string &);
-//void outputBinary(Mapfile &, const std::string &);
 
 void generate_wigfile(Mapfile &p)
 {
@@ -56,10 +54,7 @@ void generate_wigfile(Mapfile &p)
 		<< "Add the PATH to 'DROMPAplus/otherbins'." << std::endl;
     }
     unlink(tmpfile);
-  } /*else if (oftype==WigType::BINARY) {
-    filename += ".bin";
-    outputBinary(p, filename);
-    }*/
+  }
 
   printf("done.\n");
   return;
@@ -85,46 +80,7 @@ void addReadToWigArray(const WigStatsGenome &p, WigArray &wigarray, const Read x
   return;
 }
 
-WigArray count_and_normalize_Wigarray(Mapfile &p, const int32_t id)
-{
-  std::cout << "chr" << p.genome.chr[id].getname() << ".." << std::flush;
-  WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0);
-
-  // Convert readarray to Wig
-  for (auto strand: {Strand::FWD, Strand::REV}) {
-    for (auto &x: p.genome.chr[id].getvReadref(strand)) {
-      if (x.duplicate) continue;
-      addReadToWigArray(p.wsGenome, wigarray, x, p.genome.chr[id].getlen());
-    }
-  }
-
-  // Mappability normalization
-  if (p.getMpblBinaryDir() != "") {
-    int32_t binsize(p.wsGenome.getbinsize());
-    int32_t mpthre = p.getmpthre() * binsize;
-    auto mparray = readMpblWigArray(p.getMpblBinaryDir(), ("chr" + p.genome.chr[id].getname()), binsize, p.wsGenome.chr[id].getnbin());
-    for (int32_t i=0; i<p.wsGenome.chr[id].getnbin(); ++i) {
-//      std::cout << "mparray[i]: " << mparray[i] << std::endl;
-      if (mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));
-    }
-  }
-
-  /* Total read normalization */
-  if (p.rpm.getType() != "NONE") normalize_wigaray_for_totalreads(p, p.genome.chr[id], wigarray);
-
-  p.wsGenome.setWigStats(id, wigarray);
-
-  // Peak calling
-  /*  t1 = clock();
-  clock_t t1,t2;
-  p.wsGenome.chr[id].peakcall(wigarray, p.genome.chr[id].getname());
-  t2 = clock();
-  PrintTime(t1, t2, "peakcall");*/
-
-  return wigarray;
-}
-
-void normalize_wigaray_for_totalreads(Mapfile &p, SeqStats &chr, WigArray &wigarray)
+double getScaleWeight_for_totalreads(Mapfile &p, const SeqStats &chr)
 {
   static int32_t on(0);
   double w(0);
@@ -157,12 +113,55 @@ void normalize_wigaray_for_totalreads(Mapfile &p, SeqStats &chr, WigArray &wigar
     if (w>2) printwarning(w);
   }
 
-  int32_t nbin(chr.getlen()/p.wsGenome.getbinsize() +1);
-  for (int32_t i=0; i<nbin; ++i) { wigarray.multipleval(i, w); }
+  return w;
+}
 
-  chr.setsizefactor(w);
-  if (ntype == "GR" || ntype == "GD") p.genome.setsizefactor(w);
-  return;
+WigArray count_and_normalize_Wigarray(Mapfile &p, const int32_t id)
+{
+  std::cout << "chr" << p.genome.chr[id].getname() << ".." << std::flush;
+  WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0);
+
+  // Convert readarray to Wig
+  for (auto strand: {Strand::FWD, Strand::REV}) {
+    for (auto &x: p.genome.chr[id].getvReadref(strand)) {
+      if (x.duplicate) continue;
+      addReadToWigArray(p.wsGenome, wigarray, x, p.genome.chr[id].getlen());
+    }
+  }
+
+  // Mappability normalization
+  if (p.getMpblBinaryDir() != "") {
+    int32_t binsize(p.wsGenome.getbinsize());
+    int32_t mpthre = p.getmpthre() * binsize;
+    auto mparray = readMpblWigArray(p.getMpblBinaryDir(),
+				    ("chr" + p.genome.chr[id].getname()),
+				    binsize,
+				    p.wsGenome.chr[id].getnbin());
+    for (int32_t i=0; i<p.wsGenome.chr[id].getnbin(); ++i) {
+//      std::cout << "mparray[i]: " << mparray[i] << std::endl;
+      if (mparray[i] > mpthre) wigarray.multipleval(i, getratio(binsize, mparray[i]));
+    }
+  }
+
+  /* Total read normalization */
+  if (p.rpm.getType() != "NONE") {
+    double w = getScaleWeight_for_totalreads(p, p.genome.chr[id]);
+    p.genome.setsizefactor(w, id);
+    if (p.rpm.getType() == "GR" || p.rpm.getType() == "GD") p.genome.setsizefactor(w);
+
+    for (int32_t i=0; i<p.wsGenome.chr[id].getnbin(); ++i) { wigarray.multipleval(i, w); }
+  }
+
+  p.wsGenome.setWigStats(id, wigarray);
+
+  // Peak calling
+  /*  t1 = clock();
+  clock_t t1,t2;
+  p.wsGenome.chr[id].peakcall(wigarray, p.genome.chr[id].getname());
+  t2 = clock();
+  PrintTime(t1, t2, "peakcall");*/
+
+  return wigarray;
 }
 
 void outputWig(Mapfile &p, const std::string &filename)
@@ -229,15 +228,3 @@ void outputBedGraph(Mapfile &p, const std::string &filename)
 
   return;
 }
-
-/*void outputBinary(Mapfile &p, const std::string &filename)
-{
-  std::ofstream out(filename, std::ios::binary);
-
-  for (size_t i=0; i<p.genome.chr.size(); ++i) {
-    WigArray array = count_and_normalize_Wigarray(p, i);
-    array.outputAsBinary(out);
-  }
-  return;
-}
-*/

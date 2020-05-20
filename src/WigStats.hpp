@@ -231,7 +231,7 @@ public:
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
     outputzero  = values.count("outputzero");
 
-    for (auto &x: _chr) chr.emplace_back(x.seqstatsssp.getlen()/binsize +1);
+    for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1);
     for (auto &x: chr) genome.nbin += x.getnbin();
   }
   void dump() const {

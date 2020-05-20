@@ -8,129 +8,74 @@
 #include "../submodules/SSP/src/MThread.hpp"
 #include "../submodules/SSP/src/Mapfile.hpp"
 
-class SeqStats {
- public:
-  SeqStatsSSP seqstatsssp;
+class bed;
 
- SeqStats(std::string &s, int32_t l):
-   seqstatsssp(s, l) {}
-
-  void setFRiP(const std::vector<bed> &vbed);
-
-  double getFRiP() const {
-    return getratio(seqstatsssp.getnread_inbed(),
-		    seqstatsssp.getnread_nonred(Strand::BOTH));
-  }
-};
-
-
-class SeqStatsGenome {
-  MyOpt::Opts opt;
-
-  std::string inputfilename;
-  std::string genometable;
-
-  int32_t pairedend;
-  int32_t maxins;
-  int32_t specifyFtype;
-  std::string ftype;
-
-  std::string name;
-  double depth;
+class AnnotationSeqStatsGenome {
+  uint64_t nread_inbed;
   double sizefactor;
 
-  void readGenomeTable(const std::string &gt);
+  public:
+  SeqStats &chr;
+
+  AnnotationSeqStatsGenome(SeqStats &_chr):
+    nread_inbed(0), sizefactor(0), chr(_chr)
+  {}
+
+  uint64_t getnread_inbed() const { return nread_inbed; }
+  double getsizefactor() const { return sizefactor; }
+
+  void setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq);
+
+  void setsizefactor(const double w) {
+    sizefactor = w;
+    for (auto strand: {Strand::FWD, Strand::REV})
+      chr.seq[strand].nread_rpm = chr.seq[strand].nread_nonred * sizefactor;
+  }
+
+};
+
+class SeqStatsGenome : public SeqStatsGenomeSSP {
+
+  std::vector<AnnotationSeqStatsGenome> annoChr;
+  double sizefactor;
 
  public:
-  std::vector<SeqStats> chr;
-  std::vector<MyMthread::chrrange> vsepchr;
-  FragmentLengthDist dflen;
 
- SeqStatsGenome():
-   opt("Genome",100),
-   pairedend(0), maxins(0), specifyFtype(0),
-   ftype(""),
-   name("Genome"), depth(0), sizefactor(0) {
-   using namespace boost::program_options;
-   opt.add_options()
-     ("gt", value<std::string>(),
-      "Genome table (tab-delimited file describing the name and length of each chromosome)")
-     ("mptable", value<std::string>(),
-      "Genome table of mappable regions")
-      ;
- }
+  SeqStatsGenome():
+    SeqStatsGenomeSSP(),
+    sizefactor(0)
+  {
+    for(size_t i=0; i<chr.size(); ++i) annoChr.emplace_back(chr[i]);
+  }
 
-  const std::string & getInputfile() const { return inputfilename; }
-  const std::string & getGenomeTable() const { return genometable; }
-  int32_t isPaired()    const { return pairedend; }
-  int32_t getmaxins()   const { return maxins; }
-  int32_t onFtype()     const { return specifyFtype; }
-  const std::string & getftype() const { return ftype; }
+  void setsizefactor(const double w, const int32_t i) { annoChr[i].setsizefactor(w); }
+  void setsizefactor(const double w) { sizefactor = w; }
 
-  void setOpts(MyOpt::Opts &allopts) {
-    allopts.add(opt);
-    dflen.setOpts(allopts);
+  void setFRiP(const std::vector<bed> &vbed) {
+    for(size_t i=0; i<annoChr.size(); ++i) annoChr[i].setFRiP(vbed, getlen(), getname(), chr[i].seq);
   }
-  void setValues(const MyOpt::Variables &values);
 
-  std::string getname() const { return name; }
-  uint64_t getlen() const {
-    uint64_t len(0);
-    for (auto &x: chr) len += x.seqstatsssp.getlen();
-    return len;
-  }
-  uint64_t getlenmpbl() const {
-    uint64_t len_mpbl(0);
-    for (auto &x:chr) len_mpbl += x.seqstatsssp.getlenmpbl();
-    return len_mpbl;
-  }
-  double getpmpbl() const {
-    return getratio(getlenmpbl(), getlen());
-  }
-  uint64_t getnread (const Strand::Strand strand) const {
-    uint64_t nread(0);
-    for (auto &x:chr) nread += x.seqstatsssp.getnread(strand);
-    return nread;
-  }
-  uint64_t getnread_nonred (const Strand::Strand strand) const {
-    uint64_t nread(0);
-    for (auto &x:chr) nread += x.seqstatsssp.getnread_nonred(strand);
-    return nread;
-  }
-  uint64_t getnread_red (const Strand::Strand strand) const {
-    uint64_t nread(0);
-    for (auto &x:chr) nread += x.seqstatsssp.getnread_red(strand);
-    return nread;
-  }
-  uint64_t getnread_rpm (const Strand::Strand strand) const {
-    uint64_t nread(0);
-    for (auto &x:chr) nread += x.seqstatsssp.getnread_rpm(strand);
-    return nread;
-  }
-  uint64_t getnread_afterGC (const Strand::Strand strand) const {
-    uint64_t nread(0);
-    for (auto &x:chr) nread += x.seqstatsssp.getnread_afterGC(strand);
-    return nread;
-  }
   uint64_t getnread_inbed() const {
     uint64_t nread(0);
-    for (auto &x:chr) nread += x.seqstatsssp.getnread_inbed();
+    for(auto &x: annoChr) nread += x.getnread_inbed();
     return nread;
   }
+  uint64_t getnread_inbed(const int32_t i) const {
+    return annoChr[i].getnread_inbed();
+  }
+
+
   double getFRiP() const {
     return getratio(getnread_inbed(), getnread_nonred(Strand::BOTH));
   }
-  void setdepth(const double d) { depth = d; }
-  double getdepth() const { return depth; }
-  double getsizefactor()const { return sizefactor; }
-
-  void setsizefactor(const double w) { sizefactor = w; }
-
-  void printReadstats() const {
-    std::cout << "name\tlength\tlen_mpbl\tread num\tnonred num\tred num\tnormed\tafterGC\tdepth" << std::endl;
-    printSeqStats(*this);
-    for (auto &x: chr) printSeqStats(x);
+  double getFRiP(const int32_t i) const {
+    return getratio(annoChr[i].getnread_inbed(), chr[i].getnread_nonred(Strand::BOTH));
   }
+
+  double getsizefactor() const { return sizefactor; }
+  double getsizefactor(const int32_t i) const { return annoChr[i].getsizefactor(); }
+
+
 };
 
 

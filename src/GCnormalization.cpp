@@ -3,7 +3,7 @@
  */
 #include "GCnormalization.hpp"
 #include "ReadMpbldata.hpp"
-#include "../submodules/SSP/src/Mapfile.hpp"
+#include "SeqStatsDROMPA.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
 namespace {

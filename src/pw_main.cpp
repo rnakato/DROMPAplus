@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include "../submodules/SSP/src/ParseMapfile.hpp"
-#include "../submodules/SSP/src/ShiftProfile.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
 #include "pw_makefile.hpp"
+#include "pw_strShiftProfile.hpp"
 #include "version.hpp"
 #include "pw_gv.hpp"
 
@@ -46,70 +46,15 @@ void CalcDepth(T &obj, const int32_t flen)
   obj.setdepth(d);
 }
 
-int32_t setIdLongestChr(SeqStatsGenome &genome)
-{
-  int32_t id(0);
-  uint64_t lenmax(0);
-  for(size_t i=0; i<genome.chr.size(); ++i) {
-    if(lenmax < genome.chr[i].seqstatsssp.getlenmpbl()) {
-      lenmax = genome.chr[i].seqstatsssp.getlenmpbl();
-      id = i;
-    }
-  }
-  return id;
-}
-
-template <class T>
-void makeProfile_forDROMPA(SSPstats &sspst, SeqStatsGenome &genome, const std::string &head, const std::string &typestr)
-{
-  DEBUGprint("makeProfile: " + typestr);
-  T dist(sspst, genome);
-  dist.printStartMessage();
-
-  int32_t id_longestChr = setIdLongestChr(genome);
-
-  std::string prefix(head + "." + typestr);
-  genThread(dist, genome, id_longestChr, id_longestChr, prefix, sspst.isEachchr(), sspst.getNgTo());
-
-  for (size_t i=0; i<genome.chr.size(); ++i) {
-    if (genome.chr[i].seqstatsssp.isautosome()) dist.addmp2genome(i);
-  }
-
-  dist.setflen(dist.name);
-  genome.dflen.setflen_ssp(dist.getnsci());
-
-  if(sspst.getNgTo() < 0) return;
-
-  std::string prefix2 = head + "." + typestr;
-  dist.outputmpGenome(prefix2);
-
-  if (typestr == "jaccard") setSSPstats(sspst, dist.getbackgroundUniformity(), dist.getnsc(), dist.getrlsc(), dist.getrsc());
-
-  DEBUGprint("makeProfile: " + typestr + " done.");
-  return;
-}
-
-class shiftJacBit;
-void strShiftProfile(SSPstats &sspst, SeqStatsGenome &genome,
-		     const std::string &head, const std::string &typestr)
-{
-  DEBUGprint("strShiftProfile...");
-  if (genome.dflen.isallchr()) makeProfile<shiftJacBit>(sspst, genome, head, "jaccard");
-  else makeProfile_forDROMPA<shiftJacBit>(sspst, genome, head, "jaccard");
-
-  DEBUGprint("strShiftProfile done.");
-  return;
-}
-
 void DefineFragmentLength(Mapfile &p)
 {
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
-    strShiftProfile(p.sspst, p.genome, p.getprefix(), "drompa");
+    strShiftProfile(p.sspst, p.genome, p.getprefix());
   }
   for (auto &x: p.genome.chr) {
-    std::cout << x.seqstatsssp.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
-    x.seqstatsssp.setF5ToRead(p.genome.dflen.getflen());
-    x.seqstatsssp.printvRead();
+    std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
+    x.setF5ToRead(p.genome.dflen.getflen());
+    x.printvRead();
   }
 }
 
@@ -120,7 +65,7 @@ int main(int32_t argc, char* argv[])
 
   clock_t t1,t2;
   t1 = clock();
-  read_mapfile(p.genome);
+  p.genome.read_mapfile();
   t2 = clock();
   PrintTime(t1, t2, "read_mapfile");
 
@@ -158,7 +103,7 @@ int main(int32_t argc, char* argv[])
 
   // p.wsGenome.printPeak(p.getbinprefix());
 
-  if(p.isverbose()) {
+  if (p.isverbose()) {
     output_wigstats(p);
     p.genome.dflen.outputDistFile(p.getprefix(), p.genome.getnread(Strand::BOTH));
   }
@@ -245,8 +190,7 @@ void init_dump(const Mapfile &p, const MyOpt::Variables &values)
   return;
 }
 
-template <class T, class S>
-void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile &mapfile)
+void print_SeqStats(std::ofstream &out, const SeqStatsGenome &p, const GenomeCov::Genome &gcov, const Mapfile &mapfile)
 {
   /* genome data */
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
@@ -260,18 +204,51 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
   for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
 
   /* reads after GCnorm */
-  if(mapfile.gc.isGcNormOn()) {
+  if (mapfile.gc.isGcNormOn()) {
     for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
   }
   out << boost::format("%1$.3f\t") % p.getdepth();
-  if(p.getsizefactor()) out << boost::format("%1$.3f\t") % p.getsizefactor();
+  if (p.getsizefactor()) out << boost::format("%1$.3f\t") % p.getsizefactor();
   else                  out << " - \t";
-  if(mapfile.rpm.getType() == "NONE") out << p.getnread_nonred(Strand::BOTH) << "\t";
+  if (mapfile.rpm.getType() == "NONE") out << p.getnread_nonred(Strand::BOTH) << "\t";
   else out << p.getnread_rpm(Strand::BOTH) << "\t";
 
   gcov.printstats(out);
 
-  if(mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % p.getnread_inbed() % p.getFRiP();
+  if (mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % p.getnread_inbed() % p.getFRiP();
+
+  return;
+}
+
+void print_SeqStats(std::ofstream &out, const int32_t i,
+		    const SeqStatsGenome &genome, const SeqStats &p,
+		    const GenomeCov::Chr &gcov, const Mapfile &mapfile)
+{
+  /* genome data */
+  out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
+  /* total reads*/
+  out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
+    % p.getnread(Strand::BOTH) % p.getnread(Strand::FWD) % p.getnread(Strand::REV)
+    % getpercent(p.getnread(Strand::BOTH), genome.getnread(Strand::BOTH));
+
+  std::vector<Strand::Strand> vstr = {Strand::BOTH, Strand::FWD, Strand::REV};
+  for (auto strand: vstr) printNumandPer(out, p.getnread_nonred(strand), p.getnread(strand));
+  for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
+
+  /* reads after GCnorm */
+  if (mapfile.gc.isGcNormOn()) {
+    for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
+  }
+  out << boost::format("%1$.3f\t") % p.getdepth();
+  double w_chr(genome.getsizefactor(i));
+  if (w_chr) out << boost::format("%1$.3f\t") % w_chr;
+  else       out << " - \t";
+  if (mapfile.rpm.getType() == "NONE") out << p.getnread_nonred(Strand::BOTH) << "\t";
+  else out << p.getnread_rpm(Strand::BOTH) << "\t";
+
+  gcov.printstats(out);
+
+  if (mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % genome.getnread_inbed(i) % genome.getFRiP(i);
 
   return;
 }
@@ -287,39 +264,33 @@ void output_stats(const Mapfile &p)
 
   p.complexity.print(out);
   p.genome.dflen.printFlen(out);
-  if(p.gc.isGcNormOn()) out << "GC summit: " << p.getmaxGC() << std::endl;
+  if (p.gc.isGcNormOn()) out << "GC summit: " << p.getmaxGC() << std::endl;
 
   // Global stats
   out << "\n\tlength\tmappable base\tmappability\t";
   out << "total reads\t\t\t\t";
   out << "nonredundant reads\t\t\t";
   out << "redundant reads\t\t\t";
-  if(p.gc.isGcNormOn()) out << "reads (GCnormed)\t\t\t";
+  if (p.gc.isGcNormOn()) out << "reads (GCnormed)\t\t\t";
   out << "read depth\t";
   out << "scaling weight\t";
   out << "normalized read number\t";
   p.gcov.printhead(out);
-  if(p.isBedOn()) out << "reads in peaks\tFRiP";
-  //  out << "\tbin mean\tbin variance";
-  // out << "\tnb_p\tnb_n\tnb_p0";
+  if (p.isBedOn()) out << "reads in peaks\tFRiP";
   out << std::endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
   out << "both\tforward\treverse\t";
   out << "both\tforward\treverse\t";
-  if(p.gc.isGcNormOn()) out << "both\tforward\treverse\t";
+  if (p.gc.isGcNormOn()) out << "both\tforward\treverse\t";
   out << std::endl;
 
   // SeqStats
   print_SeqStats(out, p.genome, p.gcov, p);
-  //  p.wsGenome.genome.printPoispar(out);
-  // p.wsGenome.genome.printZINBpar(out);
   out << std::endl;
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
-    print_SeqStats(out, p.genome.chr[i], p.gcov.chr[i], p);
-    //   p.wsGenome.chr[i].printPoispar(out);
-    // p.wsGenome.chr[i].printZINBpar(out);
+    print_SeqStats(out, i, p.genome, p.genome.chr[i], p.gcov.chr[i], p);
     out << std::endl;
   }
 
@@ -364,7 +335,7 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   DEBUGprint_FUNCStart();
 
   on_bed = values.count("bed");
-  if(on_bed) {
+  if (on_bed) {
     bedfilename = MyOpt::getVal<std::string>(values, "bed");
     isFile(bedfilename);
     vbed = parseBed<bed>(bedfilename);
@@ -391,4 +362,24 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   obinprefix = oprefix + "." + std::to_string(MyOpt::getVal<int32_t>(values, "binsize"));
 
   DEBUGprint_FUNCend();
+}
+
+void AnnotationSeqStatsGenome::setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq) {
+  std::vector<BpStatus> array(len, BpStatus::MAPPABLE);
+  setPeak_to_MpblBpArray(array, name, vbed);
+
+  for (auto strand: {Strand::FWD, Strand::REV}) {
+    for (auto &x: seq[strand].vRead) {
+      if(x.duplicate) continue;
+      int32_t s(std::min(x.F3, x.F5));
+      int32_t e(std::max(x.F3, x.F5));
+      for(int32_t i=s; i<=e; ++i) {
+	if(array[i] == BpStatus::INBED) {
+	  x.inpeak = 1;
+	  ++nread_inbed;
+	  break;
+	}
+      }
+    }
+  }
 }
