@@ -4,11 +4,11 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <ext/stdio_filebuf.h>
 #include <boost/filesystem.hpp>
 #include "ReadMpbldata.hpp"
 #include "../submodules/SSP/common/seq.hpp"
 #include "../submodules/SSP/src/SeqStats.hpp"
+#include "../submodules/SSP/common/gzstream.h"
 
 std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
 				      const std::string &chrname,
@@ -21,10 +21,12 @@ std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
 
   DEBUGprint("mpfile: " << filename);
 
-  std::string command = "zcat " + filename;
+/*  std::string command = "zcat " + filename;
   FILE *fp = popen(command.c_str(), "r");
   __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
   std::istream in(static_cast<std::streambuf *>(p_fb));
+*/
+  igzstream in(filename.c_str());
 
   std::string lineStr;
   while (!in.eof()) {
@@ -87,10 +89,12 @@ std::vector<BpStatus> readMpblBpArray(const std::string &mpfile,
   std::string filename = mpfile + "/map_" + chrname + "_binary.txt.gz";
   isFile(filename);
 
-  std::string command = "zcat " + filename;
+/*  std::string command = "zcat " + filename;
   FILE *fp = popen(command.c_str(), "r");
   __gnu_cxx::stdio_filebuf<char> *p_fb = new __gnu_cxx::stdio_filebuf<char>(fp, std::ios_base::in);
-  std::istream in(static_cast<std::streambuf *>(p_fb));
+  std::istream in(static_cast<std::streambuf *>(p_fb));*/
+
+  igzstream in(filename.c_str());
 
   int32_t n(0);
   int8_t c;
