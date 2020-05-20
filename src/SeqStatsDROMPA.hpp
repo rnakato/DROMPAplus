@@ -32,6 +32,20 @@ class AnnotationSeqStatsGenome {
       chr.seq[strand].nread_rpm = chr.seq[strand].nread_nonred * sizefactor;
   }
 
+  double getFRiP() const {
+    return getratio(getnread_inbed(), getnread_nonred(Strand::BOTH));
+  }
+
+  uint64_t getlen()       const { return chr.getlen(); }
+  uint64_t getlenmpbl()   const { return chr.getlenmpbl(); }
+  double   getpmpbl()     const { return chr.getpmpbl(); }
+  double   getdepth()     const { return chr.getdepth(); }
+  uint64_t getnread (const Strand::Strand strand) const { return chr.getnread(strand);}
+  uint64_t getnread_nonred (const Strand::Strand strand) const { return chr.getnread_nonred(strand); }
+  uint64_t getnread_red (const Strand::Strand strand) const { return chr.getnread_red(strand); }
+  uint64_t getnread_rpm (const Strand::Strand strand) const { return chr.getnread_rpm(strand); }
+  uint64_t getnread_afterGC (const Strand::Strand strand) const { return chr.getnread_afterGC(strand); }
+  const std::string & getname() const { return chr.getname(); }
 };
 
 class SeqStatsGenome : public SeqStatsGenomeSSP {
@@ -64,12 +78,11 @@ class SeqStatsGenome : public SeqStatsGenomeSSP {
     return annoChr[i].getnread_inbed();
   }
 
+  const AnnotationSeqStatsGenome &getannochr(const int32_t i) const { return annoChr[i];}
+
 
   double getFRiP() const {
     return getratio(getnread_inbed(), getnread_nonred(Strand::BOTH));
-  }
-  double getFRiP(const int32_t i) const {
-    return getratio(annoChr[i].getnread_inbed(), chr[i].getnread_nonred(Strand::BOTH));
   }
 
   double getsizefactor() const { return sizefactor; }

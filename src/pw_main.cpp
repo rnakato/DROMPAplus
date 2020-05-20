@@ -8,7 +8,6 @@
 #include <fstream>
 #include <algorithm>
 #include <boost/filesystem.hpp>
-#include "../submodules/SSP/src/ParseMapfile.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
 #include "pw_makefile.hpp"
 #include "pw_strShiftProfile.hpp"
@@ -190,7 +189,9 @@ void init_dump(const Mapfile &p, const MyOpt::Variables &values)
   return;
 }
 
-void print_SeqStats(std::ofstream &out, const SeqStatsGenome &p, const GenomeCov::Genome &gcov, const Mapfile &mapfile)
+template <class T, class S>
+//void print_SeqStats(std::ofstream &out, const SeqStatsGenome &p, const GenomeCov::Genome &gcov, const Mapfile &mapfile)
+void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile &mapfile)
 {
   /* genome data */
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
@@ -220,13 +221,12 @@ void print_SeqStats(std::ofstream &out, const SeqStatsGenome &p, const GenomeCov
   return;
 }
 
-void print_SeqStats(std::ofstream &out, const int32_t i,
+/*void print_SeqStats(std::ofstream &out, const int32_t i,
 		    const SeqStatsGenome &genome, const SeqStats &p,
 		    const GenomeCov::Chr &gcov, const Mapfile &mapfile)
 {
-  /* genome data */
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
-  /* total reads*/
+
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.getnread(Strand::BOTH) % p.getnread(Strand::FWD) % p.getnread(Strand::REV)
     % getpercent(p.getnread(Strand::BOTH), genome.getnread(Strand::BOTH));
@@ -235,7 +235,6 @@ void print_SeqStats(std::ofstream &out, const int32_t i,
   for (auto strand: vstr) printNumandPer(out, p.getnread_nonred(strand), p.getnread(strand));
   for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
 
-  /* reads after GCnorm */
   if (mapfile.gc.isGcNormOn()) {
     for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
   }
@@ -251,7 +250,7 @@ void print_SeqStats(std::ofstream &out, const int32_t i,
   if (mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % genome.getnread_inbed(i) % genome.getFRiP(i);
 
   return;
-}
+}*/
 
 void output_stats(const Mapfile &p)
 {
@@ -290,7 +289,7 @@ void output_stats(const Mapfile &p)
   out << std::endl;
 
   for(size_t i=0; i<p.genome.chr.size(); ++i) {
-    print_SeqStats(out, i, p.genome, p.genome.chr[i], p.gcov.chr[i], p);
+    print_SeqStats(out, p.genome.getannochr(i), p.gcov.chr[i], p);
     out << std::endl;
   }
 
