@@ -10,7 +10,7 @@ int32_t setIdLongestChr(const SeqStatsGenome &genome)
 {
   int32_t id(0);
   uint64_t lenmax(0);
-  for(size_t i=0; i<genome.chr.size(); ++i) {
+  for(size_t i=0; i<genome.getnchr(); ++i) {
     if (lenmax < genome.chr[i].getlenmpbl()) {
       lenmax = genome.chr[i].getlenmpbl();
       id = i;
@@ -19,42 +19,48 @@ int32_t setIdLongestChr(const SeqStatsGenome &genome)
   return id;
 }
 
-void makeProfile_forDROMPA(SSPstats &sspst, SeqStatsGenome &genome, const std::string &head, const std::string &typestr)
+void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, const bool isallchr)
 {
+  DEBUGprint("strShiftProfileDROMPA...");
+
+  std::string typestr("jaccard");
+
   DEBUGprint("makeProfile: " + typestr);
-  shiftJacBit dist(sspst, genome);
+  shiftJacBit dist(sspst, *this);
   dist.printStartMessage();
 
-  int32_t id_longestChr = setIdLongestChr(genome);
-
   std::string prefix(head + "." + typestr);
-  genThread(dist, genome, id_longestChr, id_longestChr, prefix, sspst.isEachchr(), sspst.getNgTo());
 
-  for (size_t i=0; i<genome.chr.size(); ++i) {
-    if (genome.chr[i].isautosome()) dist.addmp2genome(i);
+  if (isallchr) {
+    boost::thread_group agroup;
+    for (size_t i=0; i<vsepchr.size(); ++i) {
+      agroup.create_thread(bind(genThread<shiftJacBit>, boost::ref(dist), boost::cref(*this), vsepchr[i].s, vsepchr[i].e, boost::cref(prefix), sspst.isEachchr(), sspst.getNgTo()));
+    }
+    agroup.join_all();
+
+    for (size_t i=0; i<getnchr(); ++i) {
+      if (chr[i].isautosome()) dist.addmp2genome(i);
+    }
+  } else {
+    int32_t id_longestChr = setIdLongestChr(*this);
+    genThread(dist, *this, id_longestChr, id_longestChr, prefix, sspst.isEachchr(), sspst.getNgTo());
+    for (size_t i=0; i<getnchr(); ++i) {
+      if (chr[i].isautosome()) dist.addmp2genome(i);
+    }
   }
 
   dist.setflen(dist.name);
-  genome.dflen.setflen_ssp(dist.getnsci());
+  dflen.setflen_ssp(dist.getnsci());
 
   if(sspst.getNgTo() < 0) return;
 
   std::string prefix2 = head + "." + typestr;
   dist.outputmpGenome(prefix2);
 
-  if (typestr == "jaccard") setSSPstats(sspst, dist.getbackgroundUniformity(), dist.getnsc(), dist.getrlsc(), dist.getrsc());
+  setSSPstats(sspst, dist.getbackgroundUniformity(), dist.getnsc(), dist.getrlsc(), dist.getrsc());
 
   DEBUGprint("makeProfile: " + typestr + " done.");
-  return;
-}
-void strShiftProfile(SSPstats &sspst, SeqStatsGenome &genome, const std::string &head)
-{
-  DEBUGprint("strShiftProfileDROMPA...");
-//  if (genome.dflen.isallchr()) makeProfile<shiftJacBit>(sspst, genome, head, "jaccard");
-//  else makeProfile_forDROMPA(sspst, genome, head, "jaccard");
 
- // use the longest chromosome only
-  makeProfile_forDROMPA(sspst, genome, head, "jaccard");
 
   DEBUGprint("strShiftProfileDROMPA done.");
   return;

@@ -82,8 +82,8 @@ class Mapfile: private Uncopyable {
   std::string obinprefix;
   std::string mpdir;
   double mpthre;
+  bool allchr;
 
-//  bool Greekchr;
   bool verbose;
 
   //  std::vector<Peak> vPeak;
@@ -104,10 +104,10 @@ class Mapfile: private Uncopyable {
   LibComp complexity;
 
   Mapfile():
-    opt("Fragment",100),
+    opt("Input annotations",100),
     on_bed(0),
     mpdir(""), mpthre(0),
-//    Greekchr(false),
+    allchr(false),
     verbose(false),
     id_longestChr(0),
     maxGC(0), genome(),
@@ -121,6 +121,8 @@ class Mapfile: private Uncopyable {
       ("mpthre",
        boost::program_options::value<double>()->default_value(0.3)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--mpthre")),
        "Threshold of low mappability regions")
+      ("allchr", "Use all chromosomes to estimate fragment length")
+      ("verbose", "verbose output stats")
       ;
   }
 
@@ -150,10 +152,12 @@ class Mapfile: private Uncopyable {
 
   int32_t getIdLongestChr () const { return id_longestChr; }
   int32_t isBedOn () const { return on_bed; }
+  bool isallchr () const { return allchr; }
   bool isverbose () const { return verbose; }
   const std::string & getbedfilename() const { return bedfilename; }
   const std::string & getSampleName() const { return samplename; }
   const std::string & getMpblBinaryDir()      const { return mpdir; }
+  size_t getnchr() const { return genome.chr.size(); }
 
   int32_t getmaxGC() const {return maxGC; }
 
@@ -162,7 +166,7 @@ class Mapfile: private Uncopyable {
 
     gcov.setr4cmp(genome.getnread_nonred(Strand::BOTH), genome.getnread_inbed());
 
-    for(size_t i=0; i<genome.chr.size(); i++) {
+    for(size_t i=0; i<genome.getnchr(); i++) {
       auto array = GenomeCov::makeGcovArray(*this, genome.chr[i], gcov.getr4cmp());
       gcov.chr.emplace_back(array, gcov.getlackOfRead());
     }

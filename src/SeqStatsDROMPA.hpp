@@ -13,10 +13,9 @@ class bed;
 class AnnotationSeqStatsGenome {
   uint64_t nread_inbed;
   double sizefactor;
-
-  public:
   SeqStats &chr;
 
+  public:
   AnnotationSeqStatsGenome(SeqStats &_chr):
     nread_inbed(0), sizefactor(0), chr(_chr)
   {}
@@ -49,16 +48,17 @@ class AnnotationSeqStatsGenome {
 };
 
 class SeqStatsGenome : public SeqStatsGenomeSSP {
-
-  std::vector<AnnotationSeqStatsGenome> annoChr;
   double sizefactor;
+  std::vector<AnnotationSeqStatsGenome> annoChr;
 
  public:
 
   SeqStatsGenome():
     SeqStatsGenomeSSP(),
     sizefactor(0)
-  {
+  {}
+
+  void initannoChr() {
     for(size_t i=0; i<chr.size(); ++i) annoChr.emplace_back(chr[i]);
   }
 
@@ -88,6 +88,7 @@ class SeqStatsGenome : public SeqStatsGenomeSSP {
   double getsizefactor() const { return sizefactor; }
   double getsizefactor(const int32_t i) const { return annoChr[i].getsizefactor(); }
 
+  void strShiftProfile(SSPstats &sspst, const std::string &head, const bool isallchr);
 
 };
 

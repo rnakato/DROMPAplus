@@ -48,7 +48,7 @@ void CalcDepth(T &obj, const int32_t flen)
 void DefineFragmentLength(Mapfile &p)
 {
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
-    strShiftProfile(p.sspst, p.genome, p.getprefix());
+    p.genome.strShiftProfile(p.sspst, p.getprefix(), p.isallchr());
   }
   for (auto &x: p.genome.chr) {
     std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
@@ -61,6 +61,8 @@ int main(int32_t argc, char* argv[])
 {
   Mapfile p;
   getOpts(p, argc, argv);
+
+  p.genome.initannoChr();
 
   clock_t t1,t2;
   t1 = clock();
@@ -190,12 +192,18 @@ void init_dump(const Mapfile &p, const MyOpt::Variables &values)
 }
 
 template <class T, class S>
-//void print_SeqStats(std::ofstream &out, const SeqStatsGenome &p, const GenomeCov::Genome &gcov, const Mapfile &mapfile)
 void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile &mapfile)
 {
+  printf("test6sss\n");
+
+  std::cout << p.getname() << "\n";
+  std::cout << p.getlen()  << "\n";
+  std::cout<< p.getlenmpbl() << "\n";
+  std::cout << p.getpmpbl() << "\n";
   /* genome data */
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
   /* total reads*/
+
   out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
     % p.getnread(Strand::BOTH) % p.getnread(Strand::FWD) % p.getnread(Strand::REV)
     % getpercent(p.getnread(Strand::BOTH), mapfile.genome.getnread(Strand::BOTH));
@@ -208,6 +216,7 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
   if (mapfile.gc.isGcNormOn()) {
     for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
   }
+
   out << boost::format("%1$.3f\t") % p.getdepth();
   if (p.getsizefactor()) out << boost::format("%1$.3f\t") % p.getsizefactor();
   else                  out << " - \t";
@@ -220,37 +229,6 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
 
   return;
 }
-
-/*void print_SeqStats(std::ofstream &out, const int32_t i,
-		    const SeqStatsGenome &genome, const SeqStats &p,
-		    const GenomeCov::Chr &gcov, const Mapfile &mapfile)
-{
-  out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
-
-  out << boost::format("%1%\t%2%\t%3%\t%4$.1f%%\t")
-    % p.getnread(Strand::BOTH) % p.getnread(Strand::FWD) % p.getnread(Strand::REV)
-    % getpercent(p.getnread(Strand::BOTH), genome.getnread(Strand::BOTH));
-
-  std::vector<Strand::Strand> vstr = {Strand::BOTH, Strand::FWD, Strand::REV};
-  for (auto strand: vstr) printNumandPer(out, p.getnread_nonred(strand), p.getnread(strand));
-  for (auto strand: vstr) printNumandPer(out, p.getnread_red(strand),    p.getnread(strand));
-
-  if (mapfile.gc.isGcNormOn()) {
-    for (auto strand: vstr) printNumandPer(out, p.getnread_afterGC(strand), p.getnread(strand));
-  }
-  out << boost::format("%1$.3f\t") % p.getdepth();
-  double w_chr(genome.getsizefactor(i));
-  if (w_chr) out << boost::format("%1$.3f\t") % w_chr;
-  else       out << " - \t";
-  if (mapfile.rpm.getType() == "NONE") out << p.getnread_nonred(Strand::BOTH) << "\t";
-  else out << p.getnread_rpm(Strand::BOTH) << "\t";
-
-  gcov.printstats(out);
-
-  if (mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % genome.getnread_inbed(i) % genome.getFRiP(i);
-
-  return;
-}*/
 
 void output_stats(const Mapfile &p)
 {
@@ -288,7 +266,8 @@ void output_stats(const Mapfile &p)
   print_SeqStats(out, p.genome, p.gcov, p);
   out << std::endl;
 
-  for(size_t i=0; i<p.genome.chr.size(); ++i) {
+  std::cout << p.getnchr() << std::endl;
+  for(size_t i=0; i<p.getnchr(); ++i) {
     print_SeqStats(out, p.genome.getannochr(i), p.gcov.chr[i], p);
     out << std::endl;
   }
@@ -308,20 +287,13 @@ void output_wigstats(const Mapfile &p)
   out << "\tGenome\t\t";
   for (auto &x: p.genome.chr) out << x.getname() << "\t\t";
   out << std::endl;
-  out << "read number\tnum of bins genome\tprop\t";  // ZINB estimated\t
-  for (size_t i=0; i<p.genome.chr.size(); ++i) out << "num of bins\tprop\t"; // \tPoisson estimated\tZINB estimated
+  out << "read number\tnum of bins genome\tprop\t";
+  for (size_t i=0; i<p.getnchr(); ++i) out << "num of bins\tprop\t";
   out << std::endl;
 
   for(int32_t i=0; i<p.wsGenome.getWigDistsize(); ++i) {
     out << i << "\t";
-    //    p.wsGenome.genome.printWigDist(out, i);
-    //  out << p.wsGenome.genome.getZINB(i) << "\t";
-    //    out << p.genome.getZIP(i) << "\t";
-    for (auto &x: p.wsGenome.chr) {
-      x.printWigDist(out, i);
-      //  out << x.getPoisson(i) << "\t";
-      // out << x.getZINB(i) << "\t";
-    }
+    for (auto &x: p.wsGenome.chr) x.printWigDist(out, i);
     out << std::endl;
   }
 
@@ -342,6 +314,9 @@ void Mapfile::setValues(const MyOpt::Variables &values)
 
   if (values.count("mpdir")) mpdir = MyOpt::getVal<std::string>(values, "mpdir");
   mpthre = MyOpt::getVal<double>(values, "mpthre");
+
+  verbose = values.count("verbose");
+  allchr = values.count("allchr");
 
   genome.setValues(values);
   wsGenome.setValues(values, genome.chr);
