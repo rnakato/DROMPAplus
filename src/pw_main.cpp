@@ -194,12 +194,6 @@ void init_dump(const Mapfile &p, const MyOpt::Variables &values)
 template <class T, class S>
 void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile &mapfile)
 {
-  printf("test6sss\n");
-
-  std::cout << p.getname() << "\n";
-  std::cout << p.getlen()  << "\n";
-  std::cout<< p.getlenmpbl() << "\n";
-  std::cout << p.getpmpbl() << "\n";
   /* genome data */
   out << p.getname() << "\t" << p.getlen()  << "\t" << p.getlenmpbl() << "\t" << p.getpmpbl() << "\t";
   /* total reads*/
