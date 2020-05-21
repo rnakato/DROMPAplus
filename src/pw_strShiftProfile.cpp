@@ -38,6 +38,8 @@ void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, c
   dist.setflen(dist.name);
   dflen.setflen_ssp(dist.getnsci());
 
+  std::cout << "\nEstimated fragment length: " << dist.getnsci() << std::endl;
+
   if(verbose) {
     std::string prefix2 = head + "." + typestr;
     dist.outputmpGenome(prefix2);

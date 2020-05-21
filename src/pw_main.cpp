@@ -50,7 +50,7 @@ void DefineFragmentLength(Mapfile &p)
     p.genome.strShiftProfile(p.sspst, p.getprefix(), p.isallchr(), p.isverbose());
   }
   for (auto &x: p.genome.chr) {
-    std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
+//    std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
     x.setF5ToRead(p.genome.dflen.getflen());
     x.printvRead();
   }
@@ -259,7 +259,6 @@ void output_stats(const Mapfile &p)
   print_SeqStats(out, p.genome, p.gcov, p);
   out << std::endl;
 
-  std::cout << p.getnchr() << std::endl;
   for(size_t i=0; i<p.getnchr(); ++i) {
     print_SeqStats(out, p.genome.getannochr(i), p.gcov.chr[i], p);
     out << std::endl;

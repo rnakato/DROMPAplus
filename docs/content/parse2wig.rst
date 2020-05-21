@@ -86,7 +86,8 @@ Fragment length estimation
 
 - For single-end data, **parse2wig+** internally uses `SSP <https://github.com/rnakato/SSP>`_ to estimate the averaged fragment length and extends to it.
 - In default, **parse2wig+** uses the longest chromosme that contains the most mappable bases to estimate fragment length. To estimate it more precisely, supply ``--allchr`` option to use all chromosomes (recommend: with multithreading option ``-p``).
-- When the ``--nomodel`` option is used, DROMPAplus omits the use of SSP and extends the read to a predetermined length (150 bp by default). Add the ``--flen`` option to change the default value.
+- When the ``--verbose`` option is used, **parse2wig+** generates .pdf and .tsv files of strand-shift profile as SSP does. They are usefule to check whether the estimated fragment length is reasonable.
+- When the ``--nomodel`` option is used, **parse2wig+** omits the use of SSP and extends the read to a predetermined length (150 bp by default). Add the ``--flen`` option to change the default value.
 
 Paired-end file
 +++++++++++++++++++++++++++++++++++
