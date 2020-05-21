@@ -3,6 +3,7 @@
 ## 1.6.0 (2020-05-XX)
 - Adopt htslib API for parsing SAM/BAM/CRAM format
 - Now available to use on Mac
+- Parse2wig+: Add --allchr option that uses all chromosomes to estimate fragment length
 
 ## 1.5.0 (2020-05-12)
 - Add GENWIG command to generate wig data of ChIP/Input enrichment and p-value distributions
