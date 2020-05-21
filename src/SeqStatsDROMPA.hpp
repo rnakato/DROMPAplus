@@ -88,7 +88,7 @@ class SeqStatsGenome : public SeqStatsGenomeSSP {
   double getsizefactor() const { return sizefactor; }
   double getsizefactor(const int32_t i) const { return annoChr[i].getsizefactor(); }
 
-  void strShiftProfile(SSPstats &sspst, const std::string &head, const bool isallchr);
+  void strShiftProfile(SSPstats &sspst, const std::string &head, const bool isallchr, const bool isverbose);
 
 };
 

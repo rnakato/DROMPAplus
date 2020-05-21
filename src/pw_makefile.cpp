@@ -6,7 +6,6 @@
 #include "WigStats.hpp"
 #include "ReadMpbldata.hpp"
 #include "../submodules/SSP/src/SeqStats.hpp"
-#include "../submodules/SSP/common/inline.hpp"
 
 namespace {
   void printwarning(double w)

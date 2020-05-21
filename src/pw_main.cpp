@@ -8,11 +8,10 @@
 #include <fstream>
 #include <algorithm>
 #include <boost/filesystem.hpp>
-#include "../submodules/SSP/common/BoostOptions.hpp"
 #include "pw_makefile.hpp"
-#include "pw_strShiftProfile.hpp"
 #include "version.hpp"
 #include "pw_gv.hpp"
+#include "../submodules/SSP/common/BoostOptions.hpp"
 
 void getOpts(Mapfile &p, int32_t argc, char* argv[]);
 void setOpts(MyOpt::Opts &);
@@ -48,7 +47,7 @@ void CalcDepth(T &obj, const int32_t flen)
 void DefineFragmentLength(Mapfile &p)
 {
   if (!p.genome.isPaired() && !p.genome.dflen.isnomodel()) {
-    p.genome.strShiftProfile(p.sspst, p.getprefix(), p.isallchr());
+    p.genome.strShiftProfile(p.sspst, p.getprefix(), p.isallchr(), p.isverbose());
   }
   for (auto &x: p.genome.chr) {
     std::cout << x.getname() << "\t" << p.genome.dflen.getflen() << std::endl;
@@ -323,7 +322,7 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   gc.setValues(values);
 
   samplename = MyOpt::getVal<std::string>(values, "output");
-  id_longestChr = setIdLongestChr(genome);
+  id_longestChr = genome.getIdLongestChr();
   oprefix = MyOpt::getVal<std::string>(values, "odir") + "/" + MyOpt::getVal<std::string>(values, "output");
   obinprefix = oprefix + "." + std::to_string(MyOpt::getVal<int32_t>(values, "binsize"));
 

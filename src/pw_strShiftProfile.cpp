@@ -1,25 +1,11 @@
 /* Copyright(c)  Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#include "pw_strShiftProfile.hpp"
 #include "SeqStatsDROMPA.hpp"
 #include "../submodules/SSP/src/ShiftProfile.hpp"
 #include "../submodules/SSP/src/ShiftProfile_p.hpp"
 
-int32_t setIdLongestChr(const SeqStatsGenome &genome)
-{
-  int32_t id(0);
-  uint64_t lenmax(0);
-  for(size_t i=0; i<genome.getnchr(); ++i) {
-    if (lenmax < genome.chr[i].getlenmpbl()) {
-      lenmax = genome.chr[i].getlenmpbl();
-      id = i;
-    }
-  }
-  return id;
-}
-
-void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, const bool isallchr)
+void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, const bool isallchr, const bool verbose)
 {
   DEBUGprint("strShiftProfileDROMPA...");
 
@@ -42,7 +28,7 @@ void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, c
       if (chr[i].isautosome()) dist.addmp2genome(i);
     }
   } else {
-    int32_t id_longestChr = setIdLongestChr(*this);
+    int32_t id_longestChr = getIdLongestChr();
     genThread(dist, *this, id_longestChr, id_longestChr, prefix, sspst.isEachchr(), sspst.getNgTo());
     for (size_t i=0; i<getnchr(); ++i) {
       if (chr[i].isautosome()) dist.addmp2genome(i);
@@ -52,16 +38,14 @@ void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, c
   dist.setflen(dist.name);
   dflen.setflen_ssp(dist.getnsci());
 
-  if(sspst.getNgTo() < 0) return;
+  if(verbose) {
+    std::string prefix2 = head + "." + typestr;
+    dist.outputmpGenome(prefix2);
 
-  std::string prefix2 = head + "." + typestr;
-  dist.outputmpGenome(prefix2);
-
-  setSSPstats(sspst, dist.getbackgroundUniformity(), dist.getnsc(), dist.getrlsc(), dist.getrsc());
+    setSSPstats(sspst, dist.getbackgroundUniformity(), dist.getnsc(), dist.getrlsc(), dist.getrsc());
+  }
 
   DEBUGprint("makeProfile: " + typestr + " done.");
-
-
   DEBUGprint("strShiftProfileDROMPA done.");
   return;
 }

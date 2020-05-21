@@ -14,6 +14,7 @@
 #include "../submodules/SSP/src/LibraryComplexity.hpp"
 #include "../submodules/SSP/src/Mapfile.hpp"
 #include "../submodules/SSP/src/ShiftProfile.hpp"
+#include "../submodules/SSP/common/inline.hpp"
 
 namespace RPM {
   class Pnorm {
