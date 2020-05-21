@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0 (2020-05-XX)
+## 1.6.0 (2020-05-21)
 - Adopt htslib API for parsing SAM/BAM/CRAM format
 - Now available to use on Mac
 - Parse2wig+: Add --allchr option that uses all chromosomes to estimate fragment length
