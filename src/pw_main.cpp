@@ -228,7 +228,7 @@ void output_stats(const Mapfile &p)
   std::string filename = p.getbinprefix() + ".tsv";
   std::ofstream out(filename);
 
-  out << "parse2wig version " << VERSION << std::endl;
+  out << "parse2wig+ version " << VERSION << std::endl;
   out << "Input file: \"" << p.genome.getInputfile() << "\"" << std::endl;
   out << "Redundancy threshold: >" << p.complexity.getThreshold() << std::endl;
 
