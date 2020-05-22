@@ -49,11 +49,11 @@ For Singularity:
 On Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
-    libgsl-dev libz-dev
+    libgsl-dev libz-dev libbz2-dev
 
 On CentOS:
 
-    sudo yum -y install git gcc-c++ clang boost-devel zlib-devel gsl-devel gtkmm30-devel
+    sudo yum -y install git gcc-c++ clang boost-devel zlib-devel gsl-devel gtkmm30-devel bzip2-devel
 
 On Mac:
 
