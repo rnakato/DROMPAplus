@@ -53,7 +53,7 @@ On Ubuntu:
 
 On CentOS:
 
-    sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
+    sudo yum -y install git gcc-c++ clang boost-devel zlib-devel gsl-devel gtkmm30-devel
 
 On Mac:
 
