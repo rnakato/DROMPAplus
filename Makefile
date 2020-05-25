@@ -12,7 +12,7 @@ bin/parse2wig+: $(HTSLIBDIR)/libhts.a
 bin/drompa+: $(HTSLIBDIR)/libhts.a
 	mkdir -p build && cd build && cmake .. && make
 	mkdir -p bin
-	cp build/test/parse2wig+ build/test/drompa+ bin
+	cp build/test/parse2wig/parse2wig+ build/test/drompa/drompa+ bin
 
 $(HTSLIBDIR)/libhts.a:
 	$(MAKE) -C $(HTSLIBDIR)

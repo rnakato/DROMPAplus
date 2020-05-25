@@ -1,5 +1,6 @@
 docs/_build/
 bin/
 obj/
+build
 *bam
 *cram

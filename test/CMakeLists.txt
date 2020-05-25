@@ -14,32 +14,5 @@ link_directories(drompa+ "/usr/local/lib")
 #find_package(Boost 1.53.0 REQUIRED thread program_options system filesystem)
 #include_directories(${Boost_INCLUDE_DIRS})
 
-add_executable(parse2wig+ pw_main.cpp)
-
-target_link_libraries(parse2wig+
-                      pw_func
-                      common
-                      ssp_func
-                      ssp_common
-                      ${PROJECT_SOURCE_DIR}/submodules/SSP/src/htslib-1.10.2/libhts.a
-                      ${BOOST_LIBS}
-#                      ${Boost_LIBRARIES}
-                      -lcurl -llzma -lbz2 -lz
-                      -lgsl -lgslcblas
-                      ${GTKMM_LIBRARIES}
-)
-
-add_executable(drompa+ dd_main.cpp)
-
-target_link_libraries(drompa+
-                      dd_func
-                      common
-                      ssp_func
-                      ssp_common
-                      ${PROJECT_SOURCE_DIR}/submodules/SSP/src/htslib-1.10.2/libhts.a
-                      ${BOOST_LIBS}
-#                      ${Boost_LIBRARIES}
-                      -lcurl -llzma -lbz2 -lz
-                      -lgsl -lgslcblas
-                      ${GTKMM_LIBRARIES}
-)
+add_subdirectory(parse2wig)
+add_subdirectory(drompa)

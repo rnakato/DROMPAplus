@@ -8,7 +8,6 @@ set( CMAKE_CXX_FLAGS "-std=c++11 -O2 -W -Wall")
 
 include_directories("/usr/local/include")
 
-# サブディレクトリを登録
 add_subdirectory(src)
 add_subdirectory(submodules/SSP/)
 add_subdirectory(test)
