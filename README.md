@@ -17,11 +17,12 @@ See http://drompaplus.readthedocs.io/ for the detailed Manual.
 
 # 2. Requirements
 DROMPAplus requires the following programs and libraries:
-* [Boost C++ library](http://www.boost.org/)
+* [Boost C++ library (>1.53.0)](http://www.boost.org/)
 * [Cairo libraries](http://www.cairographics.org/)
 * [GTK library](http://www.gtk.org/)
-* [GNU Scientific Library](http://www.gnu.org/software/gsl/)
-* [zlib](http://www.zlib.net/)
+* [GNU Scientific Library (>1.15)](http://www.gnu.org/software/gsl/)
+* [zlib (>1.2.7)](http://www.zlib.net/)
+* [CMake (>2.8)](https://cmake.org/)
 * [HTSlib (1.10.2)](https://github.com/samtools/htslib) (for SAM/BAM/CRAM formatted input)
 
 and also contains two submodules:
@@ -49,15 +50,15 @@ For Singularity:
 On Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
-    libgsl-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev
+    libgsl-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev cmake
 
 On CentOS:
 
-    sudo yum -y install git gcc-c++ clang boost-devel zlib-devel gsl-devel gtkmm30-devel bzip2-devel
+    sudo yum -y install git gcc-c++ clang boost-devel zlib-devel gsl-devel gtkmm30-devel bzip2-devel cmake
 
 On Mac:
 
-     brew install gsl gtk gtkmm cairo pkgconfig curl xz zlib boost
+     brew install gsl gtk gtkmm cairo pkgconfig curl xz zlib boost cmake
 
 #### 3.2.2. Install DROMPAplus
 On Linux:
