@@ -49,7 +49,7 @@ For Singularity:
 On Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
-    libgsl-dev libz-dev libbz2-dev libgsl-dev 
+    libgsl-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev
 
 On CentOS:
 
