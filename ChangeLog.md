@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1 (2020-05-25)
+- Bug fix: basename(label) of filename in peak-calling
+- Switch from <int32_t> to <double> for y-axis bins in pdf
+
 ## 1.6.0 (2020-05-21)
 - Adopt htslib API for parsing SAM/BAM/CRAM format
 - Now available to use on Mac

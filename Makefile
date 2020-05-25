@@ -35,7 +35,7 @@ endif
 
 OBJS_UTIL = $(SSPCMNOBJDIR)/util.o $(SSPCMNOBJDIR)/BoostOptions.o $(SSPCMNOBJDIR)/statistics.o $(SSPCMNOBJDIR)/gzstream.o
 OBJS_PW = $(OBJDIR)/pw_main.o $(OBJDIR)/pw_makefile.o $(OBJDIR)/WigStats.o $(OBJDIR)/GenomeCoverage.o $(OBJDIR)/GCnormalization.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/ReadMpbldata.o $(OBJDIR)/significancetest.o $(OBJDIR)/pw_strShiftProfile.o
-OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/dd_sample_definition.o $(OBJDIR)/dd_profile.o
+OBJS_DD = $(OBJDIR)/dd_main.o $(OBJDIR)/dd_init.o $(OBJDIR)/dd_draw_dataframe.o $(OBJDIR)/dd_classfunc_draw.o $(OBJDIR)/dd_command.o $(OBJDIR)/dd_readfile.o $(OBJDIR)/dd_draw.o $(OBJDIR)/dd_chiadrop.o $(OBJDIR)/dd_drawgenes.o $(OBJDIR)/color.o $(OBJDIR)/significancetest.o $(OBJDIR)/WigStats.o $(OBJDIR)/ReadAnnotation.o $(OBJDIR)/dd_sample_definition.o $(OBJDIR)/dd_profile.o $(OBJDIR)/util.o
 OBJS_SSP = $(SSPOBJDIR)/Mapfile.o $(SSPOBJDIR)/ParseMapfile.o $(SSPOBJDIR)/LibraryComplexity.o $(SSPOBJDIR)/ShiftProfile.o
 
 .PHONY: all clean
@@ -105,4 +105,4 @@ $(OBJDIR)/dd_draw_dataframe.o: $(SRCDIR)/dd_draw.hpp $(SRCDIR)/dd_draw_pdfpage.h
 $(OBJDIR)/GCnormalization.o: $(SRCDIR)/GCnormalization.hpp $(SRCDIR)/ReadMpbldata.hpp
 $(OBJS_UTIL): Makefile $(HEADS_UTIL)
 $(OBJS_PW): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/pw_gv.hpp $(SSPCMNDIR)/statistics.hpp $(SSPSRCDIR)/LibraryComplexity.hpp $(HEADS_UTIL) $(SSPSRCDIR)/ShiftProfile_p.hpp $(SSPSRCDIR)/ShiftProfile.hpp $(SRCDIR)/significancetest.hpp $(SRCDIR)/BpStatus.hpp $(SRCDIR)/SeqStatsDROMPA.hpp
-$(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/extendBedFormat.hpp $(SRCDIR)/dd_sample_definition.hpp $(SRCDIR)/significancetest.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp
+$(OBJS_DD): Makefile $(SRCDIR)/version.hpp $(SRCDIR)/dd_readfile.hpp $(SRCDIR)/dd_gv.hpp $(SRCDIR)/extendBedFormat.hpp $(SRCDIR)/dd_sample_definition.hpp $(SRCDIR)/significancetest.hpp $(HEADS_UTIL) $(SRCDIR)/ReadAnnotation.hpp $(SRCDIR)/GeneAnnotation.hpp $(SRCDIR)/util.hpp

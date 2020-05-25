@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "WigStats.hpp"
 #include "extendBedFormat.hpp"
+#include "util.hpp"
 
 class vChrArray;
 
@@ -102,7 +103,8 @@ public:
   void peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname, const double pthre_inter);
 
   void printPeak(const std::string &prefix) const {
-    std::string filename = prefix + "." + label + ".peak.tsv";
+    std::string baselabel = basename(label);
+    std::string filename = prefix + "." + baselabel + ".peak.tsv";
 
     DEBUGprint("Peakfile name: " << filename);
     std::ofstream out(filename);

@@ -90,13 +90,13 @@ void DataFrame::StrokeEachBin(const SamplePairEach &pair,
   double value(getVal(pair, vReadArray, i));
   if (!value) return;
 
-  int32_t len;
+  double len(0);
   if (!nlayer) len = par.ystep * value / scale;
   else         len = par.ystep * value / scale2nd;
   if (shownegative) {
-    if (value > 0)      len = -std::min(len,  (int32_t)len_plus);
-    else if (value < 0) len = -std::max(len, -(int32_t)len_minus);
-  } else                len = -std::min(len,  (int32_t)height_df);
+    if (value > 0)      len = -std::min(len,  len_plus);
+    else if (value < 0) len = -std::max(len, -len_minus);
+  } else                len = -std::min(len,  height_df);
   if (!len) return;
 
 /*  DEBUGprint("value " << value
@@ -141,8 +141,8 @@ void LogRatioDataFrame::StrokeEachBin(const SamplePairEach &pair,
   setColor(value, nlayer, 1);
   rel_yline(cr, xcen, yaxis + len - len_minus, LEN_EDGE);
   cr->stroke();
-  // nakami
 
+  // nakami
   if (par.alpha) {
     setColor(value, nlayer, par.alpha);
     rel_yline(cr, xcen, yaxis - len_minus, len);
