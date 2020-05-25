@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.2 (2020-05-XX)
+- Adopt CMake to compile
+
 ## 1.6.1 (2020-05-25)
 - Bug fix: basename(label) of filename in peak-calling
 - Switch from <int32_t> to <double> for y-axis bins in pdf
