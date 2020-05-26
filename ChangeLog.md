@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1 (2020-05-26)
+- Bug fix in peak-calling (overflow of p_enrich)
+- Add script change_chrname_[to|from]_Greek.pl in scripts directory
+
 ## 1.7.0 (2020-05-26)
 - Adopt CMake to compile
 
