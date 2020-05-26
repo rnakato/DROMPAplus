@@ -1,6 +1,6 @@
 add_library(common
   STATIC
-ReadAnnotation.cpp color.cpp util.cpp WigStats.cpp significancetest.cpp
+  ReadAnnotation.cpp color.cpp util.cpp WigStats.cpp significancetest.cpp
   )
 
 target_include_directories(common

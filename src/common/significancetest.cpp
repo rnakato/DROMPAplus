@@ -27,6 +27,7 @@ double getlogp_BinomialTest(const double n1_ref, const double n2_ref, const doub
   if ((n1 < n2) || (!n1 && !n2)) return 0;
 
   pvalue = getBinomial(n1, p, n1+n2);
+  if (!pvalue && n1 > n2) pvalue = 1e-300;
   if (pvalue) pvalue = -log10(pvalue);
   return pvalue;
 }

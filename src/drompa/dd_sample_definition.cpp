@@ -285,8 +285,8 @@ void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string
 }
 
 void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
-					const double pthre_inter, const double pthre_enrich,
-					const double ethre, const double ipm)
+                                        const double pthre_inter, const double pthre_enrich,
+                                        const double ethre, const double ipm)
 {
   int32_t ext(0);
 
@@ -299,21 +299,22 @@ void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::
 
     if (!ext) {
       if (logp_inter > pthre_inter
-	  && logp_enrich > pthre_enrich
-	  && getratio(ChIParray[i], Inputarray[i]) > ethre
-	  && ChIParray[i] > ipm)
-	{
-	  vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
-	  ext=1;
-	}
+          && logp_enrich > pthre_enrich
+          && getratio(ChIParray[i], Inputarray[i]) > ethre
+          && ChIParray[i] > ipm)
+        {
+          vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
+          ext=1;
+        }
     } else {
       if (logp_inter > pthre_inter
-	  && logp_enrich > pthre_enrich
-	  && getratio(ChIParray[i], Inputarray[i]) > ethre
-	  && ChIParray[i] > ipm)
-	{
-	  vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
-	} else ext=0;
+          && logp_enrich > pthre_enrich
+          && getratio(ChIParray[i], Inputarray[i]) > ethre
+          && ChIParray[i] > ipm)
+        {
+          vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
+        }
+      else ext=0;
     }
   }
 
