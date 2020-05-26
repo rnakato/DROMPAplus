@@ -3,10 +3,11 @@ add_library(dd_func
   dd_init.cpp dd_draw_dataframe.cpp dd_classfunc_draw.cpp dd_command.cpp dd_readfile.cpp dd_draw.cpp dd_chiadrop.cpp dd_drawgenes.cpp dd_sample_definition.cpp dd_profile.cpp
   )
 
-find_package(PkgConfig)
+find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(GTKMM gtkmm-3.0)
-if(!PKG_CONFIG_FOUND)
-    pkg_check_modules(GTKMM gtkmm-2.4)
+if(NOT GTKMM_FOUND)
+    pkg_check_modules(GTKMM gtkmm-2.4 REQUIRED)
 endif()
 
 include_directories(${GTKMM_INCLUDE_DIRS})
