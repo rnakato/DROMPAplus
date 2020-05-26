@@ -3,8 +3,6 @@
  */
 #include "WigStats.hpp"
 
-double getlogp_Poisson(const double val, const double myu);
-
 uint32_t getWigDistThre(const std::vector<uint64_t> &wigDist, const uint64_t sum) {
   uint32_t thre(9);
   uint64_t num;
@@ -38,24 +36,3 @@ void WigStats::setWigStats(const WigArray &wigarray)
 
   //  setZINBParam(ar);
 }
-
-/*void WigStats::peakcall_onlyChIP(const WigArray &wigarray, const std::string &chrname)
-{
-  int32_t ext(0);
-  for (size_t i=0; i<wigarray.size(); ++i) {
-    double val(wigarray[i]);
-    double logp_inter(getlogp_Poisson(val, wigarray.getLocalAverage(i, binsize)));
-
-    if (!ext) {
-      if (logp_inter > pthre) {
-	vPeak.emplace_back(Peak(chrname, i, i, val, logp_inter));
-	ext=1;
-      }
-    } else {
-      if (logp_inter > pthre) vPeak[vPeak.size()-1].renew(i, val, logp_inter);
-      else ext=0;
-    }
-  }
-  return;
-}
-*/

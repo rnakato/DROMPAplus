@@ -6,8 +6,10 @@
 double getlogp_Poisson(const double val, const double myu)
 {
   double pvalue(0);
-  if (myu && val > myu) pvalue = _getPoisson(val, myu);
-  if (!pvalue && val > myu) pvalue = 1e-300;
+  if (myu && val > myu) {
+    pvalue = _getPoisson(val, myu);
+    if (!pvalue) pvalue = 1e-300;
+  }
   if (pvalue) pvalue = -log10(pvalue);
   return pvalue;
 }

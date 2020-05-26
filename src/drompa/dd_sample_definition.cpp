@@ -298,19 +298,19 @@ void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::
     double logp_enrich(getlogp_BinomialTest(ChIParray[i], Inputarray[i], ratio));
 
     if (!ext) {
-      if (logp_inter > pthre_inter
-          && logp_enrich > pthre_enrich
-          && getratio(ChIParray[i], Inputarray[i]) > ethre
-          && ChIParray[i] > ipm)
+      if (logp_inter >= pthre_inter
+          && logp_enrich >= pthre_enrich
+          && getratio(ChIParray[i], Inputarray[i]) >= ethre
+          && ChIParray[i] >= ipm)
         {
           vPeak[chrname].emplace_back(Peak(chrname, binsize, i*binsize, (i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich));
           ext=1;
         }
     } else {
-      if (logp_inter > pthre_inter
-          && logp_enrich > pthre_enrich
-          && getratio(ChIParray[i], Inputarray[i]) > ethre
-          && ChIParray[i] > ipm)
+      if (logp_inter >= pthre_inter
+          && logp_enrich >= pthre_enrich
+          && getratio(ChIParray[i], Inputarray[i]) >= ethre
+          && ChIParray[i] >= ipm)
         {
           vPeak[chrname][vPeak[chrname].size()-1].renew((i+1)*binsize -1, ChIParray[i], logp_inter, Inputarray[i], logp_enrich);
         }
