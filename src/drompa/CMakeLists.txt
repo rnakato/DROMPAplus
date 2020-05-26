@@ -5,6 +5,10 @@ add_library(dd_func
 
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
+if(!PKG_CONFIG_FOUND)
+    pkg_check_modules(GTKMM gtkmm-2.4)
+endif()
+
 include_directories(${GTKMM_INCLUDE_DIRS})
 
 target_include_directories(dd_func
