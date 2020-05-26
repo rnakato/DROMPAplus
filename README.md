@@ -61,19 +61,9 @@ On Mac:
      brew install gsl gtk gtkmm cairo pkgconfig curl xz zlib boost cmake
 
 #### 3.2.2. Install DROMPAplus
-On Linux:
 
     git clone --recursive https://github.com/rnakato/DROMPAplus
     cd DROMPAplus
-    make
-
-On Mac:
-
-    git clone --recursive https://github.com/rnakato/DROMPAplus
-    cd DROMPAplus
-    # change name from "-lboost_thread" to "-lboost_thread-mt"
-    sed -i -e 's/-lboost_thread/-lboost_thread-mt/g' Makefile
-    sed -i -e 's/-lboost_thread/-lboost_thread-mt/g' submodules/SSP/Makefile
     make
 
 If you get an installation error, make sure that all required libraries are successfully installed.
