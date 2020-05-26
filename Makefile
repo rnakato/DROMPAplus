@@ -1,15 +1,15 @@
 .PHONY: all clean
 
-HTSLIBDIR=submodules/SSP/src/htslib-1.10.2/
+BINDIR = bin
+PROGRAMS = parse2wig+ drompa+
+TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
 
-all: bin/parse2wig+ bin/drompa+ $(HTSLIBDIR)/libhts.a
+SSPDIR = submodules/SSP
+HTSLIBDIR = $(SSPDIR)/src/htslib-1.10.2/
 
-bin/parse2wig+: $(HTSLIBDIR)/libhts.a
-	mkdir -p build && cd build && cmake .. && make
-	mkdir -p bin
-	cp build/test/parse2wig+ build/test/drompa+ bin
+all: $(TARGET) $(HTSLIBDIR)/libhts.a
 
-bin/drompa+: $(HTSLIBDIR)/libhts.a
+$(TARGET): $(HTSLIBDIR)/libhts.a
 	mkdir -p build && cd build && cmake .. && make
 	mkdir -p bin
 	cp build/test/parse2wig/parse2wig+ build/test/drompa/drompa+ bin
@@ -20,3 +20,4 @@ $(HTSLIBDIR)/libhts.a:
 clean:
 	rm -rf build bin
 	make -C $(HTSLIBDIR) clean
+	make -C $(SSPDIR) clean
