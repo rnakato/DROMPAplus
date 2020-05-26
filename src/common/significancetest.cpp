@@ -1,7 +1,7 @@
 /* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
  * All rights reserved.
  */
-#include "../submodules/SSP/common/statistics.hpp"
+#include "statistics.hpp"
 
 double getlogp_Poisson(const double val, const double myu)
 {

@@ -8,8 +8,9 @@
 #include <fstream>
 #include <boost/bind.hpp>
 #include "extendBedFormat.hpp"
+#include "statistics.hpp"
 #include "../submodules/SSP/common/util.hpp"
-#include "../submodules/SSP/common/inline.hpp"
+//#include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/BoostOptions.hpp"
 #include "SeqStatsDROMPA.hpp"
 //#include "../submodules/SSP/src/SeqStats.hpp"
