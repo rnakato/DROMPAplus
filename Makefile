@@ -6,7 +6,6 @@ TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
 
 SSPDIR = submodules/SSP
 HTSLIBDIR = $(SSPDIR)/src/htslib-1.10.2/
-#SSPLIB = build/$(SSPDIR)/src/libssp_func.a build/$(SSPDIR)/common/libssp_common.a
 
 all: $(TARGET) $(HTSLIBDIR)/libhts.a
 
