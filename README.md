@@ -41,7 +41,7 @@ We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https
 
 For Singularity:
 
-    singularity pull ssp_drompa.img docker://rnakato/ssp_drompa
+    singularity build ssp_drompa.img docker://rnakato/ssp_drompa
     singularity exec ssp_drompa.img drompa+
 
 ### 3.2. Building from source
