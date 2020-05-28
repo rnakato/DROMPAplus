@@ -32,16 +32,21 @@ protected:
   }
 
   void WriteValAroundPosi(std::ofstream &out,
-			  const SamplePairOverlayed &pair, const vChrArray &vReadArray,
-			  const int32_t posi, const std::string &strand);
+                          const SamplePairOverlayed &pair,
+                          const vChrArray &vReadArray,
+                          const int32_t posi,
+                          const std::string &strand);
 
-  double getSumVal(const SamplePairOverlayed &pair,
-		   const vChrArray &vReadArray,
-		   const int32_t sbin, const int32_t ebin);
+  double getAverageVal(const SamplePairOverlayed &pair,
+                       const vChrArray &vReadArray,
+                       const int32_t sbin, const int32_t ebin);
+  double getMaxVal(const SamplePairOverlayed &pair,
+                   const vChrArray &vReadArray,
+                   const int32_t sbin, const int32_t ebin);
 
 public:
   ReadProfile(const DROMPA::Global &p, const int32_t _nbin=0);
-  void setOutputFilename(const DROMPA::Global &p);
+  void setOutputFilename(const DROMPA::Global &p, const std::string &);
   void MakeFigure(const DROMPA::Global &p);
   virtual void WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)=0;
 
@@ -50,7 +55,7 @@ public:
       std::string file(RDataname + "." + x.first.label + ".tsv");
       std::ofstream out(file);
       for (int32_t i=-binwidth_from_center; i<=binwidth_from_center; ++i) {
-	out << "\t" << (i*binsize);
+        out << "\t" << (i*binsize);
       }
       out << std::endl;
       out.close();
@@ -78,7 +83,7 @@ class ProfileGene100: public ReadProfile {
   enum {GENEBLOCKNUM=100};
 
   void outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
-		      const genedata &gene, const vChrArray &vReadArray, int32_t len);
+                      const genedata &gene, const vChrArray &vReadArray, int32_t len);
 
 public:
   explicit ProfileGene100(const DROMPA::Global &p):
@@ -91,7 +96,7 @@ public:
       std::string file(RDataname + "." + x.first.label + ".tsv");
       std::ofstream out(file);
       for (int32_t i=-GENEBLOCKNUM; i<GENEBLOCKNUM*2; ++i) {
-	out << "\t" << i;
+        out << "\t" << i;
       }
       out << std::endl;
       out.close();
@@ -129,7 +134,7 @@ template <class T>
 void exec_PROFILE_asType(DROMPA::Global &p)
 {
   T profile(p);
-  profile.setOutputFilename(p);
+  profile.setOutputFilename(p, "PROFILE");
   profile.printHead(p);
 
   for(auto &chr: p.gt) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.2 (2020-05-28)
+- Modify output filename of PROFILE and MULTICI
+- MULTICI: add `--getmaxposi` option to output the max bin value for each site instead of averaged bin value
+
 ## 1.7.1 (2020-05-26)
 - Bug fix in peak-calling (overflow of p_enrich)
 - Add script change_chrname_[to|from]_Greek.pl in scripts directory

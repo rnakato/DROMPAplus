@@ -195,11 +195,12 @@ namespace DROMPA {
     int32_t stype;
     int32_t ntype;
     int32_t width_from_center;
-    double maxval;
+    double  hm_maxval;
     int32_t hmsort;
+    bool getmaxposi;
 
-    Profile(): ptype(0), stype(0), ntype(0),
-	       width_from_center(0), maxval(0), hmsort(0)
+    Profile(): ptype(0), stype(0), ntype(0), width_from_center(0),
+               hm_maxval(0), hmsort(0), getmaxposi(false)
     {}
 
     void setOpts(MyOpt::Opts &allopts);
@@ -209,6 +210,7 @@ namespace DROMPA {
     bool isPtypeTTS() const { return ptype == TTS; }
     bool isPtypeGene100() const { return ptype == GENE100; }
     bool isPtypeBed() const { return ptype == BEDSITES; }
+    bool isgetmaxposi() const { return getmaxposi; }
   };
 
   class Threshold {

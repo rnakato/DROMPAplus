@@ -217,7 +217,7 @@ void exec_PROFILE(DROMPA::Global &p)
 void exec_MULTICI(DROMPA::Global &p)
 {
   ProfileMULTICI profile(p);
-  profile.setOutputFilename(p);
+  profile.setOutputFilename(p, "MULTICI");
   profile.printHead(p);
 
   for(auto &chr: p.gt) {

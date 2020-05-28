@@ -171,8 +171,9 @@ void Profile::setOpts(MyOpt::Opts &allopts) {
     (SETOPT_RANGE("ntype", int32_t, 0, 0, 1),
      "Normalization: 0; total read 1; target regions only")
     (SETOPT_OVER("widthfromcenter", int32_t, 2500, 1), "width from the center")
-    (SETOPT_OVER("maxval", double, 0, 0), "Upper limit for heatmap")
-    (SETOPT_OVER("hmsort", int32_t, 1, 1),  "Column number for sorting sites")
+    (SETOPT_OVER("hm_maxval", double, 0, 0), "Upper limit for heatmap")
+    (SETOPT_OVER("hmsort", int32_t, 1, 1),   "Column number for sorting sites")
+    ("getmaxposi",  "(for MULTICI) output the max bin value (default: averaged bin value) ")
     ;
   allopts.add(opt);
 }
@@ -185,8 +186,9 @@ void Profile::setValues(const Variables &values) {
     stype = getVal<int32_t>(values, "stype");
     ntype = getVal<int32_t>(values, "ntype");
     width_from_center = getVal<int32_t>(values, "widthfromcenter");
-    maxval = getVal<double>(values, "maxval");
+    hm_maxval = getVal<double>(values, "hm_maxval");
     hmsort = getVal<int32_t>(values, "hmsort");
+    getmaxposi = values.count("getmaxposi");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }

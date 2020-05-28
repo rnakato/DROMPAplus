@@ -4,59 +4,70 @@
 #include "dd_profile.hpp"
 #include "color.hpp"
 
+namespace {
+  double getReadVal(const vChrArray &vReadArray, const SamplePairOverlayed &pair,
+                    const int32_t i, const int32_t stype)
+  {
+    double val(0);
+    if (!stype) { // ChIP read
+      val = vReadArray.getArray(pair.first.argvChIP).array[i];
+    } else if (stype == 1) { // ChIP/Input enrichment
+      val = getratio(vReadArray.getArray(pair.first.argvChIP).array[i],
+                     vReadArray.getArray(pair.first.argvInput).array[i]);
+    }
+    return val;
+  }
+}
+
 std::vector<genedata> ReadProfile::get_garray(const GeneDataMap &mp)
 {
   std::vector<genedata> garray;
   for (auto &m: mp) {
     if (m.second.gtype == "nonsense_mediated_decay" ||
-	m.second.gtype == "processed_transcript"    ||
-	m.second.gtype == "retained_intron") continue;
+        m.second.gtype == "processed_transcript"    ||
+        m.second.gtype == "retained_intron") continue;
     garray.emplace_back(m.second);
   }
   return garray;
 }
 
 void ReadProfile::WriteValAroundPosi(std::ofstream &out,
-				     const SamplePairOverlayed &pair,
-				     const vChrArray &vReadArray,
-				     const int32_t posi, const std::string &strand)
+                                     const SamplePairOverlayed &pair,
+                                     const vChrArray &vReadArray,
+                                     const int32_t posi, const std::string &strand)
 {
   int32_t bincenter(posi/binsize);
   int32_t sbin(bincenter - binwidth_from_center);
   int32_t ebin(bincenter + binwidth_from_center);
 
   if (strand == "+") {
-    for (int32_t i=sbin; i<=ebin; ++i) out << "\t" << getSumVal(pair, vReadArray, i, i);
+    for (int32_t i=sbin; i<=ebin; ++i) out << "\t" << getReadVal(vReadArray, pair, i, stype);
   } else {
-    for (int32_t i=ebin; i>=sbin; --i) out << "\t" << getSumVal(pair, vReadArray, i, i);
+    for (int32_t i=ebin; i>=sbin; --i) out << "\t" << getReadVal(vReadArray, pair, i, stype);
   }
 }
 
-double ReadProfile::getSumVal(const SamplePairOverlayed &pair,
-			      const vChrArray &vReadArray,
-			      const int32_t sbin,
-			      const int32_t ebin)
+double ReadProfile::getAverageVal(const SamplePairOverlayed &pair,
+                                  const vChrArray &vReadArray,
+                                  const int32_t sbin,
+                                  const int32_t ebin)
 {
-  double value(-1);
-  if (!stype) { // ChIP read
-    double sumIP(0);
-    for (int32_t i=sbin; i<=ebin; ++i) sumIP += vReadArray.getArray(pair.first.argvChIP).array[i];
-    value = getratio(sumIP, (ebin - sbin + 1));
-  } else if (stype == 1) { // ChIP/Input enrichment
-    double sumRatio(0);
-    for (int32_t i=sbin; i<=ebin; ++i) {
-      double r = getratio(vReadArray.getArray(pair.first.argvChIP).array[i],
-			  vReadArray.getArray(pair.first.argvInput).array[i]);
-/*      printf("%f, %f, r=%f\n",vReadArray.getArray(pair.first.argvChIP).array[i],
-	     vReadArray.getArray(pair.first.argvInput).array[i],
-	     r);*/
-      sumRatio += r;
-    }
-    value = getratio(sumRatio, (ebin - sbin + 1));
-  }
-  return value;
+  double sumIP(0);
+  for (int32_t i=sbin; i<=ebin; ++i) sumIP += getReadVal(vReadArray, pair, i, stype);
+  return getratio(sumIP, (ebin - sbin + 1));
 }
 
+double ReadProfile::getMaxVal(const SamplePairOverlayed &pair,
+                              const vChrArray &vReadArray,
+                              const int32_t sbin,
+                              const int32_t ebin)
+{
+  double maxIP(0);
+  for (int32_t i=sbin; i<=ebin; ++i) {
+    maxIP = std::max(maxIP, getReadVal(vReadArray, pair, i, stype));
+  }
+  return maxIP;
+}
 
 ReadProfile::ReadProfile(const DROMPA::Global &p, const int32_t _nbin):
   stype(p.prof.stype),
@@ -85,11 +96,15 @@ ReadProfile::ReadProfile(const DROMPA::Global &p, const int32_t _nbin):
   for (auto &x: p.samplepair) hprofile[x.first.argvChIP] = array;
 }
 
-void ReadProfile::setOutputFilename(const DROMPA::Global &p)
+void ReadProfile::setOutputFilename(const DROMPA::Global &p, const std::string &commandname)
 {
-  std::string prefix(p.getPrefixName());
+  std::string prefix(p.getPrefixName() + "." + commandname);
+
+  if (p.prof.isgetmaxposi()) prefix += ".maxposi";
+  else                       prefix += ".averaged";
   if      (stype==0) prefix += ".ChIPread";
   else if (stype==1) prefix += ".Enrichment";
+
   Rscriptname = prefix + ".R";
   RDataname   = prefix;    //  prefix + ".tsv";
   Rfigurename = prefix + ".pdf";
@@ -184,15 +199,15 @@ void ProfileTSS::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
 
       int32_t position(0);
       if (p.prof.isPtypeTSS()) {
-	if (gene.strand == "+") position = gene.txStart;
-	else                    position = gene.txEnd;
+        if (gene.strand == "+") position = gene.txStart;
+        else                    position = gene.txEnd;
       } else if (p.prof.isPtypeTTS()) {
-	if (gene.strand == "+") position = gene.txEnd;
-	else                    position = gene.txStart;
+        if (gene.strand == "+") position = gene.txEnd;
+        else                    position = gene.txStart;
       }
       if (isExceedRange(position, chr.getlen())) {
-	++nsites_skipped;
-	continue;
+        ++nsites_skipped;
+        continue;
       }
       out << gene.tname;
       WriteValAroundPosi(out, x, vReadArray, position, gene.strand);
@@ -220,7 +235,7 @@ void ProfileGene100::outputEachGene(std::ofstream &out, const SamplePairOverlaye
       s = (gene.txEnd + len - len100 * (i+1))/ binsize;
       e = (gene.txEnd + len - len100 * i -1) / binsize;
     }
-    out << "\t" << getSumVal(x, vReadArray, s, e);
+    out << "\t" << getAverageVal(x, vReadArray, s, e);
   }
 }
 
@@ -273,15 +288,15 @@ void ProfileBedSites::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &c
 
     for (auto &vbed: p.anno.vbedlist) {
       for (auto &bed: vbed.getvBed()) {
-	if (bed.chr != chr.getname()) continue;
-	++nsites;
-	if (isExceedRange(bed.summit, chr.getlen())) {
-	  ++nsites_skipped;
-	  continue;
-	}
-	out << bed.getSiteStr();
-	WriteValAroundPosi(out, x, vReadArray, bed.summit, "+");
-	out << std::endl;
+        if (bed.chr != chr.getname()) continue;
+        ++nsites;
+        if (isExceedRange(bed.summit, chr.getlen())) {
+          ++nsites_skipped;
+          continue;
+        }
+        out << bed.getSiteStr();
+        WriteValAroundPosi(out, x, vReadArray, bed.summit, "+");
+        out << std::endl;
       }
     }
 
@@ -290,17 +305,6 @@ void ProfileBedSites::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &c
 
   DEBUGprint_FUNCend();
 }
-
-/*namespace {
-  double getSumIP(bed12 &bed, const SamplePairOverlayed &pair, const vChrArray &vReadArray, const int32_t binsize)
-  {
-    double sumIP(0);
-    int32_t sbin(bed.start/binsize);
-    int32_t ebin((bed.end-1)/binsize);
-    for (int32_t i=sbin; i<=ebin; ++i) sumIP += vReadArray.getArray(pair.first.argvChIP).array[i];
-    return sumIP;
-  }
-}*/
 
 void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
 {
@@ -315,19 +319,20 @@ void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
 
   for (auto &vbed: p.anno.vbedlist) {
     for (auto &bed: vbed.getvBed()) {
-//      std::cout << bed.chr << "\t" << bed.start << "\t" << bed.end << "\n";
       if (bed.chr != rmchr(chr.getname())) continue;
       ++nsites;
 
       if (bed.start < 0 || bed.end >= chr.getlen()) {
-	++nsites_skipped;
-	continue;
+        ++nsites_skipped;
+        continue;
       }
       out << bed.getSiteStr();
       int32_t sbin(bed.start/binsize);
       int32_t ebin((bed.end-1)/binsize);
-      for (auto &x: p.samplepair) out << "\t" << getSumVal(x, vReadArray, sbin, ebin);
-//      for (auto &x: p.samplepair) out << "\t" << getSumIP(bed, x, vReadArray, binsize);
+      for (auto &x: p.samplepair) {
+        if (p.prof.isgetmaxposi()) out << "\t" << getMaxVal(x, vReadArray, sbin, ebin);
+        else                       out << "\t" << getAverageVal(x, vReadArray, sbin, ebin);
+      }
       out << std::endl;
     }
   }
