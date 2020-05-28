@@ -1,6 +1,9 @@
 add_library(dd_func
   STATIC
-  dd_init.cpp dd_draw_dataframe.cpp dd_classfunc_draw.cpp dd_command.cpp dd_readfile.cpp dd_draw.cpp dd_chiadrop.cpp dd_drawgenes.cpp dd_sample_definition.cpp dd_profile.cpp
+    dd_init.cpp dd_draw_dataframe.cpp dd_classfunc_draw.cpp dd_command.cpp
+    dd_readfile.cpp dd_draw.cpp dd_chiadrop.cpp dd_drawgenes.cpp dd_sample_definition.cpp
+     dd_profile.cpp
+     ReadAnnotation.cpp color.cpp
   )
 
 find_package(PkgConfig REQUIRED)

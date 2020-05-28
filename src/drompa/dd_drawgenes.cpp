@@ -148,48 +148,48 @@ void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
 
       cr->set_line_width(0.3);
       if (m.gtype=="centromere" || m.gtype=="teromere") {
-	cr->set_source_rgba(CLR_GREEN, 1);
-	rel_yline(cr, g.xcen, ycenter -2, g.ylen);
-	showtext_cr(cr, g.x_name, g.y_name-6, m.gname, 8);
+        cr->set_source_rgba(CLR_GREEN, 1);
+        rel_yline(cr, g.xcen, ycenter -2, g.ylen);
+        showtext_cr(cr, g.x_name, g.y_name-6, m.gname, 8);
       }
       else if (m.gtype=="ARS") {
-	cr->set_source_rgba(CLR_RED, 1);
-	rel_yline(cr, g.xcen, ycenter -2, g.ylen +10 - ars_on*8);
-	showtext_cr(cr, g.x_name, g.y_name +4 - ars_on*8, m.gname, 7);
-	if (ars_on==2) ars_on=0; else ++ars_on;
+        cr->set_source_rgba(CLR_RED, 1);
+        rel_yline(cr, g.xcen, ycenter -2, g.ylen +10 - ars_on*8);
+        showtext_cr(cr, g.x_name, g.y_name +4 - ars_on*8, m.gname, 7);
+        if (ars_on==2) ars_on=0; else ++ars_on;
       }
       else if (m.gtype=="TER") {
-	cr->set_source_rgba(CLR_OLIVE, 1);
-	rel_yline(cr, g.xcen, ycenter -2, g.ylen -5);
-	showtext_cr(cr, g.x_name, g.y_name-11, m.gname, 7);
+        cr->set_source_rgba(CLR_OLIVE, 1);
+        rel_yline(cr, g.xcen, ycenter -2, g.ylen -5);
+        showtext_cr(cr, g.x_name, g.y_name-11, m.gname, 7);
       }
       else if (m.gtype=="rRNA" || m.gtype=="snoRNA") {
-	cr->set_source_rgba(CLR_BLACK, 1);
-	showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
-	cr->set_line_width(1.5);
-	rel_xline(cr, g.x1, g.ybar, g.xwid);
-	cr->stroke();
+        cr->set_source_rgba(CLR_BLACK, 1);
+        showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
+        cr->set_line_width(1.5);
+        rel_xline(cr, g.x1, g.ybar, g.xwid);
+        cr->stroke();
       }
       else if (m.gtype=="LTR" || m.gtype=="retrotransposon" || isStr(m.gtype, "repeat")) {
-	cr->set_source_rgba(CLR_PURPLE, 1);
-	showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
-	cr->set_line_width(1.5);
-	rel_xline(cr, g.x1, g.ybar, g.xwid);
-	cr->stroke();
+        cr->set_source_rgba(CLR_PURPLE, 1);
+        showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
+        cr->set_line_width(1.5);
+        rel_xline(cr, g.x1, g.ybar, g.xwid);
+        cr->stroke();
       }
       else if (m.gtype=="tRNA") {
-	cr->set_source_rgba(CLR_GREEN, 1);
-	showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
-	cr->set_line_width(1.5);
-	rel_xline(cr, g.x1, g.ybar, g.xwid);
-	cr->stroke();
+        cr->set_source_rgba(CLR_GREEN, 1);
+        showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
+        cr->set_line_width(1.5);
+        rel_xline(cr, g.x1, g.ybar, g.xwid);
+        cr->stroke();
       }
       else {
-	cr->set_source_rgba(CLR_BLUE, 1);
-	showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
-	cr->set_line_width(1.5);
-	rel_xline(cr, g.x1, g.ybar, g.xwid);
-	cr->stroke();
+        cr->set_source_rgba(CLR_BLUE, 1);
+        showtext_cr(cr, g.x_name, g.y_name, m.gname, 6);
+        cr->set_line_width(1.5);
+        rel_xline(cr, g.x1, g.ybar, g.xwid);
+        cr->stroke();
       }
     }
   } catch (...) {
