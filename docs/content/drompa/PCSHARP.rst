@@ -189,7 +189,8 @@ BED annotation and long-range interactions
 drompa+ accepts annotation data in BED or BED12 format (e.g., chromatin state file by ChromHMM) with the ``--bed`` option. The specified regions are colored in green and gray alternately to distinguish two closely located ones.
 
 Long-range interactions files such as ChIA-PET results, are also allowed
-with the ``--inter`` option, which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end. The intra- and inter-chromosomal interactions are shown in red and green, respectively.
+with the ``--inter`` option, which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end.
+The color indicates the significance of the interaction.
 
 For example, the following command generates the PDF file shown in Figure 3.7::
 
