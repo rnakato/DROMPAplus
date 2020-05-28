@@ -41,7 +41,7 @@ Contents:
 Citation:
 ---------
 
-* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *submitted*.
+* Nakato R., Sakata T., Methods for ChIP-seq analysis: A practical workflow and advanced applications, *Methods*, 2020.
 
 Contact:
 ---------
