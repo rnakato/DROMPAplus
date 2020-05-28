@@ -36,7 +36,7 @@ generates the PDF file ``drompa1.pdf`` for three ChIP samples (ChIP1, 2, 3, and 
 
    Generating the ``drompa1.pdf`` file for three ChIP samples using the same input sample.
 
-By default, **PC_SHARP** visualizes ChIP-read lines only. 
+By default, **PC_SHARP** visualizes ChIP-read lines only.
 DROMPAplus accepts the GTF or refFlat formats as gene annotation (use ``-g`` and ``--gftype`` options, if necessary). For *S. serevisiae*, ``SGD_features.tab`` obtained from the Saccharomyces Genome Database (SGD) can be used.
 
 The ``--showitag 1`` option displays the input lines for all ChIP samples, while the ``--showitag 2`` option displays only the line for the first input.
@@ -115,7 +115,7 @@ Visualize specific regions
 To focus on specific regions (in this example, the HOX A cluster region), supply a BED file describing the regions to be shown using the option ``-r`` as follows::
 
   # Make BED file "HOXA.txt"
-  $ echo -e "chr7\t27100000\t27280000" > HOXA.txt   
+  $ echo -e "chr7\t27100000\t27280000" > HOXA.txt
   $ cat HOXA.txt
   chr7    27100000        27280000
 
@@ -186,7 +186,8 @@ where ``--alpha`` indicates the transparency of read histogram.
 BED annotation and long-range interactions
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-drompa+ accepts annotation data in BED or BED12 format (e.g., chromatin state file by ChromHMM) with the ``--bed`` option.
+drompa+ accepts annotation data in BED or BED12 format (e.g., chromatin state file by ChromHMM) with the ``--bed`` option. The specified regions are colored in green and gray alternately to distinguish two closely located ones.
+
 Long-range interactions files such as ChIA-PET results, are also allowed
 with the ``--inter`` option, which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end. The intra- and inter-chromosomal interactions are shown in red and green, respectively.
 
