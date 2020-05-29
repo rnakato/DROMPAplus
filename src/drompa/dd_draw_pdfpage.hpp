@@ -120,7 +120,8 @@ class PDFPage {
   void strokeGeneSGD(const DROMPA::Global &p, const double ycenter);
   void strokeGene(const DROMPA::Global &p, const double ycenter);
 
-  void drawBedAnnotation(const vbed<bed12> &vbed);
+  template <class T> void Draw_vbedlist(const std::vector<vbed<T>> &vlist);
+  void drawBedAnnotation(const vbed<auto> &vbed);
   void drawInteraction(const InteractionSet &vinter);
   void StrokeChIADrop(const DROMPA::Global &p);
   void strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const double yaxis, const RGB &color);

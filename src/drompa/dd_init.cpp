@@ -25,12 +25,14 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
     ("ars",    value<std::string>(), "ARS list (for yeast)")
     ("ter",    value<std::string>(), "TER list (for S.cerevisiae)")
     ("bed",    value<std::vector<std::string>>(), "<bedfile>,<label>: BED file (<label> can be omited)")
+    ("bed12",  value<std::vector<std::string>>(), "<bedfile>,<label>: BED12 file (<label> can be omited)")
     ("repeat", value<std::string>(), "Display repeat annotation (RepeatMasker format)")
     ;
   allopts.add(opt);
 }
 
-void Annotation::setOptsGV(MyOpt::Opts &allopts) {
+void Annotation::setOptsGV(MyOpt::Opts &allopts)
+{
   MyOpt::Opts opt("Genome view",100);
   opt.add_options()
     ("ideogram", value<std::string>(), "Cytoband file for drawing ideogram")
@@ -48,7 +50,8 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts) {
   allopts.add(opt);
 }
 
-void Annotation::setValuesPC(const Variables &values) {
+void Annotation::setValuesPC(const Variables &values)
+{
   DEBUGprint_FUNCStart();
 
   try {
@@ -73,11 +76,10 @@ void Annotation::setValuesPC(const Variables &values) {
     if (values.count("repeat")) repeatfile = getVal<std::string>(values, "repeat");
 
     if (values.count("bed")) {
-      for (auto &x: getVal<std::vector<std::string>>(values, "bed")) {
-	std::vector<std::string> v;
-	ParseLine(v, x, ',');
-	readBedFile<bed12>(v);
-      }
+      vbedlist = readBedFile<bed>(getVal<std::vector<std::string>>(values, "bed"));
+    }
+    if (values.count("bed12")) {
+      vbed12list = readBedFile<bed12>(getVal<std::vector<std::string>>(values, "bed12"));
     }
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
@@ -85,33 +87,34 @@ void Annotation::setValuesPC(const Variables &values) {
   DEBUGprint_FUNCend();
 }
 
-void Annotation::setValuesGV(const Variables &values) {
+void Annotation::setValuesGV(const Variables &values)
+{
   DEBUGprint_FUNCStart();
 
   try {
     if (values.count("inter")) {
-      for(auto &x: getVal<std::vector<std::string>>(values, "inter")) {
-	std::vector<std::string> v;
-	boost::split(v, x, boost::algorithm::is_any_of(","));
-	std::string label(v[0]);
-	std::string tool("mango");
-	if(v.size() >= 2) label = v[1];
-	if(v.size() >= 3) tool  = v[2];
-	vinterlist.emplace_back(InteractionSet(v[0], label, tool));
+      for (auto &x: getVal<std::vector<std::string>>(values, "inter")) {
+        std::vector<std::string> v;
+        boost::split(v, x, boost::algorithm::is_any_of(","));
+        std::string label(v[0]);
+        std::string tool("mango");
+        if (v.size() >= 2) label = v[1];
+        if (v.size() >= 3) tool  = v[2];
+        vinterlist.emplace_back(InteractionSet(v[0], label, tool));
       }
     }
     if (values.count("ideogram")) {
       std::ifstream in(getVal<std::string>(values, "ideogram"));
-      if(!in) {
-	PRINTERR_AND_EXIT("Error: ideogram file " << getVal<std::string>(values, "ideogram") << " does not exist.");
+      if (!in) {
+        PRINTERR_AND_EXIT("Error: ideogram file " << getVal<std::string>(values, "ideogram") << " does not exist.");
       }
       while (!in.eof()) {
-	std::string lineStr;
-	getline(in, lineStr);
-	if(lineStr.empty() || lineStr[0] == '#') continue;
-	std::vector<std::string> v;
-	ParseLine(v, lineStr, '\t');
-	vcytoband.emplace_back(v);
+        std::string lineStr;
+        getline(in, lineStr);
+        if (lineStr.empty() || lineStr[0] == '#') continue;
+        std::vector<std::string> v;
+        ParseLine(v, lineStr, '\t');
+        vcytoband.emplace_back(v);
       }
       isIdeogram = true;
     }
@@ -135,7 +138,7 @@ void Annotation::InitDumpPC(const Variables &values) const {
 
   std::vector<std::string> str_gftype = {"refFlat", "GTF", "SGD"};
   std::cout << boost::format("\nAnnotations:\n");
-  if(genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype];
+  if (genefile != "") std::cout << boost::format("   Gene file: %1%, Format: %2%\n") % genefile % str_gftype[gftype];
   printOpt<std::string>(values, "ars",    "   ARS file");
   printOpt<std::string>(values, "ter",    "   TER file");
   printOpt<std::string>(values, "repeat", "   Repeat file");
@@ -161,7 +164,8 @@ void Annotation::InitDumpGV(const Variables &values) const {
   DEBUGprint_FUNCend();
 }
 
-void Profile::setOpts(MyOpt::Opts &allopts) {
+void Profile::setOpts(MyOpt::Opts &allopts)
+{
   MyOpt::Opts opt("PROFILE AND HEATMAP",100);
   opt.add_options()
     (SETOPT_RANGE("ptype", int32_t, TSS, TSS, PTYPENUM-1),
@@ -178,7 +182,8 @@ void Profile::setOpts(MyOpt::Opts &allopts) {
   allopts.add(opt);
 }
 
-void Profile::setValues(const Variables &values) {
+void Profile::setValues(const Variables &values)
+{
   DEBUGprint_FUNCStart();
 
   try {
@@ -212,7 +217,8 @@ void Profile::InitDump() const {
 }
 
 
-void Threshold::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
+void Threshold::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps)
+{
   sigtest = false;
 
   MyOpt::Opts opt("Threshold",100);
@@ -226,7 +232,8 @@ void Threshold::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
   allopts.add(opt);
 }
 
-void Threshold::setValues(const Variables &values) {
+void Threshold::setValues(const Variables &values)
+{
   DEBUGprint_FUNCStart();
   try {
     pthre_inter  = getVal<double>(values, "pthre_internal");
@@ -253,7 +260,8 @@ void Threshold::InitDump() const {
   DEBUGprint_FUNCend();
 }
 
-void DrawRegion::setOpts(MyOpt::Opts &allopts) {
+void DrawRegion::setOpts(MyOpt::Opts &allopts)
+{
   MyOpt::Opts opt("Region to draw",100);
   opt.add_options()
     ("chr", value<std::string>(),
@@ -267,7 +275,8 @@ void DrawRegion::setOpts(MyOpt::Opts &allopts) {
   allopts.add(opt);
 }
 
-void DrawRegion::setValues(const Variables &values) {
+void DrawRegion::setValues(const Variables &values)
+{
   DEBUGprint_FUNCStart();
 
   try {
@@ -276,7 +285,7 @@ void DrawRegion::setValues(const Variables &values) {
     if (values.count("region")) {
       isRegion = true;
       regionBed = parseBed<bed>(getVal<std::string>(values, "region"));
-      if(!regionBed.size()) PRINTERR_AND_EXIT("Error no bed regions in " << getVal<std::string>(values, "region"));
+      if (!regionBed.size()) PRINTERR_AND_EXIT("Error no bed regions in " << getVal<std::string>(values, "region"));
       //      printBed(regionBed);
     }
     if (values.count("genelocifile")) {
@@ -295,34 +304,35 @@ void DrawRegion::InitDump(const Variables &values) const {
   DEBUGprint_FUNCStart();
 
   printOpt<std::string>(values, "region",    "   Region file");
-//  if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
+  //  if (chr != "") std::cout << boost::format("   output chr%1% only.\n") % chr;
   if (values.count("genelocifile")) {
     std::cout << boost::format("   Geneloci file: %1%, around %2% bp\n") % getVal<std::string>(values, "genelocifile") % len_geneloci;
   }
   DEBUGprint_FUNCend();
 }
 
-void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps) {
+void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet &cps)
+{
   MyOpt::Opts o("Required",100);
   o.add_options()
     ("output,o",  value<std::string>(), "Output prefix")
     ("gt",        value<std::string>(), "Genome table")
     ;
   opts.add(o);
-  for(auto &x: st) {
+  for (auto &x: st) {
     switch(x) {
     case DrompaCommand::CHIP:
       {
-	options_description o("Input",100);
-	o.add_options()
-	  ("input,i", value<std::vector<std::string>>(),
-	   "Specify ChIP-Input pair and label\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:label   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue")
-	  ("ioverlay", value<std::vector<std::string>>(), "Specify sample pairs to overlay (same manner as -i)")
-	  (SETOPT_RANGE("if", int32_t, static_cast<int32_t>(WigType::NONE), 0, static_cast<int32_t>(WigType::WIGTYPENUM) -1),
-	   "Input file format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
-	  ;
-	opts.add(o);
-	break;
+        options_description o("Input",100);
+        o.add_options()
+          ("input,i", value<std::vector<std::string>>(),
+           "Specify ChIP-Input pair and label\n     (separated by ',', values except for 1 can be omitted)\n     1:ChIP   2:Input   3:label   4:peaklist   5:binsize\n     6:scale_tag   7:scale_ratio   8:scale_pvalue")
+          ("ioverlay", value<std::vector<std::string>>(), "Specify sample pairs to overlay (same manner as -i)")
+          (SETOPT_RANGE("if", int32_t, static_cast<int32_t>(WigType::NONE), 0, static_cast<int32_t>(WigType::WIGTYPENUM) -1),
+           "Input file format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
+          ;
+        opts.add(o);
+        break;
       }
     case DrompaCommand::NORM:    setOptsNorm(opts, cps.sm);    break;
     case DrompaCommand::THRE:    thre.setOpts(opts, cps);      break;
@@ -333,42 +343,43 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
     case DrompaCommand::PROF:    prof.setOpts(opts);           break;
     case DrompaCommand::GENWIG:
       {
-	options_description o("GENWIG",100);
-	o.add_options()
-	  ("outputformat",
-	   boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
-	   "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
-	  ("outputvalue",
-	   boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--outputvalue")),
-	   "Output value\n   0: ChIP/Input enrichment\n   1: P-value (ChIP internal)\n   2: P-value (ChIP/Input enrichment)")
-	  ;
-	opts.add(o);
-	break;
+        options_description o("GENWIG",100);
+        o.add_options()
+          ("outputformat",
+           boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
+           "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
+          ("outputvalue",
+           boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--outputvalue")),
+           "Output value\n   0: ChIP/Input enrichment\n   1: P-value (ChIP internal)\n   2: P-value (ChIP/Input enrichment)")
+          ;
+        opts.add(o);
+        break;
       }
     case DrompaCommand::CG:
       {
-	options_description o("CG",100);
-	o.add_options()
-	  ("cgthre",    value<double>(), "Minimum threshold per kbp")
-	  ;
-	opts.add(o);
-	break;
+        options_description o("CG",100);
+        o.add_options()
+          ("cgthre",    value<double>(), "Minimum threshold per kbp")
+          ;
+        opts.add(o);
+        break;
       }
     case DrompaCommand::TR:
       {
-	options_description o("TR",100);
-	o.add_options()
-	  ("tssthre",    value<double>(), "")
-	  ;
-	opts.add(o);
-	break;
+        options_description o("TR",100);
+        o.add_options()
+          ("tssthre",    value<double>(), "")
+          ;
+        opts.add(o);
+        break;
       }
     case DrompaCommand::OTHER: setOptsOther(opts); break;
     }
   }
 }
 
-void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables &values) {
+void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables &values)
+{
   for (auto x: {"output", "gt"}) if (!values.count(x)) PRINTERR_AND_EXIT("specify --" << x << " option.");
 
   oprefix = getVal<std::string>(values, "output");
@@ -379,36 +390,36 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     switch(op) {
     case DrompaCommand::CHIP:
       {
-	DEBUGprint("ChIP setValues...");
-	try {
-	  // SamplePairOverlayed first
-	  if (values.count("input")) {
-	    auto v(getVal<std::vector<std::string>>(values, "input"));
-	    for (auto &x: v) {
-	      vsinfo.addSampleInfo(x, gt, iftype);
-	      samplepair.emplace_back(x, vsinfo);
-	    }
-	  }
+        DEBUGprint("ChIP setValues...");
+        try {
+          // SamplePairOverlayed first
+          if (values.count("input")) {
+            auto v(getVal<std::vector<std::string>>(values, "input"));
+            for (auto &x: v) {
+              vsinfo.addSampleInfo(x, gt, iftype);
+              samplepair.emplace_back(x, vsinfo);
+            }
+          }
 
-	  // SamplePairOverlayed second
-	  if (values.count("ioverlay")) {
-	    auto v(getVal<std::vector<std::string>>(values, "ioverlay"));
-	    int32_t num(0);
-	    for (auto &x: v) {
-	      vsinfo.addSampleInfo(x, gt, iftype);
-	      samplepair[num].setSecondSample(x, vsinfo);
-	      ++num;
-	    }
-	  }
+          // SamplePairOverlayed second
+          if (values.count("ioverlay")) {
+            auto v(getVal<std::vector<std::string>>(values, "ioverlay"));
+            int32_t num(0);
+            for (auto &x: v) {
+              vsinfo.addSampleInfo(x, gt, iftype);
+              samplepair[num].setSecondSample(x, vsinfo);
+              ++num;
+            }
+          }
 
-	  iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
+          iftype = static_cast<WigType>(getVal<int32_t>(values, "if"));
 
-	} catch(const boost::bad_any_cast& e) {
-	  PRINTERR_AND_EXIT(e.what());
-	}
-	DEBUGprint("ChIP setValues done.");
+        } catch(const boost::bad_any_cast& e) {
+          PRINTERR_AND_EXIT(e.what());
+        }
+        DEBUGprint("ChIP setValues done.");
 
-	break;
+        break;
       }
     case DrompaCommand::NORM: setValuesNorm(values); break;
     case DrompaCommand::THRE: thre.setValues(values); break;
@@ -419,22 +430,20 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::REGION: drawregion.setValues(values); break;
     case DrompaCommand::GENWIG:
       {
-	DEBUGprint("Global::setValues::GENWIG");
-	genwig_oftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
-	genwig_ofvalue = MyOpt::getVal<int32_t>(values, "outputvalue");
-	break;
+        DEBUGprint("Global::setValues::GENWIG");
+        genwig_oftype = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
+        genwig_ofvalue = MyOpt::getVal<int32_t>(values, "outputvalue");
+        break;
       }
     case DrompaCommand::CG:
       {
-	DEBUGprint("Global::setValues::CG");
-	//	for (auto x: {"cgthre"}) chkminus<int>(values, x, -1);
-	break;
+        DEBUGprint("Global::setValues::CG");
+        break;
       }
     case DrompaCommand::TR:
       {
-	DEBUGprint("Global::setValues::TR");
-	//	for (auto x: {"tssthre"}) chkminus<int>(values, x, -1);
-	break;
+        DEBUGprint("Global::setValues::TR");
+        break;
       }
     case DrompaCommand::OTHER: setValuesOther(values); break;
     }
@@ -443,7 +452,8 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
   return;
 }
 
-void Global::setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm) {
+void Global::setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm)
+{
   MyOpt::Opts o("Normalization",100);
   o.add_options()
     (SETOPT_RANGE("norm", int32_t, 1, 0, 2),
@@ -464,7 +474,8 @@ void Global::setValuesNorm(const Variables &values) {
   DEBUGprint_FUNCend();
 }
 
-void Global::setOptsOther(MyOpt::Opts &allopts) {
+void Global::setOptsOther(MyOpt::Opts &allopts)
+{
   MyOpt::Opts o("Others",100);
   o.add_options()
     ("includeYM", "output peaks of chromosome Y and M")
@@ -476,7 +487,8 @@ void Global::setOptsOther(MyOpt::Opts &allopts) {
   allopts.add(o);
 }
 
-void Global::setValuesOther(const Variables &values) {
+void Global::setValuesOther(const Variables &values)
+{
   DEBUGprint_FUNCStart();
   try {
     includeYM = values.count("includeYM");
@@ -522,7 +534,8 @@ void Global::InitDumpOther() const {
   DEBUGprint_FUNCend();
 }
 
-void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
+void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps)
+{
   MyOpt::Opts opt("Drawing",100);
   opt.add_options()
     (SETOPT_RANGE("showctag",   int32_t, cps.showctag,  0, 1), "Display ChIP read lines")
@@ -548,7 +561,8 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps) {
   allopts.add(opt);
 }
 
-void DrawParam::setValues(const Variables &values, const int32_t n) {
+void DrawParam::setValues(const Variables &values, const int32_t n)
+{
   DEBUGprint_FUNCStart();
 
   try {
@@ -600,26 +614,3 @@ void DrawParam::InitDump() const {
   DEBUGprint("ystep " << ystep);
   DEBUGprint_FUNCend();
 }
-
-/*Global::pdSample Global::scan_pdstr(const std::string &str) {
-  DEBUGprint_FUNCStart();
-
-  std::vector<std::string> v;
-  ParseLine(v, str, ',');
-
-  if(v.size() > 2) {
-    PRINTERR_AND_EXIT("error: sample std::string has ',' more than 2: " << str);
-  }
-
-  pdSample pd;
-  if(v[0] == "") {
-    PRINTERR_AND_EXIT("please specify file: " << str);
-  } else {
-    pd.argv = v[0];
-  }
-  if(v[1] != "") pd.name = v[1];
-  else pd.name = v[0];
-
-  DEBUGprint_FUNCend();
-  return pd;
-}*/

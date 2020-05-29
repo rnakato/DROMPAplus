@@ -13,8 +13,8 @@
 class chrsize;
 
 enum class DrompaCommand {
-  CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
-  DRAW, REGION, CG, GENWIG, TR, PROF, OTHER
+                          CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
+                          DRAW, REGION, CG, GENWIG, TR, PROF, OTHER
 };
 
 class CommandParamSet {
@@ -31,15 +31,15 @@ public:
   double thre_ipm;
 
   CommandParamSet(const int32_t defsm,
-		  const int32_t defshowctag,
-		  const int32_t defshowratio,
-		  const double defscaletag,
-		  const double defscaleratio,
-		  const double defscalepvalue,
-		  const double defthre_pinter,
-		  const double defthre_penrich,
-		  const double defthre_ethre,
-		  const double defthre_ipm):
+                  const int32_t defshowctag,
+                  const int32_t defshowratio,
+                  const double defscaletag,
+                  const double defscaleratio,
+                  const double defscalepvalue,
+                  const double defthre_pinter,
+                  const double defthre_penrich,
+                  const double defthre_ethre,
+                  const double defthre_ipm):
     sm(defsm),
     showctag(defshowctag),
     showratio(defshowratio),
@@ -62,47 +62,21 @@ namespace DROMPA {
     bool isChIADrop;
 
     template <class T>
-    void readBedFile(const std::vector<std::string> &v) {
-      auto vbed = parseBed<T>(v[0]);
-      //    printBed(vbed);
-      if (v.size()>1) vbedlist.emplace_back(vbed, v[1]);
-      else vbedlist.emplace_back(vbed, "Bed");
+    std::vector<vbed<T>> readBedFile(const std::vector<std::string> &vfilename) {
+      std::vector<vbed<T>> list;
+
+      for (auto &x: vfilename) {
+        std::vector<std::string> v;
+        ParseLine(v, x, ',');
+        auto vbed = parseBed<T>(v[0]);
+        //    printBed(vbed);
+        if (v.size()>1) list.emplace_back(vbed, v[1]);
+        else            list.emplace_back(vbed, "Bed");
+      }
+      return list;
     }
 
-    void parse_ChIADropData(const std::string &fileName)
-    {
-      std::ifstream in(fileName);
-      if (!in) PRINTERR_AND_EXIT("Error: ChIADrop file " << fileName << " does not exist.");
-
-      std::unordered_map<std::string, std::vector<GenomicPosition>> mp;
-      while (!in.eof()) {
-	std::string lineStr;
-	getline(in, lineStr);
-
-	if (lineStr.empty() || lineStr[0] == '#') continue;
-	std::vector<std::string> v;
-	ParseLine(v, lineStr, ',');
-
-	mp[v[0]].emplace_back(v[1], v[2]);
-      }
-
-      for (auto &pair: mp) {
-	int32_t nbed(pair.second.size());
-	if (nbed == 1) continue;
-	for (auto &x: pair.second) {
-	  mp_ChIADrop[x.chr][pair.first].emplace_back(x.start);
-	}
-      }
-
-      for (auto &x: mp_ChIADrop) {
-	for (auto &y: x.second) {
-	  std::sort(y.second.begin(), y.second.end());
-	}
-      }
-
-      isChIADrop = true;
-      return;
-    }
+    void parse_ChIADropData(const std::string &fileName);
 
   public:
     class GraphDataFileName {
@@ -113,14 +87,14 @@ namespace DROMPA {
       GraphDataFileName(): filename(""), binsize(0) {}
 
       void setValue(const std::string &f, const int32_t s) {
-	filename = f;
-	binsize = s;
+        filename = f;
+        binsize = s;
       }
       const std::string & getfilename() const { return filename; }
       int32_t getbinsize() const { return binsize; }
       bool isOn() const {
-	if (filename != "") return true;
-	else return false;
+        if (filename != "") return true;
+        else return false;
       }
     };
 
@@ -131,12 +105,12 @@ namespace DROMPA {
     bool showtranscriptname;
     std::string arsfile;
     std::string terfile;
-    std::vector<vbed<bed12>> vbedlist;
+    std::vector<vbed<bed>> vbedlist;
+    std::vector<vbed<bed12>> vbed12list;
     std::vector<InteractionSet> vinterlist;
     std::vector<cytoband> vcytoband;
     std::unordered_map<std::string,
-		       std::unordered_map<std::string,
-					  std::vector<int32_t>>> mp_ChIADrop;
+                       std::unordered_map<std::string, std::vector<int32_t>>> mp_ChIADrop;
     int32_t chia_distance_thre;
     std::string repeatfile;
     std::string mpfile;
@@ -182,7 +156,7 @@ namespace DROMPA {
 
     int32_t getgftype() const { return gftype; }
     bool is_Anno_UCSC() const {return isUCSC; }
-//    bool isshowars() const { return showars; }
+    //    bool isshowars() const { return showars; }
     bool existChIADrop() const { return isChIADrop; }
     bool showIdeogram() const { return isIdeogram; }
   };
@@ -200,8 +174,7 @@ namespace DROMPA {
     bool getmaxposi;
 
     Profile(): ptype(0), stype(0), ntype(0), width_from_center(0),
-               hm_maxval(0), hmsort(0), getmaxposi(false)
-    {}
+               hm_maxval(0), hmsort(0), getmaxposi(false) {}
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
@@ -222,8 +195,7 @@ namespace DROMPA {
     bool sigtest;
 
     Threshold(): pthre_inter(0), pthre_enrich(0),
-      ethre(0), ipm(0), sigtest(false)
-    {}
+                 ethre(0), ipm(0), sigtest(false) {}
 
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
     void setValues(const MyOpt::Variables &values);
@@ -239,17 +211,17 @@ namespace DROMPA {
     int32_t len_geneloci;
 
     void getGeneLoci(const std::string &genelocifile) {
-        std::ifstream in(genelocifile);
-	if (!in) PRINTERR_AND_EXIT("cannot open " << genelocifile);
+      std::ifstream in(genelocifile);
+      if (!in) PRINTERR_AND_EXIT("cannot open " << genelocifile);
 
-	std::string lineStr;
-	while (!in.eof()) {
-	  getline(in, lineStr);
-	  if (lineStr.empty()) continue;
-	  std::vector<std::string> v;
-	  ParseLine(v, lineStr, '\t');
-	  geneloci[v[0]] = 1;
-	}
+      std::string lineStr;
+      while (!in.eof()) {
+        getline(in, lineStr);
+        if (lineStr.empty()) continue;
+        std::vector<std::string> v;
+        ParseLine(v, lineStr, '\t');
+        geneloci[v[0]] = 1;
+      }
     }
 
   public:
@@ -264,7 +236,7 @@ namespace DROMPA {
     std::vector<bed> getRegionBedChr(const std::string &chrname) const {
       std::vector<bed> vbed;
       for (auto &x: regionBed) {
-	if (x.chr == chrname || x.chr == "chr" + chrname) vbed.emplace_back(x);
+        if (x.chr == chrname || x.chr == "chr" + chrname) vbed.emplace_back(x);
       }
       return vbed;
     }
@@ -304,20 +276,20 @@ namespace DROMPA {
     double alpha;
 
     DrawParam(): linenum_per_page(0), barnum(0), ystep(0),
-		 showymem(true), showylab(true), showpdf(true),
-		 samplenum(0),
-		 width_page_pixel(0),
-		 width_draw_pixel(0),
-		 width_per_line(0),
-		 showctag(0),
-		 showitag(0),
-		 showratio(0),
-		 showpinter(0),
-		 showpenrich(0),
-		 scale_tag(0),
-		 scale_ratio(0),
-		 scale_pvalue(0),
-		 alpha(0)
+                 showymem(true), showylab(true), showpdf(true),
+                 samplenum(0),
+                 width_page_pixel(0),
+                 width_draw_pixel(0),
+                 width_per_line(0),
+                 showctag(0),
+                 showitag(0),
+                 showratio(0),
+                 showpinter(0),
+                 showpenrich(0),
+                 scale_tag(0),
+                 scale_ratio(0),
+                 scale_pvalue(0),
+                 alpha(0)
     {}
 
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
@@ -360,13 +332,6 @@ namespace DROMPA {
     int32_t genwig_ofvalue;
     std::string genometablefilename;
 
-/*    class pdSample {
-    public:
-      std::string argv;
-      std::string name;
-      pdSample(){}
-    };*/
-
   public:
     MyOpt::Opts opts;
     DrawParam drawparam;
@@ -378,7 +343,6 @@ namespace DROMPA {
     std::vector<chrsize> gt;
     vSampleInfo vsinfo;
     std::vector<SamplePairOverlayed> samplepair;
-//    std::vector<pdSample> pd;
 
     bool isGV;
 
@@ -424,7 +388,7 @@ namespace DROMPA {
       for (auto &x: samplepair) x.first.genwig_closefilestream(getGenomeTableFileName());
     }
 
-//    pdSample scan_pdstr(const std::string &str);
+    //    pdSample scan_pdstr(const std::string &str);
   };
 }
 

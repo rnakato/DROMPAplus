@@ -39,6 +39,7 @@ int32_t DrawParam::getHeightAllSample(const Global &p, const std::vector<SampleP
     height += BOXHEIGHT_GENEBOX_EXON + MERGIN_BETWEEN_DATA;
   }
   height += (BOXHEIGHT_BEDANNOTATION + MERGIN_BETWEEN_READ_BED + 2) * p.anno.vbedlist.size() + 15;
+  height += (BOXHEIGHT_BEDANNOTATION + MERGIN_BETWEEN_READ_BED + 2) * p.anno.vbed12list.size() + 15;
   height += (BOXHEIGHT_INTERACTION   + MERGIN_BETWEEN_READ_BED + 5) * p.anno.vinterlist.size() + 15;
 
   if (p.anno.existChIADrop()) height += BOXHEIGHT_ChIADROP + MERGIN_BETWEEN_READ_BED;

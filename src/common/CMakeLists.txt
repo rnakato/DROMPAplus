@@ -1,6 +1,6 @@
 add_library(common
   STATIC
-  util.cpp WigStats.cpp significancetest.cpp statistics.cpp
+  util.cpp WigStats.cpp significancetest.cpp statistics.cpp extendBedFormat.cpp
   )
 
 target_include_directories(common

@@ -329,10 +329,26 @@ void PDFPage::StrokeGraph(const GraphData &graph)
   return;
 }
 
-void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
+void setcolor(const Cairo::RefPtr<Cairo::Context> &cr, bed &x)
+{
+  static int32_t on(0);
+  if(!on) {
+    cr->set_source_rgba(CLR_GRAY4, 1);
+    on=1;
+  } else {
+    cr->set_source_rgba(CLR_GREEN, 1);
+    on=0;
+  }
+}
+
+void setcolor(const Cairo::RefPtr<Cairo::Context> &cr, bed12 &x)
+{
+  cr->set_source_rgba(x.rgb_r/(double)255, x.rgb_g/(double)255, x.rgb_b/(double)255, 0.6);
+}
+
+void PDFPage::drawBedAnnotation(const vbed<auto> &vbed)
 {
   DEBUGprint_FUNCStart();
-
   int32_t boxheight(BOXHEIGHT_BEDANNOTATION);
   std::string chr(rmchr(chrname));
   double ycenter(par.yaxis_now + boxheight/2);
@@ -347,21 +363,10 @@ void PDFPage::drawBedAnnotation(const vbed<bed12> &vbed)
 
   // bed
   cr->set_line_width(boxheight/2);
-  int32_t on(0);
   for (auto &x: vbed.getvBed()) {
     if (x.chr != chr) continue;
 
-    if (x.rgb_r != -1) {
-      cr->set_source_rgba(x.rgb_r/(double)255, x.rgb_g/(double)255, x.rgb_b/(double)255, 0.6);
-    } else {
-      if(!on) {
-	cr->set_source_rgba(CLR_GRAY4, 1);
-	on=1;
-      } else {
-	cr->set_source_rgba(CLR_GREEN, 1);
-	on=0;
-      }
-    }
+    setcolor(cr, x);
     if (par.xstart <= x.end && x.start <= par.xend) {
       double x1 = BP2PIXEL(x.start - par.xstart);
       double len = (x.end - x.start) * par.dot_per_bp;
@@ -455,14 +460,14 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
 
     if (x.stain == "acen") {
       if(!acen_once) {
-	mytriangle(s,     par.yaxis_now,
-		   s,     par.yaxis_now + boxheight,
-		   s+len, par.yaxis_now + boxheight/2);
-	++acen_once;
+        mytriangle(s,     par.yaxis_now,
+                   s,     par.yaxis_now + boxheight,
+                   s+len, par.yaxis_now + boxheight/2);
+        ++acen_once;
       } else {
-	mytriangle(s,     par.yaxis_now + boxheight/2,
-		   s+len+1, par.yaxis_now,
-		   s+len+1, par.yaxis_now + boxheight);
+        mytriangle(s,     par.yaxis_now + boxheight/2,
+                   s+len+1, par.yaxis_now,
+                   s+len+1, par.yaxis_now + boxheight);
       }
     } else {
       cr->rectangle(s, par.yaxis_now, len, boxheight);
@@ -487,6 +492,18 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
   return;
 }
 
+template <class T>
+void PDFPage::Draw_vbedlist(const std::vector<vbed<T>> &vlist)
+{
+  if(!vlist.size()) return;
+
+  par.yaxis_now += MERGIN_BETWEEN_READ_BED;
+  for (auto &x: vlist) {
+    drawBedAnnotation(x);
+    par.yaxis_now += 2;
+  }
+}
+
 void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 {
   if (p.anno.showIdeogram()) DrawIdeogram(p);
@@ -500,14 +517,9 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
   // Read
   StrokeReadLines(p);
 
-  // Bed file
-  if(p.anno.vbedlist.size()) {
-    par.yaxis_now += MERGIN_BETWEEN_READ_BED;
-    for (auto &x: p.anno.vbedlist) {
-      drawBedAnnotation(x);
-      par.yaxis_now += +2;
-    }
-  }
+  // Bed files
+  Draw_vbedlist(p.anno.vbed12list);
+  Draw_vbedlist(p.anno.vbedlist);
 
   // ChIA-Drop
   if (p.anno.existChIADrop()) {

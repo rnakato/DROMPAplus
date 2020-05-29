@@ -97,6 +97,43 @@ namespace {
   }
 }
 
+namespace DROMPA {
+  void Annotation::parse_ChIADropData(const std::string &fileName)
+  {
+    std::ifstream in(fileName);
+    if (!in) PRINTERR_AND_EXIT("Error: ChIADrop file " << fileName << " does not exist.");
+
+    std::unordered_map<std::string, std::vector<GenomicPosition>> mp;
+    while (!in.eof()) {
+      std::string lineStr;
+      getline(in, lineStr);
+
+      if (lineStr.empty() || lineStr[0] == '#') continue;
+      std::vector<std::string> v;
+      ParseLine(v, lineStr, ',');
+
+      mp[v[0]].emplace_back(v[1], v[2]);
+    }
+
+    for (auto &pair: mp) {
+      int32_t nbed(pair.second.size());
+      if (nbed == 1) continue;
+      for (auto &x: pair.second) {
+        mp_ChIADrop[x.chr][pair.first].emplace_back(x.start);
+      }
+    }
+
+    for (auto &x: mp_ChIADrop) {
+      for (auto &y: x.second) {
+        std::sort(y.second.begin(), y.second.end());
+      }
+    }
+
+    isChIADrop = true;
+    return;
+  }
+}
+
 void PDFPage::strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const double yaxis, const RGB &color)
 {
   double ywidth = std::min(_ywidth, 0.4);
@@ -183,11 +220,9 @@ void PDFPage::StrokeChIADrop(const DROMPA::Global &p)
       splitbarcode(v, vv, p.anno.chia_distance_thre);
 #ifdef DEBUG
       for (auto &x: vv) {
-	printf("xxx:  ");
-	for (auto &y:x) {
-	  std::cout << y << " ";
-	}
-	printf("\n");
+        printf("xxx:  ");
+        for (auto &y:x) std::cout << y << " ";
+        printf("\n");
       }
 #endif
       for (auto &x: vv) {
