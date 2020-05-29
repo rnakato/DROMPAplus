@@ -1,4 +1,4 @@
-PC_SHARP: Read distribution visualization
+,PC_SHARP: Read distribution visualization
 ---------------------------------------------
 
 (Optional) Download the BAM files and run parse2wig+ to make the bigWig files for the 100-bp bin::
@@ -198,10 +198,10 @@ For example, the following command generates the PDF file shown in Figure 3.7::
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
 	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
 	-o drompa_beds -g $gene --gt $gt \
-    --bed12 E123_15_coreMarks_dense.bed,ChromHMM \
-    --bed drompa4.H3K4me3.peak.tsv,H3K4me3 \
-    --bed drompa4.H3K27me3.peak.tsv,H3K27me3 \
-    --bed drompa4.H3K36me3.peak.tsv,H3K36me3 \
+	--bed12 E123_15_coreMarks_dense.bed,ChromHMM \
+	--bed drompa4.H3K4me3.peak.tsv,H3K4me3 \
+	--bed drompa4.H3K27me3.peak.tsv,H3K27me3 \
+	--bed drompa4.H3K36me3.peak.tsv,H3K36me3 \
 	--lpp 2 --chr 1 --ls 400
 
 .. figure:: img/drompa.bed.jpg
