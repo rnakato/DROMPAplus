@@ -74,7 +74,7 @@ namespace DROMPA {
       std::ifstream in(fileName);
       if (!in) PRINTERR_AND_EXIT("Error: ChIADrop file " << fileName << " does not exist.");
 
-      std::unordered_map<std::string, std::vector<GenomePosition>> mp;
+      std::unordered_map<std::string, std::vector<GenomicPosition>> mp;
       while (!in.eof()) {
 	std::string lineStr;
 	getline(in, lineStr);

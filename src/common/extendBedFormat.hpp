@@ -14,27 +14,28 @@
 #include <boost/algorithm/string.hpp>
 #include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/util.hpp"
-//#include "../submodules/SSP/common/BedFormat.hpp"
 
 bool isStr(std::string, std::string);
 
 class Interaction;
 
-//namespace NAKATO {
 class bed {
- public:
+public:
   std::string chr;
   int32_t start;
   int32_t end;
   int32_t summit;
- bed(): start(0), end(0), summit(0) {}
+
+  bed(): start(0), end(0), summit(0) {}
   virtual ~bed(){}
+
   bed(const std::string &c, const int32_t s, const int32_t e, const int32_t _summit=0):
     chr(rmchr(c)), start(s), end(e)
   {
     if (_summit) summit = _summit;
     else summit = (start + end)/2;
   }
+
   explicit bed(const std::vector<std::string> &s) {
     if(s.size() < 3) {
       std::cerr << "\nWarning: Bed site size < 3." << std::endl;
@@ -51,21 +52,20 @@ class bed {
   std::string getSiteStr() const {
     return "chr" + chr + "-" + std::to_string(start) + "-" + std::to_string(end);
   }
-
 };
-//}
 
 
-class GenomePosition {
+class GenomicPosition {
  public:
   std::string chr;
   int32_t start;
- GenomePosition(): start(0) {}
-  virtual ~GenomePosition(){}
-  GenomePosition(const std::string &c, const std::string &s):
+
+  GenomicPosition(): start(0) {}
+  GenomicPosition(const std::string &c, const std::string &s):
     chr(rmchr(c)), start(stoi(s))
   {}
-  bool operator<(const GenomePosition &another) const
+
+  bool operator<(const GenomicPosition &another) const
   {
     if (compare_chr(chr, another.chr) < 0) return 1;
     else if (compare_chr(chr, another.chr) == 0 && start < another.start) return 1;
@@ -91,24 +91,28 @@ class bed12 : public bed {
   explicit bed12(std::vector<std::string> &s):
    bed(s), rgb_r(-1), rgb_g(-1), rgb_b(-1)
   {
-   int32_t num = s.size();
-   if(num > 3)  name        = s[3];
-   if(num > 4)  score       = stoi(s[4]);
-   if(num > 5)  strand      = s[5];
-   if(num > 6)  thickStart  = stoi(s[6]);
-   if(num > 7)  thickEnd    = stoi(s[7]);
-   if(num > 8) {
-     std::vector<std::string> v;
-     ParseLine(v, s[8], ',');
-     if(v.size() >= 3) {
-       rgb_r = stoi(v[0]);
-       rgb_g = stoi(v[1]);
-       rgb_b = stoi(v[2]);
-     }
-   }
-   if(num > 9)  blockCount  = stoi(s[9]);
-   if(num > 10) blockSizes  = stoi(s[10]);
-   if(num > 11) blockStarts = stoi(s[11]);
+    try {
+      int32_t num = s.size();
+      if(num > 3)  name        = s[3];
+      if(num > 4)  score       = stoi(s[4]);
+      if(num > 5)  strand      = s[5];
+      if(num > 6)  thickStart  = stoi(s[6]);
+      if(num > 7)  thickEnd    = stoi(s[7]);
+      if(num > 8) {
+        std::vector<std::string> v;
+        ParseLine(v, s[8], ',');
+        if(v.size() >= 3) {
+          rgb_r = stoi(v[0]);
+          rgb_g = stoi(v[1]);
+          rgb_b = stoi(v[2]);
+        }
+      }
+      if(num > 9)  blockCount  = stoi(s[9]);
+      if(num > 10) blockSizes  = stoi(s[10]);
+      if(num > 11) blockStarts = stoi(s[11]);
+    } catch (std::exception &e) {
+      PRINTERR_AND_EXIT(e.what());
+    }
  }
  void print() const {
    std::cout << chr << "\t" << start << "\t" << end << "\t"
