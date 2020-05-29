@@ -186,13 +186,37 @@ where ``--alpha`` indicates the transparency of read histogram.
 BED annotation and long-range interactions
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-drompa+ accepts annotation data in BED or BED12 format (e.g., chromatin state file by ChromHMM) with the ``--bed`` option. The specified regions are colored in green and gray alternately to distinguish two closely located ones.
-
-Long-range interactions files such as ChIA-PET results, are also allowed
-with the ``--inter`` option, which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end.
-The color indicates the significance of the interaction.
+drompa+ accepts annotation data in BED format (``--bed`` option) and BED12 format (``--bed12`` option, e.g., chromatin state file by ChromHMM).
+For BED format, the specified regions are colored in green and gray alternately to distinguish two closely located ones.
+For BED12 format, the color is specified in the input file ifself.
 
 For example, the following command generates the PDF file shown in Figure 3.7::
+
+  $ dir=parse2wigdir+
+  $ drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa_beds -g $gene --gt $gt \
+    --bed12 E123_15_coreMarks_dense.bed,ChromHMM \
+    --bed drompa4.H3K4me3.peak.tsv,H3K4me3 \
+    --bed drompa4.H3K27me3.peak.tsv,H3K27me3 \
+    --bed drompa4.H3K36me3.peak.tsv,H3K36me3 \
+	--lpp 2 --chr 1 --ls 400
+
+.. figure:: img/drompa.bed.jpg
+   :width: 600px
+   :align: center
+   :alt: Alternate
+
+   with BED/BED12 annotations.
+
+
+Long-range interactions files such as ChIA-PET results, are also allowed with the ``--inter`` option,
+which takes tab-separated files with six columns: head chr, head start, head end, tail chr, tail start, and tail end.
+The color indicates the significance of the interaction.
+
+For example, the following command generates the PDF file shown in Figure 3.8::
 
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
@@ -209,7 +233,7 @@ For example, the following command generates the PDF file shown in Figure 3.7::
    :align: center
    :alt: Alternate
 
-   BED annotation and long-range interactions.
+   with long-range interactions.
 
 
 Additional information
