@@ -91,6 +91,21 @@ drompa+ PC_SHARP \
 	--lpp 3 --chr 1 \
 	--alpha 0.6 \
 
+# with bed/bed12 files
+gt=../data/genometable/genometable.hg19.txt
+dir=parse2wigdir+
+gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,200 \
+	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,,,10 \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
+	-o drompa_beds -g $gene --gt $gt \
+    --bed12 E123_15_coreMarks_dense.bed,ChromHMM \
+    --bed drompa4.H3K4me3.peak.tsv,H3K4me3 \
+    --bed drompa4.H3K27me3.peak.tsv,H3K27me3 \
+    --bed drompa4.H3K36me3.peak.tsv,H3K36me3 \
+	--lpp 2 --chr 1 --ls 400
+
 # with chromatin loops
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
@@ -174,30 +189,11 @@ drompa+ PC_SHARP \
 	-o drompa1withnegative -g $gene --gt $gt \
 	--shownegative --bn 4 --chr 1
 
-exit
-
-### for test
-
-gt=../data/genometable/genometable.hg19.txt
-mptable=../data/mptable/mptable.UCSC.hg19.36mer.flen150.txt
-parse2wig+ -i wgEncodeUwHistoneK562H3k4me3StdAlnRep1.bam  -o H3K4me3  --gt $gt --mptable $mptable -n GR --mp /work/Database/UCSC/hg19/mappability_Mosaics_36mer/
-
+# MULTICI
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+
-gene=../data/geneannotation/Homo_sapiens.GRCh37.87.chr.gene.name.refFlat
-drompa+ PC_SHARP \
-	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,,,100 \
-	--ioverlay $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,,,10 \
-	-o drompa-overlay -g $gene --gt $gt \
-        --showratio 1 --showpinter 1 --showpenrich 1 \
-	--lpp 1 --chr 20 \
-	--alpha 0.6
-
-gt=../data/genometable/genometable.hg19.txt
-dir=parse2wigdir+
-drompa+ PC_SHARP \
+drompa+ MULTICI \
 	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
 	-i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
-	-o test --gt $gt --showpinter 1 --showpenrich 1 \
-	--lpp 2 \
-	--chr 22 --ls 100 --callpeak
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+	-o drompa --gt $gt --bed drompa4.H3K4me3.peak.tsv
