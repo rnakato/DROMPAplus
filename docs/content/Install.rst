@@ -15,7 +15,7 @@ For Singularity:
 
 .. code-block:: bash
 
-   singularity pull ssp_drompa.img docker://rnakato/ssp_drompa
+   singularity build ssp_drompa.img docker://rnakato/ssp_drompa
    singularity exec ssp_drompa.img drompa+
 
 
@@ -27,12 +27,13 @@ Requirements
 
 DROMPAplus requires the following programs and libraries:
 
-- Boost C++ library
+- Boost C++ library (>1.53.0)
 - Cairo libraries
 - GTK library
-- GNU Scientific Library
-- zlib
-- SAMtools
+- GNU Scientific Library (>1.15)
+- zlib (>1.2.7)
+- CMake (>2.8)
+- HTSlib (1.10.2) (for SAM/BAM/CRAM formatted input)
 
 and also contains two submodules:
 
@@ -46,13 +47,20 @@ On Ubuntu:
 
 .. code-block:: bash
 
-    sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev libgsl-dev libz-dev samtools
+    sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
+    libgsl-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev cmake
 
 On CentOS:
 
 .. code-block:: bash
 
-    sudo yum -y install git gcc-c++ boost-devel zlib-devel gsl-devel gtkmm30-devel
+    sudo yum -y install git gcc-c++ clang boost-devel zlib-devel gsl-devel gtkmm30-devel bzip2-devel cmake
+
+On Mac:
+
+.. code-block:: bash
+
+    brew install gsl gtk gtkmm cairo pkgconfig curl xz zlib boost cmake
 
 Install DROMPAplus
 +++++++++++++++++++++++++
