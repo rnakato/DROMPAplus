@@ -11,7 +11,7 @@ The **MULTICI** generates a matrix file that describes the averaged read density
     -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
     -o drompa --gt $gt --bed H3K4me3.bed
 
-The output file (``drompa.MULTICI.averaged.ChIPread.tsv``) is a tab-delimitted TSV file that contains the averaged ChIP-read intensity per bin size for each BED site like this::
+The output file (``drompa.MULTICI.averaged.ChIPread.tsv``) is a tab-delimited TSV file that contains the averaged ChIP-read intensity per bin size for each BED site like this::
 
      $ head drompa.MULTICI.averaged.ChIPread.tsv
              H3K4me3 H3K27me3        H3K36me3
@@ -25,7 +25,7 @@ The output file (``drompa.MULTICI.averaged.ChIPread.tsv``) is a tab-delimitted T
      chr1-859300-861299      48.3319 8.51783 0.29999
      chr1-875800-876399      48.9127 14.4279 1.93347
 
-This file can be used to draw a scatterplot, for example (in Python below)
+This file can be used to draw a scatter plot, for example (in Python below)
 
 .. code-block:: python3
 
@@ -41,13 +41,13 @@ This file can be used to draw a scatterplot, for example (in Python below)
    :align: center
    :alt: Alternate
 
-   Scatteplot between H3K4me3 and H3K27me3 within H3K4me3 peaks.
+   Scatterplot (log-scale) between H3K4me3 and H3K27me3 within H3K4me3 peaks.
 
 
 Output ChIP/Input enrichment
 ++++++++++++++++++++++++++++++++++++++
 
-Add ``--stype 1`` to generate averaged ChIP/Input enrichment matrix::
+Add ``--stype 1`` to generate averaged ChIP/Input enrichment table::
 
     dir=parse2wigdir+
     gt=genometable.hg19.txt
