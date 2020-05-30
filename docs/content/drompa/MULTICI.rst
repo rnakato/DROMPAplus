@@ -58,8 +58,10 @@ then ``drompa.MULTICI.maxposi.ChIPread.tsv`` is outputted.
 Visualization using MULTICI
 ++++++++++++++++++++++++++++++++++++++
 
+Here I introduce two example python commands to visualize the output file
+of **MULTICI** (here ``drompa.MULTICI.averaged.ChIPread.tsv``).
 
-This file can be used to draw a scatter plot, for example (in Python below)
+The command below draws a scatter plot between two samples.
 
 .. code-block:: python3
 
@@ -78,7 +80,7 @@ This file can be used to draw a scatter plot, for example (in Python below)
 
    Scatterplot (log-scale) between H3K4me3 and H3K27me3 within H3K4me3 peaks.
 
-Another example visualization using pairplot is shown below
+The command below draws a pairplot among all samples.
 
 .. code-block:: python3
 
@@ -92,6 +94,7 @@ Another example visualization using pairplot is shown below
        g.map_upper(sns.scatterplot)
        g.map_diag(sns.distplot)
        g.map_lower(sns.kdeplot)
+
 
 .. figure:: img/multici.pairplot.jpg
      :width: 500px
