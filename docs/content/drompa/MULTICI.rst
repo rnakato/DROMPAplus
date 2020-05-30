@@ -69,7 +69,8 @@ The command below draws a scatter plot between two samples.
      import pandas as pd
      import seaborn as sns
 
-     df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
+     df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=["chromosome","start","end"])
+
      logdf = np.log1p(df)
      sns.scatterplot(logdf.iloc[:,0], logdf.iloc[:,1])
 
@@ -88,7 +89,7 @@ The command below draws a pairplot among all samples.
        import pandas as pd
        import seaborn as sns
 
-       df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
+       df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=["chromosome","start","end"])
        logdf = np.log1p(df)
        g = sns.PairGrid(logdf)
        g.map_upper(sns.scatterplot)
