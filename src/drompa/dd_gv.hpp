@@ -56,6 +56,28 @@ public:
 namespace DROMPA {
   class Global;
 
+  /// GraphDataFileName (used in Annotation)
+  class GraphDataFileName {
+    std::string filename;
+    int32_t binsize;
+
+  public:
+    GraphDataFileName(): filename(""), binsize(0) {}
+
+    void setValue(const std::string &f, const int32_t s) {
+      filename = f;
+      binsize = s;
+    }
+    const std::string & getfilename() const { return filename; }
+    int32_t getbinsize() const { return binsize; }
+    bool isOn() const {
+      if (filename != "") return true;
+      else return false;
+    }
+  };
+
+
+  //// Annotation
   class Annotation {
     bool isUCSC;
     bool isIdeogram;
@@ -79,25 +101,6 @@ namespace DROMPA {
     void parse_ChIADropData(const std::string &fileName);
 
   public:
-    class GraphDataFileName {
-      std::string filename;
-      int32_t binsize;
-
-    public:
-      GraphDataFileName(): filename(""), binsize(0) {}
-
-      void setValue(const std::string &f, const int32_t s) {
-        filename = f;
-        binsize = s;
-      }
-      const std::string & getfilename() const { return filename; }
-      int32_t getbinsize() const { return binsize; }
-      bool isOn() const {
-        if (filename != "") return true;
-        else return false;
-      }
-    };
-
     std::string genefile;
     int32_t gftype;
     HashOfGeneDataMap gmp;
@@ -161,31 +164,36 @@ namespace DROMPA {
     bool showIdeogram() const { return isIdeogram; }
   };
 
+
+  ////// Profile
   class Profile {
     enum {TSS, TTS, GENE100, BEDSITES, PTYPENUM};
-
-  public:
+    bool getmaxval;
+    int32_t width_from_center;
     int32_t ptype;
     int32_t stype;
-    int32_t ntype;
-    int32_t width_from_center;
-    double  hm_maxval;
-    int32_t hmsort;
-    bool getmaxposi;
+    //   int32_t ntype;
 
-    Profile(): ptype(0), stype(0), ntype(0), width_from_center(0),
-               hm_maxval(0), hmsort(0), getmaxposi(false) {}
+  public:
+
+    Profile(): getmaxval(false), width_from_center(0),
+               ptype(0), stype(0) {} //, ntype(0)
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
     void InitDump() const;
-    bool isPtypeTSS() const { return ptype == TSS; }
-    bool isPtypeTTS() const { return ptype == TTS; }
+    bool isgetmaxval() const { return getmaxval; }
+    bool isPtypeTSS()     const { return ptype == TSS; }
+    bool isPtypeTTS()     const { return ptype == TTS; }
     bool isPtypeGene100() const { return ptype == GENE100; }
-    bool isPtypeBed() const { return ptype == BEDSITES; }
-    bool isgetmaxposi() const { return getmaxposi; }
+    bool isPtypeBed()     const { return ptype == BEDSITES; }
+    int32_t get_width_from_center() const { return width_from_center; }
+    int32_t is_distribution_type() const { return stype; }
+//    int32_t is_normalization_type() const { return ntype; }
   };
 
+
+  //// Threshold
   class Threshold {
   public:
     double pthre_inter;
@@ -202,6 +210,8 @@ namespace DROMPA {
     void InitDump() const;
   };
 
+
+  //// DrawRegion
   class DrawRegion {
     bool isRegion;
     std::vector<bed> regionBed;
@@ -250,6 +260,8 @@ namespace DROMPA {
     }
   };
 
+
+  /// Drawparam
   class DrawParam {
     int32_t linenum_per_page;
     int32_t barnum;
@@ -278,19 +290,10 @@ namespace DROMPA {
     DrawParam(): linenum_per_page(0), barnum(0), ystep(0),
                  showymem(true), showylab(true), showpdf(true),
                  samplenum(0),
-                 width_page_pixel(0),
-                 width_draw_pixel(0),
-                 width_per_line(0),
-                 showctag(0),
-                 showitag(0),
-                 showratio(0),
-                 showpinter(0),
-                 showpenrich(0),
-                 scale_tag(0),
-                 scale_ratio(0),
-                 scale_pvalue(0),
-                 alpha(0)
-    {}
+                 width_page_pixel(0), width_draw_pixel(0), width_per_line(0),
+                 showctag(0), showitag(0), showratio(0), showpinter(0), showpenrich(0),
+                 scale_tag(0), scale_ratio(0), scale_pvalue(0),
+                 alpha(0) {}
 
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
     void setValues(const MyOpt::Variables &values, const int32_t n);
@@ -319,6 +322,8 @@ namespace DROMPA {
     int32_t getPageHeight(const Global &p, const std::vector<SamplePairOverlayed> &pairs) const;
   };
 
+
+  /// Global
   class Global {
     bool ispng;
     bool showchr;
@@ -348,8 +353,7 @@ namespace DROMPA {
 
     Global():
       ispng(false), showchr(false), iftype(WigType::NONE),
-      oprefix(""), includeYM(false),
-      norm(0), smoothing(0),
+      oprefix(""), includeYM(false), norm(0), smoothing(0),
       opts("Options"), isGV(false)
     {}
 
@@ -387,8 +391,6 @@ namespace DROMPA {
     void genwig_closefilestream() {
       for (auto &x: samplepair) x.first.genwig_closefilestream(getGenomeTableFileName());
     }
-
-    //    pdSample scan_pdstr(const std::string &str);
   };
 }
 

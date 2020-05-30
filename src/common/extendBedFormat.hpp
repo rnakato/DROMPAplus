@@ -15,16 +15,13 @@
 #include "../submodules/SSP/common/inline.hpp"
 #include "../submodules/SSP/common/util.hpp"
 
-bool isStr(std::string, std::string);
-
-class Interaction;
-
 class bed {
 public:
   std::string chr;
   int32_t start;
   int32_t end;
   int32_t summit;
+  std::string name;
 
   bed(): start(0), end(0), summit(0) {}
   virtual ~bed(){}
@@ -41,16 +38,29 @@ public:
       std::cerr << "\nWarning: Bed site size < 3." << std::endl;
       return;
     }
-    chr = rmchr(s[0]);
-    start = stoi(s[1]);
-    end = stoi(s[2]);
-    summit = (start + end)/2;
+
+    try {
+      chr = rmchr(s[0]);
+      start = stoi(s[1]);
+      end = stoi(s[2]);
+      summit = (start + end)/2;
+      if(s.size() >= 4) name = s[0];
+    } catch (std::exception &e) {
+      PRINTERR_AND_EXIT("invalid columns in macsxls format. " + std::string(e.what()));
+    }
+
   }
   void print() const { std::cout << "chr" << chr << "\t" << start  << "\t" << end ; }
   void printHead() const { std::cout << "chromosome\tstart\tend"; }
   int32_t length() const { return abs(end - start); }
   std::string getSiteStr() const {
     return "chr" + chr + "-" + std::to_string(start) + "-" + std::to_string(end);
+  }
+  std::string getSiteStrTAB() const {
+    return "chr" + chr + "\t" + std::to_string(start) + "\t" + std::to_string(end);
+  }
+  std::string getSiteStrTABwithNAME() const {
+    return getSiteStrTAB() + "\t" + name;
   }
 };
 
@@ -75,7 +85,7 @@ public:
 
 class bed12 : public bed {
 public:
-  std::string name;
+//  std::string name;
   int32_t score;
   std::string strand;
   int32_t thickStart;
@@ -108,7 +118,7 @@ public:
   double p;
   double enrich;
   double q;
-  std::string name;
+//  std::string name;
 
   macsxls(): bed(), len(0), pileup(0), p(0), enrich(0), q(0) {}
   explicit macsxls(std::vector<std::string> &s): bed(s) {

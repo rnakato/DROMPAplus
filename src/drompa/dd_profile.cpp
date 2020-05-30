@@ -23,9 +23,9 @@ std::vector<genedata> ReadProfile::get_garray(const GeneDataMap &mp)
 {
   std::vector<genedata> garray;
   for (auto &m: mp) {
-    if (m.second.gtype == "nonsense_mediated_decay" ||
-        m.second.gtype == "processed_transcript"    ||
-        m.second.gtype == "retained_intron") continue;
+    if (m.second.gtype == "nonsense_mediated_decay"
+        || m.second.gtype == "processed_transcript"
+        || m.second.gtype == "retained_intron") continue;
     garray.emplace_back(m.second);
   }
   return garray;
@@ -70,8 +70,8 @@ double ReadProfile::getMaxVal(const SamplePairOverlayed &pair,
 }
 
 ReadProfile::ReadProfile(const DROMPA::Global &p, const int32_t _nbin):
-  stype(p.prof.stype),
-  width_from_center(p.prof.width_from_center),
+  stype(p.prof.is_distribution_type()),
+  width_from_center(p.prof.get_width_from_center()),
   nsites(0), nsites_skipped(0)
 {
 
@@ -100,13 +100,13 @@ void ReadProfile::setOutputFilename(const DROMPA::Global &p, const std::string &
 {
   std::string prefix(p.getPrefixName() + "." + commandname);
 
-  if (p.prof.isgetmaxposi()) prefix += ".maxposi";
-  else                       prefix += ".averaged";
+  if (p.prof.isgetmaxval()) prefix += ".maxvalue";
+  else                      prefix += ".averaged";
   if      (stype==0) prefix += ".ChIPread";
   else if (stype==1) prefix += ".Enrichment";
 
   Rscriptname = prefix + ".R";
-  RDataname   = prefix;    //  prefix + ".tsv";
+  RDataname   = prefix;
   Rfigurename = prefix + ".pdf";
   for (auto &x: {Rscriptname, RDataname, Rfigurename}) unlink(x.c_str());
   for (auto &x: p.samplepair) {
@@ -330,8 +330,8 @@ void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
       int32_t sbin(bed.start/binsize);
       int32_t ebin((bed.end-1)/binsize);
       for (auto &x: p.samplepair) {
-        if (p.prof.isgetmaxposi()) out << "\t" << getMaxVal(x, vReadArray, sbin, ebin);
-        else                       out << "\t" << getAverageVal(x, vReadArray, sbin, ebin);
+        if (p.prof.isgetmaxval()) out << "\t" << getMaxVal(x, vReadArray, sbin, ebin);
+        else                      out << "\t" << getAverageVal(x, vReadArray, sbin, ebin);
       }
       out << std::endl;
     }

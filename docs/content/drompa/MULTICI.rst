@@ -43,7 +43,7 @@ then ``drompa.MULTICI.averaged.Enrichment.tsv`` is outputted.
 Output the maximum bin value
 ++++++++++++++++++++++++++++++++++++++
 
-In default, **MULTICI** command output the averaged value of bins included in each site. If the user wants to output the maximum value among bins included in each site, supply ``--getmaxposi`` option::
+In default, **MULTICI** command output the averaged value of bins included in each site. If the user wants to output the maximum value among bins included in each site, supply ``--maxvalue`` option::
 
         dir=parse2wigdir+
         gt=genometable.hg19.txt
@@ -51,9 +51,9 @@ In default, **MULTICI** command output the averaged value of bins included in ea
         -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
         -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
         -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-        -o drompa --gt $gt --bed H3K4me3.bed --getmaxposi
+        -o drompa --gt $gt --bed H3K4me3.bed --maxvalue
 
-then ``drompa.MULTICI.maxposi.ChIPread.tsv`` is outputted.
+then ``drompa.MULTICI.maxvalue.ChIPread.tsv`` is outputted.
 
 Visualization using MULTICI
 ++++++++++++++++++++++++++++++++++++++
