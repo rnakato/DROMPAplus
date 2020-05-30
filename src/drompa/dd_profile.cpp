@@ -100,8 +100,8 @@ void ReadProfile::setOutputFilename(const DROMPA::Global &p, const std::string &
 {
   std::string prefix(p.getPrefixName() + "." + commandname);
 
-  if (p.prof.isgetmaxval()) prefix += ".maxvalue";
-  else                      prefix += ".averaged";
+  if (p.isgetmaxval()) prefix += ".maxvalue";
+  else                 prefix += ".averaged";
   if      (stype==0) prefix += ".ChIPread";
   else if (stype==1) prefix += ".Enrichment";
 
@@ -326,12 +326,16 @@ void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
         ++nsites_skipped;
         continue;
       }
-      out << bed.getSiteStr();
+
       int32_t sbin(bed.start/binsize);
       int32_t ebin((bed.end-1)/binsize);
+
+      if (p.isgetmaxval()) out << bed.getSiteStrTABwithNAME();
+      else out << bed.getSiteStrTAB();
+
       for (auto &x: p.samplepair) {
-        if (p.prof.isgetmaxval()) out << "\t" << getMaxVal(x, vReadArray, sbin, ebin);
-        else                      out << "\t" << getAverageVal(x, vReadArray, sbin, ebin);
+        if (p.isgetmaxval()) out << "\t" << getMaxVal(x, vReadArray, sbin, ebin);
+        else                 out << "\t" << getAverageVal(x, vReadArray, sbin, ebin);
       }
       out << std::endl;
     }

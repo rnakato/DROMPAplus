@@ -14,7 +14,8 @@ class chrsize;
 
 enum class DrompaCommand {
                           CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
-                          DRAW, REGION, CG, GENWIG, TR, PROF, OTHER
+                          DRAW, REGION, GENWIG, PROF, MULTICI,
+                          CG, TR, OTHER
 };
 
 class CommandParamSet {
@@ -168,7 +169,6 @@ namespace DROMPA {
   ////// Profile
   class Profile {
     enum {TSS, TTS, GENE100, BEDSITES, PTYPENUM};
-    bool getmaxval;
     int32_t width_from_center;
     int32_t ptype;
     int32_t stype;
@@ -176,13 +176,12 @@ namespace DROMPA {
 
   public:
 
-    Profile(): getmaxval(false), width_from_center(0),
+    Profile(): width_from_center(0),
                ptype(0), stype(0) {} //, ntype(0)
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
     void InitDump() const;
-    bool isgetmaxval() const { return getmaxval; }
     bool isPtypeTSS()     const { return ptype == TSS; }
     bool isPtypeTTS()     const { return ptype == TTS; }
     bool isPtypeGene100() const { return ptype == GENE100; }
@@ -337,6 +336,10 @@ namespace DROMPA {
     int32_t genwig_ofvalue;
     std::string genometablefilename;
 
+    // MULTICI
+    bool getmaxval;
+    bool addname;
+
   public:
     MyOpt::Opts opts;
     DrawParam drawparam;
@@ -354,6 +357,7 @@ namespace DROMPA {
     Global():
       ispng(false), showchr(false), iftype(WigType::NONE),
       oprefix(""), includeYM(false), norm(0), smoothing(0),
+      genwig_ofvalue(0), getmaxval(false), addname(false),
       opts("Options"), isGV(false)
     {}
 
@@ -384,6 +388,8 @@ namespace DROMPA {
     }
     bool isincludeYM() const { return includeYM; }
     bool isshowchr() const { return showchr; }
+    bool isgetmaxval() const { return getmaxval; }
+    bool isaddname() const { return addname; }
 
     void genwig_openfilestream() {
       for (auto &x: samplepair) x.first.genwig_openfilestream(getPrefixName(), genwig_oftype, genwig_ofvalue);

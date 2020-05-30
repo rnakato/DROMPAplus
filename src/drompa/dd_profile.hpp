@@ -122,6 +122,8 @@ public:
   void printHead(const DROMPA::Global &p) {
     std::string file(RDataname + ".tsv");
     std::ofstream out(file);
+    out << "chromosome\tstart\tend";
+    if (p.isaddname())  out << "\tname";
 
     for (auto &x: p.samplepair) out << "\t" << x.first.label;
     out << std::endl;

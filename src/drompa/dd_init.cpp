@@ -175,7 +175,6 @@ void Profile::setOpts(MyOpt::Opts &allopts)
 //    (SETOPT_RANGE("ntype", int32_t, 0, 0, 1),
 //     "Normalization: 0; total read 1; target regions only")
     (SETOPT_OVER("widthfromcenter", int32_t, 2500, 1), "width from the center")
-    ("maxvalue",  "(for MULTICI) output the max bin value (default: averaged bin value) ")
     ;
   allopts.add(opt);
 }
@@ -189,7 +188,6 @@ void Profile::setValues(const Variables &values)
     stype = getVal<int32_t>(values, "stype");
  //   ntype = getVal<int32_t>(values, "ntype");
     width_from_center = getVal<int32_t>(values, "widthfromcenter");
-    getmaxval = values.count("maxvalue");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }
@@ -207,7 +205,7 @@ void Profile::InitDump() const {
   std::cout << boost::format("   Profile type: %1%\n")  % str_ptype[ptype];
   std::cout << boost::format("   Show type: %1%\n")     % str_stype[stype];
 //  std::cout << boost::format("   Normalization: %1%\n") % str_ntype[ntype];
-  std::cout << boost::format("   Width from center: %1%\n") % width_from_center;
+//  std::cout << boost::format("   Width from center: %1%\n") % width_from_center;
 
   DEBUGprint_FUNCend();
 }
@@ -337,6 +335,16 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
     case DrompaCommand::DRAW:    drawparam.setOpts(opts, cps); break;
     case DrompaCommand::REGION:  drawregion.setOpts(opts);     break;
     case DrompaCommand::PROF:    prof.setOpts(opts);           break;
+    case DrompaCommand::MULTICI:
+      {
+        options_description o("MULTICI",100);
+        o.add_options()
+          ("maxvalue",  "output the max bin value (default: averaged bin value) ")
+          ("addname",  "output peakname in addition to genomic position (the 4th column required)")
+          ;
+        opts.add(o);
+        break;
+      }
     case DrompaCommand::GENWIG:
       {
         options_description o("GENWIG",100);
@@ -424,6 +432,13 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
     case DrompaCommand::PROF: prof.setValues(values); break;
     case DrompaCommand::DRAW: drawparam.setValues(values, samplepair.size()); break;
     case DrompaCommand::REGION: drawregion.setValues(values); break;
+    case DrompaCommand::MULTICI:
+      {
+        DEBUGprint("Global::setValues::MULTICI");
+        getmaxval = values.count("maxvalue");
+        addname = values.count("isaddname");
+        break;
+      }
     case DrompaCommand::GENWIG:
       {
         DEBUGprint("Global::setValues::GENWIG");
