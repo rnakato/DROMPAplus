@@ -101,4 +101,4 @@ The command below draws a pairplot among all samples.
      :align: center
      :alt: Alternate
 
-     Scatterplot (log-scale) between H3K4me3 and H3K27me3 within H3K4me3 peaks.
+     Pairplot (log-scale) among three samples within H3K4me3 peaks.
