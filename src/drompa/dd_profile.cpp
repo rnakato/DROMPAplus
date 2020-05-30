@@ -330,7 +330,7 @@ void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
       int32_t sbin(bed.start/binsize);
       int32_t ebin((bed.end-1)/binsize);
 
-      if (p.isgetmaxval()) out << bed.getSiteStrTABwithNAME();
+      if (p.isaddname()) out << bed.getSiteStrTABwithNAME();
       else out << bed.getSiteStrTAB();
 
       for (auto &x: p.samplepair) {

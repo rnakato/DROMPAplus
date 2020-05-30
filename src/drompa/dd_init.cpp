@@ -436,7 +436,7 @@ void Global::setValues(const std::vector<DrompaCommand> &vopts, const Variables 
       {
         DEBUGprint("Global::setValues::MULTICI");
         getmaxval = values.count("maxvalue");
-        addname = values.count("isaddname");
+        addname = values.count("addname");
         break;
       }
     case DrompaCommand::GENWIG:

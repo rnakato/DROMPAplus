@@ -27,7 +27,7 @@ public:
   virtual ~bed(){}
 
   bed(const std::string &c, const int32_t s, const int32_t e, const int32_t _summit=0):
-    chr(rmchr(c)), start(s), end(e)
+    chr(rmchr(c)), start(s), end(e), name("")
   {
     if (_summit) summit = _summit;
     else summit = (start + end)/2;
@@ -44,7 +44,7 @@ public:
       start = stoi(s[1]);
       end = stoi(s[2]);
       summit = (start + end)/2;
-      if(s.size() >= 4) name = s[0];
+      if(s.size() >= 4) name = s[3];
     } catch (std::exception &e) {
       PRINTERR_AND_EXIT("invalid columns in macsxls format. " + std::string(e.what()));
     }
