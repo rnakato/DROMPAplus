@@ -25,25 +25,6 @@ The output file (``drompa.MULTICI.averaged.ChIPread.tsv``) is a tab-delimited TS
      chr1-859300-861299      48.3319 8.51783 0.29999
      chr1-875800-876399      48.9127 14.4279 1.93347
 
-This file can be used to draw a scatter plot, for example (in Python below)
-
-.. code-block:: python3
-
-     import numpy as np
-     import pandas as pd
-     import seaborn as sns
-
-     df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
-     sns.scatterplot(np.log1p(df.iloc[:,0]), np.log1p(df.iloc[:,1]))
-
-.. figure:: img/multici.scatter.jpg
-   :width: 400px
-   :align: center
-   :alt: Alternate
-
-   Scatterplot (log-scale) between H3K4me3 and H3K27me3 within H3K4me3 peaks.
-
-
 Output ChIP/Input enrichment
 ++++++++++++++++++++++++++++++++++++++
 
@@ -73,3 +54,48 @@ In default, **MULTICI** command output the averaged value of bins included in ea
         -o drompa --gt $gt --bed H3K4me3.bed --getmaxposi
 
 then ``drompa.MULTICI.maxposi.ChIPread.tsv`` is outputted.
+
+Visualization using MULTICI
+++++++++++++++++++++++++++++++++++++++
+
+
+This file can be used to draw a scatter plot, for example (in Python below)
+
+.. code-block:: python3
+
+     import numpy as np
+     import pandas as pd
+     import seaborn as sns
+
+     df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
+     logdf = np.log1p(df)
+     sns.scatterplot(logdf.iloc[:,0], logdf.iloc[:,1])
+
+.. figure:: img/multici.scatter.jpg
+   :width: 400px
+   :align: center
+   :alt: Alternate
+
+   Scatterplot (log-scale) between H3K4me3 and H3K27me3 within H3K4me3 peaks.
+
+Another example visualization using pairplot is shown below
+
+.. code-block:: python3
+
+       import numpy as np
+       import pandas as pd
+       import seaborn as sns
+
+       df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
+       logdf = np.log1p(df)
+       g = sns.PairGrid(logdf)
+       g.map_upper(sns.scatterplot)
+       g.map_diag(sns.distplot)
+       g.map_lower(sns.kdeplot)
+
+.. figure:: img/multici.pairplot.jpg
+     :width: 500px
+     :align: center
+     :alt: Alternate
+
+     Scatterplot (log-scale) between H3K4me3 and H3K27me3 within H3K4me3 peaks.
