@@ -79,6 +79,9 @@ int main(int32_t argc, char* argv[])
   t2 = clock();
   PrintTime(t1, t2, "ShiftProfile");
 
+  std::cout << p.genome.dflen.getlenF3() << "\t" << p.genome.dflen.getlenF5() << std::endl;
+  exit(0);
+
   for (auto &x: p.genome.chr) CalcDepth(x, p.genome.dflen.getflen());
   CalcDepth(p.genome, p.genome.dflen.getflen());
 
@@ -241,6 +244,9 @@ void output_stats(const Mapfile &p)
   out << "total reads\t\t\t\t";
   out << "nonredundant reads\t\t\t";
   out << "redundant reads\t\t\t";
+  out << "read length (F3)\t" << p.genome.dflen.getlenF3();
+  if (p.genome.isPaired()) out << "read length (F5)\t" << p.genome.dflen.getlenF5();
+  out << "fragment length\t" << p.genome.dflen.getflen();
   if (p.gc.isGcNormOn()) out << "reads (GCnormed)\t\t\t";
   out << "read depth\t";
   out << "scaling weight\t";

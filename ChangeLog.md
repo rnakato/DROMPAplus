@@ -6,7 +6,8 @@
 - MULTICI: add `--addname` option to output peakname
 - Add `--bed12` option to depict BED12 format (mainly for ChromHMM output)
 - PROFILE: remove `--ntype` option
-
+- parse2wig+: add `--onlyreadregion` option for paired-end RNA-seq
+ 
 ## 1.7.1 (2020-05-26)
 - Bug fix in peak-calling (overflow of p_enrich)
 - Add script change_chrname_[to|from]_Greek.pl in scripts directory
