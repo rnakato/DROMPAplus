@@ -25,9 +25,9 @@ public:
 
   SampleInfo() {}
   SampleInfo(const std::string &filename,
-	     const std::vector<chrsize> &gt,
-	     const int32_t b,
-	     const WigType &type);
+             const std::vector<chrsize> &gt,
+             const int32_t b,
+             const WigType &type);
 
   void scanStatsFile(const std::string &filename);
   void gettotalreadnum(const std::string &filename, const std::vector<chrsize> &gt);
@@ -98,9 +98,9 @@ public:
   void genEnrichWig(const vChrArray &vReadArray, const std::string &chrname, const int32_t chrlen);
 
   void peakcall_withInput(const vChrArray &vReadArray, const std::string &chrname,
-			  const double pthre_inter, const double pthre_enrich,
-			  const double ethre, const double ipm);
-  void peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname, const double pthre_inter);
+                          const double pthre_inter, const double pthre_enrich,
+                          const double ethre, const double ipm);
+  void peakcall_onlyChIP(const vChrArray &vReadArray, const std::string &chrname, const double pthre_inter, const double ipm);
 
   void printPeak(const std::string &prefix) const {
     std::string baselabel = basename(label);

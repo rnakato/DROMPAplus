@@ -51,7 +51,7 @@ public:
 
     for (auto &x: vsamplepairoverlayed) {
       if (x.first.InputExists()) {
-	x.first.genEnrichWig(vReadArray, chrname, chrlen -1);
+        x.first.genEnrichWig(vReadArray, chrname, chrlen -1);
       }
 
     }
@@ -65,11 +65,11 @@ public:
 
     for (auto &x: vsamplepairoverlayed) {
       if (x.first.InputExists()) {
-	x.first.peakcall_withInput(vReadArray, chrname,
-				   p.thre.pthre_inter, p.thre.pthre_enrich,
-				   p.thre.ethre, p.thre.ipm);
+        x.first.peakcall_withInput(vReadArray, chrname,
+                                   p.thre.pthre_inter, p.thre.pthre_enrich,
+                                   p.thre.ethre, p.thre.ipm);
       }
-      else x.first.peakcall_onlyChIP(vReadArray, chrname, p.thre.pthre_inter);
+      else x.first.peakcall_onlyChIP(vReadArray, chrname, p.thre.pthre_inter, p.thre.ipm);
     }
     t2 = clock();
     PrintTime(t1, t2, "peakcall");

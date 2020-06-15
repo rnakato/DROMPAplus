@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0 (2020-06-15)
+- drompa+: change default value of `--norm` option to 0 (not normalize)
+- Add `--ipm` threshold in peak calling (ChIP only)
+- bug fix in peakcall (scaling factor between ChIP and Input was not reflected)
+
 ## 1.7.3 (2020-06-15)
 - PROFILE: bug fix in `--ptype 3` that the header of .tsv file are not outputted
 - PROFILE: add "ylim" option in R script generated
@@ -11,7 +16,7 @@
 - Add `--bed12` option to depict BED12 format (mainly for ChromHMM output)
 - PROFILE: remove `--ntype` option
 - parse2wig+: add `--onlyreadregion` option for paired-end RNA-seq
- 
+
 ## 1.7.1 (2020-05-26)
 - Bug fix in peak-calling (overflow of p_enrich)
 - Add script change_chrname_[to|from]_Greek.pl in scripts directory

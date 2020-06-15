@@ -4,8 +4,8 @@
 #include "dd_draw_dataframe.hpp"
 
 void DataFrame::Draw(const DROMPA::Global &p,
-		     const SamplePairOverlayed &pair,
-		     const vChrArray &vReadArray)
+                     const SamplePairOverlayed &pair,
+                     const vChrArray &vReadArray)
 {
   int32_t nlayer(0);
   StrokeBins(pair.first, vReadArray, nlayer);
@@ -60,8 +60,8 @@ void DataFrame::StrokeSampleLabel(const SamplePairOverlayed &pair) {
 }
 
 void DataFrame::StrokeBins(const SamplePairEach &pair,
-			   const vChrArray &vReadArray,
-			   const int32_t nlayer)
+                           const vChrArray &vReadArray,
+                           const int32_t nlayer)
 {
   int32_t binsize(pair.getbinsize());
   int32_t sbin(par.xstart/binsize);
@@ -83,9 +83,9 @@ void DataFrame::StrokeBins(const SamplePairEach &pair,
 }
 
 void DataFrame::StrokeEachBin(const SamplePairEach &pair,
-			      const vChrArray &vReadArray,
-			      const int32_t i, const double xcen,
-			      const int32_t yaxis, const int32_t nlayer)
+                              const vChrArray &vReadArray,
+                              const int32_t i, const double xcen,
+                              const int32_t yaxis, const int32_t nlayer)
 {
   double value(getVal(pair, vReadArray, i));
   if (!value) return;
@@ -99,14 +99,14 @@ void DataFrame::StrokeEachBin(const SamplePairEach &pair,
   } else                len = -std::min(len,  height_df);
   if (!len) return;
 
-/*  DEBUGprint("value " << value
-	     << " ystep:" << par.ystep
-	     << " scale:" << scale
-	     << " len:" << len
-	     << " height_df " << height_df
-	     << " yaxis" << yaxis
-	     << " len_binedge" << len_binedge
-	     << " len_minus " << len_minus);*/
+  /*  DEBUGprint("value " << value
+      << " ystep:" << par.ystep
+      << " scale:" << scale
+      << " len:" << len
+      << " height_df " << height_df
+      << " yaxis" << yaxis
+      << " len_binedge" << len_binedge
+      << " len_minus " << len_minus);*/
 
   // waku
   setColor(value, nlayer, 1);
@@ -122,11 +122,11 @@ void DataFrame::StrokeEachBin(const SamplePairEach &pair,
 }
 
 void LogRatioDataFrame::StrokeEachBin(const SamplePairEach &pair,
-				      const vChrArray &vReadArray,
-				      const int32_t i,
-				      const double xcen,
-				      const int32_t yaxis,
-				      const int32_t nlayer)
+                                      const vChrArray &vReadArray,
+                                      const int32_t i,
+                                      const double xcen,
+                                      const int32_t yaxis,
+                                      const int32_t nlayer)
 {
   double value(getVal(pair, vReadArray, i));
   if (!nlayer) value = value ? log(value) / log(scale): 0;
@@ -162,12 +162,12 @@ void RatioDataFrame::setColor(const double value, const int32_t nlayer, const do
 {
   if (!nlayer) { // first layer
     if(isGV || sigtest) {
-      if (value > threshold) cr->set_source_rgba(CLR_RED, alpha);
+      if (value >= threshold) cr->set_source_rgba(CLR_RED, alpha);
       else cr->set_source_rgba(CLR_GRAY, alpha);
     } else getColor1st(alpha);
   } else {    // second layer
     if(isGV || sigtest) {
-      if (value > threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
+      if (value >= threshold) cr->set_source_rgba(CLR_DARKORANGE, alpha);
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     } else getColor2nd(alpha);
   }
@@ -177,12 +177,12 @@ void LogRatioDataFrame::setColor(const double value, const int32_t nlayer, const
 {
   if (!nlayer) {
     if (isGV || sigtest) {
-      if (value > 0) cr->set_source_rgba(CLR_SALMON, 1);
+      if (value >= 0) cr->set_source_rgba(CLR_SALMON, 1);
       else cr->set_source_rgba(CLR_BLUEPURPLE, 1);
     } else getColor1st(alpha);
   } else {
     if (isGV || sigtest) {
-      if (value > 0) cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha);
+      if (value >= 0) cr->set_source_rgba(CLR_DEEPSKYBLUE, alpha);
       else cr->set_source_rgba(CLR_GRAY2, alpha);
     } else getColor2nd(alpha);
   }
@@ -191,10 +191,10 @@ void LogRatioDataFrame::setColor(const double value, const int32_t nlayer, const
 void PvalueDataFrame::setColor(const double value, const int32_t nlayer, const double alpha)
 {
   if (!nlayer) { // first layer
-    if (value > threshold) getColor1st(alpha);
+    if (value >= threshold) getColor1st(alpha);
     else cr->set_source_rgba(CLR_GRAY, alpha);
   } else {    // second layer
-    if (value > threshold) getColor2nd(alpha);
+    if (value >= threshold) getColor2nd(alpha);
     else cr->set_source_rgba(CLR_GRAY, alpha);
   }
 }

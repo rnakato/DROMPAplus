@@ -467,7 +467,7 @@ void Global::setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm)
 {
   MyOpt::Opts o("Normalization",100);
   o.add_options()
-    (SETOPT_RANGE("norm", int32_t, 1, 0, 2),
+    (SETOPT_RANGE("norm", int32_t, 0, 0, 2),
      "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n      3: with NCIS method\n")
     (SETOPT_OVER("sm", int32_t, defsm, 0), "# of bins for Gausian smoothing")
     ;
