@@ -149,7 +149,12 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
     if(i<p.samplepair.size()) out << ",";
     else out << ")))\n";
   }
-
+  out << "ymin <- ceiling(min(c(";
+  for (size_t i=1; i<=p.samplepair.size(); ++i) {
+    out << boost::format("min(p%1%)") % i;
+    if(i<p.samplepair.size()) out << ",";
+    else out << ")))\n";
+  }
 
   out << "pdf('" << Rfigurename << "',6,6)" << std::endl;
   out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2] << ")";
@@ -163,7 +168,7 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
   min = (int)(min*10)/10.0;
   if(!min) min = 0.1;*/
 
-  if (p.prof.isPtypeGene100()) out << ", log='y', ylim=c(0.01, ymax)";
+  if (p.prof.isPtypeGene100()) out << ", log='y', ylim=c(ymin, ymax)";
   else out << ", ylim=c(0, ymax)";
 
   if (!stype) {
