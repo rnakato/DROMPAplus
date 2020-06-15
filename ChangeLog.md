@@ -2,6 +2,7 @@
 
 ## 1.7.3 (2020-06-15)
 - PROFILE: bug fix in `--ptype 3` that the header of .tsv file are not outputted
+- PROFILE: add "ylim" option in R script generated
 
 ## 1.7.2 (2020-05-28)
 - Modify output filename of PROFILE and MULTICI

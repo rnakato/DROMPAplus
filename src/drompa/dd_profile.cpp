@@ -142,13 +142,34 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
     out << boost::format("p%1%_lower <- p%1% - SE%1%\n") % i;
     out << boost::format("x <- as.integer(colnames(t%1%))\n") % i;
   }
+
+  out << "ymax <- ceiling(max(c(";
+  for (size_t i=1; i<=p.samplepair.size(); ++i) {
+    out << boost::format("max(p%1%)") % i;
+    if(i<p.samplepair.size()) out << ",";
+    else out << ")))\n";
+  }
+
+
   out << "pdf('" << Rfigurename << "',6,6)" << std::endl;
   out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2] << ")";
-  if (p.prof.isPtypeGene100()) out << ",log='y'";
+
+/*  double min(1);
+  for (size_t i=1; i<=p.samplepair.size(); ++i) {
+    for(j=0; j<num; j++){
+      if(min > sample[i].profile.IP[j]) min = sample[i].profile.IP[j];
+    }
+  }
+  min = (int)(min*10)/10.0;
+  if(!min) min = 0.1;*/
+
+  if (p.prof.isPtypeGene100()) out << ", log='y', ylim=c(0.01, ymax)";
+  else out << ", ylim=c(0, ymax)";
+
   if (!stype) {
     out << ",xlab='" << xlabel << "',ylab='Read density')" << std::endl;
   } else if (stype==1) {
-    out << ",xlab='" << xlabel << "',ylab='Read enrichment')" << std::endl;
+    out << ",xlab='" << xlabel << "',ylab='ChIP/Input enrichment')" << std::endl;
   }
   out << "polygon(c(x, rev(x)), c(p1_lower, rev(p1_upper)), col=rgb("
       << vcol[0] << "," << vcol[1] << "," << vcol[2] << ",0.3), border=NA)" << std::endl;
