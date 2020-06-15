@@ -83,7 +83,7 @@ namespace {
   }
 }
 
-void GraphData::setValue(const DROMPA::Annotation::GraphDataFileName &g,
+void GraphData::setValue(const DROMPA::GraphDataFileName &g,
 	      const std::string &chr,
 	      const int32_t chrlen, const std::string &l,
 	      const double ymin, const double ymax)

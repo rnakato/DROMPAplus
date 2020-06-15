@@ -117,12 +117,6 @@ class WigArray {
       else         fprintf(File, "%s\t%zu\t%lu\t%.0f\n", name.c_str(), i*binsize, (uint64_t)chrend, rmGeta(array[i]));
     }
   }
-  /*  void outputAsBinary(std::ofstream &out) const {
-    for (size_t i=0; i<array.size(); ++i) out.write((char *)&array[i], sizeof(int32_t));
-  }
-  void readBinary(std::ifstream &in, const int32_t nbin) const {
-    for (int32_t i=0; i<nbin; ++i) in.read((char *)&array[i], sizeof(int32_t));
-    }*/
   void dump() const {
     for (auto &x: array) std::cout << x << std::endl;
   }
@@ -132,7 +126,6 @@ class WigArray {
 class WigStats {
   enum {WIGDISTNUM=200};
 
-//  double ave, var, nb_p0;
   std::vector<uint64_t> wigDist;
 
  public:
@@ -140,7 +133,6 @@ class WigStats {
   int32_t binsize;
   double nb_p, nb_n;
   WigStats(const int32_t _nbin=0, const int32_t _binsize=0):
-//    ave(0), var(0), nb_p0(0),
     wigDist(WIGDISTNUM, 0),
     nbin(_nbin), binsize(_binsize),
     nb_p(0), nb_n(0)
@@ -203,12 +195,13 @@ class WigStatsGenome {
   int32_t rcenter;
   WigType type;
   bool outputzero;
+  bool onlyreadregion;
 
 public:
   std::vector<WigStats> chr;
   WigStats genome;
 
-  WigStatsGenome(): binsize(0), rcenter(0), type(WigType::NONE), outputzero(false) {}
+  WigStatsGenome(): binsize(0), rcenter(0), type(WigType::NONE), outputzero(false), onlyreadregion(false) {}
 
   void setOpts(MyOpt::Opts &allopts) {
     MyOpt::Opts opt("Wigarray", 100);
@@ -223,6 +216,7 @@ public:
       ("rcenter",
        boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--rcenter")),
        "consider length around the center of fragment")
+      ("onlyreadregion", "(for paired-end) count only read region (default: full fragment length)")
       ;
     allopts.add(opt);
   }
@@ -230,7 +224,8 @@ public:
     binsize = MyOpt::getVal<int32_t>(values, "binsize");
     rcenter = MyOpt::getVal<int32_t>(values, "rcenter");
     type    = static_cast<WigType>(MyOpt::getVal<int32_t>(values, "outputformat"));
-    outputzero  = values.count("outputzero");
+    outputzero = values.count("outputzero");
+    onlyreadregion = values.count("onlyreadregion");
 
     for (auto &x: _chr) chr.emplace_back(x.getlen()/binsize +1);
     for (auto &x: chr) genome.nbin += x.getnbin();
@@ -245,6 +240,7 @@ public:
   int32_t getWigDistsize() const { return genome.getWigDistsize(); }
   int32_t getrcenter() const { return rcenter; }
   bool isoutputzero() const { return outputzero; }
+  bool isonlyreadregion() const { return onlyreadregion; }
   WigType getWigType() const { return type; }
 
   void setWigStats(const int32_t id, const WigArray &array) {

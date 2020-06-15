@@ -43,7 +43,7 @@ then ``drompa.MULTICI.averaged.Enrichment.tsv`` is outputted.
 Output the maximum bin value
 ++++++++++++++++++++++++++++++++++++++
 
-In default, **MULTICI** command output the averaged value of bins included in each site. If the user wants to output the maximum value among bins included in each site, supply ``--getmaxposi`` option::
+In default, **MULTICI** command output the averaged value of bins included in each site. If the user wants to output the maximum value among bins included in each site, supply ``--maxvalue`` option::
 
         dir=parse2wigdir+
         gt=genometable.hg19.txt
@@ -51,9 +51,9 @@ In default, **MULTICI** command output the averaged value of bins included in ea
         -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
         -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
         -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-        -o drompa --gt $gt --bed H3K4me3.bed --getmaxposi
+        -o drompa --gt $gt --bed H3K4me3.bed --maxvalue
 
-then ``drompa.MULTICI.maxposi.ChIPread.tsv`` is outputted.
+then ``drompa.MULTICI.maxvalue.ChIPread.tsv`` is outputted.
 
 Visualization using MULTICI
 ++++++++++++++++++++++++++++++++++++++
@@ -69,7 +69,9 @@ The command below draws a scatter plot between two samples.
      import pandas as pd
      import seaborn as sns
 
-     df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
+     df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv",
+                      sep="\t",
+                      index_col=["chromosome","start","end"])
      logdf = np.log1p(df)
      sns.scatterplot(logdf.iloc[:,0], logdf.iloc[:,1])
 
@@ -88,13 +90,14 @@ The command below draws a pairplot among all samples.
        import pandas as pd
        import seaborn as sns
 
-       df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv", sep="\t", index_col=0)
+       df = pd.read_csv("drompa.MULTICI.averaged.ChIPread.tsv",
+                        sep="\t",
+                        index_col=["chromosome","start","end"])
        logdf = np.log1p(df)
        g = sns.PairGrid(logdf)
        g.map_upper(sns.scatterplot)
        g.map_diag(sns.distplot)
        g.map_lower(sns.kdeplot)
-
 
 .. figure:: img/multici.pairplot.jpg
      :width: 500px

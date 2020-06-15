@@ -81,23 +81,3 @@ Modify plot parameters
 To modify the plot parameters (e.g., range of y-axis), change parameters descrived in the generated R script and remake the PDF file as follows::
 
     $ R --vanilla < aroundTSS.PROFILE.averaged.ChIPread.R
-
-Normalizing the read number for the specified regions
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-The averaged read number in the background regions sometimes highly varies among samples due to the effect of repetitive regions or sparsely mapped reads (low background uniformity).
-The option ``--ntype 1`` normalizes the read number for total number of reads mapped in the regions used by **PROFILE** command (e.g., genic regions for ``--ptype 2``)::
-
-    dir=parse2wigdir+
-    drompa+ PROFILE --ptype 2 --ntype 1 \
-       -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
-       -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
-       -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
-       -o aroundgene2 -g refFlat.txt --gt genometable.txt
-
-.. figure:: img/aroundgene2.jpg
-   :width: 400px
-   :align: center
-   :alt: Alternate
-
-   The read enrichment with ``--ntype 1`` option.

@@ -75,7 +75,7 @@ public:
   double mwid;
   GraphData(): binsize(0), memnum(0), boxheight(0), mmin(0), mmax(0), mwid(0){}
 
-  void setValue(const DROMPA::Annotation::GraphDataFileName &g,
+  void setValue(const DROMPA::GraphDataFileName &g,
 		const std::string &chr, const int32_t chrlen,
 		const std::string &l,	const double ymin, const double ymax);
 

@@ -233,6 +233,7 @@ void output_stats(const Mapfile &p)
   out << "Redundancy threshold: >" << p.complexity.getThreshold() << std::endl;
 
   p.complexity.print(out);
+  p.genome.dflen.printreadlen(out);
   p.genome.dflen.printFlen(out);
   if (p.gc.isGcNormOn()) out << "GC summit: " << p.getmaxGC() << std::endl;
 

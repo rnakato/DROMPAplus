@@ -57,7 +57,7 @@ std::vector<Command> generateCommands()
   cmds.emplace_back(Command("MULTICI", "Generate matrix of averaged read density in specified BED sites",
 			    "-i <ChIP>,<Input>,<label> [-i <ChIP>,<Input>,<label> ...]",
 			    exec_MULTICI,
-			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::OTHER},
+			    {DrompaCommand::CHIP, DrompaCommand::ANNO_PC, DrompaCommand::NORM, DrompaCommand::PROF, DrompaCommand::MULTICI, DrompaCommand::OTHER},
 			    CommandParamSet(5, 0, 0, 0, 0, 0,
 					    0, 0, 0, 0)
 			    ));
