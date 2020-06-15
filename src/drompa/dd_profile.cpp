@@ -261,8 +261,8 @@ void ProfileGene100::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
 
       int32_t len(gene.length());
       if (len < 1000 || gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) {
-	++nsites_skipped;
-	continue;
+        ++nsites_skipped;
+        continue;
       }
 
       out << gene.gname;
@@ -284,7 +284,7 @@ void ProfileBedSites::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &c
 
   for (auto &x: p.samplepair) {
     std::string file(RDataname + "." + x.first.label + ".tsv");
-    std::ofstream out(file);
+    std::ofstream out(file, std::ios::app);
 
     for (auto &vbed: p.anno.vbedlist) {
       for (auto &bed: vbed.getvBed()) {

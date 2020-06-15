@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.7.3 (2020-06-15)
+- PROFILE: bug fix in `--ptype 3` that the header of .tsv file are not outputted
+
 ## 1.7.2 (2020-05-28)
 - Modify output filename of PROFILE and MULTICI
 - MULTICI: add `--getmaxposi` option to output the max bin value for each site instead of averaged bin value
