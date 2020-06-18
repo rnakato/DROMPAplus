@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.1 (2020-06-18)
+- BED-formatted peak file is also generated in addition to TSV-formatted one
+
 ## 1.8.0 (2020-06-15)
 - drompa+: change default value of `--norm` option to 0 (not normalize)
 - Add `--ipm` threshold in peak calling (ChIP only)

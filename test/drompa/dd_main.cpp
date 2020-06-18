@@ -60,25 +60,25 @@ namespace {
 
       if (values.count("version")) printVersion();
       if (values.count("help")) {
-	help_global(cmds);
-	exit(0);
+        help_global(cmds);
+        exit(0);
       }
 
       // check command and param
       int32_t on(0);
       std::string cmd = MyOpt::getVal<std::string>(values, "command");
       for (size_t i=0; i<cmds.size(); ++i) {
-	if (cmd == cmds[i].getname()) {
-	  cmdid = i;
-	  cmds[i].SetValue(argc-1, argv+1);
-	  on++;
-	}
+        if (cmd == cmds[i].getname()) {
+          cmdid = i;
+          cmds[i].SetValue(argc-1, argv+1);
+          on++;
+        }
       }
 
       if (!on) {
-	std::cerr << "  Invalid command: " << MyOpt::getVal<std::string>(values, "command") << std::endl;
-	help_global(cmds);
-	exit(0);
+        std::cerr << "  Invalid command: " << MyOpt::getVal<std::string>(values, "command") << std::endl;
+        help_global(cmds);
+        exit(0);
       }
 
     } catch (std::exception &e) {
@@ -144,7 +144,7 @@ void exec_PCSHARP(DROMPA::Global &p)
     if (p.drawregion.isGeneLociFile()) {
       int32_t n(0);
       for (auto &m: p.anno.gmp.at(rmchr(chr.getname()))) {
-	if(p.drawregion.ExistInGeneLociFile(m.second.gname)) ++n;
+        if(p.drawregion.ExistInGeneLociFile(m.second.gname)) ++n;
       }
 #ifdef DEBUG
       printf("DEBUG geneloci\n");
@@ -228,7 +228,7 @@ void exec_MULTICI(DROMPA::Global &p)
   }
 
   profile.printNumOfSites();
-//  profile.MakeFigure(p);
+  //  profile.MakeFigure(p);
 
   return;
 }

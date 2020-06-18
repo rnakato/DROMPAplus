@@ -105,6 +105,7 @@ public:
   void printPeak(const std::string &prefix) const {
     std::string baselabel = basename(label);
     std::string filename = prefix + "." + baselabel + ".peak.tsv";
+    std::string filenameBED = prefix + "." + baselabel + ".peak.bed";
 
     DEBUGprint("Peakfile name: " << filename);
     std::ofstream out(filename);
@@ -115,6 +116,11 @@ public:
     for (auto &x: vPeak) {
       for (auto &peak: x.second) peak.print(out, num++);
     }
+    out.close();
+
+    // make BED file from TSV file
+    std::string command("grep -v \\# " + filename + " | grep -v chromosome | cut -f1-3 > " + filenameBED);
+    if(system(command.c_str())) std::cerr << "Warning: peak BED file cannot be generated.";
   }
 
   std::vector<bed> getBedChr(const std::string &chrname) const {
