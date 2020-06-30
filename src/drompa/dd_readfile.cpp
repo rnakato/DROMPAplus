@@ -28,8 +28,8 @@ namespace {
       if(lineStr.empty() || !lineStr.find("track")) continue;
       if(on && isStr(lineStr, "chrom=")) break;
       if(isStr(lineStr, head)) {
-	on=1;
-	continue;
+        on=1;
+        continue;
       }
       if(!on) continue;
       std::vector<std::string> v;
@@ -40,7 +40,7 @@ namespace {
   }
 
   void readBedGraph(WigArray &array, const std::string &filename,
-		    const std::string &chrname, const int32_t binsize)
+                    const std::string &chrname, const int32_t binsize)
   {
     std::ifstream in(filename);
     if (!in) PRINTERR_AND_EXIT("cannot open " << filename);
@@ -55,8 +55,8 @@ namespace {
       std::vector<std::string> v;
       SplitBedGraphLine(v, lineStr);
       if (v[0] != chrname) {
-	if (!on) continue;
-	else break;
+        if (!on) continue;
+        else break;
       }
       if (!on) on=1;
       //    std::cout << chrname << "\t" << v[0] << "\t" << binsize << "\t" << stod(v[3]) << "\t" << v[2] << "\t" << std::endl;
@@ -77,7 +77,7 @@ namespace {
   }
 
   void funcWig(WigArray &array, const std::string &filename,
-	       const int32_t binsize, const std::string &chrname)
+               const int32_t binsize, const std::string &chrname)
   {
     DEBUGprint_FUNCStart();
 
@@ -90,7 +90,7 @@ namespace {
   }
 
   void funcCompressWig(WigArray &array, const std::string &filename,
-		       const int32_t binsize, const std::string &chrname)
+                       const int32_t binsize, const std::string &chrname)
   {
     DEBUGprint_FUNCStart();
 
@@ -101,7 +101,7 @@ namespace {
   }
 
   void funcBigWig(WigArray &array, const std::string &filename,
-		  const int32_t binsize, const std::string &chrname)
+                  const int32_t binsize, const std::string &chrname)
   {
     DEBUGprint_FUNCStart();
 
@@ -115,8 +115,8 @@ namespace {
     int32_t return_code = system(command.c_str());
     if (WEXITSTATUS(return_code)) {
       PRINTERR_AND_EXIT("Error: command " << command
-			<< "return nonzero status. "
-		       << "Add the PATH to 'DROMPAplus/otherbins'.");
+                        << "return nonzero status. "
+                        << "Add the PATH to 'DROMPAplus/otherbins'.");
     }
     readBedGraph(array, std::string(tmpfile), chrname, binsize);
     unlink(tmpfile);
@@ -126,7 +126,7 @@ namespace {
   }
 
   void funcBedGraph(WigArray &array, const std::string &filename,
-		    const int32_t binsize, const std::string &chrname)
+                    const int32_t binsize, const std::string &chrname)
   {
     DEBUGprint_FUNCStart();
 
@@ -177,7 +177,7 @@ vChrArray::vChrArray(const DROMPA::Global &p, const chrsize &_chr):
   std::cout << "all SamplePair:" << std::endl;
   for (auto &x: p.samplepair) {
     std::cout << x.first.argvChIP << "," << x.first.argvInput
-	      << ", binsize " << x.first.getbinsize() << std::endl;
+              << ", binsize " << x.first.getbinsize() << std::endl;
   }
 #endif
 }

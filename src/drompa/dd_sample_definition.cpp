@@ -76,7 +76,6 @@ SampleInfo::SampleInfo(const std::string &filename,
       --last;
     } else if (v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
     else if (v[last] == "bw")         iftype = WigType::BIGWIG;
-    //     else if (v[last] == "bin")        iftype = WigType::BINARY;
     else PRINTERR_AND_EXIT("invalid postfix: " << filename);
   }
   setbinsize(v[last-1], b);
@@ -188,7 +187,9 @@ void vSampleInfo::addSampleInfo(const std::string &str,
 
   if(v.size() >4 && v[4] != "") {
     try { binsize = stoi(v[4]); }
-    catch (...) { std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl; }
+    catch (...) {
+      std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl;
+    }
   }
 
   // ChIP sample
