@@ -6,7 +6,7 @@
 
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
-#include "GeneAnnotation.hpp"
+#include "../common/GeneAnnotation.hpp"
 
 using GeneDataMap = std::unordered_map<std::string, genedata>;
 using HashOfGeneDataMap = std::unordered_map<std::string, GeneDataMap>;

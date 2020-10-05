@@ -12,8 +12,8 @@
 #include <cmath>
 #include <unordered_map>
 #include <boost/algorithm/string.hpp>
-#include "../submodules/SSP/common/inline.hpp"
-#include "../submodules/SSP/common/util.hpp"
+#include "../../submodules/SSP/common/inline.hpp"
+#include "../../submodules/SSP/common/util.hpp"
 
 class bed {
 public:

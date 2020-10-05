@@ -4,8 +4,8 @@
 #ifndef _GENEANNOTATION_HPP_
 #define _GENEANNOTATION_HPP_
 
-#include "../submodules/SSP/common/seq.hpp"
-#include "../submodules/SSP/common/inline.hpp"
+#include "../../submodules/SSP/common/seq.hpp"
+#include "../../submodules/SSP/common/inline.hpp"
 
 enum status {INTERGENIC, GENIC, INTRON, EXON, DOWNSTREAM, UPSTREAM, TSS, PARALLEL, DIVERGENT, CONVERGENT};
 

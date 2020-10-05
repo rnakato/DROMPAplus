@@ -221,27 +221,31 @@ HashOfGeneDataMap parseRefFlat(const std::string& fileName)
     std::string chr = rmchr(v[2]);
     if (isStr(tname, "NM") || isStr(tname, "NR")) UCSC = true;
 
-    tmp[chr][tname].tname   = tname;
-    tmp[chr][tname].gname   = v[0];
-    tmp[chr][tname].chr     = chr;
-    tmp[chr][tname].strand  = v[3];
-    tmp[chr][tname].txStart = stoi(v[4]);
-    tmp[chr][tname].txEnd   = stoi(v[5]);
-    tmp[chr][tname].cdsStart = stoi(v[6]);
-    tmp[chr][tname].cdsEnd   = stoi(v[7]);
-    tmp[chr][tname].exonCount = stoi(v[8]);
-    if (v.size() >= 13) tmp[chr][tname].gtype = v[12];
-    else if (v.size() >= 12) tmp[chr][tname].gtype = v[11];
-    else if (UCSC) {
-      if (isStr(tname, "NM")) tmp[chr][tname].gtype = "protein_coding";
-      else tmp[chr][tname].gtype = "noncoding RNA";
-    }
+    try {
+      tmp[chr][tname].tname   = tname;
+      tmp[chr][tname].gname   = v[0];
+      tmp[chr][tname].chr     = chr;
+      tmp[chr][tname].strand  = v[3];
+      tmp[chr][tname].txStart = stoi(v[4]);
+      tmp[chr][tname].txEnd   = stoi(v[5]);
+      tmp[chr][tname].cdsStart = stoi(v[6]);
+      tmp[chr][tname].cdsEnd   = stoi(v[7]);
+      tmp[chr][tname].exonCount = stoi(v[8]);
+      if (v.size() >= 13) tmp[chr][tname].gtype = v[12];
+      else if (v.size() >= 12) tmp[chr][tname].gtype = v[11];
+      else if (UCSC) {
+        if (isStr(tname, "NM")) tmp[chr][tname].gtype = "protein_coding";
+        else tmp[chr][tname].gtype = "noncoding RNA";
+      }
 
-    boost::split(exonStarts, v[9], boost::algorithm::is_any_of(","));
-    boost::split(exonEnds,  v[10], boost::algorithm::is_any_of(","));
+      boost::split(exonStarts, v[9], boost::algorithm::is_any_of(","));
+      boost::split(exonEnds,  v[10], boost::algorithm::is_any_of(","));
 
-    for (int32_t i=0; i<tmp[chr][tname].exonCount; i++) {
-      tmp[chr][tname].exon.emplace_back(stoi(exonStarts[i]), stoi(exonEnds[i]));
+      for (int32_t i=0; i<tmp[chr][tname].exonCount; i++) {
+        tmp[chr][tname].exon.emplace_back(stoi(exonStarts[i]), stoi(exonEnds[i]));
+      }
+    } catch (std::exception &e) {
+      PRINTERR_AND_EXIT("invalid columns in refFlat format. " + std::string(e.what()));
     }
   }
   return tmp;
