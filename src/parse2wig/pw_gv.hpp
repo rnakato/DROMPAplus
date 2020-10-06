@@ -33,10 +33,10 @@ namespace RPM {
 	 boost::program_options::value<std::string>()->default_value("NONE"),
 	 "Total read normalization\n{NONE|GR|GD|CR|CD}\n   NONE: not normalize\n   GR: for whole genome, read number\n   GD: for whole genome, read depth\n   CR: for each chromosome, read number\n   CD: for each chromosome, read depth")
 	("nrpm",
-	 boost::program_options::value<int32_t>()->default_value(2*NUM_10M)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--nrpm")),
+	 boost::program_options::value<int32_t>()->default_value(2*NUM_10M)->notifier(std::bind(&MyOpt::over<int32_t>, std::placeholders::_1, 0, "--nrpm")),
 	 "(For GR|CR) Total read number after normalization")
 	("ndepth",
-	 boost::program_options::value<double>()->default_value(1.0)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--ndepth")),
+	 boost::program_options::value<double>()->default_value(1.0)->notifier(std::bind(&MyOpt::over<double>, std::placeholders::_1, 0, "--ndepth")),
 	 "(For GD|CD) Averaged read depth after normalization")
 	;
     }
@@ -120,7 +120,7 @@ class Mapfile: private Uncopyable {
        "specify the BED file of enriched regions (e.g., peak regions)")
       ("mpdir",  boost::program_options::value<std::string>(), "directory of mappability file")
       ("mpthre",
-       boost::program_options::value<double>()->default_value(0.3)->notifier(boost::bind(&MyOpt::over<double>, _1, 0, "--mpthre")),
+       boost::program_options::value<double>()->default_value(0.3)->notifier(std::bind(&MyOpt::over<double>, std::placeholders::_1, 0, "--mpthre")),
        "Threshold of low mappability regions")
       ("allchr", "Use all chromosomes to estimate fragment length")
       ;

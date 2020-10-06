@@ -23,9 +23,9 @@
 
 namespace {
   void strokeGraph4EachWindow(const Cairo::RefPtr<Cairo::Context> cr,
-			      double x_pre, double y_pre,
-			      double x_cen, double y_cen,
-			      int32_t bottom)
+                              double x_pre, double y_pre,
+                              double x_cen, double y_cen,
+                              int32_t bottom)
   {
     if(y_pre > bottom && y_cen > bottom) return;
 
@@ -37,13 +37,13 @@ namespace {
       double xlen = abs(x2 - x1);
       double ylen = abs(y2 - y1);
       if (y_pre > bottom) {
-	double ydiff(abs(y_cen - bottom));
-	x1 = x2 - xlen*(ydiff/ylen);
-	y1 = bottom;
+        double ydiff(abs(y_cen - bottom));
+        x1 = x2 - xlen*(ydiff/ylen);
+        y1 = bottom;
       } else {
-	double ydiff(abs(y_pre - bottom));
-	x2 = x1 - xlen*(ydiff/ylen);
-	y2 = bottom;
+        double ydiff(abs(y_pre - bottom));
+        x2 = x1 - xlen*(ydiff/ylen);
+        y2 = bottom;
       }
     }
     cr->move_to(x1, y1);
@@ -346,7 +346,9 @@ void setcolor(const Cairo::RefPtr<Cairo::Context> &cr, bed12 &x)
   cr->set_source_rgba(x.rgb_r/(double)255, x.rgb_g/(double)255, x.rgb_b/(double)255, 0.6);
 }
 
-void PDFPage::drawBedAnnotation(const vbed<auto> &vbed)
+//void PDFPage::drawBedAnnotation(const vbed<auto> &vbed)
+template <class T>
+void PDFPage::drawBedAnnotation(const vbed<T> &vbed)
 {
   DEBUGprint_FUNCStart();
   int32_t boxheight(BOXHEIGHT_BEDANNOTATION);
@@ -542,8 +544,8 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
 }
 
 void PDFPage::MakePage(const DROMPA::Global &p,
-		       const int32_t page_no,
-		       const std::string &pagelabel)
+                       const int32_t page_no,
+                       const std::string &pagelabel)
 {
   DEBUGprint_FUNCStart();
 
@@ -582,9 +584,9 @@ void PDFPage::MakePage(const DROMPA::Global &p,
 }
 
 void Figure::Draw_SpecificRegion(DROMPA::Global &p,
-			 std::string &pdffilename,
-			 int32_t width,
-			 int32_t height)
+                                 std::string &pdffilename,
+                                 int32_t width,
+                                 int32_t height)
 {
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
   int32_t region_no(1);
@@ -592,7 +594,7 @@ void Figure::Draw_SpecificRegion(DROMPA::Global &p,
     int32_t num_page = p.drawparam.getNumPage(x.start, x.end);
     for(int32_t i=0; i<num_page; ++i) {
       std::cout << boost::format("   page %5d/%5d/%5d\r")
-	% (i+1) % num_page % region_no << std::flush;
+        % (i+1) % num_page % region_no << std::flush;
       PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, x.start, x.end);
       page.MakePage(p, i, std::to_string(region_no));
     }
@@ -602,9 +604,9 @@ void Figure::Draw_SpecificRegion(DROMPA::Global &p,
 }
 
 void Figure::Draw_SpecificGene(DROMPA::Global &p,
-			   std::string &pdffilename,
-			   int32_t width,
-			   int32_t height)
+                               std::string &pdffilename,
+                               int32_t width,
+                               int32_t height)
 {
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
   int32_t len(p.drawregion.getLenGeneLoci());
@@ -625,9 +627,9 @@ void Figure::Draw_SpecificGene(DROMPA::Global &p,
 }
 
 void Figure::Draw_WholeGenome(DROMPA::Global &p,
-			std::string &pdffilename,
-			int32_t width,
-			int32_t height)
+                              std::string &pdffilename,
+                              int32_t width,
+                              int32_t height)
 {
 #ifdef CAIRO_HAS_PDF_SURFACE
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);

@@ -5,7 +5,7 @@
 #define _GCNORMALIZATION_HPP_
 
 #include <numeric>
-#include <boost/bind.hpp>
+//#include <boost/bind.hpp>
 #include "../submodules/SSP/common/BoostOptions.hpp"
 #include "../submodules/SSP/common/util.hpp"
 #include "../submodules/SSP/common/inline.hpp"
@@ -32,7 +32,7 @@ public:
       ("chrdir", boost::program_options::value<std::string>(),
        "Chromosome directory of reference genome sequence for GC content estimation")
       ("flen4gc",
-       boost::program_options::value<int32_t>()->default_value(120)->notifier(boost::bind(&MyOpt::over<int32_t>, _1, 0, "--flen4gc")),
+       boost::program_options::value<int32_t>()->default_value(120)->notifier(std::bind(&MyOpt::over<int32_t>, std::placeholders::_1, 0, "--flen4gc")),
        "Fragment length for calculation of GC distribution")
       ("gcdepthoff", "ignore to consider depth of GC contents")
       ;

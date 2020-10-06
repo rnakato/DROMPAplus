@@ -11,8 +11,8 @@ using namespace DROMPA;
 
 #define SETOPT_OVER(name,type,defval,val) name, value<type>()->default_value(defval)->NOTIFY_OVER(type, val, name)
 #define SETOPT_RANGE(name,type,defval,min,max) name, value<type>()->default_value(defval)->NOTIFY_RANGE(type, min, max, name)
-#define NOTIFY_OVER(type,val,name)      notifier(boost::bind(&MyOpt::over<type>, _1, val, name))
-#define NOTIFY_RANGE(type,min,max,name) notifier(boost::bind(&MyOpt::range<type>, _1, min, max, name))
+#define NOTIFY_OVER(type,val,name)      notifier(std::bind(&MyOpt::over<type>, std::placeholders::_1, val, name))
+#define NOTIFY_RANGE(type,min,max,name) notifier(std::bind(&MyOpt::range<type>, std::placeholders::_1, min, max, name))
 
 void Annotation::setOptsPC(MyOpt::Opts &allopts)
 {
@@ -350,10 +350,10 @@ void Global::setOpts(const std::vector<DrompaCommand> &st, const CommandParamSet
         options_description o("GENWIG",100);
         o.add_options()
           ("outputformat",
-           boost::program_options::value<int32_t>()->default_value(3)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
+           boost::program_options::value<int32_t>()->default_value(3)->notifier(std::bind(&MyOpt::range<int32_t>, std::placeholders::_1, 0, static_cast<int>(WigType::WIGTYPENUM) -2, "--outputformat")),
            "Output format\n   0: compressed wig (.wig.gz)\n   1: uncompressed wig (.wig)\n   2: bedGraph (.bedGraph)\n   3: bigWig (.bw)")
           ("outputvalue",
-           boost::program_options::value<int32_t>()->default_value(0)->notifier(boost::bind(&MyOpt::range<int32_t>, _1, 0, 2, "--outputvalue")),
+           boost::program_options::value<int32_t>()->default_value(0)->notifier(std::bind(&MyOpt::range<int32_t>, std::placeholders::_1, 0, 2, "--outputvalue")),
            "Output value\n   0: ChIP/Input enrichment\n   1: P-value (ChIP internal)\n   2: P-value (ChIP/Input enrichment)")
           ;
         opts.add(o);

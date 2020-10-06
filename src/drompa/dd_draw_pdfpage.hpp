@@ -121,7 +121,8 @@ class PDFPage {
   void strokeGene(const DROMPA::Global &p, const double ycenter);
 
   template <class T> void Draw_vbedlist(const std::vector<vbed<T>> &vlist);
-  void drawBedAnnotation(const vbed<auto> &vbed);
+  template <class T> void drawBedAnnotation(const vbed<T> &vbed);
+//  void drawBedAnnotation(const vbed<auto> &vbed);
   void drawInteraction(const InteractionSet &vinter);
   void StrokeChIADrop(const DROMPA::Global &p);
   void strokeChIADropBarcode(const std::vector<int32_t> &v, const std::string &nbarcode, const double _ywidth, const double yaxis, const RGB &color);
@@ -130,10 +131,10 @@ class PDFPage {
   DParam par;
 
   PDFPage(const DROMPA::Global &p,
-	  const vChrArray &_vReadArray,
-	  const std::vector<SamplePairOverlayed> &pair,
-	  const Cairo::RefPtr<Cairo::PdfSurface> surface,
-	  const int32_t s, const int32_t e):
+          const vChrArray &_vReadArray,
+          const std::vector<SamplePairOverlayed> &pair,
+          const Cairo::RefPtr<Cairo::PdfSurface> surface,
+          const int32_t s, const int32_t e):
     vReadArray(_vReadArray),
     chrname(vReadArray.getchr().getrefname()),
     vsamplepairoverlayed(pair),

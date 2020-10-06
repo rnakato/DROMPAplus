@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.2 (2020-10-06)
+- Bug fix: switch boost::bind to std::bind to avoid complilation error depend on the version of compiler
+
 ## 1.8.1 (2020-06-18)
 - BED-formatted peak file is also generated in addition to TSV-formatted one
 
