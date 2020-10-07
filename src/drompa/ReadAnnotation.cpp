@@ -212,7 +212,7 @@ HashOfGeneDataMap parseRefFlat(const std::string& fileName)
 
   while (!in.eof()) {
     getline(in, lineStr);
-    if (lineStr.empty()) continue;
+    if (lineStr.empty() || lineStr[0] == '#') continue;
 
     std::vector<std::string> v, exonStarts, exonEnds;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
@@ -394,15 +394,15 @@ void printRefFlat(const HashOfGeneDataMap &mp, const int32_t nameflag)
       if (nameflag) std::cout << x.second.gname << "\t" << x.second.tname << "\t";
       else std::cout << x.second.gid << "\t" << x.second.tid << "\t";
       std::cout << "chr"<< pair.first << "\t"
-	   << x.second.strand << "\t"
-	   << x.second.txStart << "\t"
-	   << x.second.txEnd << "\t";
+                << x.second.strand << "\t"
+                << x.second.txStart << "\t"
+                << x.second.txEnd << "\t";
       if (x.second.cdsStart) {
-	std::cout << x.second.cdsStart << "\t"
-		  << x.second.cdsEnd   << "\t";
+        std::cout << x.second.cdsStart << "\t"
+                  << x.second.cdsEnd   << "\t";
       } else {
-	std::cout << x.second.txStart << "\t"
-		  << x.second.txEnd   << "\t";
+        std::cout << x.second.txStart << "\t"
+                  << x.second.txEnd   << "\t";
       }
       std::cout << x.second.exonCount << "\t";
       for (auto &ex: x.second.exon) std::cout << ex.start << ",";
