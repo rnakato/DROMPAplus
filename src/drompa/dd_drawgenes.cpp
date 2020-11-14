@@ -21,8 +21,8 @@ namespace {
     int32_t ybar;
 
     GeneElement(const genedata &m, const DParam &par,
-		const double ycenter, const int32_t ty,
-		int32_t &on_plus, int32_t &on_minus):
+                const double ycenter, const int32_t ty,
+                int32_t &on_plus, int32_t &on_minus):
       dif (6), cnt(1),
       x1(BP2PIXEL(m.txStart - par.xstart +1)),
       x2(BP2PIXEL(m.txEnd   - par.xstart +1)),
@@ -32,38 +32,38 @@ namespace {
       //      std::cout << m.txStart << " "  << m.txEnd << " "  << x1 << " "<< xstart << " " << x2 << " "  << xwid << std::endl;
 
       if (!ty) { // SGD
-	x_name = xcen - 3.25 * m.gname.length() + 6;
-	if (m.strand == "+") {
-	  ybar   = ycenter - dif;
-	  y_name = ybar -5 - on_minus*6;
-	  if (on_minus == cnt) on_minus=0; else ++on_minus;
-	}
-	else if (m.strand == "-") {
-	  ybar   = ycenter + dif;
-	  y_name = ybar +9 + on_plus*6;
-	  if (on_plus == cnt) on_plus=0; else ++on_plus;
-	}
-	else y_name = ycenter -22;
-	ylen = y_name - ycenter;
+        x_name = xcen - 3.25 * m.gname.length() + 6;
+        if (m.strand == "+") {
+          ybar   = ycenter - dif;
+          y_name = ybar -5 - on_minus*6;
+          if (on_minus == cnt) on_minus=0; else ++on_minus;
+        }
+        else if (m.strand == "-") {
+          ybar   = ycenter + dif;
+          y_name = ybar +9 + on_plus*6;
+          if (on_plus == cnt) on_plus=0; else ++on_plus;
+        }
+        else y_name = ycenter -22;
+        ylen = y_name - ycenter;
       } else {  // Others
-	if (m.strand == "+") {
-	  ybar = ycenter - 8 - on_minus * 8;
-	  if (on_minus==7) on_minus=0; else ++on_minus;
-	} else{
-	  ybar = ycenter + 8 + on_plus * 8;
-	  if (on_plus==7) on_plus=0; else ++on_plus;
-	}
-	x_name = x2 + 2;
-	if (x_name < 150) x_name = 150;
-	else if (x_name > OFFSET_X + par.width_draw + 60) x_name = OFFSET_X + par.width_draw + 60;
-	y_name = ybar +3;
+        if (m.strand == "+") {
+          ybar = ycenter - 8 - on_minus * 8;
+          if (on_minus==7) on_minus=0; else ++on_minus;
+        } else{
+          ybar = ycenter + 8 + on_plus * 8;
+          if (on_plus==7) on_plus=0; else ++on_plus;
+        }
+        x_name = x2 + 2;
+        if (x_name < 150) x_name = 150;
+        else if (x_name > OFFSET_X + par.width_draw + 60) x_name = OFFSET_X + par.width_draw + 60;
+        y_name = ybar +3;
       }
 
     }
   };
 
   void ShowColorAnnotation(const Cairo::RefPtr<Cairo::Context> cr, const int32_t x, int32_t &ycen,
-			   const std::string &label, const double r, const double g, const double b)
+                           const std::string &label, const double r, const double g, const double b)
   {
     cr->set_source_rgba(r,g,b, 1);
     rel_xline(cr, x, ycen, 20);
@@ -80,12 +80,12 @@ namespace {
     for (auto &m: mp) {
       if (!my_overlap(m.second.txStart, m.second.txEnd, xstart, xend)) continue;
       if (m.second.gtype == "nonsense_mediated_decay" ||
-	  m.second.gtype == "processed_transcript" ||
-	  m.second.gtype == "retained_intron") continue;
+          m.second.gtype == "processed_transcript" ||
+          m.second.gtype == "retained_intron") continue;
       garray.emplace_back(m.second);
     }
     sort(garray.begin(), garray.end(),
-	 [](const genedata &x, const genedata &y) { return x.txStart < y.txStart;});
+         [](const genedata &x, const genedata &y) { return x.txStart < y.txStart;});
     return garray;
   }
 }
@@ -103,20 +103,20 @@ void PDFPage::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
       GeneElement g(m, par, ycenter, 0, on_plus, on_minus);
 
       if (m.gtype=="ARS") {
-	cr->set_source_rgba(CLR_RED, 1);
-	rel_yline(cr, g.xcen, ycenter -2, g.ylen +14 - 8 * ars_on);
-	showtext_cr(cr, g.x_name, g.y_name +8 - ars_on*8, m.gname, 8);
-	if (ars_on==2) ars_on=0; else ++ars_on;
+        cr->set_source_rgba(CLR_RED, 1);
+        rel_yline(cr, g.xcen, ycenter -2, g.ylen +14 - 8 * ars_on);
+        showtext_cr(cr, g.x_name, g.y_name +8 - ars_on*8, m.gname, 8);
+        if (ars_on==2) ars_on=0; else ++ars_on;
       }
       else if (m.gtype=="centromere") {
-	cr->set_source_rgba(CLR_GREEN, 1);
-	rel_yline(cr, g.xcen, ycenter -2, g.ylen -2);
-	showtext_cr(cr, g.x_name, g.y_name -8, m.gname, 8);
+        cr->set_source_rgba(CLR_GREEN, 1);
+        rel_yline(cr, g.xcen, ycenter -2, g.ylen -2);
+        showtext_cr(cr, g.x_name, g.y_name -8, m.gname, 8);
       }
       else if (m.gtype=="teromere") {
-	cr->set_source_rgba(CLR_OLIVE, 1);
-	rel_yline(cr, g.xcen, ycenter -2, g.ylen -5);
-	showtext_cr(cr, g.x_name, g.y_name -11, m.gname, 7);
+        cr->set_source_rgba(CLR_OLIVE, 1);
+        rel_yline(cr, g.xcen, ycenter -2, g.ylen -5);
+        showtext_cr(cr, g.x_name, g.y_name -11, m.gname, 7);
       }else continue;
     }
   } catch (...) {
@@ -250,12 +250,12 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
       // Exon
       cr->set_line_width(6);
       for (int32_t i=0; i<m.exonCount; ++i) {
-	double x(BP2PIXEL(m.exon[i].start - par.xstart +1));
-	double xlen(std::max(1.0,m.exon[i].getlen() * par.dot_per_bp));
-	if (x >= llimit && x <= rlimit) {
-	  rel_xline(cr, x, g.ybar, xlen);
-	  cr->stroke();
-	}
+        double x(BP2PIXEL(m.exon[i].start - par.xstart +1));
+        double xlen(std::max(1.0,m.exon[i].getlen() * par.dot_per_bp));
+        if (x >= llimit && x <= rlimit) {
+          rel_xline(cr, x, g.ybar, xlen);
+          cr->stroke();
+        }
       }
 
       // Name
@@ -292,9 +292,9 @@ void PDFPage::DrawGeneAnnotation(const DROMPA::Global &p)
     else strokeGene(p, ycenter);
   }
   /* frame */
-/*  cr->set_line_width(0.4);
-  cr->rectangle(OFFSET_X, ytop, par.getXaxisLen(), boxheight);
-  cr->stroke();*/
+  /*  cr->set_line_width(0.4);
+      cr->rectangle(OFFSET_X, ytop, par.getXaxisLen(), boxheight);
+      cr->stroke();*/
 
   /* genome line */
   cr->set_source_rgba(CLR_BLACK, 1);

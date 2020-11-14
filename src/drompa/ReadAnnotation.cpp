@@ -222,8 +222,8 @@ HashOfGeneDataMap parseRefFlat(const std::string& fileName)
     if (isStr(tname, "NM") || isStr(tname, "NR")) UCSC = true;
 
     try {
-      tmp[chr][tname].tname   = tname;
       tmp[chr][tname].gname   = v[0];
+      tmp[chr][tname].tname   = tname;
       tmp[chr][tname].chr     = chr;
       tmp[chr][tname].strand  = v[3];
       tmp[chr][tname].txStart = stoi(v[4]);
@@ -381,7 +381,7 @@ bool isGeneUCSC(const HashOfGeneDataMap &mp)
 {
   for (auto &pair: mp) {
     for (auto &x: pair.second) {
-      if (isStr(x.second.gtype, "lincRNA")) return false;
+      if (isStr(x.second.tname, "ENS")) return true;
     }
   }
   return true;
