@@ -381,7 +381,7 @@ bool isGeneUCSC(const HashOfGeneDataMap &mp)
 {
   for (auto &pair: mp) {
     for (auto &x: pair.second) {
-      if (isStr(x.second.tname, "ENS")) return true;
+      if (isStr(x.second.tname, "ENS")) return false;
     }
   }
   return true;
