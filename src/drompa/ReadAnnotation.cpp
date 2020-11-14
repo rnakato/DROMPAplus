@@ -387,35 +387,6 @@ bool isGeneUCSC(const HashOfGeneDataMap &mp)
   return true;
 }
 
-void printRefFlat(const HashOfGeneDataMap &mp, const int32_t nameflag)
-{
-  for (auto pair: mp) {
-    for (auto x: pair.second) {
-      if (nameflag) std::cout << x.second.gname << "\t" << x.second.tname << "\t";
-      else std::cout << x.second.gid << "\t" << x.second.tid << "\t";
-      std::cout << "chr"<< pair.first << "\t"
-                << x.second.strand << "\t"
-                << x.second.txStart << "\t"
-                << x.second.txEnd << "\t";
-      if (x.second.cdsStart) {
-        std::cout << x.second.cdsStart << "\t"
-                  << x.second.cdsEnd   << "\t";
-      } else {
-        std::cout << x.second.txStart << "\t"
-                  << x.second.txEnd   << "\t";
-      }
-      std::cout << x.second.exonCount << "\t";
-      for (auto &ex: x.second.exon) std::cout << ex.start << ",";
-      std::cout << "\t";
-      for (auto &ex: x.second.exon) std::cout << ex.end   << ",";
-      std::cout << "\t" << x.second.gtype;
-      std::cout << "\t" << x.second.ttype;
-      std::cout << std::endl;
-    }
-  }
-  return;
-}
-
 std::vector<chrsize> readGenomeTable(const std::string& fileName)
 {
   std::ifstream in(fileName);
