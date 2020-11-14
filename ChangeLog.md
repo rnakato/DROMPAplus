@@ -2,6 +2,7 @@
 
 ## 1.8.3 (2020-11-14)
 - Bug fix: Gene annotation label for Ensembl data
+- Remove printRefFlat function
 
 ## 1.8.2 (2020-10-06)
 - Bug fix: switch boost::bind to std::bind to avoid complilation error depend on the version of compiler
