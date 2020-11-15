@@ -46,7 +46,7 @@ public:
       summit = (start + end)/2;
       if(s.size() >= 4) name = s[3];
     } catch (std::exception &e) {
-      PRINTERR_AND_EXIT("invalid columns in macsxls format. " + std::string(e.what()));
+      PRINTERR_AND_EXIT("invalid columns in BED format. " + std::string(e.what()));
     }
 
   }
