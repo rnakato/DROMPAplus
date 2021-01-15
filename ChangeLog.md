@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.4 (2021-01-15)
+- drompa+: Add an error message when specifying a illegal BED file for -r option
+
 ## 1.8.3 (2020-11-14)
 - Bug fix: Gene annotation label for Ensembl data
 - Remove printRefFlat function
