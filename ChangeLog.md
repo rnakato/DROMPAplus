@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.5 (2021-02-04)
+- drompa+: Modify parseGTF to allow gene id having transcript_id only
+
 ## 1.8.4 (2021-01-15)
 - drompa+: Add an error message when specifying a illegal BED file for -r option
 
