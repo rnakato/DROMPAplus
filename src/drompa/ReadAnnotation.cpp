@@ -298,7 +298,8 @@ HashOfGeneDataMap parseGtf(const std::string& fileName)
       }
     }
 
-    if (tname =="") continue;
+//    if (tname =="") continue;
+    if (tid =="") continue;
 
     tmp[chr][tid].tname  = tname;
     tmp[chr][tid].gname  = gname;
