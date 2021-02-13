@@ -46,5 +46,5 @@ Citation:
 Contact:
 ---------
 
-:Mail: rnakato AT iam.u-tokyo.ac.jp
+:Mail: rnakato AT iqb.u-tokyo.ac.jp
 :Twitter: @RyuichiroNakato

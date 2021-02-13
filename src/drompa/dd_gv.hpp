@@ -1,4 +1,4 @@
-/* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+/* Copyright(c) Ryuichiro Nakato <rnakato@iqb.u-tokyo.ac.jp>
  * All rights reserved.
  */
 #ifndef _DD_GV_H_

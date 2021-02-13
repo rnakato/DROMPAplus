@@ -1,4 +1,4 @@
-/* Copyright(c) Ryuichiro Nakato <rnakato@iam.u-tokyo.ac.jp>
+/* Copyright(c) Ryuichiro Nakato <rnakato@iqb.u-tokyo.ac.jp>
  * This file is a part of DROMPA sources.
  */
 #ifndef _DD_COMMAND_H_
