@@ -10,14 +10,14 @@
 - drompa+: Modify parseGTF to allow gene id having transcript_id only
 
 ## 1.8.4 (2021-01-15)
-- drompa+: Add an error message when specifying a illegal BED file for -r option
+- drompa+: Add an error message when specifying an illegal BED file for -r option
 
 ## 1.8.3 (2020-11-14)
 - Bug fix: Gene annotation label for Ensembl data
 - Remove printRefFlat function
 
 ## 1.8.2 (2020-10-06)
-- Bug fix: switch boost::bind to std::bind to avoid complilation error depend on the version of compiler
+- Bug fix: switch boost::bind to std::bind to avoid complilation error depend on the version of a compiler
 
 ## 1.8.1 (2020-06-18)
 - BED-formatted peak file is also generated in addition to TSV-formatted one
