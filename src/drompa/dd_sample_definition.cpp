@@ -113,6 +113,7 @@ void SampleInfo::scanStatsFile(const std::string &filename)
     if(lineStr.empty() || isStr(lineStr, "% genome")) continue;
 
     std::vector<std::string> v;
+
     switch (status) {
     case NONE:
       if (isStr(lineStr, "normalized read number")) ncol_readnum = getNcolReadNum(lineStr);
@@ -130,6 +131,7 @@ void SampleInfo::scanStatsFile(const std::string &filename)
       totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
       break;
     case OTHER:
+      if (isStr(lineStr, "Input file:") || isStr(lineStr, "total reads")) break;
       if (isStr(lineStr, "Genome")) {
         ParseLine(v, lineStr, '\t');
         totalreadnum = stoi(v[1]);
@@ -215,7 +217,7 @@ SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo
      6:scale_tag   7:scale_ratio   8:scale_pvalue */
   if (v[0] != "") argvChIP = v[0];
   if (v.size() >=2 && v[1] != "") argvInput = v[1];
-  if (v.size() >=3 && v[2] != "") label     = v[2]; else label = v[0];
+  if (v.size() >=3 && v[2] != "") label     = v[2]; else label = basename(v[0]);
   if (v.size() >=4 && v[3] != "") peak_argv = v[3];
   if (peak_argv != "") vbedregions = parseBed_Hash<bed>(peak_argv);
   binsize = vsinfo.getbinsize(argvChIP);

@@ -9,9 +9,9 @@ namespace {
                     const int32_t i, const int32_t stype)
   {
     double val(0);
-    if (!stype) { // ChIP read
+    if (!stype) {   // ChIP read
       val = vReadArray.getArray(pair.first.argvChIP).array[i];
-    } else if (stype == 1) { // ChIP/Input enrichment
+    } else if (stype == 1) {   // ChIP/Input enrichment
       val = getratio(vReadArray.getArray(pair.first.argvChIP).array[i],
                      vReadArray.getArray(pair.first.argvInput).array[i]);
     }
@@ -102,8 +102,8 @@ void ReadProfile::setOutputFilename(const DROMPA::Global &p, const std::string &
 
   if (p.isgetmaxval()) prefix += ".maxvalue";
   else                 prefix += ".averaged";
-  if      (stype==0) prefix += ".ChIPread";
-  else if (stype==1) prefix += ".Enrichment";
+  if      (stype==0)   prefix += ".ChIPread";
+  else if (stype==1)   prefix += ".Enrichment";
 
   Rscriptname = prefix + ".R";
   RDataname   = prefix;

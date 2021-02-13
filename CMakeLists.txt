@@ -4,7 +4,8 @@ project(DROMPAPLUS CXX)
 set( CMAKE_CXX_STANDARD 14 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_EXTENSIONS OFF )
-set( CMAKE_CXX_FLAGS "-std=c++14 -O2 -W -Wall") # -fconcepts
+set( CMAKE_CXX_FLAGS "-std=c++14 -O2 -W -Wall")
+#set( CMAKE_CXX_FLAGS "-std=c++14 -O2 -W -Wall -DDEBUG") # -fconcepts
 
 include_directories("/usr/local/include")
 

@@ -236,7 +236,6 @@ std::vector<T> parseBed(const std::string &fileName)
     std::vector<std::string> v;
     ParseLine(v, lineStr, '\t');
 
-    std::cout << v[0] << std::endl;
     if(v.size() < 3) {
       std::cerr << "\nError: invalid delimitar in BED file?: " << v[0] << std::endl;
       exit(1);

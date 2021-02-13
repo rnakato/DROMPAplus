@@ -59,15 +59,28 @@ namespace {
         else break;
       }
       if (!on) on=1;
-      //    std::cout << chrname << "\t" << v[0] << "\t" << binsize << "\t" << stod(v[3]) << "\t" << v[2] << "\t" << std::endl;
 
-      int32_t start(stoi(v[1]));
-      int32_t end(stoi(v[2])-1);
-      if (start%binsize) PRINTERR_AND_EXIT("ERROR: invalid start position: " << start << " for binsize " << binsize);
-      int32_t s(start/binsize);
-      int32_t e(end/binsize);
-      //    std::cout << s << "\t " << e << "\t " << array.size() << "\t" << stod(v[3]) << std::endl;
-      for(int32_t i=s; i<=e; ++i) array.setval(i, stod(v[3]));
+      if(v.size() < 4) {
+        std::cerr << "\nError: invalid delimitar in BedGraph file?: " << lineStr << std::endl;
+        exit(1);
+      }
+
+      double val(0);
+      if(v[3] == "") val = 0; else val = stod(v[3]);
+      //std::cout << chrname << "\t" << v[0] << "\t" << binsize << "\t" << val << "\t" << v[2] << "\t" << std::endl;
+
+      try {
+        int32_t start(stoi(v[1]));
+        int32_t end(stoi(v[2])-1);
+        if (start%binsize) PRINTERR_AND_EXIT("ERROR: invalid start position: " << start << " for binsize " << binsize);
+        int32_t s(start/binsize);
+        int32_t e(end/binsize);
+        //    std::cout << s << "\t " << e << "\t " << array.size() << "\t" << stod(v[3]) << std::endl;
+        for(int32_t i=s; i<=e; ++i) array.setval(i, val);
+      } catch (const boost::bad_any_cast& e) {
+        PRINTERR_AND_EXIT("Error: invalid value in BedGraph. " + lineStr + ": :" + std::string(e.what()));
+      }
+
     }
 
     in.close();
