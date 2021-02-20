@@ -36,7 +36,8 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts)
   MyOpt::Opts opt("Genome view",100);
   opt.add_options()
     ("ideogram", value<std::string>(), "Cytoband file for drawing ideogram")
-    ("inter",  value<std::vector<std::string>>(), "<interaction file>,<label>: Interaction file and label (<label> can be omited)")
+    ("inter",  value<std::vector<std::string>>(),
+     "<interaction file>,<label>,<tool>: Interaction file\n     (label and tool can be omitted)\n     <tool>:mango (Mango format, default)\n            hiccups (HICCUPS format)\n            bedpe (BEDPE format)\n")
     ("chiadrop", value<std::string>(), "ChIADrop file (single-cell ChIA-PET)")
     ("chia_distance_thre", value<int32_t>()->default_value(100000), "(with --chiadrip) max distance of neighboring reads in each GEM")
     ("mp",     value<std::string>(), "Mappability file")

@@ -300,6 +300,7 @@ class InteractionSet {
 
   void setAsMango(const std::string &lineStr);
   void setAsHICCUPS(const std::string &lineStr);
+  void setAsBEDPE(const std::string &lineStr);
 
 public:
   InteractionSet(const std::string &fileName, const std::string &l, const std::string &tool):
@@ -319,7 +320,8 @@ public:
       getline(in, lineStr);
       if(lineStr.empty() || lineStr[0] == '#') continue;
       if (tool == "mango") setAsMango(lineStr);
-      else setAsHICCUPS(lineStr);
+      else if (tool == "hiccups") setAsHICCUPS(lineStr);
+      else setAsBEDPE(lineStr);
     }
     //    print();
   }

@@ -65,7 +65,7 @@ void InteractionSet::setAsHICCUPS(const std::string &lineStr)
   ParseLine(v, lineStr, '\t');
   //    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
   if(v.size() < 19) {
-    std::cerr << "Warning: " << lineStr << " does not contain 8 columns." << std::endl;
+    std::cerr << "Warning: " << lineStr << " does not contain 19 columns." << std::endl;
     return;
   }
 
@@ -75,6 +75,26 @@ void InteractionSet::setAsHICCUPS(const std::string &lineStr)
                         bed({v[3], v[4], v[5]}),
                         val);
     if(std::isfinite(val)) maxval = std::max(val, maxval);
+  } catch (std::exception &e) {
+    PRINTERR_AND_EXIT(e.what());
+  }
+}
+
+
+void InteractionSet::setAsBEDPE(const std::string &lineStr)
+{
+  std::vector<std::string> v;
+  ParseLine(v, lineStr, '\t');
+  if(v.size() < 6) {
+    std::cerr << "Warning: " << lineStr << " does not contain 6 columns." << std::endl;
+    return;
+  }
+
+  try {
+    vinter.emplace_back(bed({v[0], v[1], v[2]}),
+                        bed({v[3], v[4], v[5]}),
+                        1);
+    maxval = 1;
   } catch (std::exception &e) {
     PRINTERR_AND_EXIT(e.what());
   }
