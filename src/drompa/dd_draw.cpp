@@ -399,12 +399,12 @@ void PDFPage::stroke_xaxis_num(const double y, const int32_t fontsize)
       kilo = (i%NUM_1M)/NUM_1K;
       if (par.width_per_line > 10*NUM_1K) str = float2string(i/static_cast<double>(NUM_1M), 3) + "M";
       else if (par.width_per_line > 10) {
-	if (mega) str = std::to_string(mega) + "," + float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
-	else str = float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
+        if (mega) str = std::to_string(mega) + "," + float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
+        else str = float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
       } else {
-	if (mega) str = std::to_string(mega) + "," + std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
-	else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
-	else str = std::to_string(i%NUM_1K);
+        if (mega) str = std::to_string(mega) + "," + std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
+        else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
+        else str = std::to_string(i%NUM_1K);
       }
     }
     showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
@@ -514,7 +514,7 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
   if (p.anno.GD.isOn()) StrokeGraph(GD);
 
   // Gene
-  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "")DrawGeneAnnotation(p);
+  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawGeneAnnotation(p);
 
   // Read
   StrokeReadLines(p);

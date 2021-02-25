@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.8 (2021-02-25)
+- drompa+: Bug fix that the y-axis of read distribution boxes becomes too bold when applying large binsize
+
 ## 1.8.7 (2021-02-20)
 - drompa+: Allow BEDPE format for `--inter` option
 
