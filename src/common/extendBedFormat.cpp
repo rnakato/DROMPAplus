@@ -17,9 +17,11 @@ bed12::bed12(std::vector<std::string> &s):
       std::vector<std::string> v;
       ParseLine(v, s[8], ',');
       if(v.size() >= 3) {
+//        std::cout << v[0] << "\t" << v[1] << "\t" << v[2] << "\n"
         rgb_r = stoi(v[0]);
         rgb_g = stoi(v[1]);
         rgb_b = stoi(v[2]);
+ //       printf("%d, %d, %d\n", rgb_r, rgb_g, rgb_b);
       }
     }
     if(num > 9)  blockCount  = stoi(s[9]);

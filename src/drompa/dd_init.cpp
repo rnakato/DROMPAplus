@@ -25,7 +25,7 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
     ("ars",    value<std::string>(), "ARS list (for yeast)")
     ("ter",    value<std::string>(), "TER list (for S.cerevisiae)")
     ("bed",    value<std::vector<std::string>>(), "<bedfile>,<label>: BED file (<label> can be omited)")
-    ("bed12",  value<std::vector<std::string>>(), "<bedfile>,<label>: BED12 file (<label> can be omited)")
+    ("bed12",  value<std::vector<std::string>>(), "<bed12file>,<label>: BED12 file (<label> can be omited)")
     ("repeat", value<std::string>(), "Display repeat annotation (RepeatMasker format)")
     ;
   allopts.add(opt);
@@ -568,6 +568,7 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps)
     ("shownegative", "allow negative values in historgram")
     ("offymem", "Omit Y memory")
     ("offylabel", "Omit Y label")
+    ("offbedname", "Omit name in BED12")
     ("offpdf", "Omit pdf generation (for peak calling)")
     ;
   allopts.add(opt);
@@ -592,6 +593,7 @@ void DrawParam::setValues(const Variables &values, const int32_t n)
     shownegative = values.count("shownegative");
     showymem = !values.count("offymem");
     showylab = !values.count("offylabel");
+    showbedname = !values.count("offbedname");
     showpdf  = !values.count("offpdf");
     alpha = getVal<double>(values, "alpha");
 

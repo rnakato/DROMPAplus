@@ -23,11 +23,11 @@ public:
   int32_t summit;
   std::string name;
 
-  bed(): start(0), end(0), summit(0) {}
+  bed(): start(0), end(0), summit(0), name("") {}
   virtual ~bed(){}
 
   bed(const std::string &c, const int32_t s, const int32_t e, const int32_t _summit=0):
-    chr(rmchr(c)), start(s), end(e), name("")
+    chr(rmchr(c)), start(s), end(e)
   {
     if (_summit) summit = _summit;
     else summit = (start + end)/2;
@@ -44,7 +44,7 @@ public:
       start = stoi(s[1]);
       end = stoi(s[2]);
       summit = (start + end)/2;
-      if(s.size() >= 4) name = s[3];
+//      if(s.size() >= 4) name = s[3];
     } catch (std::exception &e) {
       PRINTERR_AND_EXIT("invalid columns in BED format. " + std::string(e.what()));
     }
@@ -118,7 +118,7 @@ public:
   double p;
   double enrich;
   double q;
-//  std::string name;
+  std::string name;
 
   macsxls(): bed(), len(0), pileup(0), p(0), enrich(0), q(0) {}
   explicit macsxls(std::vector<std::string> &s): bed(s) {

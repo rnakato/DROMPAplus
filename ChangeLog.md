@@ -2,6 +2,8 @@
 
 ## 1.8.8 (2021-02-25)
 - drompa+: Bug fix that the y-axis of read distribution boxes becomes too bold when applying large binsize
+- drompa+: accept color information in BED12 file
+- drompa+: add `--offbedname` option to omit bed name
 
 ## 1.8.7 (2021-02-20)
 - drompa+: Allow BEDPE format for `--inter` option
