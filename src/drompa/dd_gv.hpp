@@ -268,6 +268,7 @@ namespace DROMPA {
     bool shownegative;
     bool showymem;
     bool showylab;
+    bool showbedname;
     bool showpdf;
 
     int32_t samplenum;
@@ -287,7 +288,7 @@ namespace DROMPA {
     double alpha;
 
     DrawParam(): linenum_per_page(0), barnum(0), ystep(0),
-                 showymem(true), showylab(true), showpdf(true),
+                 showymem(true), showylab(true), showbedname(true), showpdf(true),
                  samplenum(0),
                  width_page_pixel(0), width_draw_pixel(0), width_per_line(0),
                  showctag(0), showitag(0), showratio(0), showpinter(0), showpenrich(0),
@@ -300,6 +301,7 @@ namespace DROMPA {
     bool isshownegative() const { return shownegative; };
     bool isshowymem() const { return showymem; };
     bool isshowylab() const { return showylab; };
+    bool isshowbedname() const { return showbedname; };
     bool isshowpdf() const { return showpdf; };
 
     int32_t getbarnum() const { return barnum; }

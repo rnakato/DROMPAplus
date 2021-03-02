@@ -343,21 +343,17 @@ void setcolor(const Cairo::RefPtr<Cairo::Context> &cr, bed &x)
 
 void setcolor(const Cairo::RefPtr<Cairo::Context> &cr, bed12 &x)
 {
+//  printf("%d, %d, %d\n", x.rgb_r, x.rgb_g, x.rgb_b);
   cr->set_source_rgba(x.rgb_r/(double)255, x.rgb_g/(double)255, x.rgb_b/(double)255, 0.6);
 }
 
-//void PDFPage::drawBedAnnotation(const vbed<auto> &vbed)
 template <class T>
-void PDFPage::drawBedAnnotation(const vbed<T> &vbed)
+void PDFPage::drawBedAnnotation(const DROMPA::Global &p, const vbed<T> &vbed)
 {
   DEBUGprint_FUNCStart();
   int32_t boxheight(BOXHEIGHT_BEDANNOTATION);
   std::string chr(rmchr(chrname));
   double ycenter(par.yaxis_now + boxheight/2);
-
-  // label
-  cr->set_source_rgba(CLR_BLACK, 1);
-  showtext_cr(cr, 90, ycenter+4, vbed.getlabel(), 12);
 
   cr->set_line_width(0.5);
   rel_xline(cr, OFFSET_X, ycenter, par.getXaxisLen());
@@ -368,15 +364,25 @@ void PDFPage::drawBedAnnotation(const vbed<T> &vbed)
   for (auto &x: vbed.getvBed()) {
     if (x.chr != chr) continue;
 
-    setcolor(cr, x);
     if (par.xstart <= x.end && x.start <= par.xend) {
+      setcolor(cr, x);
       double x1 = BP2PIXEL(x.start - par.xstart);
       double len = (x.end - x.start) * par.dot_per_bp;
       rel_xline(cr, x1, ycenter, len);
       cr->stroke();
+      if (p.drawparam.isshowbedname() && x.name != "") { // bed12
+        cr->set_source_rgba(CLR_BLACK, 1);
+        showtext_cr(cr, x1+len/2, ycenter-1, x.name, 8);
+      }
     }
   }
   cr->stroke();
+
+  // label
+  cr->set_source_rgba(CLR_BLACK, 1);
+  showtext_cr(cr, 90, ycenter+4, vbed.getlabel(), 12);
+
+
   par.yaxis_now += boxheight;
 
   DEBUGprint_FUNCend();
@@ -399,12 +405,12 @@ void PDFPage::stroke_xaxis_num(const double y, const int32_t fontsize)
       kilo = (i%NUM_1M)/NUM_1K;
       if (par.width_per_line > 10*NUM_1K) str = float2string(i/static_cast<double>(NUM_1M), 3) + "M";
       else if (par.width_per_line > 10) {
-	if (mega) str = std::to_string(mega) + "," + float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
-	else str = float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
+        if (mega) str = std::to_string(mega) + "," + float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
+        else str = float2string((i%NUM_1M)/static_cast<double>(NUM_1K), 3) + "K";
       } else {
-	if (mega) str = std::to_string(mega) + "," + std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
-	else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
-	else str = std::to_string(i%NUM_1K);
+        if (mega) str = std::to_string(mega) + "," + std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
+        else if (kilo) str = std::to_string(kilo) + "," + std::to_string(i%NUM_1K);
+        else str = std::to_string(i%NUM_1K);
       }
     }
     showtext_cr(cr, x - 3*str.length(), y+10, str, fontsize);
@@ -495,13 +501,13 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
 }
 
 template <class T>
-void PDFPage::Draw_vbedlist(const std::vector<vbed<T>> &vlist)
+void PDFPage::Draw_vbedlist(const DROMPA::Global &p, const std::vector<vbed<T>> &vlist)
 {
   if(!vlist.size()) return;
 
   par.yaxis_now += MERGIN_BETWEEN_READ_BED;
   for (auto &x: vlist) {
-    drawBedAnnotation(x);
+    drawBedAnnotation(p, x);
     par.yaxis_now += 2;
   }
 }
@@ -514,14 +520,15 @@ void PDFPage::StrokeEachLayer(const DROMPA::Global &p)
   if (p.anno.GD.isOn()) StrokeGraph(GD);
 
   // Gene
-  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "")DrawGeneAnnotation(p);
+  if (p.anno.genefile != "" || p.anno.arsfile != "" || p.anno.terfile != "") DrawGeneAnnotation(p);
 
   // Read
   StrokeReadLines(p);
 
-  // Bed files
-  Draw_vbedlist(p.anno.vbed12list);
-  Draw_vbedlist(p.anno.vbedlist);
+  // BED12 files
+  Draw_vbedlist(p, p.anno.vbed12list);
+  // BED files
+  Draw_vbedlist(p, p.anno.vbedlist);
 
   // ChIA-Drop
   if (p.anno.existChIADrop()) {

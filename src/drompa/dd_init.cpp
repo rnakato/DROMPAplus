@@ -25,7 +25,7 @@ void Annotation::setOptsPC(MyOpt::Opts &allopts)
     ("ars",    value<std::string>(), "ARS list (for yeast)")
     ("ter",    value<std::string>(), "TER list (for S.cerevisiae)")
     ("bed",    value<std::vector<std::string>>(), "<bedfile>,<label>: BED file (<label> can be omited)")
-    ("bed12",  value<std::vector<std::string>>(), "<bedfile>,<label>: BED12 file (<label> can be omited)")
+    ("bed12",  value<std::vector<std::string>>(), "<bed12file>,<label>: BED12 file (<label> can be omited)")
     ("repeat", value<std::string>(), "Display repeat annotation (RepeatMasker format)")
     ;
   allopts.add(opt);
@@ -36,7 +36,8 @@ void Annotation::setOptsGV(MyOpt::Opts &allopts)
   MyOpt::Opts opt("Genome view",100);
   opt.add_options()
     ("ideogram", value<std::string>(), "Cytoband file for drawing ideogram")
-    ("inter",  value<std::vector<std::string>>(), "<interaction file>,<label>: Interaction file and label (<label> can be omited)")
+    ("inter",  value<std::vector<std::string>>(),
+     "<interaction file>,<label>,<tool>: Interaction file\n     (label and tool can be omitted)\n     <tool>:mango (Mango format, default)\n            hiccups (HICCUPS format)\n            bedpe (BEDPE format)\n")
     ("chiadrop", value<std::string>(), "ChIADrop file (single-cell ChIA-PET)")
     ("chia_distance_thre", value<int32_t>()->default_value(100000), "(with --chiadrip) max distance of neighboring reads in each GEM")
     ("mp",     value<std::string>(), "Mappability file")
@@ -567,6 +568,7 @@ void DrawParam::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps)
     ("shownegative", "allow negative values in historgram")
     ("offymem", "Omit Y memory")
     ("offylabel", "Omit Y label")
+    ("offbedname", "Omit name in BED12")
     ("offpdf", "Omit pdf generation (for peak calling)")
     ;
   allopts.add(opt);
@@ -591,6 +593,7 @@ void DrawParam::setValues(const Variables &values, const int32_t n)
     shownegative = values.count("shownegative");
     showymem = !values.count("offymem");
     showylab = !values.count("offylabel");
+    showbedname = !values.count("offbedname");
     showpdf  = !values.count("offpdf");
     alpha = getVal<double>(values, "alpha");
 

@@ -17,9 +17,11 @@ bed12::bed12(std::vector<std::string> &s):
       std::vector<std::string> v;
       ParseLine(v, s[8], ',');
       if(v.size() >= 3) {
+//        std::cout << v[0] << "\t" << v[1] << "\t" << v[2] << "\n"
         rgb_r = stoi(v[0]);
         rgb_g = stoi(v[1]);
         rgb_b = stoi(v[2]);
+ //       printf("%d, %d, %d\n", rgb_r, rgb_g, rgb_b);
       }
     }
     if(num > 9)  blockCount  = stoi(s[9]);
@@ -65,7 +67,7 @@ void InteractionSet::setAsHICCUPS(const std::string &lineStr)
   ParseLine(v, lineStr, '\t');
   //    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
   if(v.size() < 19) {
-    std::cerr << "Warning: " << lineStr << " does not contain 8 columns." << std::endl;
+    std::cerr << "Warning: " << lineStr << " does not contain 19 columns." << std::endl;
     return;
   }
 
@@ -75,6 +77,26 @@ void InteractionSet::setAsHICCUPS(const std::string &lineStr)
                         bed({v[3], v[4], v[5]}),
                         val);
     if(std::isfinite(val)) maxval = std::max(val, maxval);
+  } catch (std::exception &e) {
+    PRINTERR_AND_EXIT(e.what());
+  }
+}
+
+
+void InteractionSet::setAsBEDPE(const std::string &lineStr)
+{
+  std::vector<std::string> v;
+  ParseLine(v, lineStr, '\t');
+  if(v.size() < 6) {
+    std::cerr << "Warning: " << lineStr << " does not contain 6 columns." << std::endl;
+    return;
+  }
+
+  try {
+    vinter.emplace_back(bed({v[0], v[1], v[2]}),
+                        bed({v[3], v[4], v[5]}),
+                        1);
+    maxval = 1;
   } catch (std::exception &e) {
     PRINTERR_AND_EXIT(e.what());
   }

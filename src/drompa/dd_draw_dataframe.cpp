@@ -26,6 +26,7 @@ void DataFrame::Draw(const DROMPA::Global &p,
 
 void DataFrame::StrokeYmem(const int32_t nlayer)
 {
+  cr->set_line_width(0.4);
   cr->set_source_rgba(CLR_BLACK, 0.5);
   for (int32_t i=0; i<par.barnum; ++i) rel_xline(cr, OFFSET_X, par.yaxis_now - i*par.ystep, par.getXaxisLen());
   cr->stroke();
