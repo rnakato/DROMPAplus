@@ -28,6 +28,13 @@ For Singularity:
    singularity build ssp_drompa.img docker://rnakato/ssp_drompa
    singularity exec ssp_drompa.img drompa+
 
+Singularity mounts the current directory automatically. If you access the files in the other directory,
+please mount by ``--bind`` option::
+
+    singularity exec --bind /work ssp_drompa.img drompa+
+
+This command mounts ``/work`` directory.
+
 
 Building from source
 ---------------------------------
