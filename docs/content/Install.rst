@@ -29,7 +29,7 @@ For Singularity:
    singularity exec ssp_drompa.img drompa+
 
 Singularity mounts the current directory automatically. If you access the files in the other directory,
-please mount by ``--bind`` option::
+please mount by ``--bind`` option, for instance::
 
     singularity exec --bind /work ssp_drompa.img drompa+
 
