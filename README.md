@@ -1,6 +1,6 @@
 # DROMPAplus
 
-# 1. Overview
+## 1. Overview
 DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a ChIP-seq pipeline tool that meets various needs, including quality check, analysis, and visualization of multiple ChIP samples.
 
 DROMPAplus is written in C++ and has many valuable features. DROMPAplus:
@@ -15,7 +15,40 @@ DROMPAplus is written in C++ and has many valuable features. DROMPAplus:
 
 See http://drompaplus.readthedocs.io/ for the detailed Manual.
 
-# 2. Requirements
+## 2. Install
+
+### 2.1. Docker image
+
+#### 2.1.1. Docker 
+We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https://hub.docker.com/r/rnakato/ssp_drompa) using:
+
+    docker pull rnakato/ssp_drompa
+    docker run -it --rm rnakato/ssp_drompa drompa+
+
+Note:: When using the docker image, it is necessary to mount the directory by ``-v`` option to access the input files as follows:
+
+    docker run -it --rm -v $(pwd):/mnt rnakato/ssp_drompa parse2wig+ \
+             -i /mnt/ChIP.bam -o /mnt/ChIP --gt /mnt/genometable.txt
+
+This command mounts the current directory to /mnt directory in the container. 
+Please see also the document of Docker: https://docs.docker.com/storage/volumes/
+
+#### 2.1.2. Singularity
+
+Singularity can also be used to execute the docker image:
+
+    singularity build ssp_drompa.img docker://rnakato/ssp_drompa
+    singularity exec ssp_drompa.img drompa+
+
+Singularity mounts the current directory automatically. If you access the files in the other directory, please mount by `--bind` option, for instance:
+
+    singularity exec --bind /work ssp_drompa.img drompa+
+    
+This command mounts `/work` directory.
+
+### 2.2. Building from source
+
+#### 2.2.1 Requirements
 DROMPAplus requires the following programs and libraries:
 * [Boost C++ library (>1.53.0)](http://www.boost.org/)
 * [Cairo libraries](http://www.cairographics.org/)
@@ -30,23 +63,7 @@ and also contains two submodules:
 * [SSP](https://github.com/rnakato/SSP)
 * [Coherent PDF](http://community.coherentpdf.com/)
 
-# 3. Install
-
-### 3.1. Docker image
-
-We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https://hub.docker.com/r/rnakato/ssp_drompa) using:
-
-    docker pull rnakato/ssp_drompa
-    docker run -it --rm rnakato/ssp_drompa drompa+
-
-For Singularity:
-
-    singularity build ssp_drompa.img docker://rnakato/ssp_drompa
-    singularity exec ssp_drompa.img drompa+
-
-### 3.2. Building from source
-
-#### 3.2.1. Install required libraries
+#### 2.2.2. Install required libraries
 On Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
@@ -60,7 +77,7 @@ On Mac:
 
      brew install gsl gtk gtkmm cairo pkgconfig curl xz zlib boost cmake
 
-#### 3.2.2. Install DROMPAplus
+#### 2.2.3. Install DROMPAplus
 
     git clone --recursive https://github.com/rnakato/DROMPAplus
     cd DROMPAplus
@@ -68,12 +85,12 @@ On Mac:
 
 If you get an installation error, make sure that all required libraries are successfully installed.
 
-#### 3.2.3. Add the PATH environment variable
+#### 2.2.4. Add the PATH environment variable
 Permanently set the path to the DROMPAplus download directory by updating your **~/.bashrc** file. For example, if you downloaded DROMPAplus into $HOME directory, add the following lines to **~/.bashrc**:
 
     export PATH = $PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
 
-# 4. Reference
+# 3. Reference
 For DROMPAplus:
 * Nakato R., Sakata T., [Methods for ChIP-seq analysis: A practical workflow and advanced applications](https://www.sciencedirect.com/science/article/pii/S1046202320300591), *Methods*, 2020.
 
