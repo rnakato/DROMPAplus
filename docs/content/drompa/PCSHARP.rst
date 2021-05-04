@@ -19,12 +19,22 @@ Example usage
 drompa+ can take multiple ChIP-input pairs as input. Each pair should be specified with the option ``-i``.
 For example, the command::
 
+  # For local execution:
   $ dir=parse2wigdir+
   $ drompa+ PC_SHARP \
            -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
            -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
            -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
            -o drompa1 -g refFlat.txt --gt genometable.txt \
+           --lpp 2 --showitag 2 --chr 1
+
+   # If you are using the docker image:
+   $ dir=/mnt/parse2wigdir+
+   $ docker run -it --rm -v $(pwd):/mnt rnakato/ssp_drompa drompa+ PC_SHARP \
+           -i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3 \
+           -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3 \
+           -i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3 \
+           -o /mnt/drompa1 -g /mnt/refFlat.txt --gt /mnt/genometable.txt \
            --lpp 2 --showitag 2 --chr 1
 
 generates the PDF file ``drompa1.pdf`` for three ChIP samples (ChIP1, 2, 3, and 4) using the same input sample (Input), as shown in Fig. 3.1.
