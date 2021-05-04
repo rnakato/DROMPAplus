@@ -19,13 +19,15 @@ See http://drompaplus.readthedocs.io/ for the detailed Manual.
 
 ### 2.1. Docker image
 
+We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https://hub.docker.com/r/rnakato/ssp_drompa).
+
 #### 2.1.1. Docker 
-We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https://hub.docker.com/r/rnakato/ssp_drompa) using:
+ To use docker command, type:
 
     docker pull rnakato/ssp_drompa
     docker run -it --rm rnakato/ssp_drompa drompa+
 
-Note:: When using the docker image, it is necessary to mount the directory by ``-v`` option to access the input files as follows:
+**Note**: When using the docker image, it is necessary to mount the directory by ``-v`` option to access the input files as follows:
 
     docker run -it --rm -v $(pwd):/mnt rnakato/ssp_drompa parse2wig+ \
              -i /mnt/ChIP.bam -o /mnt/ChIP --gt /mnt/genometable.txt
