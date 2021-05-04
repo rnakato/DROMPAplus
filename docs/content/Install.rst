@@ -19,7 +19,7 @@ We recommend using the latest Docker image of DROMPAplus from DockerHub as follo
                -i /mnt/ChIP.bam -o /mnt/ChIP --gt /mnt/genometable.txt
 
     This command mounts the current directory to /mnt directory in the container. 
-    Please see also the document of Docker: https://docs.docker.com/storage/volumes/
+    Please see also `the document of Docker <https://docs.docker.com/storage/volumes/>`_.
 
 For Singularity:
 
