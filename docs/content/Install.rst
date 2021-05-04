@@ -95,4 +95,4 @@ Permanently set the path to the DROMPAplus download directory by updating your *
 
 .. code-block:: bash
 
-   export PATH = $PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
+   export PATH=$PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
