@@ -1,4 +1,4 @@
-,PC_SHARP: Read distribution visualization
+PC_SHARP: Read distribution visualization
 ---------------------------------------------
 
 (Optional) Download the BAM files and run parse2wig+ to make the bigWig files for the 100-bp bin::
