@@ -90,7 +90,7 @@ If you get an installation error, make sure that all required libraries are succ
 #### 2.2.4. Add the PATH environment variable
 Permanently set the path to the DROMPAplus download directory by updating your **~/.bashrc** file. For example, if you downloaded DROMPAplus into $HOME directory, add the following lines to **~/.bashrc**:
 
-    export PATH = $PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
+    export PATH=$PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
 
 # 3. Reference
 For DROMPAplus:
