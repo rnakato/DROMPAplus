@@ -30,7 +30,7 @@ We recommend to use the latest Docker image of DROMPAplus from [DockerHub](https
 **Note**: When using the docker image, it is necessary to mount the directory by ``-v`` option to access the input files as follows:
 
     docker run -it --rm -v $(pwd):/mnt rnakato/ssp_drompa parse2wig+ \
-             -i /mnt/ChIP.bam -o /mnt/ChIP --gt /mnt/genometable.txt
+             -i /mnt/ChIP.bam -o ChIP --odir /mnt/parse2wigdir+ --gt /mnt/genometable.txt
 
 This command mounts the current directory to ``/mnt`` directory in the container. 
 Please see also the [document of Docker](https://docs.docker.com/storage/volumes/).
