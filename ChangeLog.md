@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.9 (2021-05-08)
+- drompa+: bug fix for x memories when specifying a large value to `--ls`
+- fixed typo
+
 ## 1.8.8 (2021-02-25)
 - drompa+: Bug fix that the y-axis of read distribution boxes becomes too bold when applying large binsize
 - drompa+: accept color information in BED12 file
