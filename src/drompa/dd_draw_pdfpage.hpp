@@ -104,9 +104,9 @@ class PDFPage {
   Cairo::RefPtr<Cairo::Context> cr;
 
   int32_t setInterval() const {
-    int32_t interval;
-    if (par.width_per_line > 100*NUM_1M) interval = 10*NUM_1M;       // 10Mbp
-    else if (par.width_per_line > 10*NUM_1M) interval = 100*NUM_1K;  // 100kbp
+    int32_t interval(0);
+    if (par.width_per_line > 100*NUM_1M)     interval = 10*NUM_1M;   // 10Mbp
+//    else if (par.width_per_line > 10*NUM_1M) interval = NUM_1M; // 1Mbp  //100*NUM_1K;  // 100kbp
     else interval = par.width_per_line/10;
     return interval;
   }

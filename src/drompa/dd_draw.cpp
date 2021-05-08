@@ -259,6 +259,8 @@ void PDFPage::stroke_xaxis(const double y)
 
   cr->set_source_rgba(CLR_BLACK, 1);
   for(int32_t i=setline(par.xstart, interval); i<=par.xend; i+=interval) {
+//    std::cout << par.xstart << "\t" << interval << "\t" << par.xend << "\t" << i << std::endl;
+
     double x(BP2PIXEL(i - par.xstart));
     if (!(i%interval_large)) {
       cr->set_line_width(1);
@@ -399,7 +401,7 @@ void PDFPage::stroke_xaxis_num(const double y, const int32_t fontsize)
     std::string str;
     double x(BP2PIXEL(i - par.xstart));
     if (par.width_per_line > 100*NUM_1M)     str = float2string(i/static_cast<double>(NUM_1M), 1) + "M";
-    else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k";
+//    else if (par.width_per_line > 10*NUM_1M) str = float2string(i/static_cast<double>(NUM_1K), 1) + "k";
     else {
       mega = i/NUM_1M;
       kilo = (i%NUM_1M)/NUM_1K;
