@@ -13,9 +13,9 @@
 class chrsize;
 
 enum class DrompaCommand {
-                          CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
-                          DRAW, REGION, GENWIG, PROF, MULTICI,
-                          CG, TR, OTHER
+  CHIP, NORM, THRE, ANNO_PC, ANNO_GV,
+  DRAW, REGION, GENWIG, PROF, MULTICI,
+  CG, TR, OTHER
 };
 
 class CommandParamSet {
@@ -374,6 +374,13 @@ namespace DROMPA {
     void InitDumpOther() const;
 
     WigType getIfType() const { return iftype; }
+
+    bool ischr_in_gt(const std::string &query) const {
+      for(auto &chr: gt) {
+        if (chr.getname() == query) return true;
+      }
+      return false;
+    }
 
     int32_t getSmoothing() const { return smoothing; }
     int32_t getChIPInputNormType() const { return norm; }

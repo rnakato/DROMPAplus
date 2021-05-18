@@ -1,13 +1,16 @@
 # Changelog
 
+## 1.9.0 (2021-05-18)
+- drompa+: Add an error message when specifying a chromosome name by `--chr` that is not in the genometable file.
+
 ## 1.8.9 (2021-05-08)
-- drompa+: bug fix for x memories when specifying a large value to `--ls`
+- drompa+: Bug fix for x memories when specifying a large value to `--ls`
 - fixed typo
 
 ## 1.8.8 (2021-02-25)
 - drompa+: Bug fix that the y-axis of read distribution boxes becomes too bold when applying large binsize
-- drompa+: accept color information in BED12 file
-- drompa+: add `--offbedname` option to omit bed name
+- drompa+: Accept color information in BED12 file
+- drompa+: Add `--offbedname` option to omit bed name
 
 ## 1.8.7 (2021-02-20)
 - drompa+: Allow BEDPE format for `--inter` option
