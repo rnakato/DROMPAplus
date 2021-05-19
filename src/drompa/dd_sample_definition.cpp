@@ -74,8 +74,8 @@ SampleInfo::SampleInfo(const std::string &filename,
     else if (v[last] == "gz" && v[last-1] == "wig") {
       iftype = WigType::COMPRESSWIG;
       --last;
-    } else if (v[last] == "bedGraph") iftype = WigType::BEDGRAPH;
-    else if (v[last] == "bw")         iftype = WigType::BIGWIG;
+    } else if (v[last] == "bedGraph" || v[last] == "bedgraph") iftype = WigType::BEDGRAPH;
+    else if (v[last] == "bw" || v[last] == "bigwig") iftype = WigType::BIGWIG;
     else PRINTERR_AND_EXIT("invalid postfix: " << filename);
   }
   setbinsize(v[last-1], b);
