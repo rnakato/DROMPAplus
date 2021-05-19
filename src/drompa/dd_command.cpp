@@ -99,6 +99,14 @@ void Command::InitDump()
     if (p.drawregion.getchr() != "" && !p.ischr_in_gt(p.drawregion.getchr())) {
       PRINTERR_AND_EXIT("--chr " << p.drawregion.getchr() << " is not in the genometable file (--gt).");
     }
+    if (p.drawregion.isRegionBed()) {
+      int32_t n(0);
+       for(auto &chr: p.gt) {
+         std::vector<bed> bed(p.drawregion.getRegionBedChr(chr.getname()));
+         n += bed.size();
+       }
+       if(!n) PRINTERR_AND_EXIT("No chromosome specified in --region file is in the genometable file (--gt).");
+    }
   }
 
   for (auto x: vopts) {
