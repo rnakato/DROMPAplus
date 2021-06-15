@@ -48,7 +48,7 @@ public:
 
   void generateWig(const std::string &chrname, const int32_t chrlen) {
     DEBUGprint_FUNCStart();
-
+    
     for (auto &x: vsamplepairoverlayed) {
       if (x.first.InputExists()) {
         x.first.genEnrichWig(vReadArray, chrname, chrlen -1);

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.9.1 (2021-06-15)
+- drompa+: Bug fix when the smoothing width is larger than the array size.
+
 ## 1.9.0 (2021-05-18)
 - drompa+: Add an error message when specifying a chromosome name by `--chr` that is not in the genometable file.
 
