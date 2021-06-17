@@ -39,7 +39,7 @@ class WigArray {
   }
 
  public:
-  WigArray(): geta(10000.0){}
+  WigArray(): geta(10000.0) {}
   WigArray(const size_t num, const int32_t val):
     array(num, val), geta(10000.0)
   {}
@@ -61,6 +61,10 @@ class WigArray {
   void multipleval(const size_t i, const double val) {
     checki(i);
     array[i] *= val;
+  }
+  void divideval(const size_t i, const double val) {
+    checki(i);
+    array[i] /= val;
   }
 
   void Smoothing(const int32_t nsmooth) {

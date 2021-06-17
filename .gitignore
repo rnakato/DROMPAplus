@@ -4,3 +4,4 @@ obj/
 build
 *bam
 *cram
+.vscode/

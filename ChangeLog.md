@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.0 (2021-06-17)
+- drompa+: Modify to allow bedGraph/bigWig files with variable step.
+- Add "genometable.mm9.txt" in "data" folder.
+
 ## 1.9.1 (2021-06-15)
 - drompa+: Bug fix when the smoothing width is larger than the array size.
 

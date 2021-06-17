@@ -89,7 +89,9 @@ public:
   yScale scale;
 
   SamplePairEach():
-    genwig_filename(""), oftype(WigType::BEDGRAPH), binsize(0), argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
+    genwig_filename(""), oftype(WigType::BEDGRAPH), binsize(0),
+    argvChIP(""), argvInput(""), peak_argv(""),
+    label(""), ratio(1)
   {}
   SamplePairEach(const std::string &str, const vSampleInfo &vsinfo);
 

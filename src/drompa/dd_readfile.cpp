@@ -47,6 +47,8 @@ namespace {
 
     DEBUGprint_FUNCStart();
 
+    std::vector<int32_t> array_ncount(array.size());
+
     int32_t on(0);
     std::string lineStr;
     while (!in.eof()) {
@@ -72,18 +74,25 @@ namespace {
       try {
         int32_t start(stoi(v[1]));
         int32_t end(stoi(v[2])-1);
-        if (start%binsize) PRINTERR_AND_EXIT("ERROR: invalid start position: " << start << " for binsize " << binsize);
+//        if (start%binsize) PRINTERR_AND_EXIT("ERROR: invalid start position: " << start << " for binsize " << binsize);
         int32_t s(start/binsize);
         int32_t e(end/binsize);
-        //    std::cout << s << "\t " << e << "\t " << array.size() << "\t" << stod(v[3]) << std::endl;
-        for(int32_t i=s; i<=e; ++i) array.setval(i, val);
+//        for (int32_t i=s; i<=e; ++i) array.setval(i, val);
+        for (int32_t i=s; i<=e; ++i) {
+          array.addval(i, val);
+          ++array_ncount[i];
+        }
       } catch (const boost::bad_any_cast& e) {
         PRINTERR_AND_EXIT("Error: invalid value in BedGraph. " + lineStr + ": :" + std::string(e.what()));
       }
 
     }
-
     in.close();
+
+    for (size_t i=0; i<array.size(); ++i) {
+//       std::cout << "i: " << std::to_string(i) << " array_ncount : " << std::to_string(array_ncount[i]) << " array : " << std::to_string(array[i]) << std::endl;
+        if (array_ncount[i]>1) array.divideval(i, array_ncount[i]);
+    }
 
     DEBUGprint_FUNCend();
     return;

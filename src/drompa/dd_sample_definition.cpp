@@ -60,25 +60,26 @@ namespace {
 
 SampleInfo::SampleInfo(const std::string &filename,
                        const std::vector<chrsize> &gt,
-                       const int32_t b,
+                       const int32_t _binsize,
                        const WigType &type):
   binsize(0), totalreadnum(0), prefix("")
 {
+
   std::vector<std::string> v;
   ParseLine(v, filename, '.');
   int32_t last(v.size()-1);
 
   if (type != WigType::NONE) iftype = type;
   else {
-    if (v[last] == "wig") iftype = WigType::UNCOMPRESSWIG;
-    else if (v[last] == "gz" && v[last-1] == "wig") {
+    if (v[last] == "wig" || v[last] == "wiggle") iftype = WigType::UNCOMPRESSWIG;
+    else if (v[last] == "gz" && (v[last-1] == "wig" || v[last-1] == "wiggle")) {
       iftype = WigType::COMPRESSWIG;
       --last;
-    } else if (v[last] == "bedGraph" || v[last] == "bedgraph") iftype = WigType::BEDGRAPH;
-    else if (v[last] == "bw" || v[last] == "bigwig") iftype = WigType::BIGWIG;
+    } else if (v[last] == "bedGraph" || v[last] == "BedGraph" || v[last] == "bedgraph") iftype = WigType::BEDGRAPH;
+    else if (v[last] == "bw" || v[last] == "bigwig" || v[last] == "bigWig"|| v[last] == "BigWig") iftype = WigType::BIGWIG;
     else PRINTERR_AND_EXIT("invalid postfix: " << filename);
   }
-  setbinsize(v[last-1], b);
+  setbinsize(v[last-1], _binsize);
   for (int32_t i=0; i<last; ++i) prefix += v[i] + ".";
   gettotalreadnum(filename, gt);
 }
@@ -179,15 +180,15 @@ void vSampleInfo::addSampleInfo(const std::string &str,
   std::vector<std::string> v;
   ParseLine(v, str, ',');
 
-  if(v.size() >8) {
+  if (v.size() >8) {
     PRINTERR_AND_EXIT("error: sample std::string has ',' more than 8: " << str);
   }
-  if(v[0] == "") {
+  if (v[0] == "") {
     PRINTERR_AND_EXIT("please specify ChIP sample: " << str);
   }
   isFile(v[0]);
 
-  if(v.size() >4 && v[4] != "") {
+  if (v.size() >4 && v[4] != "") {
     try { binsize = stoi(v[4]); }
     catch (...) {
       std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl;
@@ -195,11 +196,11 @@ void vSampleInfo::addSampleInfo(const std::string &str,
   }
 
   // ChIP sample
-  if(!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
-  if(vsinfo[v[0]].getbinsize() <= 0) PRINTERR_AND_EXIT("please specify binsize.\n");
+  if (!Exists(v[0])) vsinfo[v[0]] = SampleInfo(v[0], gt, binsize, iftype);
+  if (vsinfo[v[0]].getbinsize() <= 0) PRINTERR_AND_EXIT("please specify binsize.\n");
 
   // Input sample
-  if(v.size() >=2 && v[1] != "") {
+  if (v.size() >=2 && v[1] != "") {
     if(!Exists(v[1])) vsinfo[v[1]] = SampleInfo(v[1], gt, binsize, iftype);
     if(vsinfo[v[0]].getbinsize() != vsinfo[v[1]].getbinsize()) PRINTERR_AND_EXIT("binsize of ChIP and Input should be same. " << str);
   }
