@@ -221,10 +221,22 @@ SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo
   if (v.size() >=3 && v[2] != "") label     = v[2]; else label = basename(v[0]);
   if (v.size() >=4 && v[3] != "") peak_argv = v[3];
   if (peak_argv != "") vbedregions = parseBed_Hash<bed>(peak_argv);
-  binsize = vsinfo.getbinsize(argvChIP);
-  if (v.size() >=6 && v[5] != "") scale.tag = stod(v[5]);
-  if (v.size() >=7 && v[6] != "") scale.ratio = stod(v[6]);
-  if (v.size() >=8 && v[7] != "") scale.pvalue = stod(v[7]);
+
+  if (v.size() >4 && v[4] != "") {
+    try { binsize = stoi(v[4]); }
+    catch (...) {
+      std::cerr << "Warning: invalid binsize " << v[4] << "." << std::endl;
+      binsize = vsinfo.getbinsize(argvChIP);
+    }
+  } else binsize = vsinfo.getbinsize(argvChIP);
+  //std::cout << "binsize " << std::to_string(binsize) << "\n";
+  try {
+    if (v.size() >=6 && v[5] != "") scale.tag = stod(v[5]);
+    if (v.size() >=7 && v[6] != "") scale.ratio = stod(v[6]);
+    if (v.size() >=8 && v[7] != "") scale.pvalue = stod(v[7]);
+  }  catch (const boost::bad_any_cast& e) {
+    PRINTERR_AND_EXIT("in --input binsize or scales: " << e.what());
+  }
 
   //    printBed_Hash(vbedregions);
 }
