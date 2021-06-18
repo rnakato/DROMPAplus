@@ -2,6 +2,7 @@
 
 ## 1.10.0 (2021-06-17)
 - drompa+: Modify to allow bedGraph/bigWig files with variable step.
+- drompa+: Bug fix when a single sample is specified multiple times with different binsize (5th string in `-i`)
 - Add "genometable.mm9.txt" in "data" folder.
 
 ## 1.9.1 (2021-06-15)
