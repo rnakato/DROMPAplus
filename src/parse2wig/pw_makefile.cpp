@@ -152,9 +152,9 @@ namespace {
   void outputBedGraph(Mapfile &p, const std::string &filename)
   {
     int32_t binsize(p.wsGenome.getbinsize());
-
+  printf("ss array: \n");
     std::ofstream out(filename);
-    out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[1].getrefname() % 0 % (p.genome.chr[1].getlen()/100);
+    out << boost::format("browser position %1%:%2%-%3%\n") % p.genome.chr[0].getrefname() % 0 % (p.genome.chr[0].getlen()/100);
     out << "browser hide all" << std::endl;
     out << "browser pack refGene encodeRegions" << std::endl;
     out << "browser full altGraph" << std::endl;
@@ -162,6 +162,7 @@ namespace {
       % p.getSampleName() % binsize;
     out.close();
 
+  printf("ss afffrray: \n");
     std::string tempfile = filename + ".tmpfile";
 
     FILE* File = fopen(tempfile.c_str(), "w");
