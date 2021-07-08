@@ -23,8 +23,8 @@ public:
 
   ChrArray(){}
   ChrArray(const DROMPA::Global &p,
-	   const std::pair<const std::string, SampleInfo> &x,
-	   const chrsize &chr):
+           const std::pair<const std::string, SampleInfo> &x,
+           const chrsize &chr):
     binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
     array(loadWigData(x.first, x.second, chr)),
     stats(nbin, binsize),
