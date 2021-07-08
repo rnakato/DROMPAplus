@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.10.1 (2021-07-08)
+- drompa+: Modify the width for calculating p-inter (100kbp -> 1k bins)
+
 ## 1.10.0 (2021-06-17)
 - drompa+: Modify to allow bedGraph/bigWig files with variable step.
 - drompa+: Bug fix when a single sample is specified multiple times with different binsize (5th string in `-i`)
