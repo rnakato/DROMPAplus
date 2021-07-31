@@ -19,10 +19,11 @@ class DataFrame {
     cr->stroke();
   }
 
+  double getmax(const SamplePairEach &pair, const vChrArray &vReadArray,
+                const int32_t i, const int32_t thin);
   void StrokeBins(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t nlayer);
-  virtual void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
-                             const int32_t i, const double xcen, const int32_t yaxis,
-                             const int32_t nlayer);
+  virtual void StrokeEachBin(const double value, const double xcen,
+                             const int32_t yaxis, const int32_t nlayer);
 
 protected:
   enum { POSI_ASSAYLABEL=6, POSI_XLABEL=66, LEN_EDGE=2};
@@ -219,9 +220,8 @@ class LogRatioDataFrame : public DataFrame {
     return std::pow(scale, i - barnum_minus);
   }
 
-  void StrokeEachBin(const SamplePairEach &pair, const vChrArray &vReadArray,
-                     const int32_t i, const double xcen, const int32_t yaxis,
-                     const int32_t nlayer);
+  void StrokeEachBin(const double value, const double xcen,
+                     const int32_t yaxis, const int32_t nlayer);
 
 public:
   LogRatioDataFrame(const Cairo::RefPtr<Cairo::Context> cr_, const DROMPA::Global &p,
@@ -265,7 +265,7 @@ public:
 class PinterDataFrame : public PvalueDataFrame {
   double getVal(const SamplePairEach &pair, const vChrArray &vReadArray, const int32_t i) {
     const ChrArray &a = vReadArray.getArray(pair.argvChIP);
-    double myu(a.array.getLocalAverage(i, a.binsize));
+    double myu(a.array.getLocalAverage(i));
 
     return getlogp_Poisson(a.array[i], myu);
   }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0 (2021-07-31)
+- drompa+: Tuning the thining approach for read visualization (random -> max(abs(value)) for each windows)
+
 ## 1.10.1 (2021-07-08)
 - drompa+: Modify the width for calculating p-inter (100kbp -> 1k bins)
 

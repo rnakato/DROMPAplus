@@ -60,6 +60,19 @@ void DataFrame::StrokeSampleLabel(const SamplePairOverlayed &pair) {
   }
 }
 
+double DataFrame::getmax(const SamplePairEach &pair,
+              const vChrArray &vReadArray,
+              const int32_t i, const int32_t thin)
+{
+  double value(0);
+  double v;
+  for (int32_t j=0; j<thin; ++j) {
+    v = getVal(pair, vReadArray, i+j);
+    if (abs(v) > abs(value)) value = v;
+  }
+  return value;
+}
+
 void DataFrame::StrokeBins(const SamplePairEach &pair,
                            const vChrArray &vReadArray,
                            const int32_t nlayer)
@@ -76,19 +89,25 @@ void DataFrame::StrokeBins(const SamplePairEach &pair,
   if (thin > 1) cr->set_line_width(dot_per_bin*thin);
   else cr->set_line_width(dot_per_bin);
 
-  for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {
+  for (int32_t i=sbin; i<ebin; i += thin, xcen += dot_per_bin*thin) {
+    double value(0);
+    if (thin > 1) value = getmax(pair, vReadArray, i, thin);
+    else value = getVal(pair, vReadArray, i);
+
+    StrokeEachBin(value, xcen, yaxis, nlayer);
+ }
+
+  /*for (int32_t i=sbin; i<ebin; ++i, xcen += dot_per_bin) {
     if (thin > 1 && i%thin) continue;
-    StrokeEachBin(pair, vReadArray, i, xcen, yaxis, nlayer);
-  }
+    double value(getVal(pair, vReadArray, i));
+    StrokeEachBin(value, xcen, yaxis, nlayer);
+  }*/
   cr->stroke();
 }
 
-void DataFrame::StrokeEachBin(const SamplePairEach &pair,
-                              const vChrArray &vReadArray,
-                              const int32_t i, const double xcen,
+void DataFrame::StrokeEachBin(const double value, const double xcen,
                               const int32_t yaxis, const int32_t nlayer)
 {
-  double value(getVal(pair, vReadArray, i));
   if (!value) return;
 
   double len(0);
@@ -122,16 +141,12 @@ void DataFrame::StrokeEachBin(const SamplePairEach &pair,
   }
 }
 
-void LogRatioDataFrame::StrokeEachBin(const SamplePairEach &pair,
-                                      const vChrArray &vReadArray,
-                                      const int32_t i,
-                                      const double xcen,
-                                      const int32_t yaxis,
-                                      const int32_t nlayer)
+void LogRatioDataFrame::StrokeEachBin(const double _value, const double xcen,
+                                      const int32_t yaxis, const int32_t nlayer)
 {
-  double value(getVal(pair, vReadArray, i));
-  if (!nlayer) value = value ? log(value) / log(scale): 0;
-  else         value = value ? log(value) / log(scale2nd): 0;
+  double value(0);
+  if (!nlayer) value = _value ? log(_value) / log(scale): 0;
+  else         value = _value ? log(_value) / log(scale2nd): 0;
 
   int32_t len(0);
   if (value > 0)      len = -std::min(par.ystep*value,  len_plus);

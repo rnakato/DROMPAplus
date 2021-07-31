@@ -282,7 +282,7 @@ void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string
 
   for (size_t i=0; i<ChIParray.size(); ++i) {
     if      (ofvaluetype == 0) wigarray.setval(i, getratio(ChIParray[i], (double)Inputarray[i]));
-    else if (ofvaluetype == 1) wigarray.setval(i, getlogp_Poisson(ChIParray[i], ChIParray.getLocalAverage(i, binsize)));
+    else if (ofvaluetype == 1) wigarray.setval(i, getlogp_Poisson(ChIParray[i], ChIParray.getLocalAverage(i)));
     else if (ofvaluetype == 2) wigarray.setval(i, getlogp_BinomialTest(ChIParray[i], Inputarray[i], ratio));
     else {
       PRINTERR_AND_EXIT("Invalid outputvaluetype: " << ofvaluetype);
@@ -311,7 +311,7 @@ void SamplePairEach::peakcall_withInput(const vChrArray &vReadArray, const std::
   const WigArray &Inputarray = vReadArray.getArray(argvInput).array;
 
   for (size_t i=0; i<ChIParray.size(); ++i) {
-    double logp_inter(getlogp_Poisson(ChIParray[i], ChIParray.getLocalAverage(i, binsize)));
+    double logp_inter(getlogp_Poisson(ChIParray[i], ChIParray.getLocalAverage(i)));
     double logp_enrich(getlogp_BinomialTest(ChIParray[i], Inputarray[i], ratio));
     double ratio_i(CalcRatio(ChIParray[i], Inputarray[i], ratio));
 
@@ -348,7 +348,7 @@ void SamplePairEach::peakcall_onlyChIP(const vChrArray &vReadArray, const std::s
 
   for (size_t i=0; i<ChIParray.size(); ++i) {
     double val(ChIParray[i]);
-    double logp_inter(getlogp_Poisson(val, ChIParray.getLocalAverage(i, binsize)));
+    double logp_inter(getlogp_Poisson(val, ChIParray.getLocalAverage(i)));
 
     if (!ext) {
       if (logp_inter >= pthre_inter && ChIParray[i] >= ipm) {

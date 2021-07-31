@@ -29,7 +29,7 @@ class WigArray {
   std::vector<int32_t> array;
   double geta;
 //  enum {LENGTH_FOR_LOCALPOISSON=100000}; // 100 kbp
-  enum {BINNUM_FOR_LOCALPOISSON=1000}; 
+  enum {BINNUM_FOR_LOCALPOISSON=1000};
 
   template <class T> double rmGeta(const T val)  const { return val/geta; }
   template <class T> double addGeta(const T val) const { return val*geta; }
@@ -77,14 +77,13 @@ class WigArray {
     for (auto x: array) sum += x;
     return rmGeta(sum);
   }
-  
+
   double getMinValue() const {
     int32_t min(*std::min_element(array.begin(), array.end()));
     return rmGeta(min);
   }
 
-  double getLocalAverage(const int32_t i, const int32_t binsize) const {
-//    int32_t length_bin(LENGTH_FOR_LOCALPOISSON / binsize);
+  double getLocalAverage(const int32_t i) const {
     int32_t length_bin(BINNUM_FOR_LOCALPOISSON);
     checki(i);
     if (i<0) PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " < 0.");
@@ -97,7 +96,7 @@ class WigArray {
     ave /= right - left;
     return rmGeta(ave);
   }
-  
+
   double getPercentile(double per) const {
     int32_t v95(MyStatistics::getPercentile(array, per));
     return rmGeta(v95);
