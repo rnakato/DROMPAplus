@@ -84,6 +84,11 @@ void DataFrame::StrokeBins(const SamplePairEach &pair,
   int32_t yaxis(par.yaxis_now);  // convert to int
 
   int32_t thin(std::min(par.width_per_line/(1000*binsize), 20));
+  if(!thin) thin = 1;
+
+/*  printf("\n\nthin %d\n", thin);
+  printf("\n\ndot_per_bin %f\n", dot_per_bin);
+  printf("\n\nthin %d\n", par.width_per_line/(1000*binsize));*/
 
   double xcen(BP2PIXEL(binsize/2)); // initial position
   if (thin > 1) cr->set_line_width(dot_per_bin*thin);
