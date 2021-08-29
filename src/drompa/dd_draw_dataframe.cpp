@@ -94,7 +94,7 @@ void DataFrame::StrokeBins(const SamplePairEach &pair,
   if (thin > 1) cr->set_line_width(dot_per_bin*thin);
   else cr->set_line_width(dot_per_bin);
 
-  for (int32_t i=sbin; i<ebin; i += thin, xcen += dot_per_bin*thin) {
+  for (int32_t i=sbin; i<ebin-thin+1; i += thin, xcen += dot_per_bin*thin) {
     double value(0);
     if (thin > 1) value = getmax(pair, vReadArray, i, thin);
     else value = getVal(pair, vReadArray, i);

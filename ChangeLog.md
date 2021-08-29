@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.1 (2021-08-29)
+drompa+: Bug fix in getmax function ("Error: Invalid i for WigArray")
+
 ## 1.11.0 (2021-07-31)
 - drompa+: Tuning the thining approach for read visualization (random -> max(abs(value)) for each windows)
 

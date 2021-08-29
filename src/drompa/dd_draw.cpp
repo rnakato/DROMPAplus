@@ -643,6 +643,7 @@ void Figure::Draw_WholeGenome(DROMPA::Global &p,
 #ifdef CAIRO_HAS_PDF_SURFACE
   const auto surface = Cairo::PdfSurface::create(pdffilename, width, height);
   int32_t num_page = p.drawparam.getNumPage(0, vReadArray.getchrlen());
+
   for (int32_t i=0; i<num_page; ++i) {
     std::cout << boost::format("   page %5d/%5d\r") % (i+1) % num_page << std::flush;
     PDFPage page(p, vReadArray, vsamplepairoverlayed, surface, 0, vReadArray.getchrlen());
