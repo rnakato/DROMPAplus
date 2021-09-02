@@ -118,10 +118,14 @@ void DataFrame::StrokeEachBin(const double value, const double xcen,
   double len(0);
   if (!nlayer) len = par.ystep * value / scale;
   else         len = par.ystep * value / scale2nd;
+
   if (shownegative) {
     if (value > 0)      len = -std::min(len,  len_plus);
     else if (value < 0) len = -std::max(len, -len_minus);
-  } else                len = -std::min(len,  height_df);
+  } else {
+    if (value < 0) len = 0;
+    else len = -std::min(len,  height_df);
+  }
   if (!len) return;
 
   /*  DEBUGprint("value " << value
