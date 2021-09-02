@@ -124,18 +124,9 @@ void DataFrame::StrokeEachBin(const double value, const double xcen,
     else if (value < 0) len = -std::max(len, -len_minus);
   } else {
     if (value < 0) len = 0;
-    else len = -std::min(len,  height_df);
+    else len = -std::min(len, height_df);
   }
   if (!len) return;
-
-  /*  DEBUGprint("value " << value
-      << " ystep:" << par.ystep
-      << " scale:" << scale
-      << " len:" << len
-      << " height_df " << height_df
-      << " yaxis" << yaxis
-      << " len_binedge" << len_binedge
-      << " len_minus " << len_minus);*/
 
   // waku
   setColor(value, nlayer, 1);
