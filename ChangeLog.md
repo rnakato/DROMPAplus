@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.2 (2021-09-02)
+parse2wig+: Bug fix to avoid overflow when a big constant value is supplied to --nrpm
+
 ## 1.11.1 (2021-08-29)
 drompa+: Bug fix in getmax function ("Error: Invalid i for WigArray")
 

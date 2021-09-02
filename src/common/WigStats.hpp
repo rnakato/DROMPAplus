@@ -26,7 +26,7 @@ enum class WigType {
 };
 
 class WigArray {
-  std::vector<int32_t> array;
+  std::vector<int64_t> array;
   double geta;
 //  enum {LENGTH_FOR_LOCALPOISSON=100000}; // 100 kbp
   enum {BINNUM_FOR_LOCALPOISSON=1000};
