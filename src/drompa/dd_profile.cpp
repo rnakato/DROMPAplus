@@ -246,14 +246,59 @@ void ProfileTSS::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
   DEBUGprint_FUNCend();
 }
 
+void ProfileGene100::outputEachGene_fixedlength(std::ofstream &out, const SamplePairOverlayed &x,
+                                                const genedata &gene, const vChrArray &vReadArray, int32_t len,
+                                                const int32_t width_from_gene)
+{
+  double len100(len / (double)GENEBLOCKNUM);
+  double div100(width_from_gene/ (double)GENEBLOCKNUM);
+
+//  printf("genestart %d, geneend %d, strand %s, GENEBLOCKNUM %d, width_from_gene %d, len100 %1f, div100 %1f\n",
+//         gene.txStart, gene.txEnd, gene.strand.c_str(), GENEBLOCKNUM, width_from_gene, len100, div100);
+
+  for (int32_t i=0; i<nbin; ++i) {
+    int32_t s(0), e(0);
+    if (i < GENEBLOCKNUM) {
+      if (gene.strand == "+") {
+        s = (gene.txStart - width_from_gene + div100 *i)         / binsize;
+        e = (gene.txStart - width_from_gene + div100 *(i+1) -1)  / binsize;
+      } else {
+        s = (gene.txEnd   + width_from_gene - div100 * (i+1)) / binsize;
+        e = (gene.txEnd   + width_from_gene - div100 * i -1)  / binsize;
+      }
+    } else if (i < GENEBLOCKNUM*2) {
+      if (gene.strand == "+") {
+        s = (gene.txStart + len100 * (i - GENEBLOCKNUM))      / binsize;
+        e = (gene.txStart + len100 * (i+1 - GENEBLOCKNUM) -1) / binsize;
+      } else {
+        s = (gene.txEnd   - len100 * (i+1 - GENEBLOCKNUM))  / binsize;
+        e = (gene.txEnd   - len100 * (i - GENEBLOCKNUM) -1) / binsize;
+      }
+    } else {
+      if (gene.strand == "+") {
+        s = (gene.txEnd   + div100 * (i - 2*GENEBLOCKNUM))      / binsize;
+        e = (gene.txEnd   + div100 * (i+1 - 2*GENEBLOCKNUM) -1) / binsize;
+      } else {
+        s = (gene.txStart - div100 * (i+1 - 2*GENEBLOCKNUM))  / binsize;
+        e = (gene.txStart - div100 * (i - 2*GENEBLOCKNUM) -1) / binsize;
+      }
+    }
+  //  printf("i %d, s %d  e %d\n", i,s,e);
+
+    out << "\t" << getAverageVal(x, vReadArray, s, e);
+  }
+//  if (gene.strand == "-") exit(0);
+
+}
+
 
 void ProfileGene100::outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
-				    const genedata &gene, const vChrArray &vReadArray, int32_t len)
+                                    const genedata &gene, const vChrArray &vReadArray, int32_t len)
 {
-  int32_t s,e;
   double len100(len / (double)GENEBLOCKNUM);
 
   for (int32_t i=0; i<nbin; ++i) {
+    int32_t s(0), e(0);
     if (gene.strand == "+") {
       s = (gene.txStart - len + len100 *i)       / binsize;
       e = (gene.txStart - len + len100 *(i+1) -1)/ binsize;
@@ -292,7 +337,9 @@ void ProfileGene100::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
       }
 
       out << gene.gname;
-      outputEachGene(out, x, gene, vReadArray, len);
+
+      if (p.prof.isusefixedlength()) outputEachGene_fixedlength(out, x, gene, vReadArray, len, p.prof.get_width_from_center());
+      else outputEachGene(out, x, gene, vReadArray, len);
       out << std::endl;
     }
   }

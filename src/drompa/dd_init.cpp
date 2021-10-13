@@ -176,6 +176,7 @@ void Profile::setOpts(MyOpt::Opts &allopts)
 //    (SETOPT_RANGE("ntype", int32_t, 0, 0, 1),
 //     "Normalization: 0; total read 1; target regions only")
     (SETOPT_OVER("widthfromcenter", int32_t, 2500, 1), "width from the center")
+    ("fixedlengthfromgene", "(for --ptype 2) use fixed length (specied by --widthfromcenter) from a gene")
     ;
   allopts.add(opt);
 }
@@ -189,6 +190,7 @@ void Profile::setValues(const Variables &values)
     stype = getVal<int32_t>(values, "stype");
  //   ntype = getVal<int32_t>(values, "ntype");
     width_from_center = getVal<int32_t>(values, "widthfromcenter");
+    usefixedlength = values.count("fixedlengthfromgene");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());
   }

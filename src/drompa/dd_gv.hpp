@@ -172,12 +172,15 @@ namespace DROMPA {
     int32_t width_from_center;
     int32_t ptype;
     int32_t stype;
+    bool usefixedlength;
     //   int32_t ntype;
 
   public:
 
     Profile(): width_from_center(0),
-               ptype(0), stype(0) {} //, ntype(0)
+               ptype(0), stype(0),
+               usefixedlength(false)
+    {} //, ntype(0)
 
     void setOpts(MyOpt::Opts &allopts);
     void setValues(const MyOpt::Variables &values);
@@ -186,6 +189,7 @@ namespace DROMPA {
     bool isPtypeTTS()     const { return ptype == TTS; }
     bool isPtypeGene100() const { return ptype == GENE100; }
     bool isPtypeBed()     const { return ptype == BEDSITES; }
+    bool isusefixedlength() const { return usefixedlength; }
     int32_t get_width_from_center() const { return width_from_center; }
     int32_t is_distribution_type() const { return stype; }
 //    int32_t is_normalization_type() const { return ntype; }

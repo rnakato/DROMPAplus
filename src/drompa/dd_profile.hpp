@@ -84,6 +84,10 @@ class ProfileGene100: public ReadProfile {
 
   void outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
                       const genedata &gene, const vChrArray &vReadArray, int32_t len);
+  void outputEachGene_fixedlength(std::ofstream &out, const SamplePairOverlayed &x,
+                                  const genedata &gene, const vChrArray &vReadArray, int32_t len,
+                                  const int32_t width_from_gene);
+
 
 public:
   explicit ProfileGene100(const DROMPA::Global &p):

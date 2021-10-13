@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.12.0 (2021-10-13)
+- drompa+ PROFILE: add `--fixedlengthfromgene` for `--ptype 2` to use fixed length for outside of gene body
+
 ## 1.11.2 (2021-09-02)
 parse2wig+: Bug fix to avoid overflow when a big constant value is supplied to --nrpm
 
