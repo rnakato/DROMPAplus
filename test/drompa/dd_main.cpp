@@ -227,7 +227,7 @@ void exec_MULTICI(DROMPA::Global &p)
     profile.WriteTSV_EachChr(p, chr);
   }
 
-  profile.printNumOfSites();
+  profile.printNumOfSites(1);
   //  profile.MakeFigure(p);
 
   return;

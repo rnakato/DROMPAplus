@@ -331,7 +331,7 @@ void ProfileGene100::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
       ++nsites;
 
       int32_t len(gene.length());
-      if (len < 1000 || gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) {
+      if (gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) { // len < 1000 ||
         ++nsites_skipped;
         continue;
       }

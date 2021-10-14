@@ -62,9 +62,9 @@ public:
     }
   }
 
-  void printNumOfSites() const {
-    std::cout << "\n\nthe number of sites: " << nsites << std::endl;
-    std::cout << "the number of skipped sites: " << nsites_skipped << std::endl;
+  void printNumOfSites(const int32_t nsample) const {
+    std::cout << "\n\nthe number of sites: " << nsites/nsample << std::endl;
+    std::cout << "the number of skipped sites: " << nsites_skipped/nsample << std::endl;
   }
 };
 
@@ -150,7 +150,7 @@ void exec_PROFILE_asType(DROMPA::Global &p)
     profile.WriteTSV_EachChr(p, chr);
   }
 
-  profile.printNumOfSites();
+  profile.printNumOfSites(p.samplepair.size());
   profile.MakeFigure(p);
 
   return;

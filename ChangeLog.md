@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.1 (2021-10-14)
+- drompa+ PROFILE: bug fix for counting sites
+- drompa+ PROFILE: include genes <1kbp long (before they were omitted)
+
 ## 1.12.0 (2021-10-13)
 - drompa+ PROFILE: add `--fixedlengthfromgene` for `--ptype 2` to use fixed length for outside of gene body
 
