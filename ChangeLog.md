@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.12.2 (2022-04-09)
+- parse2wig+: bug fix in the error when the F3 length (read length) is too short (e.g., 1~3)
+
 ## 1.12.1 (2021-10-14)
 - drompa+ PROFILE: bug fix for counting sites
 - drompa+ PROFILE: include genes <1kbp long (before they were omitted)
