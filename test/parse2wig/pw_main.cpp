@@ -218,7 +218,11 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
 
   gcov.printstats(out);
 
-  if (mapfile.isBedOn()) out << boost::format("%1%\t%2$.3f\t") % p.getnread_inbed() % p.getFRiP();
+  if (mapfile.isBedOn()) {
+    //    double cov((double)p.get_cov_of_peakregion()/p.getlenmpbl());
+    //out << boost::format("%1%\t%2$.3f\t%3$.2e\t") % p.getnread_inbed() % p.getFRiP() % cov;
+    out << boost::format("%1%\t%2$.4f\t") % p.getnread_inbed() % p.getFRiP();
+  }
 
   return;
 }
@@ -247,7 +251,7 @@ void output_stats(const Mapfile &p)
   out << "scaling weight\t";
   out << "normalized read number\t";
   p.gcov.printhead(out);
-  if (p.isBedOn()) out << "reads in peaks\tFRiP";
+  if (p.isBedOn()) out << "reads in peaks\tpeak coverage\tFRiP";
   out << std::endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
@@ -329,15 +333,27 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   DEBUGprint_FUNCend();
 }
 
-void AnnotationSeqStatsGenome::setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq) {
+//void AnnotationSeqStatsGenome::setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq) {
+void AnnotationSeqStatsGenome::setFRiP(const std::vector<bed> &vbed, strandData *seq) {
+  uint64_t len(chr.getlen());
+  std::string chrname(chr.getname());
+
   std::vector<BpStatus> array(len, BpStatus::MAPPABLE);
-  setPeak_to_MpblBpArray(array, name, vbed);
+  setPeak_to_MpblBpArray(array, chrname, vbed);
+
+  int32_t n(0);
+  for(size_t i=0; i<=len; ++i) {
+    if(array[i]==BpStatus::INBED) ++n;
+  }
+//  printf("test len %d n %d\n", len, n);
+  cov_of_peakregion = n/(double)len;
 
   for (auto strand: {Strand::FWD, Strand::REV}) {
     for (auto &x: seq[strand].vRead) {
       if(x.duplicate) continue;
       int32_t s(std::min(x.F3, x.F5));
       int32_t e(std::max(x.F3, x.F5));
+
       for(int32_t i=s; i<=e; ++i) {
 	if(array[i] == BpStatus::INBED) {
 	  x.inpeak = 1;

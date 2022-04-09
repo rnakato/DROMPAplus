@@ -110,12 +110,22 @@ void setPeak_to_MpblBpArray(std::vector<BpStatus> &array,
 			    const std::vector<bed> &vbed)
 {
   int32_t chrlen(array.size());
+
   for(auto &bed: vbed) {
+//    std::cout << bed.chr << "?" << chrname << std::endl;
     if(bed.chr == chrname) {
       size_t s(std::max(0, bed.start));
       size_t e(std::min(bed.end, chrlen-1));
+//      printf("s=%d, e=%d\n", s,e);
       for(size_t i=s; i<=e; ++i) array[i] = BpStatus::INBED;
     }
   }
-  return;
+
+/*  int32_t n(0);
+  for(size_t i=0; i<chrlen; ++i) {
+    if(array[i]==BpStatus::INBED) ++n;
+  }
+  printf("test m %d\n", n);*/
+
+ return;
 }

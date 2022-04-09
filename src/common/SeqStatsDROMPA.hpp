@@ -12,18 +12,21 @@ class bed;
 
 class AnnotationSeqStatsGenome {
   uint64_t nread_inbed;
+  int32_t cov_of_peakregion;
   double sizefactor;
   SeqStats &chr;
 
   public:
   AnnotationSeqStatsGenome(SeqStats &_chr):
-    nread_inbed(0), sizefactor(0), chr(_chr)
+    nread_inbed(0), cov_of_peakregion(0), sizefactor(0), chr(_chr)
   {}
 
   uint64_t getnread_inbed() const { return nread_inbed; }
+  int32_t get_cov_of_peakregion() const { return cov_of_peakregion; }
   double getsizefactor() const { return sizefactor; }
 
-  void setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq);
+//  void setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq);
+  void setFRiP(const std::vector<bed> &vbed, strandData *seq);
 
   void setsizefactor(const double w) {
     sizefactor = w;
@@ -66,7 +69,7 @@ class SeqStatsGenome : public SeqStatsGenomeSSP {
   void setsizefactor(const double w) { sizefactor = w; }
 
   void setFRiP(const std::vector<bed> &vbed) {
-    for(size_t i=0; i<annoChr.size(); ++i) annoChr[i].setFRiP(vbed, getlen(), getname(), chr[i].seq);
+    for(size_t i=0; i<annoChr.size(); ++i) annoChr[i].setFRiP(vbed, chr[i].seq);
   }
 
   uint64_t getnread_inbed() const {
@@ -76,6 +79,15 @@ class SeqStatsGenome : public SeqStatsGenomeSSP {
   }
   uint64_t getnread_inbed(const int32_t i) const {
     return annoChr[i].getnread_inbed();
+  }
+
+  int32_t get_cov_of_peakregion() const {
+    int32_t nread(0);
+    for(auto &x: annoChr) nread += x.get_cov_of_peakregion();
+    return nread;
+  }
+  int32_t get_cov_of_peakregion(const int32_t i) const {
+    return annoChr[i].get_cov_of_peakregion();
   }
 
   const AnnotationSeqStatsGenome &getannochr(const int32_t i) const { return annoChr[i];}
