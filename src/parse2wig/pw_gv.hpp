@@ -122,7 +122,7 @@ class Mapfile: private Uncopyable {
       ("mpthre",
        boost::program_options::value<double>()->default_value(0.3)->notifier(std::bind(&MyOpt::over<double>, std::placeholders::_1, 0, "--mpthre")),
        "Threshold of low mappability regions")
-      ("allchr", "Use all chromosomes to estimate fragment length")
+//      ("allchr", "Use all chromosomes to estimate fragment length")
       ;
   }
 

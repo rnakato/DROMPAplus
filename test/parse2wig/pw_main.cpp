@@ -313,7 +313,7 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   mpthre = MyOpt::getVal<double>(values, "mpthre");
 
   verbose = values.count("verbose");
-  allchr = values.count("allchr");
+  allchr = true; // values.count("allchr");
 
   genome.setValues(values);
   wsGenome.setValues(values, genome.chr);
@@ -333,7 +333,6 @@ void Mapfile::setValues(const MyOpt::Variables &values)
   DEBUGprint_FUNCend();
 }
 
-//void AnnotationSeqStatsGenome::setFRiP(const std::vector<bed> &vbed, const uint64_t len, const std::string &name, strandData *seq) {
 void AnnotationSeqStatsGenome::setFRiP(const std::vector<bed> &vbed, strandData *seq) {
   uint64_t len(chr.getlen());
   std::string chrname(chr.getname());

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.14.0 (2022-04-20)
+- parse2wig+: remove `--allchr` option. Now parse2wig+ always considers all chromosomes to estimate fragment length
+
 ## 1.13.0 (2022-04-10)
 - parse2wig+: fixed the bug that the FRiP score always becomes zero
 
