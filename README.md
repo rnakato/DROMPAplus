@@ -69,7 +69,7 @@ and also contains two submodules:
 On Ubuntu:
 
     sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev \
-    libgsl-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev cmake
+    libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev cmake
 
 On CentOS:
 
