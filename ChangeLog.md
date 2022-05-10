@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.14.1 (2022-05-10)
+- parse2wig+: fixed the error when O. sativa genome is applied ("chrN" -> "ChrN")
+
 ## 1.14.0 (2022-04-20)
 - parse2wig+: remove `--allchr` option. Now parse2wig+ always considers all chromosomes to estimate fragment length
 

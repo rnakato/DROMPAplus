@@ -24,15 +24,26 @@ void SeqStatsGenome::strShiftProfile(SSPstats &sspst, const std::string &head, c
     }
     agroup.join_all();
 
+    int32_t n_autosome(0);
     for (size_t i=0; i<getnchr(); ++i) {
-      if (chr[i].isautosome()) dist.addmp2genome(i);
+      if (chr[i].isautosome()) {
+	dist.addmp2genome(i);
+	++n_autosome;
+      }
     }
+    if(!n_autosome) PRINTERR_AND_EXIT("No autosome appeared in the genometable file.");
   } else {
     int32_t id_longestChr = getIdLongestChr();
     genThread(dist, *this, id_longestChr, id_longestChr, prefix, sspst.isEachchr(), sspst.getNgTo());
+
+    int32_t n_autosome(0);
     for (size_t i=0; i<getnchr(); ++i) {
-      if (chr[i].isautosome()) dist.addmp2genome(i);
+      if (chr[i].isautosome()) {
+	dist.addmp2genome(i);
+	++n_autosome;
+      }
     }
+    if(!n_autosome) PRINTERR_AND_EXIT("No autosome appeared in the genometable file.");
   }
 
   dist.setflen(dist.name);
