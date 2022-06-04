@@ -39,8 +39,8 @@ Please see also the [document of Docker](https://docs.docker.com/storage/volumes
 
 Singularity can also be used to execute the docker image:
 
-    singularity build ssp_drompa.img docker://rnakato/ssp_drompa
-    singularity exec ssp_drompa.img drompa+
+    singularity build ssp_drompa.sif docker://rnakato/ssp_drompa
+    singularity exec ssp_drompa.sif drompa+
 
 Singularity mounts the current directory automatically. If you access the files in the other directory, please mount by `--bind` option, for instance:
 
