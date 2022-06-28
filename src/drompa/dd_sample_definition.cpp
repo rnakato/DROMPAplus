@@ -220,7 +220,10 @@ SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo
   if (v.size() >=2 && v[1] != "") argvInput = v[1];
   if (v.size() >=3 && v[2] != "") label     = v[2]; else label = basename(v[0]);
   if (v.size() >=4 && v[3] != "") peak_argv = v[3];
-  if (peak_argv != "") vbedregions = parseBed_Hash<bed>(peak_argv);
+  if (peak_argv != "") {
+    vbedregions = parseBed_Hash<bed>(peak_argv);
+//    printBed_Hash(vbedregions);
+  }
 
   if (v.size() >4 && v[4] != "") {
     try { binsize = stoi(v[4]); }
@@ -237,8 +240,6 @@ SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo
   }  catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT("in --input binsize or scales: " << e.what());
   }
-
-  //    printBed_Hash(vbedregions);
 }
 
 

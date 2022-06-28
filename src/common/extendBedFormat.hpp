@@ -252,11 +252,23 @@ std::vector<T> parseBed(const std::string &fileName)
 template <class T>
 void printBed(const std::vector<T> &vbed)
 {
+  int32_t n(0);
   for (auto &x: vbed) {
+    printf("bed%d\t", n);
     x.print();
     std::cout << std::endl;
+    ++n;
   }
   std::cout << "Total number: " << vbed.size() << std::endl;
+  return;
+}
+
+template <class T>
+void printBed_Hash(const std::unordered_map<std::string, std::vector<T>> &mp)
+{
+  for (auto vbed: mp) {
+    printBed(vbed.second);
+  }
   return;
 }
 
@@ -398,24 +410,24 @@ std::unordered_map<std::string, std::vector<T>> parseBed_Hash(const std::string 
   if(!in) PRINTERR_AND_EXIT("Error: BED file does not exist.");
 
   std::string lineStr;
-  std::vector<std::string> v;
   while (!in.eof()) {
     getline(in, lineStr);
+//    std::cout << "linestr: " << lineStr << std::endl;
 
-    if(lineStr.empty() || lineStr[0] == '#') continue;
+    if (lineStr.empty() || lineStr[0] == '#') continue;
+    std::vector<std::string> v;
     ParseLine(v, lineStr, '\t');
-    if(v[1] == "start") continue;
+//    std::cout << "v1-3 " << v[0] << " " << v[1] << " " << v[2] << std::endl;
+    if (v[1] == "start") continue;
     bedmap[rmchr(v[0])].emplace_back(bed(v));
   }
 
-  return bedmap;
-}
+/*  for (auto vbed: bedmap) {
+    printBed(vbed.second);
+  }
+  exit(0);*/
 
-template <class T>
-void printBed_Hash(const std::unordered_map<std::string, std::vector<T>> &mp)
-{
-  for(auto vbed: mp) printBed(vbed.second);
-  return;
+  return bedmap;
 }
 
 #endif  // _EXTENDBEDFORMAT_HPP_

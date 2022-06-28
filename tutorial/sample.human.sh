@@ -62,6 +62,14 @@ drompa+ PC_SHARP \
 	--lpp 2 --showitag 2 \
 	--chr 1 --callpeak
 
+drompa+ PC_SHARP \
+	-i $dir/H3K4me3.100.bw,$dir/Input.100.bw,H3K4me3,macs2/K562H3k4me3_peaks.narrowPeak \
+        -i $dir/H3K27me3.100.bw,$dir/Input.100.bw,H3K27me3,macs2/K562H3k27me3_peaks.narrowPeak \
+	-i $dir/H3K36me3.100.bw,$dir/Input.100.bw,H3K36me3,macs2/K562H3k36me3_peaks.narrowPeak \
+	-o drompa4_macs2 -g $gene --gt $gt \
+        --lpp 2 --showitag 2 \
+        --chr 1 --callpeak
+
 # Visualize specific regions
 gt=../data/genometable/genometable.hg19.txt
 dir=parse2wigdir+

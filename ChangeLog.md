@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.0 (2022-06-28)
+- drompa+: Bug fix of not highlighting peak regions when specifying the peak list in `-i` option
+
 ## 1.14.1 (2022-05-10)
 - parse2wig+: fixed the error when O. sativa genome is applied ("chrN" -> "ChrN")
 
