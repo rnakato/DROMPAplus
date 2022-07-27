@@ -105,16 +105,17 @@ void Annotation::setValuesGV(const Variables &values)
       }
     }
     if (values.count("ideogram")) {
-      std::ifstream in(getVal<std::string>(values, "ideogram"));
+      std::string ideogramfile(getVal<std::string>(values, "ideogram"));
+      std::ifstream in(ideogramfile);
       if (!in) {
-        PRINTERR_AND_EXIT("Error: ideogram file " << getVal<std::string>(values, "ideogram") << " does not exist.");
+        PRINTERR_AND_EXIT("Error: ideogram file " << ideogramfile << " does not exist.");
       }
       while (!in.eof()) {
         std::string lineStr;
         getline(in, lineStr);
         if (lineStr.empty() || lineStr[0] == '#') continue;
         std::vector<std::string> v;
-        ParseLine(v, lineStr, '\t');
+	if(ParseLine(v, lineStr, '\t')) PRINTERR_AND_EXIT("invalid line in " << ideogramfile << ": " << lineStr );
         vcytoband.emplace_back(v);
       }
       isIdeogram = true;

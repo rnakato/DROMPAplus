@@ -13,7 +13,7 @@ namespace {
   {
     int32_t ncol_readnum(0);
     std::vector<std::string> v;
-    ParseLine(v, lineStr, '\t');
+    ParseLine_NoDelimCheck(v, lineStr, '\t');
     for (size_t i=0; i<v.size(); ++i) {
       if (isStr(v[i], "normalized read number")) {
         ncol_readnum = i;
@@ -66,7 +66,7 @@ SampleInfo::SampleInfo(const std::string &filename,
 {
 
   std::vector<std::string> v;
-  ParseLine(v, filename, '.');
+  ParseLine_NoDelimCheck(v, filename, '.');
   int32_t last(v.size()-1);
 
   if (type != WigType::NONE) iftype = type;
@@ -122,25 +122,25 @@ void SampleInfo::scanStatsFile(const std::string &filename)
         status = OTHER;
       } else if (isStr(lineStr, "Genome")) {
         std::vector<std::string> v;
-        ParseLine(v, lineStr, '\t');
+        ParseLine_NoDelimCheck(v, lineStr, '\t');
         totalreadnum = stoi(v[ncol_readnum]);
         status = PARSE2WIG;
       }
       break;
     case PARSE2WIG:
-      ParseLine(v, lineStr, '\t');
+      ParseLine_NoDelimCheck(v, lineStr, '\t');
       totalreadnum_chr[v[0]] = stoi(v[ncol_readnum]);
       break;
     case OTHER:
       if (isStr(lineStr, "Input file:") || isStr(lineStr, "total reads")) break;
       if (isStr(lineStr, "Genome")) {
-        ParseLine(v, lineStr, '\t');
+        ParseLine_NoDelimCheck(v, lineStr, '\t');
         totalreadnum = stoi(v[1]);
         status = OTHER_CHR;
       }
       break;
     case OTHER_CHR:
-      ParseLine(v, lineStr, '\t');
+      ParseLine_NoDelimCheck(v, lineStr, '\t');
       totalreadnum_chr[rmchr(v[0])] = stoi(v[1]);
       break;
     }
@@ -178,10 +178,10 @@ void vSampleInfo::addSampleInfo(const std::string &str,
 {
   int32_t binsize(0);
   std::vector<std::string> v;
-  ParseLine(v, str, ',');
+  ParseLine_NoDelimCheck(v, str, ',');
 
   if (v.size() >8) {
-    PRINTERR_AND_EXIT("error: sample std::string has ',' more than 8: " << str);
+    PRINTERR_AND_EXIT("error: sample " << str << " has ',' more than 8.");
   }
   if (v[0] == "") {
     PRINTERR_AND_EXIT("please specify ChIP sample: " << str);
@@ -212,7 +212,7 @@ SamplePairEach::SamplePairEach(const std::string &str, const vSampleInfo &vsinfo
   argvChIP(""), argvInput(""), peak_argv(""), label(""), ratio(1)
 {
   std::vector<std::string> v;
-  ParseLine(v, str, ',');
+  ParseLine_NoDelimCheck(v, str, ',');
 
   /* 1:ChIP   2:Input   3:label   4:peaklist   5:binsize
      6:scale_tag   7:scale_ratio   8:scale_pvalue */

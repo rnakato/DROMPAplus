@@ -15,7 +15,7 @@ bed12::bed12(std::vector<std::string> &s):
     if(num > 7)  thickEnd    = stoi(s[7]);
     if(num > 8) {
       std::vector<std::string> v;
-      ParseLine(v, s[8], ',');
+      ParseLine_NoDelimCheck(v, s[8], ',');
       if(v.size() >= 3) {
 //        std::cout << v[0] << "\t" << v[1] << "\t" << v[2] << "\n"
         rgb_r = stoi(v[0]);
@@ -41,7 +41,7 @@ void InteractionSet::setAsMango(const std::string &lineStr)
   if (isStr(lineStr, "chrom1")) return;
 
   std::vector<std::string> v;
-  ParseLine(v, lineStr, '\t');
+  ParseLine_NoDelimCheck(v, lineStr, '\t');
   if(v.size() < 8) {
     std::cerr << "Warning: " << lineStr << " does not contain 8 columns." << std::endl;
     return;
@@ -64,9 +64,8 @@ void InteractionSet::setAsHICCUPS(const std::string &lineStr)
 {
   if (isStr(lineStr, "color")) return;
   std::vector<std::string> v;
-  ParseLine(v, lineStr, '\t');
-  //    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
-  if(v.size() < 19) {
+  ParseLine_NoDelimCheck(v, lineStr, '\t');
+   if(v.size() < 19) {
     std::cerr << "Warning: " << lineStr << " does not contain 19 columns." << std::endl;
     return;
   }
@@ -86,7 +85,7 @@ void InteractionSet::setAsHICCUPS(const std::string &lineStr)
 void InteractionSet::setAsBEDPE(const std::string &lineStr)
 {
   std::vector<std::string> v;
-  ParseLine(v, lineStr, '\t');
+  ParseLine_NoDelimCheck(v, lineStr, '\t');
   if(v.size() < 6) {
     std::cerr << "Warning: " << lineStr << " does not contain 6 columns." << std::endl;
     return;

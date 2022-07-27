@@ -234,7 +234,7 @@ std::vector<T> parseBed(const std::string &fileName)
     if(lineStr.find("description") != std::string::npos) continue;  // ChromHMM.dense.bed
 
     std::vector<std::string> v;
-    ParseLine(v, lineStr, '\t');
+    ParseLine_NoDelimCheck(v, lineStr, '\t');
 
     if(v.size() < 3) {
       std::cerr << "\nError: invalid delimitar in BED file?: " << v[0] << std::endl;
@@ -407,7 +407,7 @@ std::unordered_map<std::string, std::vector<T>> parseBed_Hash(const std::string 
 {
   std::unordered_map<std::string, std::vector<T>> bedmap;
   std::ifstream in(fileName);
-  if(!in) PRINTERR_AND_EXIT("Error: BED file does not exist.");
+  if(!in) PRINTERR_AND_EXIT("Error: BED file " << fileName << " does not exist.");
 
   std::string lineStr;
   while (!in.eof()) {
@@ -416,7 +416,7 @@ std::unordered_map<std::string, std::vector<T>> parseBed_Hash(const std::string 
 
     if (lineStr.empty() || lineStr[0] == '#') continue;
     std::vector<std::string> v;
-    ParseLine(v, lineStr, '\t');
+    if(ParseLine(v, lineStr, '\t')) PRINTERR_AND_EXIT("invalid line in " << fileName << ": " << lineStr);
 //    std::cout << "v1-3 " << v[0] << " " << v[1] << " " << v[2] << std::endl;
     if (v[1] == "start") continue;
     bedmap[rmchr(v[0])].emplace_back(bed(v));

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.1 (2022-07-27)
+- Add error messages when the format of supplied genometable/mptable files is wrong.
+- Add error message when specified BED files are missing.
+
 ## 1.15.0 (2022-06-28)
 - drompa+: Bug fix of not highlighting peak regions when specifying the peak list in `-i` option
 

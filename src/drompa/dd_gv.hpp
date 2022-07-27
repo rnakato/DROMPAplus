@@ -90,7 +90,7 @@ namespace DROMPA {
 
       for (auto &x: vfilename) {
         std::vector<std::string> v;
-        ParseLine(v, x, ',');
+        ParseLine_NoDelimCheck(v, x, ',');
         auto vbed = parseBed<T>(v[0]);
         //    printBed(vbed);
         if (v.size()>1) list.emplace_back(vbed, v[1]);
@@ -232,7 +232,7 @@ namespace DROMPA {
         getline(in, lineStr);
         if (lineStr.empty()) continue;
         std::vector<std::string> v;
-        ParseLine(v, lineStr, '\t');
+        ParseLine_NoDelimCheck(v, lineStr, '\t');
         geneloci[v[0]] = 1;
       }
     }

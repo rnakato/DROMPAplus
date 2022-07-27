@@ -110,7 +110,7 @@ namespace DROMPA {
 
       if (lineStr.empty() || lineStr[0] == '#') continue;
       std::vector<std::string> v;
-      ParseLine(v, lineStr, ',');
+      if(ParseLine(v, lineStr, ',')) PRINTERR_AND_EXIT("invalid line in " << fileName << ": " << lineStr );
 
       mp[v[0]].emplace_back(v[1], v[2]);
     }

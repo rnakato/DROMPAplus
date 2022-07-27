@@ -29,6 +29,7 @@ std::vector<int32_t> readMpblWigArray(const std::string &mpfile,
     if(lineStr.empty()) continue;
     std::vector<std::string> v;
     ParseLine(v, lineStr, '\t');
+    if(ParseLine(v, lineStr, '\t')) PRINTERR_AND_EXIT("invalid line in " << filename << ": " << lineStr );
     mparray[(stoi(v[0]))/binsize] = stod(v[1]);
   }
 
