@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.2 (2022-08-05)
+- Bug fix: remove "peak coverage" header from stats file when calculating FRiP score.
+
 ## 1.15.1 (2022-07-27)
 - Add error messages when the format of supplied genometable/mptable files is wrong.
 - Add error message when specified BED files are missing.

@@ -251,7 +251,7 @@ void output_stats(const Mapfile &p)
   out << "scaling weight\t";
   out << "normalized read number\t";
   p.gcov.printhead(out);
-  if (p.isBedOn()) out << "reads in peaks\tpeak coverage\tFRiP";
+  if (p.isBedOn()) out << "reads in peaks\tFRiP";
   out << std::endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
