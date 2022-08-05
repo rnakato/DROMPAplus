@@ -222,7 +222,10 @@ void print_SeqStats(std::ofstream &out, const T &p, const S &gcov, const Mapfile
     //    double cov((double)p.get_cov_of_peakregion()/p.getlenmpbl());
     //out << boost::format("%1%\t%2$.3f\t%3$.2e\t") % p.getnread_inbed() % p.getFRiP() % cov;
     out << boost::format("%1%\t%2$.4f\t") % p.getnread_inbed() % p.getFRiP();
+  } else {
+    out << "N/A\tN/A\t";
   }
+
 
   return;
 }
@@ -251,7 +254,8 @@ void output_stats(const Mapfile &p)
   out << "scaling weight\t";
   out << "normalized read number\t";
   p.gcov.printhead(out);
-  if (p.isBedOn()) out << "reads in peaks\tFRiP";
+//  if (p.isBedOn()) out << "reads in peaks\tFRiP";
+  out << "reads in peaks\tFRiP";
   out << std::endl;
   out << "\t\t\t\t";
   out << "both\tforward\treverse\t% genome\t";
