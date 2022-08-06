@@ -45,12 +45,12 @@ while(<File>){
 }
 close (File);
 
-print "Sample\tMapped reads\t + strand\t - strand\tRedundancy threshold\tNonredundant\tRedundant\tComplexity for10M\tRead depth\tGenome coverage\tTested_reads";
+print "Sample\tMapped reads\t + strand\t - strand\tRedundancy threshold\tNonredundant\tRedundant\tComplexity for10M\tTested_reads\tRead depth\tGenome coverage";
 print "\treads in peaks\tFRiP";
 print "\tGC summit" if($gcsummit ne "");
 print "\n";
 
-print "$file\t$total_reads\t$plus\t$minus\t$pcrbiasthre\t$total_remained\t$total_filtered\t$tested_complexity\t$depth\t$total_gc_base\t$tested_reads";
+print "$file\t$total_reads\t$plus\t$minus\t$pcrbiasthre\t$total_remained\t$total_filtered\t$tested_complexity\t$tested_reads\t$depth\t$total_gc_base";
 print "\t$nread_in_peak\t$FRiP";
 print "\t$gcsummit" if($gcsummit ne "");
 print "\n";
