@@ -459,9 +459,9 @@ void PDFPage::DrawIdeogram(const DROMPA::Global &p)
     //    x.print();
     if (x.stain == "acen") cr->set_source_rgba(CLR_SALMON, 1);
     else if (x.stain == "gneg") cr->set_source_rgba(CLR_GRAY0, 1);
-    else if (x.stain == "gpos25" || x.stain == "stalk") cr->set_source_rgba(CLR_GRAY, 1);
+    else if (x.stain == "gpos25" || x.stain == "gpos33" || x.stain == "stalk") cr->set_source_rgba(CLR_GRAY, 1);
     else if (x.stain == "gpos50") cr->set_source_rgba(CLR_GRAY2, 1);
-    else if (x.stain == "gpos75") cr->set_source_rgba(CLR_GRAY3, 1);
+    else if (x.stain == "gpos66" || x.stain == "gpos75") cr->set_source_rgba(CLR_GRAY3, 1);
     else if (x.stain == "gpos100" || x.stain == "gvar") cr->set_source_rgba(CLR_GRAY4, 1);
     else { std::cout << "Warning: stain " << x.stain << " is not annotated." << std::endl; }
 

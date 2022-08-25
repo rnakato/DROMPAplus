@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.3 (2022-08-25)
+- Add "gpos33" and "gpos66" to the ideogram stain annotation.
+
 ## 1.15.2 (2022-08-05)
 - Bug fix: remove "peak coverage" header from stats file when calculating FRiP score.
 - Modify `otherbins/parsestats4DROMPAplus.pl` to output FRiP score always.
