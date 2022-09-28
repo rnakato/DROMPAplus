@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.4 (2022-09-28)
+- Bug fix: remove ARS information from SGD features which are old.
+
 ## 1.15.3 (2022-08-25)
 - Add "gpos33" and "gpos66" to the ideogram stain annotation.
 
