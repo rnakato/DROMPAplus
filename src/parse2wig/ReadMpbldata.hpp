@@ -5,7 +5,6 @@
 #define _READMPBLDATA_HPP_
 
 #include "BpStatus.hpp"
-//#include "../submodules/SSP/common/BedFormat.hpp"
 #include "extendBedFormat.hpp"
 
 std::vector<int32_t> readMpblWigArray(const std::string &, const std::string &, const int32_t, const int32_t);

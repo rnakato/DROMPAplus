@@ -163,8 +163,8 @@ HashOfGeneDataMap parseSGD(const std::string& fileName)
     std::string type(v[1]);
     std::string tname(v[0]);
 
-    if (type == "ARS") tmp[chr][tname].gname = v[3];
-    else if (type == "centromere") tmp[chr][tname].gname = "CEN_chr" + chr;
+//    if (type == "ARS") tmp[chr][tname].gname = v[3];
+    if (type == "centromere") tmp[chr][tname].gname = "CEN_chr" + chr;
     else if (type == "teromere")   tmp[chr][tname].gname = v[3];
     else if (type == "ORF") {
       if (v[4] != "") tmp[chr][tname].gname = v[4];
