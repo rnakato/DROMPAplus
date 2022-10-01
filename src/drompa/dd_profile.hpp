@@ -83,9 +83,9 @@ class ProfileGene100: public ReadProfile {
   enum {GENEBLOCKNUM=100};
 
   void outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
-                      const genedata &gene, const vChrArray &vReadArray, int32_t len);
+                      const genedata &gene, const vChrArray &vReadArray, const int32_t len);
   void outputEachGene_fixedlength(std::ofstream &out, const SamplePairOverlayed &x,
-                                  const genedata &gene, const vChrArray &vReadArray, int32_t len,
+                                  const genedata &gene, const vChrArray &vReadArray, const int32_t len,
                                   const int32_t width_from_gene);
 
 

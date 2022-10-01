@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.0 (2022-10-01)
+- Bug fix in PROFILE `--ptype 2` option (divide gene into 100 subregions): skip genes if the extended length exceeds the chromosome length
+- Change the y-axis for `--ptype 2` `--stype 1` (ChIP/Input enrichment) from log scale to linear scale
+
 ## 1.15.4 (2022-09-28)
 - Bug fix: remove ARS information from SGD features which are old.
 

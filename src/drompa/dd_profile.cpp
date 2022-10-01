@@ -149,12 +149,12 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
     if(i<p.samplepair.size()) out << ",";
     else out << ")))\n";
   }
-  out << "ymin <- ceiling(min(c(";
+/*  out << "ymin <- ceiling(min(c(";
   for (size_t i=1; i<=p.samplepair.size(); ++i) {
     out << boost::format("min(p%1%)") % i;
     if(i<p.samplepair.size()) out << ",";
     else out << ")))\n";
-  }
+  }*/
 
   out << "pdf('" << Rfigurename << "',6,6)" << std::endl;
   out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2] << ")";
@@ -168,7 +168,7 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
   min = (int)(min*10)/10.0;
   if(!min) min = 0.1;*/
 
-  if (p.prof.isPtypeGene100()) out << ", log='y', ylim=c(ymin, ymax)";
+  if (p.prof.isPtypeGene100() && !stype) out << ", log='y', ylim=c(0, ymax)";
   else out << ", ylim=c(0, ymax)";
 
   if (!stype) {
@@ -247,14 +247,15 @@ void ProfileTSS::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
 }
 
 void ProfileGene100::outputEachGene_fixedlength(std::ofstream &out, const SamplePairOverlayed &x,
-                                                const genedata &gene, const vChrArray &vReadArray, int32_t len,
+                                                const genedata &gene, const vChrArray &vReadArray, const int32_t len,
                                                 const int32_t width_from_gene)
 {
   double len100(len / (double)GENEBLOCKNUM);
-  double div100(width_from_gene/ (double)GENEBLOCKNUM);
+  double div100(width_from_gene / (double)GENEBLOCKNUM);
 
 //  printf("genestart %d, geneend %d, strand %s, GENEBLOCKNUM %d, width_from_gene %d, len100 %1f, div100 %1f\n",
 //         gene.txStart, gene.txEnd, gene.strand.c_str(), GENEBLOCKNUM, width_from_gene, len100, div100);
+//  int32_t arraysize(vReadArray.getArray(x.first.argvChIP).array.size());
 
   for (int32_t i=0; i<nbin; ++i) {
     int32_t s(0), e(0);
@@ -283,7 +284,13 @@ void ProfileGene100::outputEachGene_fixedlength(std::ofstream &out, const Sample
         e = (gene.txStart - div100 * (i - 2*GENEBLOCKNUM) -1) / binsize;
       }
     }
-  //  printf("i %d, s %d  e %d\n", i,s,e);
+//    printf("i %d, s %d  e %d size %d\n", i,s,e, arraysize);
+
+/*    if (s < 0 || e >= arraysize) {
+      std::cerr << "Warning: the specified region exceeds the chromosome length: " << gene.txStart << "-" << gene.txStart << " + " << width_from_gene << std::endl;
+      ++nsites_skipped;
+      return;
+    }*/
 
     out << "\t" << getAverageVal(x, vReadArray, s, e);
   }
@@ -293,9 +300,10 @@ void ProfileGene100::outputEachGene_fixedlength(std::ofstream &out, const Sample
 
 
 void ProfileGene100::outputEachGene(std::ofstream &out, const SamplePairOverlayed &x,
-                                    const genedata &gene, const vChrArray &vReadArray, int32_t len)
+                                    const genedata &gene, const vChrArray &vReadArray, const int32_t len)
 {
   double len100(len / (double)GENEBLOCKNUM);
+//  int32_t arraysize(vReadArray.getArray(x.first.argvChIP).array.size());
 
   for (int32_t i=0; i<nbin; ++i) {
     int32_t s(0), e(0);
@@ -306,6 +314,12 @@ void ProfileGene100::outputEachGene(std::ofstream &out, const SamplePairOverlaye
       s = (gene.txEnd + len - len100 * (i+1))/ binsize;
       e = (gene.txEnd + len - len100 * i -1) / binsize;
     }
+/*    if (s < 0 || e >= arraysize) {
+      std::cerr << "Warning: the specified region exceeds the chromosome length: " << gene.txStart << "-" << gene.txStart << " + " << len << std::endl;
+      ++nsites_skipped;
+      return;
+    }*/
+
     out << "\t" << getAverageVal(x, vReadArray, s, e);
   }
 }
@@ -330,17 +344,26 @@ void ProfileGene100::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &ch
     for (auto &gene: gmp) {
       ++nsites;
 
-      int32_t len(gene.length());
-      if (gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) { // len < 1000 ||
-        ++nsites_skipped;
-        continue;
-      }
-
       out << gene.gname;
 
-      if (p.prof.isusefixedlength()) outputEachGene_fixedlength(out, x, gene, vReadArray, len, p.prof.get_width_from_center());
-      else outputEachGene(out, x, gene, vReadArray, len);
-      out << std::endl;
+      if (p.prof.isusefixedlength()) {
+        int32_t len(p.prof.get_width_from_center());
+        if (gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) { // len < 1000 ||
+          std::cerr << "Warning: the specified region exceeds the chromosome length: " << gene.txStart << "-" << gene.txStart << " + " << len << std::endl;
+          ++nsites_skipped;
+          continue;
+        }
+        outputEachGene_fixedlength(out, x, gene, vReadArray, len, p.prof.get_width_from_center());
+      } else {
+        int32_t len(gene.length());
+        if (gene.txEnd + len >= chr.getlen() || gene.txStart - len < 0) { // len < 1000 ||
+          std::cerr << "Warning: the specified region exceeds the chromosome length: " << gene.txStart << "-" << gene.txStart << " + " << len << std::endl;
+          ++nsites_skipped;
+          continue;
+        }
+        outputEachGene(out, x, gene, vReadArray, len);
+      }
+      out << "\n";
     }
   }
 
@@ -372,12 +395,12 @@ void ProfileBedSites::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &c
         out << std::endl;
       }
     }
-
     out.close();
   }
 
   DEBUGprint_FUNCend();
 }
+
 
 void ProfileMULTICI::WriteTSV_EachChr(const DROMPA::Global &p, const chrsize &chr)
 {
