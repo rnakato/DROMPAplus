@@ -122,15 +122,14 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
   std::cout << "\nMake figure.." << std::endl;
   std::ofstream out(Rscriptname);
 
-  std::vector<double> vcol({CLR_RED, CLR_BLUE, CLR_GREEN, CLR_LIGHTCORAL, CLR_BLACK, CLR_PURPLE, CLR_GRAY3, CLR_OLIVE, CLR_YELLOW3, CLR_SLATEGRAY, CLR_PINK, CLR_SALMON, CLR_GREEN2, CLR_BLUE3, CLR_PURPLE2, CLR_DARKORANGE});
+  std::vector<double> vcol({CLR_RED, CLR_BLUE, CLR_GREEN, CLR_SLATEGRAY, CLR_BLACK, CLR_PURPLE, CLR_GRAY3, CLR_OLIVE, CLR_YELLOW3, CLR_LIGHTCORAL, CLR_PINK, CLR_SALMON, CLR_GREEN2, CLR_BLUE3, CLR_PURPLE2, CLR_DARKORANGE});
 
   for (size_t i=1; i<=p.samplepair.size(); ++i) {
     out << "t <- read.table('"
-	<< RDataname << "." << p.samplepair[i-1].first.label << ".tsv"
-	<< "', header=F, sep='\\t', quote='')" << std::endl;
+        << RDataname << "." << p.samplepair[i-1].first.label << ".tsv"
+        << "', header=F, sep='\\t', quote='')" << std::endl;
     out << "t <- t[,-1]" << std::endl;
     out << "n <- nrow(t)" << std::endl;
-
 
     out << boost::format("t%1% <- t\n") % i;
     out << boost::format("colnames(t%1%) <- t%1%[1,]\n") % i;
@@ -149,12 +148,17 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
     if(i<p.samplepair.size()) out << ",";
     else out << ")))\n";
   }
-/*  out << "ymin <- ceiling(min(c(";
-  for (size_t i=1; i<=p.samplepair.size(); ++i) {
-    out << boost::format("min(p%1%)") % i;
-    if(i<p.samplepair.size()) out << ",";
-    else out << ")))\n";
-  }*/
+
+  if (p.prof.isPtypeGene100() && !stype) {
+    out << "ymin <- min(c(";
+    for (size_t i=1; i<=p.samplepair.size(); ++i) {
+      out << boost::format("min(p%1%)") % i;
+      if(i<p.samplepair.size()) out << ",";
+      else out << "))\n";
+    }
+  } else {
+    out << "ymin <- 0\n";
+  }
 
   out << "pdf('" << Rfigurename << "',6,6)" << std::endl;
   out << "plot(x,p1,type='l',col=rgb(" << vcol[0] << "," << vcol[1] << "," << vcol[2] << ")";
@@ -168,8 +172,10 @@ void ReadProfile::MakeFigure(const DROMPA::Global &p)
   min = (int)(min*10)/10.0;
   if(!min) min = 0.1;*/
 
-  if (p.prof.isPtypeGene100() && !stype) out << ", log='y', ylim=c(0, ymax)";
-  else out << ", ylim=c(0, ymax)";
+  if (p.prof.isPtypeGene100() && !stype) {
+
+    out << ", log='y', ylim=c(ymin, ymax)";
+  } else out << ", ylim=c(ymin, ymax)";
 
   if (!stype) {
     out << ",xlab='" << xlabel << "',ylab='Read density')" << std::endl;
