@@ -473,7 +473,7 @@ void Global::setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm)
   o.add_options()
     (SETOPT_RANGE("norm", int32_t, 0, 0, 2),
      "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n") //       3: with NCIS method\n
-    (SETOPT_OVER("smoothingtype", int32_t, 1, 0), "Smoothing type: 0: Average smoothing; 1: Gausian smoothing")
+    (SETOPT_OVER("smoothingtype", int32_t, 1, 0), "Smoothing type: 0: Average smoothing; 1: Gaussian smoothing")
     (SETOPT_OVER("sm", int32_t, defsm, 0), "# of bins for smoothing")
     ;
   allopts.add(o);
@@ -536,8 +536,11 @@ void Global::InitDumpNorm() const {
   DEBUGprint_FUNCStart();
 
   std::vector<std::string> str_norm = { "OFF", "TOTALREAD GENOME", "TOTALREAD CHR", "NCIS" };
+  std::vector<std::string> str_smoothingtype= { "AVERAGE", "GAUSSIAN" };
   std::cout << boost::format("   ChIP/Input normalization: %1%\n") % str_norm[norm];
-  if (smoothing) std::cout << boost::format("   smoothing width: %1% bins\n") % smoothing;
+  if (smoothing) {
+    std::cout << boost::format("   smoothing type: %1%, smoothing width: %2% bins\n") % str_smoothingtype[smoothingtype] % smoothing;
+  }
   DEBUGprint_FUNCend();
 }
 

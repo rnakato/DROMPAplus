@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.0 (2022-11-24)
+- drompa+: Add `--smoothingtype` option to allow the average normalization, which is consistent with that of DROMPA3.
+
 ## 1.16.1 (2022-10-11)
 - drompa+ PROFILE: change ymin value for `--ptype 2` option
 
