@@ -68,8 +68,9 @@ class WigArray {
     array[i] /= val;
   }
 
-  void Smoothing(const int32_t nsmooth) {
-    GaussianSmoothing(array, nsmooth);
+  void Smoothing(const int32_t nsmooth, const int32_t smoothingtype) {
+    if (smoothingtype == 1) GaussianSmoothing(array, nsmooth);
+    else AverageSmoothing(array, nsmooth);
   }
 
   int64_t getArraySum() const {

@@ -472,8 +472,9 @@ void Global::setOptsNorm(MyOpt::Opts &allopts, const int32_t defsm)
   MyOpt::Opts o("Normalization",100);
   o.add_options()
     (SETOPT_RANGE("norm", int32_t, 0, 0, 2),
-     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n      3: with NCIS method\n")
-    (SETOPT_OVER("sm", int32_t, defsm, 0), "# of bins for Gausian smoothing")
+     "Normalization between ChIP and Input\n      0: not normalize\n      1: with total read number (genome)\n      2: with total read number (each chr)\n") //       3: with NCIS method\n
+    (SETOPT_OVER("smoothingtype", int32_t, 1, 0), "Smoothing type: 0: Average smoothing; 1: Gausian smoothing")
+    (SETOPT_OVER("sm", int32_t, defsm, 0), "# of bins for smoothing")
     ;
   allopts.add(o);
 }
@@ -482,6 +483,7 @@ void Global::setValuesNorm(const Variables &values) {
   DEBUGprint_FUNCStart();
   try {
     norm = getVal<int32_t>(values, "norm");
+    smoothingtype = getVal<int32_t>(values, "smoothingtype");
     smoothing = getVal<int32_t>(values, "sm");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());

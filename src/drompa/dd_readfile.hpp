@@ -25,7 +25,8 @@ public:
   ChrArray(const DROMPA::Global &p,
            const std::pair<const std::string, SampleInfo> &x,
            const chrsize &chr):
-    binsize(x.second.getbinsize()), nbin(chr.getlen()/binsize +1),
+    binsize(x.second.getbinsize()), 
+    nbin(chr.getlen()/binsize +1),
     array(loadWigData(x.first, x.second, chr)),
     stats(nbin, binsize),
     totalreadnum(x.second.gettotalreadnum()),
@@ -33,7 +34,7 @@ public:
   {
     clock_t t1,t2;
     t1 = clock();
-    if(p.getSmoothing()) array.Smoothing(p.getSmoothing());
+    if(p.getSmoothing()) array.Smoothing(p.getSmoothing(), p.getSmoothingtype());
     t2 = clock();
     PrintTime(t1, t2, "Smoothing");
     t1 = clock();

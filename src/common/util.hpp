@@ -12,6 +12,34 @@
 std::string basename(const std::string &path);
 
 template <class T>
+void AverageSmoothing(std::vector<T> &v, const int32_t nsmooth)
+{
+    if (static_cast<int32_t>(v.size()) <= nsmooth) {
+        std::cerr << "Warning: the array size (" << std::to_string(v.size()) 
+                  << ") is smaller than smoothing width (--sm " << std::to_string(nsmooth) 
+                  << "). Smoothing is omitted." << std::endl;
+        return;
+    }
+
+  std::vector<double> temparray;
+  copy(v.begin(), v.end(), std::back_inserter(temparray));
+
+  for (size_t i=0; i<v.size(); ++i) {
+    int32_t count(0);
+    double ave(0);
+    for (int32_t j=-nsmooth; j<=nsmooth; ++j) {
+      if (i+j>= 0 && i+j < v.size()) {
+        ave += temparray[i+j];
+        ++count;
+      }
+    }
+    if (count) v[i] = ave/count; // else v[i] = v[i];
+  }
+
+  return;
+}
+
+template <class T>
 void GaussianSmoothing(std::vector<T> &v, const int32_t nsmooth)
 {
     if (static_cast<int32_t>(v.size()) <= nsmooth) {
@@ -21,7 +49,7 @@ void GaussianSmoothing(std::vector<T> &v, const int32_t nsmooth)
         return;
     }
 
-  std::vector<double> w(nsmooth+1,0);
+  std::vector<double> w(nsmooth + 1, 0);
   double var(1);
 
   double sum(0);

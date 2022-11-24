@@ -337,6 +337,7 @@ namespace DROMPA {
     bool includeYM;
     int32_t norm;
     int32_t smoothing;
+    int32_t smoothingtype;
 
     WigType genwig_oftype;
     int32_t genwig_ofvalue;
@@ -362,7 +363,7 @@ namespace DROMPA {
 
     Global():
       ispng(false), showchr(false), iftype(WigType::NONE),
-      oprefix(""), includeYM(false), norm(0), smoothing(0),
+      oprefix(""), includeYM(false), norm(0), smoothing(0), smoothingtype(1),
       genwig_ofvalue(0), getmaxval(false), addname(false),
       opts("Options"), isGV(false)
     {}
@@ -386,6 +387,7 @@ namespace DROMPA {
       return false;
     }
 
+    int32_t getSmoothingtype() const { return smoothingtype; }
     int32_t getSmoothing() const { return smoothing; }
     int32_t getChIPInputNormType() const { return norm; }
     const std::string getPrefixName() const { return oprefix; }
