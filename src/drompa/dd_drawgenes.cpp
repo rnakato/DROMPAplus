@@ -120,7 +120,11 @@ void PDFPage::strokeARS(const HashOfGeneDataMap &mp, const double ycenter)
       }else continue;
     }
   } catch (...) {
-    std::cerr << "Warning: " << chrname << " has no gene." << std::endl;
+    static int32_t warningcount_ars(0);
+    if (!warningcount_ars) {
+      std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+      ++warningcount_ars;
+    }
   }
 
   return;
@@ -193,7 +197,11 @@ void PDFPage::strokeGeneSGD(const DROMPA::Global &p, const double ycenter)
       }
     }
   } catch (...) {
-    std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+    static int32_t warningcount_sdg(0);
+    if (!warningcount_sdg) {
+      std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+      ++warningcount_sdg;
+    }
   }
 
   DEBUGprint_FUNCend();
@@ -264,7 +272,11 @@ void PDFPage::strokeGene(const DROMPA::Global &p, const double ycenter)
       else showtext_cr(cr, g.x_name, g.y_name, m.gname, 8);
     }
   } catch (...) {
-    std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+    static int32_t warningcount(0);
+    if (!warningcount) {
+      std::cerr << "Warning: " << chrname  << " has no gene." << std::endl;
+      ++warningcount;
+    }
   }
 
   DEBUGprint_FUNCend();

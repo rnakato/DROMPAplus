@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.1 (2023-02-19)
+- drompa+: Suppress the warning message "Warning: chrN has no gene." if the gene annotation file has no genes in the specified chromosome.
+
 ## 1.17.0 (2022-11-24)
 - drompa+: Add `--smoothingtype` option to allow the average normalization, which is consistent with that of DROMPA3.
 
