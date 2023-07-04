@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.2 (2023-07-04)
+- Add genometable files for various genome build in `data/genometable`
+
 ## 1.17.1 (2023-02-19)
 - drompa+: Suppress the warning message "Warning: chrN has no gene." if the gene annotation file has no genes in the specified chromosome.
 
