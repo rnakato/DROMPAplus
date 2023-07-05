@@ -51,6 +51,14 @@ To use multiple CPUs, add ``-p``::
 
     * Multithreading is activated in strand-shift profile for estimating the fragment length and GC content. When adding the ``--nomodel`` option and omitting ``--chrdir`` option, multithreading will make no differece to single-core mode (``-p 1``).
 
+By default, parse2wig+ calculates quality scores using only autosomes, i.e., 'chrN', where N is a numeric number, in the genome_table file.
+However, in some cases the chromosome names do not start with "chr".
+In such a case, add the ``--include_allchr`` option to include all chromosomes in the genome_table file.
+
+(See also https://github.com/rnakato/DROMPAplus/issues/8)::
+
+  $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt -p 4 --include_allchr
+
 Quality check
 ------------------------
 
