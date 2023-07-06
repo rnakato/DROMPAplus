@@ -1,5 +1,8 @@
 # DROMPAplus
 
+## 0. Changelog
+See [Changelog](https://github.com/rnakato/DROMPAplus/blob/master/ChangeLog.md)
+
 ## 1. Overview
 DROMPA (DRaw and Observe Multiple enrichment Profiles and Annotation) is a ChIP-seq pipeline tool that meets various needs, including quality check, analysis, and visualization of multiple ChIP samples.
 
