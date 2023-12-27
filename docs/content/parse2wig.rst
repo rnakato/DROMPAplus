@@ -54,7 +54,6 @@ To use multiple CPUs, add ``-p``::
 By default, parse2wig+ calculates quality scores using only autosomes, i.e., 'chrN', where N is a numeric number, in the genome_table file.
 However, in some cases the chromosome names do not start with "chr".
 In such a case, add the ``--include_allchr`` option to include all chromosomes in the genome_table file.
-
 (See also https://github.com/rnakato/DROMPAplus/issues/8)::
 
   $ parse2wig+ -i ChIP.bam -o ChIP --gt genometable.txt -p 4 --include_allchr
