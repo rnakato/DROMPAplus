@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.18.1 (2023-12-31)
+- Bug fix when applying a large value to `--maxins`.
+
 ## 1.18.0 (2023-07-05)
 - Add `--include_allchr` option to avoid an error if the chromosomes in the genome_table file do not begin with "chr" (see https://github.com/rnakato/DROMPAplus/issues/8).
 
