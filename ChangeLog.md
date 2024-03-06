@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.2 (2024-03-06)
+- Added the ideogram file for the T2T genome.
+- Added the mptable files for the T2T genome.
+
 ## 1.18.1 (2023-12-31)
 - Bug fix when applying a large value to `--maxins`.
 

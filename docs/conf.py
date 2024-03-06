@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'DROMPAplus'
-copyright = '2017-2021, Ryuichiro Nakato'
+copyright = '2017-2024, Ryuichiro Nakato'
 author = 'Ryuichiro Nakato'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -55,9 +55,9 @@ author = 'Ryuichiro Nakato'
 # built documents.
 #
 # The short X.Y version.
-version = '1.4.0'
+version = '1.18'
 # The full version, including alpha/beta/rc tags.
-release = '1.4.0'
+release = '1.18.2'
 
 numfig = True
 
