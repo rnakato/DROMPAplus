@@ -73,9 +73,13 @@ Accordingly, there are multiple thresholds for peak-calling, as discussed below:
 
      - ``--ethre``: the ChIP/Input enrichment
      - ``--ipm``: the normalized intensity (height) of the peak summit
+     - ``--nbin4lmd``: the number of bins for the local Poisson (``--pthre_internal``). If the chromosome size is smaller than the specified length, the entire chromosome is used.
+
+Thanks,
+
 
 See ``--help`` for the default threshold values for each drompa+ mode.
-We recommend using the ``--pthre_enrich`` option as the main threshold for peak-calling.
+The ``--pthre_enrich`` option is recommended as the main threshold for peak-calling.
 
 
 Peak-calling without the input sample
