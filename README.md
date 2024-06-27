@@ -96,8 +96,5 @@ Permanently set the path to the DROMPAplus download directory by updating your *
     export PATH=$PATH:$HOME/DROMPAplus/bin:$HOME/DROMPAplus/otherbins
 
 # 3. Reference
-For DROMPAplus:
-* Nakato R., Sakata T., [Methods for ChIP-seq analysis: A practical workflow and advanced applications](https://www.sciencedirect.com/science/article/pii/S1046202320300591), *Methods*, 2020.
 
-For DROMPA:
-* Nakato R, Shirahige K., Statistical Analysis and Quality Assessment of ChIP-seq Data with DROMPA, *Methods in Molecular Biology*, 2018.
+* Nakato R., Sakata T., [Methods for ChIP-seq analysis: A practical workflow and advanced applications](https://www.sciencedirect.com/science/article/pii/S1046202320300591), *Methods*, 2020.
