@@ -156,7 +156,7 @@ void SampleInfo::gettotalreadnum(const std::string &filename, const std::vector<
   else {
     DEBUGprint("loadWigData: noStatsFile...");
     for (auto &chr: gt) {
-      WigArray array(loadWigData(filename, *this, chr));
+      WigArray array(loadWigData(filename, *this, chr, 0));
       totalreadnum_chr[chr.getname()] = array.getArraySum();
       totalreadnum += totalreadnum_chr[chr.getname()];
     }
@@ -279,7 +279,7 @@ void SamplePairEach::genEnrichWig(const vChrArray &vReadArray, const std::string
   const WigArray &ChIParray  = vReadArray.getArray(argvChIP).array;
   const WigArray &Inputarray = vReadArray.getArray(argvInput).array;
 
-  WigArray wigarray(ChIParray.size(), 0);
+  WigArray wigarray(ChIParray.size(), 0, ChIParray.getLengthBin());
 
   for (size_t i=0; i<ChIParray.size(); ++i) {
     if      (ofvaluetype == 0) wigarray.setval(i, getratio(ChIParray[i], (double)Inputarray[i]));

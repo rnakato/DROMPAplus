@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.0 (2024-6-27)
+- drompa+: added `--nbin4lmd` option to specify the number of bins for the calculation of p_internal with local Poisson.
+
 ## 1.18.2 (2024-03-06)
 - Added the ideogram file for the T2T genome.
 - Added the mptable files for the T2T genome.

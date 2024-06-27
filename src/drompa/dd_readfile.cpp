@@ -158,12 +158,12 @@ namespace {
   }
 }
 
-WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr)
+WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr, const int32_t binnum_for_localpoisson)
 {
   int32_t binsize(x.getbinsize());
   int32_t nbin(chr.getlen()/binsize +1);
 
-  WigArray array(nbin, 0);
+  WigArray array(nbin, 0, binnum_for_localpoisson);
   std::string chrname(chr.getrefname());
   WigType iftype(x.getiftype());
 

@@ -226,6 +226,7 @@ void Threshold::setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps)
     ("pthre_enrich",   value<double>()->default_value(cps.thre_penrich), "p-value threshold (-log10) for ChIP/Input enrichment")
     ("ethre",          value<double>()->default_value(cps.thre_ethre), "IP/Input fold enrichment")
     ("ipm",            value<double>()->default_value(cps.thre_ipm), "Read intensity of peak summit")
+    ("nbin4lmd",       value<int32_t>()->default_value(cps.def_binnum_for_localpoisson), "Number of bins for calculating local lambda")
     ;
   allopts.add(opt);
 }
@@ -238,6 +239,7 @@ void Threshold::setValues(const Variables &values)
     pthre_enrich = getVal<double>(values, "pthre_enrich");
     ethre        = getVal<double>(values, "ethre");
     ipm          = getVal<double>(values, "ipm");
+    binnum_for_localpoisson = getVal<int32_t>(values, "nbin4lmd");
     sigtest      = values.count("callpeak");
   } catch (const boost::bad_any_cast& e) {
     PRINTERR_AND_EXIT(e.what());

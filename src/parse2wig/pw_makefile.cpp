@@ -84,7 +84,7 @@ namespace {
   WigArray count_and_normalize_Wigarray(Mapfile &p, const int32_t id)
   {
     std::cout << "chr" << p.genome.chr[id].getname() << ".." << std::flush;
-    WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0);
+    WigArray wigarray(p.wsGenome.chr[id].getnbin(), 0, 0);
 
     // Convert readarray to Wig
     for (auto strand: {Strand::FWD, Strand::REV}) {

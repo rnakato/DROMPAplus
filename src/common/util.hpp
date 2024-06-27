@@ -24,11 +24,11 @@ void AverageSmoothing(std::vector<T> &v, const int32_t nsmooth)
   std::vector<double> temparray;
   copy(v.begin(), v.end(), std::back_inserter(temparray));
 
-  for (size_t i=0; i<v.size(); ++i) {
+  for (int32_t i=0; i< static_cast<int32_t>(v.size()); ++i) {
     int32_t count(0);
     double ave(0);
     for (int32_t j=-nsmooth; j<=nsmooth; ++j) {
-      if (i+j>= 0 && i+j < v.size()) {
+      if (i+j>= 0 && i+j < static_cast<int32_t>(v.size())) {
         ave += temparray[i+j];
         ++count;
       }

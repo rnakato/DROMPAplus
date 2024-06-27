@@ -10,7 +10,7 @@
 #include "dd_gv.hpp"
 #include "../submodules/SSP/common/seq.hpp"
 
-WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &chr);
+WigArray loadWigData(const std::string &filename, const SampleInfo &x, const chrsize &, const int32_t binnum_for_localpoisson);
 
 class ChrArray {
 public:
@@ -27,7 +27,7 @@ public:
            const chrsize &chr):
     binsize(x.second.getbinsize()), 
     nbin(chr.getlen()/binsize +1),
-    array(loadWigData(x.first, x.second, chr)),
+    array(loadWigData(x.first, x.second, chr, p.thre.binnum_for_localpoisson)),
     stats(nbin, binsize),
     totalreadnum(x.second.gettotalreadnum()),
     totalreadnum_chr(x.second.gettotalreadnum_chr())

@@ -28,7 +28,7 @@ enum class WigType {
 class WigArray {
   std::vector<int64_t> array;
   double geta;
-//  enum {LENGTH_FOR_LOCALPOISSON=100000}; // 100 kbp
+  int32_t length_bin;
   enum {BINNUM_FOR_LOCALPOISSON=1000};
 
   template <class T> double rmGeta(const T val)  const { return val/geta; }
@@ -40,10 +40,12 @@ class WigArray {
   }
 
  public:
-  WigArray(): geta(10000.0) {}
-  WigArray(const size_t num, const int32_t val):
-    array(num, val), geta(10000.0)
-  {}
+  WigArray(): geta(10000.0), length_bin(BINNUM_FOR_LOCALPOISSON) {}
+  WigArray(const size_t num, const int32_t val, const int32_t _length_bin):
+    array(num, val), geta(10000.0), length_bin(_length_bin)
+  {
+    if (length_bin <= 0) length_bin = BINNUM_FOR_LOCALPOISSON;
+  }
 
   size_t size() const { return array.size(); }
   double operator[] (const size_t i) const {
@@ -79,15 +81,19 @@ class WigArray {
     return rmGeta(sum);
   }
 
+  int32_t getLengthBin() const { return length_bin; }
+
   double getMinValue() const {
     int32_t min(*std::min_element(array.begin(), array.end()));
     return rmGeta(min);
   }
 
   double getLocalAverage(const int32_t i) const {
-    int32_t length_bin(BINNUM_FOR_LOCALPOISSON);
+//    int32_t length_bin(BINNUM_FOR_LOCALPOISSON);
     checki(i);
     if (i<0) PRINTERR_AND_EXIT("Invalid i for WigArray: " << i << " < 0.");
+
+   // printf("length_bin = %d\n", length_bin);
 
     int64_t ave(0);
     int32_t lenhalf(length_bin/2);

@@ -30,6 +30,7 @@ public:
   double thre_penrich;
   double thre_ethre;
   double thre_ipm;
+  double def_binnum_for_localpoisson;
 
   CommandParamSet(const int32_t defsm,
                   const int32_t defshowctag,
@@ -50,7 +51,8 @@ public:
     thre_pinter(defthre_pinter),
     thre_penrich(defthre_penrich),
     thre_ethre(defthre_ethre),
-    thre_ipm(defthre_ipm)
+    thre_ipm(defthre_ipm),
+    def_binnum_for_localpoisson(1000)
   {}
 };
 
@@ -203,10 +205,12 @@ namespace DROMPA {
     double pthre_enrich;
     double ethre;
     double ipm;
+    int32_t binnum_for_localpoisson;
     bool sigtest;
 
     Threshold(): pthre_inter(0), pthre_enrich(0),
-                 ethre(0), ipm(0), sigtest(false) {}
+                 ethre(0), ipm(0), binnum_for_localpoisson(0),
+                 sigtest(false) {}
 
     void setOpts(MyOpt::Opts &allopts, const CommandParamSet &cps);
     void setValues(const MyOpt::Variables &values);
