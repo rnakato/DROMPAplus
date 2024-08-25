@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.20.0 (2024-8-25)
+- Fixed a bug that causes a momery error when the input file has long reads (>200 bp).
+- Changed Makefile and CMakeLists.txt to enable DEBUG mode.
+
 ## 1.19.0 (2024-6-27)
 - drompa+: added `--nbin4lmd` option to specify the number of bins for the calculation of p_internal with local Poisson.
 
