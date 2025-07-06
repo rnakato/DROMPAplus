@@ -251,7 +251,8 @@ HashOfGeneDataMap parseRefFlat(const std::string& fileName)
   return tmp;
 }
 
-HashOfGeneDataMap parseGtf(const std::string& fileName)
+
+HashOfGeneDataMap parseGtf_old(const std::string& fileName)
 {
   if (!isStr(fileName, ".gtf")) {
     std::cerr << "Warning: gene file may not be gtf format but is parsed as gtf." << std::endl;
@@ -295,6 +296,114 @@ HashOfGeneDataMap parseGtf(const std::string& fileName)
         if (ttag=="" || vc[1]=="CCDS")           ttag = vc[1];
         else if (vc[1] == "basic" && ttag != "CCDS") ttag = vc[1];
         else if (ttag  != "basic" && ttag != "CCDS") ttag = vc[1];
+      }
+    }
+
+//    if (tname =="") continue;
+    if (tid =="") continue;
+
+    if (tname != "") tmp[chr][tid].tname = tname; else tmp[chr][tid].tname = tid;
+    if (gname != "") tmp[chr][tid].gname = gname; else tmp[chr][tid].gname = gid;
+    tmp[chr][tid].tid    = tid;
+    tmp[chr][tid].gid    = gid;
+    tmp[chr][tid].chr    = chr;
+    tmp[chr][tid].strand = strand;
+    if (feat == "start_codon") {
+      if (strand == "+") tmp[chr][tid].cdsStart = start;
+      else tmp[chr][tid].cdsEnd = end;
+    } else if (feat == "stop_codon") {
+      if (strand == "+") tmp[chr][tid].cdsEnd = end;
+      else tmp[chr][tid].cdsStart = start;
+    } else if (feat == "exon") {
+      ++tmp[chr][tid].exonCount;
+      if (!tmp[chr][tid].txStart || start < tmp[chr][tid].txStart) tmp[chr][tid].txStart = start;
+      if (end > tmp[chr][tid].txEnd) tmp[chr][tid].txEnd = end;
+      tmp[chr][tid].exon.emplace_back(start, end);
+    }
+
+    tmp[chr][tid].gsrc = gsrc;
+    tmp[chr][tid].tsrc = tsrc;
+    tmp[chr][tid].gtype = gtype;
+    tmp[chr][tid].ttype = ttype;
+    tmp[chr][tid].ttag = ttag;
+  }
+
+  // "start_codon", "stop_codon"がないとcdsStart, cdsEndが0になる
+  for (auto &pair: tmp) {
+    for (auto &x: pair.second) {
+      if (!x.second.cdsStart) x.second.cdsStart = x.second.txStart;
+      if (!x.second.cdsEnd)   x.second.cdsEnd   = x.second.txEnd;
+    }
+  }
+
+  return tmp;
+}
+
+HashOfGeneDataMap parseGtf(const std::string& fileName)
+{
+  if (!isStr(fileName, ".gtf")) {
+    std::cerr << "Warning: gene file may not be gtf format but is parsed as gtf." << std::endl;
+  }
+
+  std::ifstream in(fileName);
+  if (!in) PRINTERR_AND_EXIT("gtf file does not exist.");
+
+  HashOfGeneDataMap tmp;
+  std::string lineStr;
+
+  while (!in.eof()) {
+    getline(in, lineStr);
+    if (lineStr.empty() || lineStr[0] == '#') continue;
+    std::vector<std::string> v;
+
+    boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
+    std::string feat(v[2]);
+    if (feat == "gene" || feat == "transcript" || feat == "three_prime_utr" || feat == "five_prime_utr") continue;
+
+    std::string chr(rmchr(v[0]));
+    int32_t start(stoi(v[3]));
+    int32_t end(stoi(v[4]));
+    std::string strand(v[6]);
+    std::string annotation(v[8]);
+
+    std::string gname, tname, gid, tid, gsrc, gtype, tsrc, ttype, ttag="";
+    std::vector<std::string> idtab;
+    boost::split(idtab, annotation, boost::algorithm::is_any_of(";"));
+
+    for (auto &term: idtab) {
+//      boost::split(vc, term, boost::algorithm::is_any_of("\""));
+
+        std::string key, val;
+
+        /* ---------- GFF3 形式 key=value ---------- */
+        auto eqpos = term.find('=');
+        if (eqpos != std::string::npos) {
+            key = term.substr(0, eqpos);
+            val = term.substr(eqpos + 1);
+        }
+        /* ---------- GTF 形式 key "value" ---------- */
+        else {
+            std::vector<std::string> kv;
+            boost::split(kv, term, boost::is_any_of(" \t"));
+            if (kv.size() < 2) continue;               // 値が無い／壊れている行は無視
+            key = kv[0];
+            val = kv[1];
+            boost::trim_if(val, boost::is_any_of("\"")); // 両端の引用符を除去
+        }
+
+
+	if (isStr(key, "gene_source"))             gsrc  = val;
+      else if (isStr(key, "gene_biotype") || isStr(key, "gene_type"))       gtype = val;
+      else if (isStr(key, "transcript_source"))  tsrc  = val;
+      else if (isStr(key, "transcript_biotype") || isStr(key, "transcript_type")) ttype = val;
+      else if (isStr(key, "transcript_name")) tname = val;
+      else if (isStr(key, "gene_name"))       gname = val;
+      else if (isStr(key, "transcript_id"))   tid = val;
+      else if (isStr(key, "gene_id"))         gid = val;
+      else if (isStr(key, "tag")) {
+        if (ttag=="" || val=="CCDS")           ttag = val;
+        else if (val == "basic" && ttag != "CCDS") ttag = val;
+        else if (ttag  != "basic" && ttag != "CCDS") ttag = val;
       }
     }
 
