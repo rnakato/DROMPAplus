@@ -13,11 +13,10 @@ jobs:
 
     steps:
     - name: Checkout with submodules
-      uses: actions/checkout@v4
+        uses: actions/checkout@v4
         with:
-          submodules: recursive 
-          fetch-depth: 0 
-          
+          submodules: recursive
+          fetch-depth: 0
     - name: apt install
       run: 
         sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev cmake
