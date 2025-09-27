@@ -1,0 +1,27 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: apt install
+      run: 
+        sudo apt install git build-essential libgtkmm-3.0-dev libboost-all-dev libz-dev libbz2-dev libgsl-dev libcurl4-gnutls-dev cmake
+
+    - name: make
+      run: 
+        make
+        
+    - name: test
+      run: 
+        ./bin/drompa+ -h
+
