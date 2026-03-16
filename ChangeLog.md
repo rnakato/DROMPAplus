@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.20.2 (2026.3.16)
+- Updated SSP from v1.4.1 to v1.4.2
+
 ## 1.20.1 (2025-7-6)
 - Modified parseGtf function to accept GFF3 format.
 
