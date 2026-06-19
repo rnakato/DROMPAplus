@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.20.4 (2026.6.19)
+- Updated SSP from v1.4.2 to v1.4.3
+
 ## 1.20.3 (2026.5.2)
 - drompa+: Fixed a bug that caused an error when the input files (`-i`) contained the word “Genome.”
 
