@@ -1,27 +1,33 @@
-.PHONY: all clean
+.PHONY: all build clean
 
-BINDIR = bin
+BINDIR   = bin
+BUILDDIR = build
 PROGRAMS = parse2wig+ drompa+
-TARGET = $(addprefix $(BINDIR)/,$(PROGRAMS))
+TARGET   = $(addprefix $(BINDIR)/,$(PROGRAMS))
+
+SSPDIR   = submodules/SSP
+HTSLIBDIR = $(SSPDIR)/src/htslib-1.10.2
 
 ifdef DEBUG
-CMAKEFLAGS = -DENABLE_DEBUG=ON
+CMAKEFLAGS += -DENABLE_DEBUG=ON
 endif
 
-SSPDIR = submodules/SSP
-HTSLIBDIR = $(SSPDIR)/src/htslib-1.10.2/
+all: build
 
-all: $(TARGET) $(HTSLIBDIR)/libhts.a
+JOBS ?= 8
 
-$(TARGET): $(HTSLIBDIR)/libhts.a
-	mkdir -p build && cd build && cmake $(CMAKEFLAGS) .. && make
-	mkdir -p bin
-	cp build/test/parse2wig/parse2wig+ build/test/drompa/drompa+ bin
+build: $(HTSLIBDIR)/libhts.a
+	cmake -S . -B $(BUILDDIR) $(CMAKEFLAGS)
+	cmake --build $(BUILDDIR) --parallel $(JOBS)
+	mkdir -p $(BINDIR)
+	cp $(BUILDDIR)/test/parse2wig/parse2wig+ $(BINDIR)/
+	cp $(BUILDDIR)/test/drompa/drompa+ $(BINDIR)/
+
 
 $(HTSLIBDIR)/libhts.a:
 	$(MAKE) -C $(HTSLIBDIR)
 
 clean:
-	rm -rf build bin
-	make -C $(HTSLIBDIR) clean
-	make -C $(SSPDIR) clean
+	rm -rf $(BUILDDIR) $(BINDIR)
+	$(MAKE) -C $(HTSLIBDIR) clean
+	$(MAKE) -C $(SSPDIR) clean
