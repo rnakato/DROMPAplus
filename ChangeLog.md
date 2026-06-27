@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.20.5 (2026.6.27)
+- Bug fix in ``parseRefFlat``
+
 ## 1.20.4 (2026.6.19)
 - Updated SSP from v1.4.2 to v1.4.3
 

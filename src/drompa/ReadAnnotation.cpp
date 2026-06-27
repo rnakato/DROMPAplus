@@ -212,7 +212,7 @@ HashOfGeneDataMap parseRefFlat(const std::string& fileName)
 
   while (!in.eof()) {
     getline(in, lineStr);
-    if (lineStr.empty() || lineStr[0] == '#') continue;
+    if (lineStr.empty() || lineStr[0] == '#' || isStr(lineStr, "geneName")) continue;
 
     std::vector<std::string> v, exonStarts, exonEnds;
     boost::split(v, lineStr, boost::algorithm::is_any_of("\t"));
